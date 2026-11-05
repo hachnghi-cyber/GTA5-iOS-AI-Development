@@ -1,0 +1,41 @@
+GTA V10.3 — BẢN THỬ NGHIỆM CAMERA GÓC NHÌN THỨ NHẤT VÀ FOV
+Ngày tạo: 05/11/2026
+
+Tệp: GTA-V10.3-Camera-FOV-THU-NGHIEM-UNSIGNED.ipa
+SHA-256: d67c4d6f9f504c38586cb1c0417c24924f0badaa3c00c7c6346cbb44fe11ca00
+
+QUAN TRỌNG
+- Đây là bản thử nghiệm có vá ARM64 thực sự vào GTA5 và libgtacompat.dylib.
+- KHÔNG PHẢI bản đã được xác minh trên iPhone. Có thể crash, không áp dụng FOV đúng như mong đợi hoặc gặp xung đột với mod.
+- IPA chưa ký; cần ký lại toàn bộ ứng dụng và các thành phần liên quan trước khi cài trên iOS.
+- Sao lưu dữ liệu GTA V và giữ bản V10.2 đang hoạt động trước khi thử. Ưu tiên thiết bị cài thử riêng.
+
+TRONG TRAINER → NGƯỜI CHƠI
+- Góc nhìn thứ nhất (ô tô/xe máy): Bật/tắt chế độ camera xe first-person. Chỉ kích hoạt khi nhân vật ở trong phương tiện và camera gameplay đang render.
+- FOV 60° / FOV 75° / FOV 90°: các nút tùy chọn để thử góc nhìn xe rộng hơn.
+- Nếu vô tình bật nhiều mức FOV cùng lúc, hệ thống chọn 90° > 75° > 60°.
+- Tắt cả ba mức FOV để trở về FOV mặc định; tắt công tắc góc nhìn thứ nhất để khôi phục góc nhìn xe đã lưu.
+- Khi rời xe, mã thử nghiệm khôi phục mode camera đã lưu.
+- Freecam, Ẩn nút cảm ứng và Pause không bị ghi đè bằng bản vá này.
+- Mục camera/FOV mới dùng các bit cao không nằm trong danh sách tùy chọn lưu vào lần mở sau của bản hiện tại (phải kiểm tra trên thiết bị).
+
+QUY TRÌNH TEST TRÊN THIẾT BỊ
+1. Sao lưu dữ liệu và ký/cài IPA thử nghiệm.
+2. Khởi động game. Kiểm tra menu Trainer → Người chơi có 4 công tắc mới.
+3. Thử trong ô tô: bật góc nhìn thứ nhất. Tắt lại và quan sát có khôi phục góc nhìn trước đó không.
+4. Thử trong xe máy, xe tay ga; xuống xe khi công tắc vẫn bật.
+5. Thử từng mức FOV 60/75/90, chỉ bật một mức tại một thời điểm. So sánh ảnh cùng vị trí.
+6. Thử bật/tắt Freecam, mở/đóng Pause/Trainer và ẩn nút cảm ứng khi livestream.
+7. Thử mở bản đồ, chuyển nhân vật, cắt cảnh, mở lại game (trạng thái phải OFF).
+8. Nếu crash, lấy toàn bộ crash log, iOS version, thiết bị, bước thao tác gây crash để xác định lỗi.
+
+KIỂM TRA TĨNH ĐÃ THỰC HIỆN
+- ZIP CRC/Payload: PASS.
+- Mach-O ARM64: PASS.
+- Bốn branch hook: PASS.
+- 19 relocation ARM64: PASS.
+- Vùng mã R-X và vùng dữ liệu BSS R-W: PASS.
+- So sánh file trong IPA: chỉ thay GTA5 + libgtacompat; bỏ chữ ký cũ: PASS.
+- Test iPhone: CHƯA THỰC HIỆN; trạng thái sản xuất: CHƯA ĐẠT.
+
+Nếu gặp lỗi nặng, quay lại IPA V10.2 ban đầu và khôi phục bản sao dữ liệu.

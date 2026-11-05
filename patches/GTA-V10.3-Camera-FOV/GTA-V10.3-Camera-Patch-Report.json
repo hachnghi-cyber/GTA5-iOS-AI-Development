@@ -1,0 +1,169 @@
+{
+  "status": "EXPERIMENTAL_BINARY_PATCH_UNSIGNED_NOT_IPHONE_TESTED",
+  "source": "/mnt/data/GTA-V10.2-An-Nut-Livestream(2).ipa",
+  "source_sha256": "7e1b3f39623047c97e9a7b5fa643ef9d2c6f009f916f3d7c595eabf87b905373",
+  "output": "/mnt/data/GTA-V10.3-Camera-FOV-THU-NGHIEM-UNSIGNED.ipa",
+  "output_sha256": "d67c4d6f9f504c38586cb1c0417c24924f0badaa3c00c7c6346cbb44fe11ca00",
+  "features": {
+    "trainer": "first-person vehicle ON/OFF and 60,75,90 FOV independent toggles",
+    "state": "auto off at next launch; high bits excluded from existing 0..24 persistence loop",
+    "first_person": "game tick runs player vehicle test; save previous view; use mode=4; restore mode on leave/disable",
+    "fov": "hooks camFirstPersonShooterCamera::UpdateBlendedAnimatedFov and camFollowVehicleCamera::ComputeDesiredFov",
+    "fov_selection": "90 wins over 75 wins over 60; turn all off for default"
+  },
+  "cave_ui": "0x1a9800",
+  "cave_game": "0x1025f9980",
+  "bss_state_vmaddr": "0x103ba2000",
+  "ui_relocations": [
+    {
+      "offset": "0xac",
+      "kind": "BR26",
+      "target": "_OBJCADD"
+    },
+    {
+      "offset": "0xa0",
+      "kind": "BR26",
+      "target": "_ROWFROM"
+    },
+    {
+      "offset": "0x68",
+      "kind": "BR26",
+      "target": "_UI_RESUME"
+    }
+  ],
+  "game_relocations": [
+    {
+      "offset": "0x120",
+      "kind": "BR26",
+      "target": "_FOV_FOLLOW_RESUME"
+    },
+    {
+      "offset": "0x104",
+      "kind": "PAGOF12",
+      "target": "_CAM_STATE"
+    },
+    {
+      "offset": "0x100",
+      "kind": "PAGE21",
+      "target": "_CAM_STATE"
+    },
+    {
+      "offset": "0xf0",
+      "kind": "BR26",
+      "target": "_FOV_FP_RESUME"
+    },
+    {
+      "offset": "0xd4",
+      "kind": "PAGOF12",
+      "target": "_CAM_STATE"
+    },
+    {
+      "offset": "0xd0",
+      "kind": "PAGE21",
+      "target": "_CAM_STATE"
+    },
+    {
+      "offset": "0xc4",
+      "kind": "BR26",
+      "target": "_GAME_TICK_RESUME"
+    },
+    {
+      "offset": "0xa8",
+      "kind": "BR26",
+      "target": "_CAM_SET"
+    },
+    {
+      "offset": "0x60",
+      "kind": "BR26",
+      "target": "_CAM_SET"
+    },
+    {
+      "offset": "0x50",
+      "kind": "BR26",
+      "target": "_CAM_GET"
+    },
+    {
+      "offset": "0x40",
+      "kind": "BR26",
+      "target": "_CAM_GET"
+    },
+    {
+      "offset": "0x30",
+      "kind": "BR26",
+      "target": "_IS_GAMEPLAY_CAM_RENDERING"
+    },
+    {
+      "offset": "0x28",
+      "kind": "BR26",
+      "target": "_IS_PED_IN_ANY_VEHICLE"
+    },
+    {
+      "offset": "0x1c",
+      "kind": "BR26",
+      "target": "_PLAYER_PED_ID"
+    },
+    {
+      "offset": "0x10",
+      "kind": "PAGOF12",
+      "target": "_CAM_STATE"
+    },
+    {
+      "offset": "0xc",
+      "kind": "PAGE21",
+      "target": "_CAM_STATE"
+    }
+  ],
+  "ui_changes": [
+    {
+      "offset": "0x1a9800",
+      "size": 576,
+      "reason": "UI ARM64 handler with 4 new Trainer toggles"
+    },
+    {
+      "offset": "0x1a95ec",
+      "reason": "Trainer Players row-injection hook; displaced ldr in new code",
+      "original": "f60741f8",
+      "patched": "85000014"
+    }
+  ],
+  "game_changes": [
+    {
+      "offset": "0x25f9980",
+      "size": 292,
+      "reason": "game camera handler: PlayerPed, Vehicle, Cam Mode and FOV"
+    },
+    {
+      "offset": "0x3d254",
+      "reason": "game thread: consume new camera toggles",
+      "original": "f60300aa",
+      "patched": "cbf19614"
+    },
+    {
+      "offset": "0x377b0c",
+      "reason": "first-person shooter FOV output hook",
+      "original": "08c005bd",
+      "patched": "d1078a14"
+    },
+    {
+      "offset": "0x3a9d98",
+      "reason": "follow-vehicle camera FOV output hook",
+      "original": "fd7b46a9",
+      "patched": "3a3f8914"
+    }
+  ],
+  "original_game_sha256": "59ddc3f0f94417b74db380d30ff3d90625178329b6de3901bc827401386c0e06",
+  "game_patched_sha256": "62683ea6e02276faa6bc43fd4fa09586cc22ecaaebe915dbd011fa71d4411541",
+  "original_compat_sha256": "9d469709176a753a91282ca9ee08edc1e3c0c1497dec55d3cbb246ce9310e149",
+  "compat_patched_sha256": "95649cca24abd80bdc0f0895996d7b7bf72e1f791979ae5315a4d0dc3b13fc1a",
+  "signature_entries_removed": [
+    "Payload/GTAV.app/_CodeSignature/",
+    "Payload/GTAV.app/_CodeSignature/CodeResources"
+  ],
+  "limitations": [
+    "Never run in iPhone; first-person camera FOV behavior must be validated in-game.",
+    "May be unstable with Freecam, cutscenes, and online contexts; save game data and test on disposable install.",
+    "All code signatures invalidated; IPA requires proper signing before install.",
+    "Independent FOV choices are nonexclusive switches; if multiple ON, higher FOV wins.",
+    "Not ready for general public release."
+  ]
+}
