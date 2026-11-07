@@ -1,0 +1,43 @@
+name: Build Roslyn 5.9 Full for Gojo
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-roslyn-vb59.yml'
+
+jobs:
+  bundle-roslyn:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore CSharp and VisualBasic Roslyn 5.9
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet new classlib -n RoslynBootstrap -f net8.0 --no-restore
+          dotnet add RoslynBootstrap/RoslynBootstrap.csproj package Microsoft.CodeAnalysis.CSharp.Scripting --version 5.9.0
+          dotnet add RoslynBootstrap/RoslynBootstrap.csproj package Microsoft.CodeAnalysis.VisualBasic --version 5.9.0
+          dotnet publish RoslynBootstrap/RoslynBootstrap.csproj -c Release -o out -p:CopyLocalLockFileAssemblies=true
+
+      - name: Package all required Roslyn assemblies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p patch/dotnet
+          cp out/Microsoft.CodeAnalysis*.dll patch/dotnet/
+          test -s patch/dotnet/Microsoft.CodeAnalysis.dll
+          test -s patch/dotnet/Microsoft.CodeAnalysis.CSharp.dll
+          test -s patch/dotnet/Microsoft.CodeAnalysis.Scripting.dll
+          test -s patch/dotnet/Microsoft.CodeAnalysis.CSharp.Scripting.dll
+          test -s patch/dotnet/Microsoft.CodeAnalysis.VisualBasic.dll
+          (cd patch && sha256sum dotnet/*.dll > SHA256SUMS.txt)
+          (cd patch && zip -q -r ../Roslyn_5_9_FULL_SHVDN_FIX.zip dotnet SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Roslyn_5_9_FULL_SHVDN_FIX
+          path: Roslyn_5_9_FULL_SHVDN_FIX.zip
