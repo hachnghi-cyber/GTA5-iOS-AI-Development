@@ -1,0 +1,80 @@
+name: Build Gojo iOS and Touch Bridge
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Gojo_iOS.2.cs'
+      - 'Gojo_iOS.csproj'
+      - 'refs/**'
+      - 'native/**'
+      - '.github/workflows/build-gojo.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build Gojo DLL
+        run: dotnet build Gojo_iOS.csproj -c Release
+
+      - name: Package DLL
+        run: |
+          mkdir -p dist/scripts
+          cp bin/Release/net8.0/Gojo_iOS.dll dist/scripts/
+          cd dist
+          zip -r ../Gojo_iOS_DLL_TEST.zip scripts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_iOS_DLL_TEST
+          path: Gojo_iOS_DLL_TEST.zip
+
+  build-native-bridge:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build iOS ARM64 Touch Bridge
+        run: bash native/build_ios.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GojoTouchBridge_ARM64_TEST
+          path: native/build-ios/GojoTouchBridge.dylib
+
+  package-build:
+    needs: [build, build-native-bridge]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: Gojo_iOS_DLL_TEST
+          path: dist/dotnet
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: GojoTouchBridge_ARM64_TEST
+          path: dist/native
+
+      - name: Package Build Kit
+        run: |
+          mkdir -p dist/tools
+          cp native/pack_test_ipa.py dist/tools/
+          cp native/test_macho_header.py dist/tools/
+          cp README_VI.md dist/
+          cp TOUCH_OVERLAY_V11_KIEM_CHUNG.md dist/
+          cd dist
+          zip -r ../Gojo_v11_BUILD_KIT_TEST.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_v11_BUILD_KIT_TEST
+          path: Gojo_v11_BUILD_KIT_TEST.zip
