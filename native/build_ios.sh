@@ -18,7 +18,7 @@ xcrun --sdk iphoneos clang++ -arch arm64 -miphoneos-version-min=16.0 \
   -dynamiclib -install_name '@rpath/GojoTouchBridge.dylib' \
   -Wl,-exported_symbol,_gojo_touch_consume \
   -Wl,-exported_symbol,_gojo_touch_set_enabled \
-  -framework Foundation -framework UIKit \
+  -framework Foundation -framework UIKit -framework CoreGraphics \
   "${build_dir}/GojoTouchQueue.o" "${build_dir}/GojoTouchOverlay.o" \
   -o "${build_dir}/GojoTouchBridge.dylib"
 
