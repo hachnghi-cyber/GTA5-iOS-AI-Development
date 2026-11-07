@@ -1,0 +1,36 @@
+name: Build missing Roslyn libraries for ScriptHookV .NET
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bundle-roslyn:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore matching Roslyn 5.9 libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet new classlib -n RoslynBootstrap -f net8.0 --no-restore
+          dotnet add RoslynBootstrap/RoslynBootstrap.csproj package Microsoft.CodeAnalysis.CSharp.Scripting --version 5.9.0
+          dotnet publish RoslynBootstrap/RoslynBootstrap.csproj -c Release -o out -p:CopyLocalLockFileAssemblies=true
+
+      - name: Package assemblies for iOS ScriptHook pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p patch/dotnet
+          cp out/Microsoft.CodeAnalysis*.dll patch/dotnet/
+          test -s patch/dotnet/Microsoft.CodeAnalysis.dll
+          test -s patch/dotnet/Microsoft.CodeAnalysis.CSharp.dll
+          (cd patch && sha256sum dotnet/*.dll > SHA256SUMS.txt)
+          (cd patch && zip -q -r ../Roslyn_5_9_SHVDN_FIX.zip dotnet SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Roslyn_5_9_SHVDN_FIX
+          path: Roslyn_5_9_SHVDN_FIX.zip
