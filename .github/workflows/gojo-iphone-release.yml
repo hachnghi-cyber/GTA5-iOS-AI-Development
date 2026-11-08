@@ -1,0 +1,127 @@
+name: Gojo v11.1 - iPhone Release One-Click Build (TEST)
+
+# Upload BOTH assets to a PRIVATE release tagged gojo-base-v11-1:
+# - GTAV-v11.1(1).ipa (exact original SHA-256)
+# - Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip (source release)
+# Then run this workflow from Safari > Actions. No input folder needed.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Private Release containing the original IPA and Gojo source ZIP'
+        required: true
+        default: 'gojo-base-v11-1'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-gojo-ios:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GOJO_RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download BOTH files from the private Release (no input folder)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gojo-release-iphone-build-stage/input
+          gh release download "$GOJO_RELEASE_TAG" \
+            --pattern 'Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip' \
+            --dir gojo-release-iphone-build-stage
+          gh release download "$GOJO_RELEASE_TAG" \
+            --pattern 'GTAV-v11.1(1).ipa' \
+            --dir gojo-release-iphone-build-stage/input
+          cd gojo-release-iphone-build-stage
+          unzip -tq Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip >/dev/null
+          unzip -q Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip
+          test -s gojo_v11_1_full/Gojo_iOS.csproj
+          test -s gojo_v11_1_full/native/build_ios.sh
+          test -s 'input/GTAV-v11.1(1).ipa'
+
+      - name: Check exact v11.1 game, full Gojo mod and original WAV files
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s gojo_v11_1_full \
+            -p test_full_mod.py -v
+          python3 -m unittest discover -s gojo_v11_1_full/native \
+            -p test_gojo_v11_1_pack.py -v
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'gojo_v11_1_full/native')
+          from pack_gojo_v11_1 import IPA_SHA256
+          filename = Path('input/GTAV-v11.1(1).ipa')
+          actual = hashlib.sha256(filename.read_bytes()).hexdigest()
+          if actual != IPA_SHA256:
+              raise SystemExit('Wrong game IPA: not the supplied GTA V v11.1!')
+          print('Verified exact GTA V v11.1 IPA SHA-256')
+          PY
+          xcrun clang -std=c11 -O2 -Wall -Wextra -pedantic \
+            gojo_v11_1_full/native/GojoTouchQueue.c \
+            gojo_v11_1_full/native/test_touch_queue.c \
+            -o "$RUNNER_TEMP/gojo_queue_test"
+          "$RUNNER_TEMP/gojo_queue_test"
+
+      - name: Build complete Gojo C# and native iOS touch/VFX bridge
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          dotnet build gojo_v11_1_full/Gojo_iOS.csproj \
+            --configuration Release --nologo
+          bash gojo_v11_1_full/native/build_ios.sh
+          bridge=gojo_v11_1_full/native/build-ios/GojoTouchBridge.dylib
+          test -s gojo_v11_1_full/bin/Release/net8.0/Gojo_iOS.dll
+          test -s "$bridge"
+          lipo -archs "$bridge" | grep -q arm64
+          for symbol in gojo_touch_consume gojo_touch_set_enabled \
+                        gojo_touch_show_vfx gojo_touch_clear_vfx; do
+            nm -gU "$bridge" | grep -q "_$symbol"
+          done
+          mkdir -p dist
+          cp "$bridge" dist/GojoTouchBridge.dylib
+
+      - name: Create exactly one matching UNSIGNED IPA and ScriptHook mod ZIP
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          python3 gojo_v11_1_full/native/pack_gojo_v11_1.py \
+            --ipa 'input/GTAV-v11.1(1).ipa' \
+            --bridge dist/GojoTouchBridge.dylib \
+            --out dist/GTAV_v11_1_Gojo_FULL_VFX_UNSIGN_TEST.ipa
+          mkdir -p gojo-mod-stage/scripts/gojomusic
+          cp gojo_v11_1_full/bin/Release/net8.0/Gojo_iOS.dll \
+             gojo-mod-stage/scripts/Gojo_iOS.dll
+          for wav in RR.wav Bl.wav HP.wav UV.wav MU.wav MU_short.wav; do
+            cp "gojo_v11_1_full/gojomusic/$wav" \
+               "gojo-mod-stage/scripts/gojomusic/$wav"
+          done
+          (cd gojo-mod-stage && zip -q -r \
+            ../dist/Gojo_v11_1_FullMod_ScriptHook_IMPORT_TEST.zip scripts)
+          unzip -tq dist/GTAV_v11_1_Gojo_FULL_VFX_UNSIGN_TEST.ipa >/dev/null
+          unzip -tq dist/Gojo_v11_1_FullMod_ScriptHook_IMPORT_TEST.zip >/dev/null
+          cp gojo_v11_1_full/README_GOJO_FULL.md dist/README_GOJO_FULL.md
+          (cd dist && shasum -a 256 \
+            GTAV_v11_1_Gojo_FULL_VFX_UNSIGN_TEST.ipa \
+            Gojo_v11_1_FullMod_ScriptHook_IMPORT_TEST.zip \
+            GojoTouchBridge.dylib > SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_v11_1_iPhone_Release_FULL_UNSIGNED_TEST
+          path: gojo-release-iphone-build-stage/dist/
+          if-no-files-found: error
+          retention-days: 14
