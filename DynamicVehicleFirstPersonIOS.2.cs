@@ -48,18 +48,25 @@ namespace DynamicVehicleFirstPersonIOS
             }
         }
 
-        // R6: ONE wide cockpit view. Multiple presets and persisted older FOV
-        // values could silently switch the camera back to a narrower view.
+        // R8: exactly one cabin view for cars and one handlebar view for bikes.
+        // The perspective is auto-selected by vehicle type, never by brake or
+        // by the vanilla game's changing first-person camera mode.
         private const float LockedCockpitFov = 130f;
-        private static readonly CameraPreset[] Presets = {
-            new CameraPreset("Sieu rong co dinh", LockedCockpitFov,
-                0.03f, -0.10f, 0.95f, 0.15f, 18f)
+        private const float CarNearClip = 0.20f;
+        private const float BikeNearClip = 0.24f;
+        private static readonly CameraPreset[] CarPresets = {
+            new CameraPreset("Cabin o to co dinh", LockedCockpitFov,
+                0.03f, -0.03f, 0.95f, 0.15f, 18f)
+        };
+        private static readonly CameraPreset[] BikePresets = {
+            new CameraPreset("Tay lai xe may co dinh", LockedCockpitFov,
+                0.10f, 0.02f, 0.95f, 0.10f, 20f)
         };
 
         private Camera _camera;
         private readonly Dictionary<string, CameraPreset[]> _savedProfiles =
             new Dictionary<string, CameraPreset[]>(StringComparer.OrdinalIgnoreCase);
-        private CameraPreset[] _activePresets = Presets;
+        private CameraPreset[] _activePresets = CarPresets;
         private string _vehicleKey = "";
         private string _configPath;
         private bool _menuOpen;
@@ -74,10 +81,23 @@ namespace DynamicVehicleFirstPersonIOS
         private bool _enabled = true;
         // The cockpit camera stays active while seated, independent of the
         // vanilla vehicle view-mode value (which can change on iOS brake LT).
-        // A frame-scoped GTA V ped reset flag hides the head without changing
-        // appearance components, clothing, save files, or the third-person ped.
-        private bool _hideHeadWhenDriving = true;
-        private bool _headCullNativeFailed;
+        private bool _isBike;
+        // Native head reset flag 166 shrinks the actual head, but GTA V can
+        // render custom hair and helmets as separate drawables/props. In Story
+        // Mode only, snapshot that styling, suppress obstructing accessories,
+        // and restore the exact variations when the cockpit view ends.
+        private bool _headResetUnavailable;
+        private bool _appearanceNativeFailed;
+        private int _styledPedHandle;
+        private int _styledPedModelHash;
+        private bool _appearanceCaptured;
+        private int _originalHairDrawable;
+        private int _originalHairTexture;
+        private int _originalHairPalette;
+        private bool _hairReplaced;
+        private readonly int[] _originalProps = { -1, -1 };
+        private readonly int[] _originalPropTextures = { 0, 0 };
+        private DateTime _lastPropClearUtc = DateTime.MinValue;
         private int _preset;
         private int _errorCount;
         private DateTime _lastTickUtc = DateTime.MinValue;
@@ -165,7 +185,7 @@ namespace DynamicVehicleFirstPersonIOS
                 Ped player = Game.Player.Character;
                 Vehicle car = player == null ? null : player.CurrentVehicle;
                 if (!_enabled || player == null || !player.Exists() || player.IsDead ||
-                    car == null || !car.Exists() || IsOnline())
+                    car == null || !car.Exists() || IsOnline() || !IsCarOrBike(car))
                 {
                     ReleaseCamera();
                     return;
@@ -223,7 +243,7 @@ namespace DynamicVehicleFirstPersonIOS
                     World.RenderingCamera = _camera;
                 }
 
-                ApplyDriverHeadCull(player);
+                SuppressHeadObstruction(player);
                 UpdateCamera(player, car);
                 _errorCount = 0;
             }
@@ -244,6 +264,18 @@ namespace DynamicVehicleFirstPersonIOS
             // avoids interfering with online camera ownership and other scripts.
             try { return Function.Call<bool>(Hash.NETWORK_IS_SESSION_STARTED); }
             catch (Exception) { return true; }
+        }
+
+        private static bool IsCarOrBike(Vehicle car)
+        {
+            int model = car.Model.Hash;
+            return Function.Call<bool>(Hash.IS_THIS_MODEL_A_CAR, model) ||
+                Function.Call<bool>(Hash.IS_THIS_MODEL_A_BIKE, model);
+        }
+
+        private static bool IsBike(Vehicle car)
+        {
+            return Function.Call<bool>(Hash.IS_THIS_MODEL_A_BIKE, car.Model.Hash);
         }
 
         private void ReadGamepadShortcuts()
@@ -286,7 +318,7 @@ namespace DynamicVehicleFirstPersonIOS
         private void NextPreset()
         {
             // F8/DPAD shortcut is a no-op in the locked single-view build.
-            Announce("Camera co dinh: 130 FOV");
+            Announce("Camera co dinh: o to / xe may, 130 FOV");
         }
 
         private void CycleLookMode()
@@ -302,7 +334,8 @@ namespace DynamicVehicleFirstPersonIOS
             string key = GetVehicleKey(car);
             if (key == _vehicleKey) return;
             _vehicleKey = key;
-            _activePresets = Presets;
+            _isBike = IsBike(car);
+            _activePresets = _isBike ? BikePresets : CarPresets;
             _preset = 0;
         }
 
@@ -337,7 +370,7 @@ namespace DynamicVehicleFirstPersonIOS
             if (!string.IsNullOrEmpty(_vehicleKey)) _savedProfiles[_vehicleKey] = clone;
         }
 
-        private const int MenuItemCount = 21;
+        private const int MenuItemCount = 20;
 
         private void ReadMenuInput()
         {
@@ -373,8 +406,8 @@ namespace DynamicVehicleFirstPersonIOS
             switch (_menuIndex)
             {
                 case 0: return "Bat camera: " + (_enabled ? "CO" : "KHONG");
-                case 1: return "Giu mot goc nhin: CO DINH";
-                case 2: return "Vi tri camera: 1/1 (khoa)";
+                case 1: return "Giu goc nhin: O TO / XE MAY";
+                case 2: return _isBike ? "Goc: TAY LAI XE MAY" : "Goc: CABIN O TO";
                 case 3: return "FOV: 130 (sieu rong/khoa)";
                 case 4: return "Tien/lui (m): " + Format(p.ForwardOffset);
                 case 5: return "Cao/thap (m): " + Format(p.HeightOffset);
@@ -392,7 +425,7 @@ namespace DynamicVehicleFirstPersonIOS
                 case 17: return "Dung re-center: " + (_pauseRecenter ? "CO" : "KHONG");
                 case 18: return "Luu config cho xe";
                 case 19: return "Khoi phuc mac dinh cho xe";
-                default: return "An dau khi lai xe: " + (_hideHeadWhenDriving ? "BAT" : "TAT");
+                default: return "Khong co tuy chon";
             }
         }
 
@@ -408,16 +441,10 @@ namespace DynamicVehicleFirstPersonIOS
                 _menuIndex == 15 || _menuIndex == 16) return;
             if (_menuIndex == 17) { _pauseRecenter = !_pauseRecenter; return; }
             if (_menuIndex == 18) { SaveProfiles(); return; }
-            if (_menuIndex == 20)
-            {
-                _hideHeadWhenDriving = !_hideHeadWhenDriving;
-                Announce(_hideHeadWhenDriving ? "DFPV R6: an dau BAT" : "DFPV R6: an dau TAT");
-                return;
-            }
             if (_menuIndex == 19)
             {
                 _savedProfiles.Remove(_vehicleKey);
-                _activePresets = Presets;
+                _activePresets = _isBike ? BikePresets : CarPresets;
                 _preset = 0;
                 SaveProfiles();
                 return;
@@ -601,7 +628,7 @@ namespace DynamicVehicleFirstPersonIOS
             Vector3 pos = SafeHeadPosition(player, car, p);
             _camera = World.CreateCamera(pos, new Vector3(0f, 0f, car.Heading), LockedCockpitFov);
             if (_camera == null) throw new InvalidOperationException("CREATE_CAM failed");
-            _camera.NearClip = 0.045f;
+            _camera.NearClip = _isBike ? BikeNearClip : CarNearClip;
             _camera.IsActive = true;
             World.RenderingCamera = _camera;
             // Calibrate eye position ONCE while entering the vehicle camera.
@@ -629,8 +656,8 @@ namespace DynamicVehicleFirstPersonIOS
                 try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                 catch (Exception) { }
             }
-            Announce(_vehicleCameraAttached ? "DFPV R6: khoa goc rong 130" :
-                "DFPV R6: attach loi, dung camera du phong");
+            Announce(_vehicleCameraAttached ? "DFPV R8: goc co dinh 130" :
+                "DFPV R8: attach loi, dung camera du phong");
             // Vehicle cabin context may improve interior acoustic/rendering flags.
             // Failing this optional call must not disable the camera itself.
             // SHVDN v2's Hash enum omits this native. The stable GTA V native
@@ -746,7 +773,7 @@ namespace DynamicVehicleFirstPersonIOS
                         _vehicleCameraAttached = false;
                         try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                         catch (Exception) { }
-                        Announce("DFPV R6: attach loi, da chuyen camera du phong");
+                        Announce("DFPV R8: attach loi, da chuyen camera du phong");
                     }
                 }
             }
@@ -776,31 +803,122 @@ namespace DynamicVehicleFirstPersonIOS
             }
         }
 
-        private void ApplyDriverHeadCull(Ped player)
+        private void SuppressHeadObstruction(Ped player)
         {
-            // PRF_MakeHeadInvisible (166) scales the local ped head down during
-            // this render frame. The game clears reset flags automatically;
-            // when this scripted cockpit camera stops, the head is visible
-            // again without any drawable/texture restoration or model change.
-            // It may also hide head-mounted accessories such as hats/glasses.
-            if (!_hideHeadWhenDriving || _headCullNativeFailed ||
-                _camera == null || player == null || !player.Exists()) return;
+            // This reset flag is frame scoped, so it must be renewed on every
+            // driving tick. It is NOT a persistent change to the ped's model.
+            if (!_headResetUnavailable)
+            {
+                try { Function.Call(Hash.SET_PED_RESET_FLAG, player.Handle, 166, true); }
+                catch (Exception) { _headResetUnavailable = true; }
+            }
+
+            if (!_appearanceCaptured && !_appearanceNativeFailed)
+            {
+                try
+                {
+                    _styledPedHandle = player.Handle;
+                    _styledPedModelHash = player.Model.Hash;
+                    _originalHairDrawable = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION,
+                        player.Handle, 2);
+                    _originalHairTexture = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION,
+                        player.Handle, 2);
+                    _originalHairPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION,
+                        player.Handle, 2);
+                    for (int i = 0; i < 2; i++)
+                    {
+                        _originalProps[i] = Function.Call<int>(Hash.GET_PED_PROP_INDEX,
+                            player.Handle, i);
+                        if (_originalProps[i] >= 0)
+                            _originalPropTextures[i] = Function.Call<int>(Hash.GET_PED_PROP_TEXTURE_INDEX,
+                                player.Handle, i);
+                    }
+                    _appearanceCaptured = true;
+                    // A drawable ID of -1 is not valid for every ped; use the
+                    // model's existing drawable 0 only when there are variants.
+                    int hairs = Function.Call<int>(Hash.GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS,
+                        player.Handle, 2);
+                    if (hairs > 1 && _originalHairDrawable > 0)
+                    {
+                        // Mark it for restoration before invoking the native:
+                        // a partially applied component change is still restored.
+                        _hairReplaced = true;
+                        Function.Call(Hash.SET_PED_COMPONENT_VARIATION,
+                            player.Handle, 2, 0, 0, 0);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Do not crash driving if optional appearance natives are
+                    // unavailable in this specific iOS ScriptHook build.
+                    RestoreDriverAppearance();
+                    _appearanceNativeFailed = true; // do not retry every frame
+                }
+            }
+
+            if (!_appearanceCaptured) return;
+            DateTime now = DateTime.UtcNow;
+            if ((now - _lastPropClearUtc).TotalMilliseconds < 350) return;
+            _lastPropClearUtc = now;
+            if (_styledPedHandle != player.Handle) return;
+            for (int i = 0; i < 2; i++)
+            {
+                try
+                {
+                    if (Function.Call<int>(Hash.GET_PED_PROP_INDEX, player.Handle, i) >= 0)
+                        Function.Call(Hash.CLEAR_PED_PROP, player.Handle, i);
+                }
+                catch (Exception) { /* accessory hiding is optional */ }
+            }
+        }
+
+        private void RestoreDriverAppearance()
+        {
+            if (!_appearanceCaptured) return;
             try
             {
-                Function.Call(Hash.SET_PED_RESET_FLAG, player.Handle, 166, true);
+                Ped player = Game.Player.Character;
+                if (player != null && player.Exists() &&
+                    player.Handle == _styledPedHandle &&
+                    player.Model.Hash == _styledPedModelHash)
+                {
+                    if (_hairReplaced)
+                    {
+                        try
+                        {
+                            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, player.Handle, 2,
+                                _originalHairDrawable, _originalHairTexture, _originalHairPalette);
+                        }
+                        catch (Exception) { /* continue restoring other props */ }
+                    }
+                    for (int i = 0; i < 2; i++)
+                        if (_originalProps[i] >= 0)
+                        {
+                            try
+                            {
+                                Function.Call(Hash.SET_PED_PROP_INDEX, player.Handle, i,
+                                    _originalProps[i], _originalPropTextures[i], true);
+                            }
+                            catch (Exception) { /* restore remaining props */ }
+                        }
+                }
             }
-            catch (Exception)
+            catch (Exception) { /* cleanup must not crash the script */ }
+            finally
             {
-                // An optional visual feature must never disable the camera.
-                _headCullNativeFailed = true;
-                Announce("DFPV R6: iOS khong ho tro an dau");
+                _appearanceCaptured = false;
+                _styledPedHandle = 0;
+                _hairReplaced = false;
+                _lastPropClearUtc = DateTime.MinValue;
+                _originalProps[0] = -1;
+                _originalProps[1] = -1;
             }
         }
 
         private static Vector3 SafeHeadPosition(Ped player, Vehicle car, CameraPreset preset)
         {
-            // Keep the original eye point in the cabin. Head and hair are
-            // culled with reset flag 166, NOT by pushing the camera forward.
+            // Both car and bike eye points are calibrated once relative to the
+            // vehicle; animation during acceleration must not move the camera.
             Vector3 head = Function.Call<Vector3>(Hash.GET_PED_BONE_COORDS,
                 player.Handle, 31086, 0f, 0.17f, 0f);
             Vector3 playerPos = player.Position;
@@ -825,6 +943,7 @@ namespace DynamicVehicleFirstPersonIOS
 
         private void ReleaseCamera()
         {
+            RestoreDriverAppearance();
             if (_camera != null)
             {
                 if (_dofActive) StopDof();
