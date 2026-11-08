@@ -1,0 +1,45 @@
+name: Build clean DFPV video remake for GTA V iOS v11.1
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'DynamicVehicleFirstPersonIOS.2.cs'
+      - 'DynamicVehicleFirstPersonIOS.csproj'
+      - 'refs/**'
+      - 'DFPV_Camera.ini'
+      - 'test_rebuild_contract.sh'
+      - '.github/workflows/build-dfpv-ios.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Inspect and validate source contract
+        run: bash test_rebuild_contract.sh
+      - name: Compile the new C# source, not an old R7-R10 DLL
+        run: |
+          set -euo pipefail
+          test -s refs/ScriptHookVDotNet2.dll
+          test -s refs/System.Windows.Forms.dll
+          dotnet build DynamicVehicleFirstPersonIOS.csproj --configuration Release
+      - name: Make installable SHVDN2 zip
+        run: |
+          set -euo pipefail
+          test -s bin/Release/net8.0/DynamicVehicleFirstPersonIOS.dll
+          mkdir -p out/scripts
+          cp bin/Release/net8.0/DynamicVehicleFirstPersonIOS.dll out/scripts/
+          cp DFPV_Camera.ini out/scripts/
+          cp README_VI.md out/README_VI.md
+          (cd out && sha256sum scripts/DynamicVehicleFirstPersonIOS.dll > SHA256SUMS.txt)
+          (cd out && zip -q -r ../DFPV_VIDEO_REBUILD_iOS_v11.1.zip .)
+          unzip -t DFPV_VIDEO_REBUILD_iOS_v11.1.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DFPV_VIDEO_REBUILD_iOS_v11_1
+          path: DFPV_VIDEO_REBUILD_iOS_v11.1.zip
+          if-no-files-found: error
