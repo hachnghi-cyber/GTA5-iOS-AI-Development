@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>DynamicVehicleFirstPersonIOS</AssemblyName>
+    <RootNamespace>DynamicVehicleFirstPersonIOS</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- API v2 is intentionally used on the mobile posthook compatibility layer. -->
+    <NoWarn>$(NoWarn);0618</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="DynamicVehicleFirstPersonIOS.2.cs" />
+    <Reference Include="ScriptHookVDotNet2">
+      <HintPath>refs/ScriptHookVDotNet2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>refs/System.Windows.Forms.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

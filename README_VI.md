@@ -1,84 +1,76 @@
-# Gojo iOS v11 — dự án build và kiểm thử
+# Dynamic Vehicle First Person Camera — iOS v11.1 (bản chuyển đổi độc lập R2)
 
-Đây là bộ nguồn Gojo thử nghiệm được sửa từ `Class1.cs` người dùng cung cấp.
-Thư viện tham chiếu ScriptHookVDotNet2 và System.Windows.Forms được trích nguyên vẹn từ bộ `GTAV-ScriptHook-Pack-Menyoo-VietHoa-MoRong-v11(2).zip` người dùng cung cấp.
+Đây là **bản lập trình lại độc lập** dùng API ScriptHookVDotNet 2, không sửa
+hoặc chứa tệp `.asi` Windows của tác giả ikt. Đây **không** phải bản port
+hoàn chỉnh của DynamicVehicleFirstPerson 1.3.2. Các hiệu ứng đặc thù phụ thuộc
+memory patch của mod gốc chưa được tái tạo.
 
-**Chưa có xác nhận biên dịch DLL thành công hoặc chạy trên iOS.** IPA v11 gốc không bị thay đổi.
+**Trạng thái:** Mã nguồn đã được kiểm tra tĩnh với IPA bạn cung cấp. Không có
+.NET SDK trong môi trường này để tạo DLL; chưa kiểm thử được trên iPhone. Không
+gọi là "tương thích hoàn toàn" cho đến khi có kết quả build và test thực tế.
 
-## Biên dịch
+## Yêu cầu
 
-- Cần .NET SDK 8.0 trên PC hoặc GitHub Actions.
-- Chạy `dotnet build Gojo_iOS.csproj -c Release` trong thư mục này.
-- Nếu build thành công, lấy `bin/Release/net8.0/Gojo_iOS.dll`.
-- Đưa DLL vào ZIP mod có dạng `scripts/Gojo_iOS.dll`, rồi dùng `IMPORT SCRIPT` của launcher v11 (cần kiểm tra thực tế có nạp được không).
+- GTA V iOS v11.1 với **GTAV-ScriptHook-Pack** mới và ScriptHookV .NET hoạt động.
+- Thiết bị được hỗ trợ chạy .NET mod theo cấu hình của port; thường khuyến nghị 6 GB RAM trở lên.
+- Chỉ dùng Story Mode để thử nghiệm; chưa được chứng minh an toàn trong Online.
 
-Đã kèm workflow GitHub Actions `.github/workflows/build-gojo.yml` để tạo file ZIP DLL và gửi vào mục Artifacts khi chạy workflow.
+## Cách xây dựng gói DLL
 
-### Đưa bộ nguồn lên GitHub và build (chỉ cần làm một lần)
+1. Giải nén ZIP mã nguồn rồi tải các file ở **bên trong thư mục** lên repo GitHub của bạn, giữ nguyên cấu trúc `refs/` và `.github/workflows/`.
+2. Mở **Actions** → **Build Dynamic Vehicle FPV for GTA V iOS v11.1** → **Run workflow**.
+3. Tải artifact `DFPV_iOS_v11_1_R2_TEST` và giải nén để lấy `DFPV_iOS_v11.1_R2_TEST.zip`.
+4. Trong launcher GTA V v11.1, cần cài `GTAV-ScriptHook-Pack.zip` trước. Vào ScriptHook → **IMPORT SCRIPT**, chọn `DFPV_iOS_v11.1_R2_TEST.zip` hoặc chọn DLL trong `scripts/` nếu bản launcher không nhận ZIP. Đặt `DFPV_iOS.ini` cùng thư mục DLL nếu muốn lưu profile.
+5. Bật ScriptHook trong Trainer → Add-ons nếu đang tắt; khởi động lại trò chơi, vào **Story Mode** và đổi sang góc nhìn thứ nhất khi ngồi trong xe.
 
-1. Giải nén **ZIP mã nguồn** trên máy tính. Trong thư mục giải nén phải thấy `Gojo_iOS.csproj`, `refs/`, `native/` và **thư mục ẩn** `.github/workflows/`.
-2. Sao chép **nội dung** thư mục đó vào **gốc** một GitHub repository do bạn quản lý; đừng chỉ tải nguyên file `.zip` lên repo. Giữ nguyên đường dẫn `.github/workflows/build-gojo.yml`.
-3. Commit và push các tệp. Vào trang repository > **Actions** > **Build Gojo iOS and Touch Bridge** > **Run workflow** (hoặc đợi lần build từ push).
-4. Nếu cả ba job hoàn tất, mở lần chạy và tải artifact **Gojo_v11_BUILD_KIT_TEST**. Trong đó có hai thư viện biên dịch và công cụ kiểm tra/đóng gói IPA thử nghiệm. Nếu GitHub hiển thị lỗi, gửi log của job thất bại để xử lý.
+## Điều khiển
 
-**Quan trọng:** ZIP build **không phải** IPA đã ký/cài được. Việc tạo bản IPA thực sự cần đúng IPA v11, công cụ ký iOS và kiểm chứng trên thiết bị. Workflow không chứa hoặc tải lên IPA thương mại của người dùng.
-
-## Kỹ năng và phím
-
-| Phím | Chức năng |
+| Điều khiển | Tác dụng |
 |---|---|
-| H | Infinity bật/tắt |
-| J | Red, đẩy ra xa |
-| U | Blue, hút về tâm đang ngắm |
-| Y | Hollow Purple |
-| I | Unlimited Void |
-| K | Khôi phục trạng thái khẩn cấp |
+| Chuyển sang góc nhìn thứ nhất trong xe | Camera tự bật khi ScriptHook đang bật |
+| LB + D-pad phải | Bật/tắt camera độc lập |
+| LB + D-pad lên | Chuyển camera tiếp theo; mặc định cân bằng, rộng 115°, thể thao |
+| LB + D-pad trái | Ép camera hoạt động trong xe ngay cả khi chưa ở góc thứ nhất |
+| LB + D-pad xuống | Tắt camera khẩn cấp và khôi phục góc nhìn GTA V |
+| LB + nút X | Mở menu chỉnh camera trong game |
+| F6 (bàn phím ngoài) | Bật/tắt mod |
+| F7 (bàn phím ngoài) | Ép dùng camera dù game chưa ở góc thứ nhất |
+| F8 (bàn phím ngoài) | Đổi cấu hình |
+| F9 (bàn phím ngoài) | Khẩn cấp: tắt và trả lại camera GTA V |
+| F10 (bàn phím ngoài) | Mở/đóng menu camera |
+| F11 (bàn phím ngoài) | Chuyển kiểu nhìn quanh |
+| N / B (bàn phím ngoài) | Chuyển camera / tạm dừng tự cân giữa |
 
-Phần `System.Media.SoundPlayer` đã được bỏ vì không có bằng chứng host iOS hỗ trợ cách phát WAV này. File WAV gốc không được đóng vào bản thử nghiệm.
+Trong menu, dùng **D-pad lên/xuống** để chọn mục; **D-pad trái/phải** để thay
+đổi giá trị; **A** để chọn; **B** để đóng. Menu hiển thị bằng phụ đề game (chưa
+có panel UIKit riêng). Không mở menu trong lúc thực hiện nhiệm vụ nhạy cảm.
 
-## Nút trên màn hình
+## Có trong bản thử nghiệm
 
-IPA v11 có `TCOverlay` trong `libgtacompat.dylib`. Thư mục `native/` giờ có bản thử nghiệm cầu nối độc lập:
+- Camera tại vị trí đầu người lái; tương thích logic ghế lái trái/phải về mặt tọa độ.
+- FOV 92° / 100° / 115° mặc định, chỉnh 50–130° trong menu, thay đổi vị trí và các góc lệch camera.
+- Quán tính tăng tốc/phanh/vào cua/bề mặt, rung nhẹ theo vận tốc, khóa đường chân trời.
+- Ba cách nhìn quanh bằng cần analog: Direct, Classic, Directional; nút dừng tự cân giữa.
+- Mỗi mẫu xe hoặc biển số có thể giữ cấu hình độc lập với tối đa 10 camera. Có chức năng thử lưu ra `DFPV_iOS.ini` cạnh DLL khi có quyền ghi; nếu không được, chỉ giữ trong RAM.
+- Tùy chọn DOF theo tốc độ, mặc định **tắt** để tránh ảnh hưởng hiệu năng. Lỗi DOF sẽ tự tắt phần hiệu ứng này.
+- Khi ngắm bắn trong xe, trả về camera gốc của game để hạn chế lệch mục tiêu.
+- Tự giải phóng camera khi ra xe, chết, pause, cutscene, chuyển góc, mất quyền camera hoặc gặp lỗi.
+- Không can thiệp nhị phân GTA5, libgtacompat, ScriptHookV hay Menyoo.
 
-- `GojoTouchQueue.c`: hàng đợi sự kiện atomic (đã biên dịch và kiểm thử trên Linux).
-- `GojoTouchOverlay.mm`: mẫu tạo năm UIButton bằng UIKit và nối vào `TCOverlay` bằng method swizzling (chưa được biên dịch/test trên iOS).
-- `build_ios.sh`: lệnh build `GojoTouchBridge.dylib` trên máy Mac có Xcode. **Không tự chèn dylib vào IPA.**
-- `pack_test_ipa.py`: kiểm tra hash v11, thêm load command vào bản sao `libgtacompat.dylib`, đóng IPA **chưa ký** sau khi đã có dylib ARM64 thật; không sửa IPA đầu vào.
-- C# có tùy chọn `DllImport("GojoTouchBridge")` để lấy sự kiện và vẫn dùng phím H/J/U/Y/I khi chưa có native bridge.
+## Chưa tương đương mod PC 1.3.2
 
-Cầu nối native **chưa được chứng minh** hoạt động trên v11; không được coi là bản vá cài được. Cần xác minh ABI, vòng đời UIKit, giao diện chạm, ký mã và đường nạp trước khi đưa vào IPA.
+- Menu hiện dùng phụ đề và nút gamepad, chưa phải menu gốc của ikt / chưa có nút chạm UIKit riêng.
+- Chưa có native hide-head chuẩn và tránh xuyên hình toàn diện; một số kiểu xe/nhân vật có thể lộ đầu hoặc lệch vị trí.
+- Chưa tái tạo hỗ trợ vô lăng Manual Transmission, lọc cửa kính khi nhìn qua vai và các memory patch của bản PC.
+- DOF và đường ngắm trong phiên bản iOS mới là triển khai tương đương, chưa được kiểm chứng với engine v2699.
+- Chưa xác minh hoạt động khi các mod camera khác đang chạy. Chưa thử thực tế trên iPhone.
+- Nếu mod không xuất hiện, cần kiểm tra `ScriptHookVDotNet.log`, `posthook.log`, `disabled-scripts.txt`.
 
-## Trình tự test an toàn
+## Khôi phục khi có lỗi
 
-1. Sao lưu save, cài bản ScriptHook người dùng gửi, thử một mod .NET đã xác nhận hoạt động trước.
-2. Nhập `Gojo_iOS.dll` (nếu đã build), bật trong Trainer › Add-ons › Mods; thử phím H và K bằng bàn phím được hỗ trợ, rồi mới thử các chiêu tấn công.
-3. Nếu lỗi, tắt mod trong Trainer hoặc xóa DLL; gửi log `posthook.log` và log ScriptHookV .NET để phân tích.
-4. Chỉ khi chứng minh các phím và kỹ năng chạy trên iOS mới tiếp tục làm cầu nối nút cảm ứng native.
+Tắt mod trong Trainer → ScriptHook → Mods (nếu được hỗ trợ), hoặc xóa
+`mods/scripthook/scripts/DynamicVehicleFirstPersonIOS.dll` trong phần Files.
+Sau đó khởi động lại game. IPA nguyên gốc vẫn giữ nguyên.
 
-## Kiểm thử độc lập phần hàng đợi (Linux)
-
-```sh
-gcc -std=c11 -Wall -Wextra -Werror -O2 -pthread \
-  native/GojoTouchQueue.c native/test_touch_queue.c -o /tmp/gojo_touch_queue_test
-/tmp/gojo_touch_queue_test
-```
-
-Kết quả trong môi trường phân tích: `GojoTouchQueue: all tests passed`.
-
-## Thử riêng phần Mach-O (không ghi IPA)
-
-```sh
-python3 native/pack_test_ipa.py --ipa '/path/to/GTAV-v11(3).ipa'
-```
-
-Trên đúng IPA người dùng đã gửi, kiểm tra hash và mô phỏng load-command patch trong bộ nhớ đạt: thêm 56 byte `LC_LOAD_DYLIB`, còn 11.064 byte vùng trống. Thao tác này **không** chứng minh dylib nạp và các nút có thể chạm trên iPhone.
-
-Lệnh kiểm tra hồi quy không ghi file:
-
-```sh
-python3 native/test_macho_header.py '/path/to/GTAV-v11(3).ipa'
-```
-
-Kết quả đã đạt: chỉ vùng header bị thay đổi, phần `__text` giữ nguyên, và file bị sửa sai hash sẽ bị từ chối.
-
-Khi đã có file `GojoTouchBridge.dylib` ARM64 thật, bộ đóng gói cho phép tạo một bản IPA chưa ký mới bằng tùy chọn `--bridge ... --out ...`. **Không cài bản này trực tiếp**; cần ký lại toàn bộ code phù hợp với chứng chỉ/cách cài của người dùng và kiểm thử trên thiết bị. Không phân phối bản IPA không có tính năng đã được xác minh.
+Đối chiếu: GTA V v11.1 dùng `.shv.dylib`/ScriptHookV .NET do posthook; Windows
+`.asi` là PE32+ x86-64 và bị launcher từ chối. Bản này sử dụng DLL .NET độc lập.
