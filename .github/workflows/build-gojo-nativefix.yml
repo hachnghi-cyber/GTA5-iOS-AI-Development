@@ -1,0 +1,51 @@
+name: Build Gojo NativeTargetFix iOS TEST
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Gojo_iOS_NativeTargetFix.2.cs'
+      - '.github/workflows/build-gojo-nativefix.yml'
+
+jobs:
+  build-gojo-nativefix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Confirm script and ScriptHook references are available
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s Gojo_iOS_NativeTargetFix.2.cs
+          test -s Gojo_iOS.csproj
+          test -s refs/ScriptHookVDotNet2.dll
+          test -s refs/System.Windows.Forms.dll
+
+      - name: Build native target fix with ScriptHookVDotNet v2 API
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp Gojo_iOS_NativeTargetFix.2.cs Gojo_iOS.2.cs
+          dotnet build Gojo_iOS.csproj -c Release --nologo
+          test -s bin/Release/net8.0/Gojo_iOS.dll
+
+      - name: Package DLL for GTA V iOS ScriptHook
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/scripts
+          cp bin/Release/net8.0/Gojo_iOS.dll dist/scripts/
+          (cd dist && sha256sum scripts/Gojo_iOS.dll > SHA256SUMS.txt)
+          (cd dist && zip -q -r ../Gojo_iOS_NativeTargetFix_DLL_TEST.zip scripts SHA256SUMS.txt)
+          unzip -t Gojo_iOS_NativeTargetFix_DLL_TEST.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_iOS_NativeTargetFix_DLL_TEST
+          path: Gojo_iOS_NativeTargetFix_DLL_TEST.zip
+          retention-days: 14
+
