@@ -48,10 +48,15 @@ namespace DynamicVehicleFirstPersonIOS
             }
         }
 
-        // R8: exactly one cabin view for cars and one handlebar view for bikes.
-        // The perspective is auto-selected by vehicle type, never by brake or
-        // by the vanilla game's changing first-person camera mode.
+        // R9.1: ONLY two IN-CAR first-person camera states while driving:
+        // (1) GTA V's ORIGINAL vehicle first-person camera and
+        // (2) our custom wide cockpit view.
+        // The cockpit position is automatically chosen for cars/bikes; neither
+        // braking nor the GTA vehicle-camera index selects additional views.
         private const float LockedCockpitFov = 130f;
+        private const int VanillaVehicleView = 4; // GTA vehicle first person, INSIDE car
+        private const int NextCameraControl = 0; // INPUT_NEXT_CAMERA / iOS camera button
+        private const int VehicleBrakeControl = 72; // INPUT_VEH_BRAKE / iOS LT
         private const float CarNearClip = 0.20f;
         private const float BikeNearClip = 0.24f;
         private static readonly CameraPreset[] CarPresets = {
@@ -79,8 +84,12 @@ namespace DynamicVehicleFirstPersonIOS
         private int _vehicleHandle;
         private int _selectedVehicleHandle;
         private bool _enabled = true;
-        // The cockpit camera stays active while seated, independent of the
-        // vanilla vehicle view-mode value (which can change on iOS brake LT).
+        // Preserve the R8 wide view on first entry. The camera button switches
+        // between this ONE custom view and ONE stock first-person cabin view.
+        private bool _wideViewSelected = true;
+        private bool _cameraInputInterceptUnavailable;
+        private bool _vanillaViewNativeUnavailable;
+        private DateTime _lastViewChangeUtc = DateTime.MinValue;
         private bool _isBike;
         // Native head reset flag 166 shrinks the actual head, but GTA V can
         // render custom hair and helmets as separate drawables/props. In Story
@@ -123,8 +132,8 @@ namespace DynamicVehicleFirstPersonIOS
             Tick += OnTick;
             KeyDown += OnKeyDown;
             Aborted += OnAborted;
-            // Intentionally ignore legacy DFPV_iOS.ini view presets: users
-            // requested a single fixed, maximum-wide cockpit view.
+            // Ignore legacy DFPV_iOS.ini view presets: one vanilla camera and
+            // one wide cockpit per supported vehicle type are all we allow.
         }
 
         private void OnKeyDown(object sender, KeyEventArgs args)
@@ -207,10 +216,19 @@ namespace DynamicVehicleFirstPersonIOS
                     _selectedVehicleHandle = car.Handle;
                 }
 
-                // R6 fixed view: do not query or follow the game's vehicle
-                // camera mode. In the iOS port, brake LT can make the vanilla
-                // view report a different mode even though the driver has not
-                // requested a perspective change. Only exit/pause/F6 reset us.
+                // Consume the iOS camera button as OUR two-state switch.
+                // The normal game input is suppressed, so it cannot cycle
+                // through third-person near/far/hood/first-person variants.
+                ReadCameraChangeButton();
+                if (!_wideViewSelected)
+                {
+                    // GTA's standard FIRST-PERSON cabin view is the only
+                    // vanilla state permitted. Reapply it on brake/acceleration
+                    // if the port changes the vehicle view-mode on LT.
+                    ReleaseCamera();
+                    KeepStockVehicleView();
+                    return;
+                }
 
                 int currentHandle = car.Handle;
                 if (_camera == null)
@@ -317,8 +335,94 @@ namespace DynamicVehicleFirstPersonIOS
 
         private void NextPreset()
         {
-            // F8/DPAD shortcut is a no-op in the locked single-view build.
-            Announce("Camera co dinh: o to / xe may, 130 FOV");
+            ToggleCameraMode();
+        }
+
+        private void ToggleCameraMode()
+        {
+            if (!_enabled) return;
+            // Do not create another custom preset: only flip between one
+            // stock first-person vehicle view and the fixed 130-degree view.
+            _wideViewSelected = !_wideViewSelected;
+            _lastViewChangeUtc = DateTime.UtcNow;
+            if (!_wideViewSelected)
+            {
+                ReleaseCamera();
+                KeepStockVehicleView();
+            }
+            Announce(_wideViewSelected ? "Camera: TRONG XE RONG 130" :
+                "Camera: TRONG XE MAC DINH");
+        }
+
+        private void ReadCameraChangeButton()
+        {
+            // This native must run every gameplay frame: unlike a keybind it
+            // prevents the engine from applying its own five-view cycle.
+            bool pressed = false;
+            if (!_cameraInputInterceptUnavailable)
+            {
+                try
+                {
+                    Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, NextCameraControl, true);
+                    pressed = Function.Call<bool>(Hash.IS_DISABLED_CONTROL_JUST_PRESSED,
+                        0, NextCameraControl);
+                    // The mobile frontend sometimes forwards touch buttons
+                    // through input group 2 instead of regular player group 0.
+                    if (!pressed)
+                        pressed = Function.Call<bool>(Hash.IS_DISABLED_CONTROL_JUST_PRESSED,
+                            2, NextCameraControl);
+                }
+                catch (Exception)
+                {
+                    // Some iOS compatibility layers omit a control native.
+                    // Continue to offer F8/shortcuts as a two-view fallback.
+                    _cameraInputInterceptUnavailable = true;
+                }
+            }
+            if (_cameraInputInterceptUnavailable)
+            {
+                try
+                {
+                    pressed = Function.Call<bool>(Hash.IS_CONTROL_JUST_PRESSED,
+                        0, NextCameraControl);
+                    if (!pressed)
+                        pressed = Function.Call<bool>(Hash.IS_CONTROL_JUST_PRESSED,
+                            2, NextCameraControl);
+                }
+                catch (Exception) { return; }
+            }
+            if (!pressed) return;
+
+            // In some touchscreen mappings LT (brake) can also make the game
+            // report a camera-mode change. Never take a braking tick as a
+            // request to toggle the user-selected view.
+            try
+            {
+                if (Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, VehicleBrakeControl))
+                    return;
+            }
+            catch (Exception) { /* brake guard optional on this port */ }
+
+            if ((DateTime.UtcNow - _lastViewChangeUtc).TotalMilliseconds < 300) return;
+            ToggleCameraMode();
+        }
+
+        private void KeepStockVehicleView()
+        {
+            if (_vanillaViewNativeUnavailable) return;
+            try
+            {
+                // Do not interfere with Menyoo Freecam or another script.
+                if (Function.Call<int>(Hash.GET_RENDERING_CAM) > 0) return;
+                int mode = Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
+                if (mode != VanillaVehicleView)
+                    Function.Call(Hash.SET_FOLLOW_VEHICLE_CAM_VIEW_MODE, VanillaVehicleView);
+            }
+            catch (Exception)
+            {
+                _vanillaViewNativeUnavailable = true;
+                Announce("Camera: native mac dinh khong ho tro tren ban iOS nay");
+            }
         }
 
         private void CycleLookMode()
@@ -406,7 +510,8 @@ namespace DynamicVehicleFirstPersonIOS
             switch (_menuIndex)
             {
                 case 0: return "Bat camera: " + (_enabled ? "CO" : "KHONG");
-                case 1: return "Giu goc nhin: O TO / XE MAY";
+                case 1: return "Chuyen goc trong xe: " + (_wideViewSelected ?
+                    "SIEU RONG 130" : "GOC THU NHAT MAC DINH");
                 case 2: return _isBike ? "Goc: TAY LAI XE MAY" : "Goc: CABIN O TO";
                 case 3: return "FOV: 130 (sieu rong/khoa)";
                 case 4: return "Tien/lui (m): " + Format(p.ForwardOffset);
@@ -437,7 +542,8 @@ namespace DynamicVehicleFirstPersonIOS
         private void ChangeMenuOption(int step)
         {
             if (_menuIndex == 0) { ToggleEnabled(); return; }
-            if (_menuIndex == 1 || _menuIndex == 2 || _menuIndex == 3 ||
+            if (_menuIndex == 1) { ToggleCameraMode(); return; }
+            if (_menuIndex == 2 || _menuIndex == 3 ||
                 _menuIndex == 15 || _menuIndex == 16) return;
             if (_menuIndex == 17) { _pauseRecenter = !_pauseRecenter; return; }
             if (_menuIndex == 18) { SaveProfiles(); return; }
@@ -656,8 +762,8 @@ namespace DynamicVehicleFirstPersonIOS
                 try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                 catch (Exception) { }
             }
-            Announce(_vehicleCameraAttached ? "DFPV R8: goc co dinh 130" :
-                "DFPV R8: attach loi, dung camera du phong");
+            Announce(_vehicleCameraAttached ? "DFPV R9.1: trong xe rong 130" :
+                "DFPV R9.1: attach loi, dung camera du phong");
             // Vehicle cabin context may improve interior acoustic/rendering flags.
             // Failing this optional call must not disable the camera itself.
             // SHVDN v2's Hash enum omits this native. The stable GTA V native
@@ -773,7 +879,7 @@ namespace DynamicVehicleFirstPersonIOS
                         _vehicleCameraAttached = false;
                         try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                         catch (Exception) { }
-                        Announce("DFPV R8: attach loi, da chuyen camera du phong");
+                        Announce("DFPV R9.1: attach loi, da chuyen camera du phong");
                     }
                 }
             }
