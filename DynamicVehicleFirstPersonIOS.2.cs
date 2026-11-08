@@ -48,10 +48,12 @@ namespace DynamicVehicleFirstPersonIOS
             }
         }
 
+        // R6: ONE wide cockpit view. Multiple presets and persisted older FOV
+        // values could silently switch the camera back to a narrower view.
+        private const float LockedCockpitFov = 130f;
         private static readonly CameraPreset[] Presets = {
-            new CameraPreset("Can bang", 100f, 0.10f, -0.08f, 0.85f, 0.45f, 16f),
-            new CameraPreset("Goc rong", 115f, 0.03f, -0.10f, 0.92f, 0.60f, 14f),
-            new CameraPreset("The thao", 92f, 0.14f, -0.05f, 0.55f, 1.00f, 18f)
+            new CameraPreset("Sieu rong co dinh", LockedCockpitFov,
+                0.03f, -0.10f, 0.95f, 0.15f, 18f)
         };
 
         private Camera _camera;
@@ -70,7 +72,12 @@ namespace DynamicVehicleFirstPersonIOS
         private int _vehicleHandle;
         private int _selectedVehicleHandle;
         private bool _enabled = true;
-        private bool _forceFirstPerson;
+        // The cockpit camera stays active while seated, independent of the
+        // vanilla vehicle view-mode value (which can change on iOS brake LT).
+        // A frame-scoped GTA V ped reset flag hides the head without changing
+        // appearance components, clothing, save files, or the third-person ped.
+        private bool _hideHeadWhenDriving = true;
+        private bool _headCullNativeFailed;
         private int _preset;
         private int _errorCount;
         private DateTime _lastTickUtc = DateTime.MinValue;
@@ -96,7 +103,8 @@ namespace DynamicVehicleFirstPersonIOS
             Tick += OnTick;
             KeyDown += OnKeyDown;
             Aborted += OnAborted;
-            LoadProfiles();
+            // Intentionally ignore legacy DFPV_iOS.ini view presets: users
+            // requested a single fixed, maximum-wide cockpit view.
         }
 
         private void OnKeyDown(object sender, KeyEventArgs args)
@@ -107,9 +115,7 @@ namespace DynamicVehicleFirstPersonIOS
                     ToggleEnabled();
                     break;
                 case Keys.F7:
-                    _forceFirstPerson = !_forceFirstPerson;
-                    if (!_forceFirstPerson) ReleaseCamera();
-                    Announce(_forceFirstPerson ? "Camera thu cong: BAT" : "Camera thu cong: TAT");
+                    ToggleEnabled();
                     break;
                 case Keys.F8:
                     NextPreset();
@@ -129,7 +135,6 @@ namespace DynamicVehicleFirstPersonIOS
                     break;
                 case Keys.F9:
                     _enabled = false;
-                    _forceFirstPerson = false;
                     _menuOpen = false;
                     ReleaseCamera();
                     Announce("Camera da tat / reset");
@@ -171,12 +176,10 @@ namespace DynamicVehicleFirstPersonIOS
                     return;
                 }
 
-                if (Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 25))
-                {
-                    // Yield to the vanilla aim camera to preserve drive-by aiming.
-                    ReleaseCamera();
-                    return;
-                }
+                // In this one-view build, no aim/drive-by branch can release
+                // our cockpit. LT overlaps vehicle brake and weapon aim on
+                // the iOS virtual gamepad; the user prioritizes a stable view
+                // even when the engine briefly reports an aiming action.
 
                 if (_selectedVehicleHandle != car.Handle)
                 {
@@ -184,15 +187,10 @@ namespace DynamicVehicleFirstPersonIOS
                     _selectedVehicleHandle = car.Handle;
                 }
 
-                // The native first-person mode is 4 on GTA V vehicle cameras.
-                // An explicit F7 / gamepad override is available if touch controls
-                // do not expose that view mode on a particular iOS device.
-                int followMode = Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
-                if (!_forceFirstPerson && followMode != 4)
-                {
-                    ReleaseCamera();
-                    return;
-                }
+                // R6 fixed view: do not query or follow the game's vehicle
+                // camera mode. In the iOS port, brake LT can make the vanilla
+                // view report a different mode even though the driver has not
+                // requested a perspective change. Only exit/pause/F6 reset us.
 
                 int currentHandle = car.Handle;
                 if (_camera == null)
@@ -217,7 +215,15 @@ namespace DynamicVehicleFirstPersonIOS
                     ReleaseCamera();
                     return;
                 }
+                if (rendering == 0)
+                {
+                    // Brake can return rendering to the vanilla cam without
+                    // changing our camera handle. Reassert our cockpit once.
+                    _camera.IsActive = true;
+                    World.RenderingCamera = _camera;
+                }
 
+                ApplyDriverHeadCull(player);
                 UpdateCamera(player, car);
                 _errorCount = 0;
             }
@@ -227,7 +233,6 @@ namespace DynamicVehicleFirstPersonIOS
                 if (++_errorCount >= 3)
                 {
                     _enabled = false;
-                    _forceFirstPerson = false;
                     Announce("Camera: loi API, da tu dong tat. F6 de thu lai.");
                 }
             }
@@ -261,15 +266,11 @@ namespace DynamicVehicleFirstPersonIOS
             if (Function.Call<bool>(Hash.IS_CONTROL_JUST_PRESSED, 2, 188)) NextPreset();
             if (Function.Call<bool>(Hash.IS_CONTROL_JUST_PRESSED, 2, 189))
             {
-                _forceFirstPerson = !_forceFirstPerson;
-                _enabled = true;
-                if (!_forceFirstPerson) ReleaseCamera();
-                Announce(_forceFirstPerson ? "Camera thu cong: BAT" : "Camera thu cong: TAT");
+                ToggleEnabled();
             }
             if (Function.Call<bool>(Hash.IS_CONTROL_JUST_PRESSED, 2, 187))
             {
                 _enabled = false;
-                _forceFirstPerson = false;
                 ReleaseCamera();
                 Announce("Camera iOS: reset an toan");
             }
@@ -284,9 +285,8 @@ namespace DynamicVehicleFirstPersonIOS
 
         private void NextPreset()
         {
-            _preset = (_preset + 1) % _activePresets.Length;
-            if (_camera != null) _camera.FieldOfView = _activePresets[_preset].Fov;
-            Announce("Camera: " + _activePresets[_preset].Name + " / FOV " + _activePresets[_preset].Fov);
+            // F8/DPAD shortcut is a no-op in the locked single-view build.
+            Announce("Camera co dinh: 130 FOV");
         }
 
         private void CycleLookMode()
@@ -302,14 +302,8 @@ namespace DynamicVehicleFirstPersonIOS
             string key = GetVehicleKey(car);
             if (key == _vehicleKey) return;
             _vehicleKey = key;
-            CameraPreset[] saved;
-            string modelKey = car.Model.Hash.ToString("X8", CultureInfo.InvariantCulture);
-            if (_savedProfiles.TryGetValue(key, out saved) ||
-                _savedProfiles.TryGetValue(modelKey, out saved))
-                _activePresets = saved;
-            else
-                _activePresets = Presets;
-            _preset = Math.Min(_preset, _activePresets.Length - 1);
+            _activePresets = Presets;
+            _preset = 0;
         }
 
         private static string GetVehicleKey(Vehicle car)
@@ -343,7 +337,7 @@ namespace DynamicVehicleFirstPersonIOS
             if (!string.IsNullOrEmpty(_vehicleKey)) _savedProfiles[_vehicleKey] = clone;
         }
 
-        private const int MenuItemCount = 20;
+        private const int MenuItemCount = 21;
 
         private void ReadMenuInput()
         {
@@ -379,9 +373,9 @@ namespace DynamicVehicleFirstPersonIOS
             switch (_menuIndex)
             {
                 case 0: return "Bat camera: " + (_enabled ? "CO" : "KHONG");
-                case 1: return "Ep goc 1: " + (_forceFirstPerson ? "CO" : "KHONG");
-                case 2: return "Vi tri camera: " + (_preset + 1) + "/" + _activePresets.Length;
-                case 3: return "FOV: " + p.Fov.ToString("0", CultureInfo.InvariantCulture);
+                case 1: return "Giu mot goc nhin: CO DINH";
+                case 2: return "Vi tri camera: 1/1 (khoa)";
+                case 3: return "FOV: 130 (sieu rong/khoa)";
                 case 4: return "Tien/lui (m): " + Format(p.ForwardOffset);
                 case 5: return "Cao/thap (m): " + Format(p.HeightOffset);
                 case 6: return "Trai/phai (m): " + Format(p.LateralOffset);
@@ -393,11 +387,12 @@ namespace DynamicVehicleFirstPersonIOS
                 case 12: return "Lech Yaw: " + Format(p.YawOffset);
                 case 13: return "Lech Pitch: " + Format(p.PitchOffset);
                 case 14: return "Lech Roll: " + Format(p.RollOffset);
-                case 15: return "Sao chep camera (max 10)";
-                case 16: return "Xoa camera hien tai";
+                case 15: return "Sao chep camera: da khoa";
+                case 16: return "Xoa camera: da khoa";
                 case 17: return "Dung re-center: " + (_pauseRecenter ? "CO" : "KHONG");
                 case 18: return "Luu config cho xe";
-                default: return "Khoi phuc mac dinh cho xe";
+                case 19: return "Khoi phuc mac dinh cho xe";
+                default: return "An dau khi lai xe: " + (_hideHeadWhenDriving ? "BAT" : "TAT");
             }
         }
 
@@ -409,15 +404,16 @@ namespace DynamicVehicleFirstPersonIOS
         private void ChangeMenuOption(int step)
         {
             if (_menuIndex == 0) { ToggleEnabled(); return; }
-            if (_menuIndex == 1) { _forceFirstPerson = !_forceFirstPerson; return; }
-            if (_menuIndex == 2)
-            {
-                _preset = (_preset + step + _activePresets.Length) % _activePresets.Length;
-                if (_camera != null) _camera.FieldOfView = _activePresets[_preset].Fov;
-                return;
-            }
+            if (_menuIndex == 1 || _menuIndex == 2 || _menuIndex == 3 ||
+                _menuIndex == 15 || _menuIndex == 16) return;
             if (_menuIndex == 17) { _pauseRecenter = !_pauseRecenter; return; }
             if (_menuIndex == 18) { SaveProfiles(); return; }
+            if (_menuIndex == 20)
+            {
+                _hideHeadWhenDriving = !_hideHeadWhenDriving;
+                Announce(_hideHeadWhenDriving ? "DFPV R6: an dau BAT" : "DFPV R6: an dau TAT");
+                return;
+            }
             if (_menuIndex == 19)
             {
                 _savedProfiles.Remove(_vehicleKey);
@@ -426,36 +422,10 @@ namespace DynamicVehicleFirstPersonIOS
                 SaveProfiles();
                 return;
             }
-            if (_menuIndex == 16)
-            {
-                if (_activePresets.Length <= 1) return;
-                MakeEditable();
-                var next = new List<CameraPreset>(_activePresets);
-                next.RemoveAt(_preset);
-                _activePresets = next.ToArray();
-                _savedProfiles[_vehicleKey] = _activePresets;
-                _preset = Math.Min(_preset, _activePresets.Length - 1);
-                return;
-            }
-            if (_menuIndex == 15)
-            {
-                if (_activePresets.Length >= 10) { Announce("Gioi han 10 camera"); return; }
-                MakeEditable();
-                var next = new List<CameraPreset>(_activePresets);
-                CameraPreset copy = _activePresets[_preset].Copy();
-                copy.Name = "Camera " + (next.Count + 1);
-                next.Insert(_preset + 1, copy);
-                _activePresets = next.ToArray();
-                _savedProfiles[_vehicleKey] = _activePresets;
-                _preset++;
-                return;
-            }
-
             MakeEditable();
             CameraPreset p = _activePresets[_preset];
             switch (_menuIndex)
             {
-                case 3: p.Fov = Clamp(p.Fov + step * 5f, 50f, 130f); break;
                 case 4: p.ForwardOffset = Clamp(p.ForwardOffset + step * 0.025f, -0.6f, 0.8f); break;
                 case 5: p.HeightOffset = Clamp(p.HeightOffset + step * 0.025f, -0.5f, 0.5f); break;
                 case 6: p.LateralOffset = Clamp(p.LateralOffset + step * 0.025f, -0.35f, 0.35f); break;
@@ -468,7 +438,7 @@ namespace DynamicVehicleFirstPersonIOS
                 case 13: p.PitchOffset = Clamp(p.PitchOffset + step, -35f, 35f); break;
                 case 14: p.RollOffset = Clamp(p.RollOffset + step, -35f, 35f); break;
             }
-            if (_camera != null) _camera.FieldOfView = p.Fov;
+            if (_camera != null) _camera.FieldOfView = LockedCockpitFov;
         }
 
         private void UpdateDof(float speedKph)
@@ -629,7 +599,7 @@ namespace DynamicVehicleFirstPersonIOS
         {
             CameraPreset p = _activePresets[_preset];
             Vector3 pos = SafeHeadPosition(player, car, p);
-            _camera = World.CreateCamera(pos, new Vector3(0f, 0f, car.Heading), p.Fov);
+            _camera = World.CreateCamera(pos, new Vector3(0f, 0f, car.Heading), LockedCockpitFov);
             if (_camera == null) throw new InvalidOperationException("CREATE_CAM failed");
             _camera.NearClip = 0.045f;
             _camera.IsActive = true;
@@ -659,8 +629,8 @@ namespace DynamicVehicleFirstPersonIOS
                 try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                 catch (Exception) { }
             }
-            Announce(_vehicleCameraAttached ? "DFPV R4: bam camera vao xe" :
-                "DFPV R4: attach loi, dung camera du phong");
+            Announce(_vehicleCameraAttached ? "DFPV R6: khoa goc rong 130" :
+                "DFPV R6: attach loi, dung camera du phong");
             // Vehicle cabin context may improve interior acoustic/rendering flags.
             // Failing this optional call must not disable the camera itself.
             // SHVDN v2's Hash enum omits this native. The stable GTA V native
@@ -687,6 +657,7 @@ namespace DynamicVehicleFirstPersonIOS
             dt = Clamp(dt, 0.001f, 0.08f);
             _lastTickUtc = now;
             CameraPreset p = _activePresets[_preset];
+            _camera.FieldOfView = LockedCockpitFov;
 
             float stickX = Clamp(Function.Call<float>(Hash.GET_CONTROL_NORMAL, 0, 1), -1f, 1f);
             float stickY = Clamp(Function.Call<float>(Hash.GET_CONTROL_NORMAL, 0, 2), -1f, 1f);
@@ -775,7 +746,7 @@ namespace DynamicVehicleFirstPersonIOS
                         _vehicleCameraAttached = false;
                         try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
                         catch (Exception) { }
-                        Announce("DFPV R4: attach loi, da chuyen camera du phong");
+                        Announce("DFPV R6: attach loi, da chuyen camera du phong");
                     }
                 }
             }
@@ -805,10 +776,31 @@ namespace DynamicVehicleFirstPersonIOS
             }
         }
 
+        private void ApplyDriverHeadCull(Ped player)
+        {
+            // PRF_MakeHeadInvisible (166) scales the local ped head down during
+            // this render frame. The game clears reset flags automatically;
+            // when this scripted cockpit camera stops, the head is visible
+            // again without any drawable/texture restoration or model change.
+            // It may also hide head-mounted accessories such as hats/glasses.
+            if (!_hideHeadWhenDriving || _headCullNativeFailed ||
+                _camera == null || player == null || !player.Exists()) return;
+            try
+            {
+                Function.Call(Hash.SET_PED_RESET_FLAG, player.Handle, 166, true);
+            }
+            catch (Exception)
+            {
+                // An optional visual feature must never disable the camera.
+                _headCullNativeFailed = true;
+                Announce("DFPV R6: iOS khong ho tro an dau");
+            }
+        }
+
         private static Vector3 SafeHeadPosition(Ped player, Vehicle car, CameraPreset preset)
         {
-            // Head bone follows left/right driver's seat and works on bikes.
-            // Moving slightly ahead reduces clipping without changing ped parts.
+            // Keep the original eye point in the cabin. Head and hair are
+            // culled with reset flag 166, NOT by pushing the camera forward.
             Vector3 head = Function.Call<Vector3>(Hash.GET_PED_BONE_COORDS,
                 player.Handle, 31086, 0f, 0.17f, 0f);
             Vector3 playerPos = player.Position;
