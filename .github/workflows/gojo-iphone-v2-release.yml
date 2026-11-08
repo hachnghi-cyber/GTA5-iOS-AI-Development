@@ -1,0 +1,163 @@
+name: Gojo v11.1 V2 SAFE 3D iPhone Build (TEST)
+
+# Keep BOTH original assets in PRIVATE release gojo-base-v11-1. Do not edit it.
+# Upload just gojo-v11-1-v2-patch.zip (small ZIP) to repo ROOT (Private).
+# This workflow overlays the patch on that immutable source on the Mac runner.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Private Release containing the original IPA and Gojo source ZIP'
+        required: true
+        default: 'gojo-base-v11-1'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-gojo-ios:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GOJO_RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download BOTH files from the private Release (no input folder)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gojo-release-iphone-build-stage/input
+          gh release download "$GOJO_RELEASE_TAG" \
+            --pattern 'Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip' \
+            --dir gojo-release-iphone-build-stage
+          gh release download "$GOJO_RELEASE_TAG" \
+            --pattern 'GTAV-v11.1*.ipa' \
+            --dir gojo-release-iphone-build-stage/input
+          cd gojo-release-iphone-build-stage
+          # The user's immutable release uses GTAV-v11.1.ipa (without '(1)').
+          # Normalize only the filename; the SHA-256 check below verifies bytes.
+          if test -s 'input/GTAV-v11.1.ipa' && \
+             ! test -e 'input/GTAV-v11.1(1).ipa'; then
+            mv 'input/GTAV-v11.1.ipa' 'input/GTAV-v11.1(1).ipa'
+          fi
+          unzip -tq Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip >/dev/null
+          unzip -q Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip
+          test -s gojo_v11_1_full/Gojo_iOS.csproj
+          test -s gojo_v11_1_full/native/build_ios.sh
+          test -s 'input/GTAV-v11.1(1).ipa'
+
+      - name: Apply verified V2 safety and 3D VFX patch
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          patch_zip="${GITHUB_WORKSPACE}/gojo-v11-1-v2-patch.zip"
+          test -s "$patch_zip" || {
+            echo 'Upload gojo-v11-1-v2-patch.zip to the repository ROOT first.' >&2
+            exit 1
+          }
+          printf '%s  %s\n' \
+            '78d823da10911f79ac1efe79c10fce851cba67fcc36dac5ab3f0d4fd32269f0c' \
+            "$patch_zip" | shasum -a 256 -c -
+          unzip -tq "$patch_zip" >/dev/null
+          unzip -oq "$patch_zip" -d .
+          grep -q 'EnableExperimentalParticles = true' gojo_v11_1_full/Gojo_iOS.2.cs
+          grep -q 'Aborted += OnAborted' gojo_v11_1_full/Gojo_iOS.2.cs
+          grep -q 'GOJO_SAFE_MODE.txt' gojo_v11_1_full/Gojo_iOS.2.cs
+          grep -q 'GOJO_LEGACY_SCREEN_VFX 0' gojo_v11_1_full/native/GojoVisualFX.mm
+
+      - name: Check exact v11.1 game, full Gojo mod and original WAV files
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s gojo_v11_1_full \
+            -p test_full_mod.py -v
+          python3 -m unittest discover -s gojo_v11_1_full \
+            -p test_v2_safety.py -v
+          python3 -m unittest discover -s gojo_v11_1_full/native \
+            -p test_gojo_v11_1_pack.py -v
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'gojo_v11_1_full/native')
+          from pack_gojo_v11_1 import IPA_SHA256
+          filename = Path('input/GTAV-v11.1(1).ipa')
+          actual = hashlib.sha256(filename.read_bytes()).hexdigest()
+          if actual != IPA_SHA256:
+              raise SystemExit('Wrong game IPA: not the supplied GTA V v11.1!')
+          print('Verified exact GTA V v11.1 IPA SHA-256')
+          PY
+          xcrun clang -std=c11 -O2 -Wall -Wextra -pedantic \
+            gojo_v11_1_full/native/GojoTouchQueue.c \
+            gojo_v11_1_full/native/test_touch_queue.c \
+            -o "$RUNNER_TEMP/gojo_queue_test"
+          "$RUNNER_TEMP/gojo_queue_test"
+
+      - name: Build complete Gojo C# and native iOS touch/VFX bridge
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          dotnet build gojo_v11_1_full/Gojo_iOS.csproj \
+            --configuration Release --nologo
+          # The source ZIP is on an immutable GitHub Release. Its initial
+          # Xcode link line omitted CoreGraphics, causing undefined CGRect*
+          # and CGSizeZero symbols. Repair this one line in the runner only.
+          native_script=gojo_v11_1_full/native/build_ios.sh
+          if ! grep -q -- '-framework CoreGraphics' "$native_script"; then
+            sed -i '' 's/-framework QuartzCore /-framework QuartzCore -framework CoreGraphics /' "$native_script"
+          fi
+          grep -q -- '-framework QuartzCore -framework CoreGraphics' "$native_script"
+          bash gojo_v11_1_full/native/build_ios.sh
+          bridge=gojo_v11_1_full/native/build-ios/GojoTouchBridge.dylib
+          test -s gojo_v11_1_full/bin/Release/net8.0/Gojo_iOS.dll
+          test -s "$bridge"
+          lipo -archs "$bridge" | grep -q arm64
+          nm -gU "$bridge" > "$RUNNER_TEMP/gojo_exports.txt"
+          for symbol in gojo_touch_consume gojo_touch_set_enabled \
+                        gojo_touch_show_vfx gojo_touch_clear_vfx; do
+            grep -Fq "_$symbol" "$RUNNER_TEMP/gojo_exports.txt"
+          done
+          mkdir -p dist
+          cp "$bridge" dist/GojoTouchBridge.dylib
+
+      - name: Create matching V2 UNSIGNED IPA and ScriptHook mod ZIP
+        shell: bash
+        working-directory: gojo-release-iphone-build-stage
+        run: |
+          set -euo pipefail
+          python3 gojo_v11_1_full/native/pack_gojo_v11_1.py \
+            --ipa 'input/GTAV-v11.1(1).ipa' \
+            --bridge dist/GojoTouchBridge.dylib \
+            --out dist/GTAV_v11_1_Gojo_V2_SAFE_3D_UNSIGN_TEST.ipa
+          mkdir -p gojo-mod-stage/scripts/gojomusic
+          cp gojo_v11_1_full/bin/Release/net8.0/Gojo_iOS.dll \
+             gojo-mod-stage/scripts/Gojo_iOS.dll
+          for wav in RR.wav Bl.wav HP.wav UV.wav MU.wav MU_short.wav; do
+            cp "gojo_v11_1_full/gojomusic/$wav" \
+               "gojo-mod-stage/scripts/gojomusic/$wav"
+          done
+          (cd gojo-mod-stage && zip -q -r \
+            ../dist/Gojo_v11_1_V2_SAFE_3D_ScriptHook_IMPORT_TEST.zip scripts)
+          unzip -tq dist/GTAV_v11_1_Gojo_V2_SAFE_3D_UNSIGN_TEST.ipa >/dev/null
+          unzip -tq dist/Gojo_v11_1_V2_SAFE_3D_ScriptHook_IMPORT_TEST.zip >/dev/null
+          cp gojo_v11_1_full/README_GOJO_FULL.md dist/README_GOJO_FULL.md
+          (cd dist && shasum -a 256 \
+            GTAV_v11_1_Gojo_V2_SAFE_3D_UNSIGN_TEST.ipa \
+            Gojo_v11_1_V2_SAFE_3D_ScriptHook_IMPORT_TEST.zip \
+            GojoTouchBridge.dylib > SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_v11_1_V2_SAFE_3D_UNSIGNED_TEST
+          path: gojo-release-iphone-build-stage/dist/
+          if-no-files-found: error
+          retention-days: 14
