@@ -76,10 +76,14 @@ namespace DynamicVehicleFirstPersonIOS
         private DateTime _lastTickUtc = DateTime.MinValue;
         private DateTime _lastLookUtc = DateTime.MinValue;
         private Vector3 _previousVelocity;
-        // Only smooth the tiny motion offset. Never smooth a world-space
-        // camera position: at 15-20 FPS that leaves the camera metres behind
-        // a moving car, eventually exposing the driver's head and torso.
+        // The inertial translation is in VEHICLE-LOCAL coordinates. The camera
+        // itself is attached to the vehicle by the engine's native transform;
+        // smoothing a world position, even every script tick, can lag metres
+        // behind when the physics/render phases run at different times.
         private Vector3 _smoothedRelativeOffset;
+        private bool _vehicleCameraAttached;
+        private Vector3 _vehicleSeatLocalOrigin;
+        private Vector3 _lastAttachedLocalOffset;
         private float _yawLook;
         private float _pitchLook;
         private float _currentRoll;
@@ -623,12 +627,40 @@ namespace DynamicVehicleFirstPersonIOS
 
         private void StartCamera(Ped player, Vehicle car)
         {
-            Vector3 pos = SafeHeadPosition(player, car, _activePresets[_preset]);
-            _camera = World.CreateCamera(pos, new Vector3(0f, 0f, car.Heading), _activePresets[_preset].Fov);
+            CameraPreset p = _activePresets[_preset];
+            Vector3 pos = SafeHeadPosition(player, car, p);
+            _camera = World.CreateCamera(pos, new Vector3(0f, 0f, car.Heading), p.Fov);
             if (_camera == null) throw new InvalidOperationException("CREATE_CAM failed");
             _camera.NearClip = 0.045f;
             _camera.IsActive = true;
             World.RenderingCamera = _camera;
+            // Calibrate eye position ONCE while entering the vehicle camera.
+            // Never recalculate seat position from an animated head bone while
+            // accelerating: on iOS that bone can be a frame behind the car.
+            _vehicleCameraAttached = false;
+            try
+            {
+                Vector3 localEye = Function.Call<Vector3>(Hash.GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS,
+                    car.Handle, pos.X, pos.Y, pos.Z);
+                if (IsFiniteVector(localEye) && localEye.Length() > 0.05f &&
+                    localEye.Length() < 15f)
+                {
+                    _camera.AttachTo(car, localEye);
+                    _vehicleSeatLocalOrigin = localEye -
+                        new Vector3(p.LateralOffset, p.ForwardOffset, p.HeightOffset);
+                    _lastAttachedLocalOffset = localEye;
+                    _vehicleCameraAttached = true;
+                }
+            }
+            catch (Exception)
+            {
+                // Keep a safe R3 world-coordinate fallback if an iOS port
+                // does not implement the native attachment API.
+                try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
+                catch (Exception) { }
+            }
+            Announce(_vehicleCameraAttached ? "DFPV R4: bam camera vao xe" :
+                "DFPV R4: attach loi, dung camera du phong");
             // Vehicle cabin context may improve interior acoustic/rendering flags.
             // Failing this optional call must not disable the camera itself.
             // SHVDN v2's Hash enum omits this native. The stable GTA V native
@@ -709,28 +741,55 @@ namespace DynamicVehicleFirstPersonIOS
             _currentRoll += (Clamp(targetRoll, -15f, 15f) - _currentRoll) * smooth;
             _currentPitch += (Clamp(targetPitch, -12f, 12f) - _currentPitch) * smooth;
 
-            // Follow the driver's head immediately every frame, including
-            // movement of the car itself. Only inertia/vibration is filtered.
-            Vector3 anchor = SafeHeadPosition(player, car, p);
-            Vector3 desired = anchor;
-            // Move in the car's local right/forward axes, not world X/Y.
-            // This keeps inertia consistent regardless of compass heading.
+            // Filter only centimetre-scale local movements. The engine owns
+            // the large position changes from driving and car rotation.
             float lateralShift = -rightAcceleration * p.Inertia * 0.0015f;
             float longitudinalShift = -forwardAcceleration * p.Inertia * 0.0013f;
-            desired.X += (float)Math.Cos(heading) * lateralShift -
-                (float)Math.Sin(heading) * longitudinalShift;
-            desired.Y += (float)Math.Sin(heading) * lateralShift +
-                (float)Math.Cos(heading) * longitudinalShift;
-            desired.Z -= Clamp(accel.Z, -12f, 12f) * p.Inertia * 0.001f;
             // Subtle bounded vehicle vibration, independent of frame rate.
             float kph = velocity.Length() * 3.6f;
             float amplitude = Clamp((kph - 70f) / 120f, 0f, 1f) * p.Shake;
-            desired.Z += (float)Math.Sin(now.Ticks / 10000000.0 * 23.0) * amplitude;
-            _smoothedRelativeOffset += ((desired - anchor) - _smoothedRelativeOffset) * smooth;
+            Vector3 desiredLocalMotion = new Vector3(lateralShift, longitudinalShift,
+                -Clamp(accel.Z, -12f, 12f) * p.Inertia * 0.001f +
+                (float)Math.Sin(now.Ticks / 10000000.0 * 23.0) * amplitude);
+            _smoothedRelativeOffset +=
+                (desiredLocalMotion - _smoothedRelativeOffset) * smooth;
 
             float targetYaw = WrapAngle(car.Heading + targetLookYaw + p.YawOffset);
             _lastYaw = WrapAngle(_lastYaw + WrapAngle(targetYaw - _lastYaw) * smooth);
-            _camera.Position = anchor + _smoothedRelativeOffset;
+            if (_vehicleCameraAttached)
+            {
+                // Only change the native attachment offset for cabin-position
+                // settings and small inertia, NEVER for the car's world travel.
+                Vector3 desiredLocal = _vehicleSeatLocalOrigin +
+                    new Vector3(p.LateralOffset, p.ForwardOffset, p.HeightOffset) +
+                    _smoothedRelativeOffset;
+                if ((desiredLocal - _lastAttachedLocalOffset).Length() > 0.002f)
+                {
+                    try
+                    {
+                        _camera.AttachTo(car, desiredLocal);
+                        _lastAttachedLocalOffset = desiredLocal;
+                    }
+                    catch (Exception)
+                    {
+                        _vehicleCameraAttached = false;
+                        try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
+                        catch (Exception) { }
+                        Announce("DFPV R4: attach loi, da chuyen camera du phong");
+                    }
+                }
+            }
+            if (!_vehicleCameraAttached)
+            {
+                // Explicit fallback uses R3's no-smoothing head tracking.
+                Vector3 fallback = SafeHeadPosition(player, car, p);
+                fallback.X += (float)Math.Cos(heading) * _smoothedRelativeOffset.X -
+                    (float)Math.Sin(heading) * _smoothedRelativeOffset.Y;
+                fallback.Y += (float)Math.Sin(heading) * _smoothedRelativeOffset.X +
+                    (float)Math.Cos(heading) * _smoothedRelativeOffset.Y;
+                fallback.Z += _smoothedRelativeOffset.Z;
+                _camera.Position = fallback;
+            }
             _camera.Rotation = new Vector3(_currentPitch + _pitchLook + p.PitchOffset,
                 _currentRoll + p.RollOffset, _lastYaw);
             if (p.Dof && !_dofFailed) UpdateDof(kph);
@@ -785,14 +844,27 @@ namespace DynamicVehicleFirstPersonIOS
                 }
                 catch (Exception) { /* cleanup continues */ }
 
+                if (_vehicleCameraAttached)
+                {
+                    try { Function.Call(Hash.DETACH_CAM, _camera.Handle); }
+                    catch (Exception) { }
+                }
                 try { _camera.IsActive = false; }
                 catch (Exception) { }
                 try { _camera.Destroy(); }
                 catch (Exception) { }
                 _camera = null;
             }
+            _vehicleCameraAttached = false;
             _vehicleHandle = 0;
             _lastTickUtc = DateTime.MinValue;
+        }
+
+        private static bool IsFiniteVector(Vector3 value)
+        {
+            return !float.IsNaN(value.X) && !float.IsNaN(value.Y) &&
+                !float.IsNaN(value.Z) && !float.IsInfinity(value.X) &&
+                !float.IsInfinity(value.Y) && !float.IsInfinity(value.Z);
         }
 
         private static float SmoothFactor(float responsiveness, float dt)
