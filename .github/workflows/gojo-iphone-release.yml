@@ -1,7 +1,7 @@
 name: Gojo v11.1 - iPhone Release One-Click Build (TEST)
 
 # Upload BOTH assets to a PRIVATE release tagged gojo-base-v11-1:
-# - GTAV-v11.1(1).ipa (exact original SHA-256)
+# - GTAV-v11.1.ipa OR GTAV-v11.1(1).ipa (exact original SHA-256)
 # - Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip (source release)
 # Then run this workflow from Safari > Actions. No input folder needed.
 on:
@@ -38,9 +38,15 @@ jobs:
             --pattern 'Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip' \
             --dir gojo-release-iphone-build-stage
           gh release download "$GOJO_RELEASE_TAG" \
-            --pattern 'GTAV-v11.1(1).ipa' \
+            --pattern 'GTAV-v11.1*.ipa' \
             --dir gojo-release-iphone-build-stage/input
           cd gojo-release-iphone-build-stage
+          # The user's immutable release uses GTAV-v11.1.ipa (without '(1)').
+          # Normalize only the filename; the SHA-256 check below verifies bytes.
+          if test -s 'input/GTAV-v11.1.ipa' && \
+             ! test -e 'input/GTAV-v11.1(1).ipa'; then
+            mv 'input/GTAV-v11.1.ipa' 'input/GTAV-v11.1(1).ipa'
+          fi
           unzip -tq Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip >/dev/null
           unzip -q Gojo_iOS_v11_1_FULL_OnePass_Source_TEST.zip
           test -s gojo_v11_1_full/Gojo_iOS.csproj
