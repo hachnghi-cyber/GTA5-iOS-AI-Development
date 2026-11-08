@@ -76,7 +76,10 @@ namespace DynamicVehicleFirstPersonIOS
         private DateTime _lastTickUtc = DateTime.MinValue;
         private DateTime _lastLookUtc = DateTime.MinValue;
         private Vector3 _previousVelocity;
-        private Vector3 _smoothedPosition;
+        // Only smooth the tiny motion offset. Never smooth a world-space
+        // camera position: at 15-20 FPS that leaves the camera metres behind
+        // a moving car, eventually exposing the driver's head and torso.
+        private Vector3 _smoothedRelativeOffset;
         private float _yawLook;
         private float _pitchLook;
         private float _currentRoll;
@@ -634,7 +637,7 @@ namespace DynamicVehicleFirstPersonIOS
             catch (Exception) { }
             _dofActive = false;
             _vehicleHandle = car.Handle;
-            _smoothedPosition = pos;
+            _smoothedRelativeOffset = new Vector3(0f, 0f, 0f);
             _previousVelocity = car.Velocity;
             _yawLook = 0f;
             _pitchLook = 0f;
@@ -706,7 +709,10 @@ namespace DynamicVehicleFirstPersonIOS
             _currentRoll += (Clamp(targetRoll, -15f, 15f) - _currentRoll) * smooth;
             _currentPitch += (Clamp(targetPitch, -12f, 12f) - _currentPitch) * smooth;
 
-            Vector3 desired = SafeHeadPosition(player, car, p);
+            // Follow the driver's head immediately every frame, including
+            // movement of the car itself. Only inertia/vibration is filtered.
+            Vector3 anchor = SafeHeadPosition(player, car, p);
+            Vector3 desired = anchor;
             // Move in the car's local right/forward axes, not world X/Y.
             // This keeps inertia consistent regardless of compass heading.
             float lateralShift = -rightAcceleration * p.Inertia * 0.0015f;
@@ -720,11 +726,11 @@ namespace DynamicVehicleFirstPersonIOS
             float kph = velocity.Length() * 3.6f;
             float amplitude = Clamp((kph - 70f) / 120f, 0f, 1f) * p.Shake;
             desired.Z += (float)Math.Sin(now.Ticks / 10000000.0 * 23.0) * amplitude;
-            _smoothedPosition += (desired - _smoothedPosition) * smooth;
+            _smoothedRelativeOffset += ((desired - anchor) - _smoothedRelativeOffset) * smooth;
 
             float targetYaw = WrapAngle(car.Heading + targetLookYaw + p.YawOffset);
             _lastYaw = WrapAngle(_lastYaw + WrapAngle(targetYaw - _lastYaw) * smooth);
-            _camera.Position = _smoothedPosition;
+            _camera.Position = anchor + _smoothedRelativeOffset;
             _camera.Rotation = new Vector3(_currentPitch + _pitchLook + p.PitchOffset,
                 _currentRoll + p.RollOffset, _lastYaw);
             if (p.Dof && !_dofFailed) UpdateDof(kph);
@@ -760,7 +766,9 @@ namespace DynamicVehicleFirstPersonIOS
             head.Y += (float)Math.Cos(heading) * preset.ForwardOffset;
             head.X += (float)Math.Cos(heading) * preset.LateralOffset;
             head.Y += (float)Math.Sin(heading) * preset.LateralOffset;
-            head.Z += preset.HeightOffset;
+            // A modest global eye-level correction for low vehicle cabins.
+            // The regular HeightOffset slider still adjusts around this base.
+            head.Z += 0.14f + preset.HeightOffset;
             return head;
         }
 
