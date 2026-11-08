@@ -628,7 +628,9 @@ namespace DynamicVehicleFirstPersonIOS
             World.RenderingCamera = _camera;
             // Vehicle cabin context may improve interior acoustic/rendering flags.
             // Failing this optional call must not disable the camera itself.
-            try { Function.Call(Hash.SET_CAM_IS_INSIDE_VEHICLE, _camera.Handle, true); }
+            // SHVDN v2's Hash enum omits this native. The stable GTA V native
+            // hash works with Function.Call even when the enum name is absent.
+            try { Function.Call((Hash)0xA2767257A320FC82UL, _camera.Handle, true); }
             catch (Exception) { }
             _dofActive = false;
             _vehicleHandle = car.Handle;
@@ -731,7 +733,9 @@ namespace DynamicVehicleFirstPersonIOS
             // Do not make camera rendering depend on this optional native.
             if (!_firstPersonFlagFailed)
             {
-                try { Function.Call(Hash.SET_SCRIPTED_CAMERA_IS_FIRST_PERSON_THIS_FRAME, true); }
+                // Keep the cockpit/first-person context without relying on a
+                // symbol missing from the older SHVDN v2 Hash enum.
+                try { Function.Call((Hash)0x469F2ECDEC046337UL, true); }
                 catch (Exception) { _firstPersonFlagFailed = true; }
             }
         }
