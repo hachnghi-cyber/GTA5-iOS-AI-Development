@@ -1,76 +1,48 @@
-# Dynamic Vehicle First Person Camera — iOS v11.1 (bản chuyển đổi độc lập R2)
+# DFPV iOS v11.1 — làm lại từ video (bản nguồn thử nghiệm)
 
-Đây là **bản lập trình lại độc lập** dùng API ScriptHookVDotNet 2, không sửa
-hoặc chứa tệp `.asi` Windows của tác giả ikt. Đây **không** phải bản port
-hoàn chỉnh của DynamicVehicleFirstPerson 1.3.2. Các hiệu ứng đặc thù phụ thuộc
-memory patch của mod gốc chưa được tái tạo.
+Đây là **mã nguồn mới hoàn toàn**, không sử dụng lại DLL vá R7–R10. Cần build trên GitHub Actions mới tạo được file `.dll` để cài thử. Chưa xác nhận tính tương thích thực tế bằng thiết bị iOS.
 
-**Trạng thái:** Mã nguồn đã được kiểm tra tĩnh với IPA bạn cung cấp. Không có
-.NET SDK trong môi trường này để tạo DLL; chưa kiểm thử được trên iPhone. Không
-gọi là "tương thích hoàn toàn" cho đến khi có kết quả build và test thực tế.
+## Đúng hai góc trong xe
 
-## Yêu cầu
+1. **Mặc định**: góc lái thứ nhất do GTA V tạo sẵn (camera nội thất).
+2. **Tùy chỉnh**: camera thứ nhất góc rộng 120°, có thể nhìn vô lăng, tay lái, người và đồng hồ xe tùy loại xe.
 
-- GTA V iOS v11.1 với **GTAV-ScriptHook-Pack** mới và ScriptHookV .NET hoạt động.
-- Thiết bị được hỗ trợ chạy .NET mod theo cấu hình của port; thường khuyến nghị 6 GB RAM trở lên.
-- Chỉ dùng Story Mode để thử nghiệm; chưa được chứng minh an toàn trong Online.
+Ấn **nút đổi camera** để chuyển qua lại chỉ hai góc trên. Nếu bản port không cho phép chặn nút này, trong chế độ mặc định script sẽ cố đưa camera quay lại góc trong xe mỗi khung hình. Phím **N** cũng chuyển hai góc. Khi xuống xe, camera tự nhả. Xe không phải ô tô/xe máy giữ nguyên game gốc.
 
-## Cách xây dựng gói DLL
+**Dữ liệu lấy từ video**: xe máy FOV 120°, tiến 0,05m, hạ 0,09m, cúi −40,30° và camera neo vào xe. Ô tô lấy **vị trí góc lái mặc định của chính game** làm mốc; FOV 120°, tiến 0,04m, hạ 0,04m, cúi −14° là mốc thử nghiệm. Cả hai có thể chỉnh lại trực tiếp trong game. Giá trị từ video không đảm bảo phù hợp với mọi model xe/đồ mod.
 
-1. Giải nén ZIP mã nguồn rồi tải các file ở **bên trong thư mục** lên repo GitHub của bạn, giữ nguyên cấu trúc `refs/` và `.github/workflows/`.
-2. Mở **Actions** → **Build Dynamic Vehicle FPV for GTA V iOS v11.1** → **Run workflow**.
-3. Tải artifact `DFPV_iOS_v11_1_R2_TEST` và giải nén để lấy `DFPV_iOS_v11.1_R2_TEST.zip`.
-4. Trong launcher GTA V v11.1, cần cài `GTAV-ScriptHook-Pack.zip` trước. Vào ScriptHook → **IMPORT SCRIPT**, chọn `DFPV_iOS_v11.1_R2_TEST.zip` hoặc chọn DLL trong `scripts/` nếu bản launcher không nhận ZIP. Đặt `DFPV_iOS.ini` cùng thư mục DLL nếu muốn lưu profile.
-5. Bật ScriptHook trong Trainer → Add-ons nếu đang tắt; khởi động lại trò chơi, vào **Story Mode** và đổi sang góc nhìn thứ nhất khi ngồi trong xe.
+## Vì sao khác cách Menyoo
 
-## Điều khiển
+Clip gốc chép `DynamicVehicleFirstPerson.asi` vào thư mục GTA V trên **Windows**, sau đó dùng **menu riêng `Dynamic Vehicle FPV`**, không phải menu Menyoo. Tệp `.asi` Windows x86 không chạy trực tiếp trên GTA V iOS ARM64. Bản này là script C# dùng **ScriptHookVDotNet2** của GTA V iOS v11.1, không sửa hoặc thay Menyoo. Nút Menyoo cũ giữ nguyên.
 
-| Điều khiển | Tác dụng |
-|---|---|
-| Chuyển sang góc nhìn thứ nhất trong xe | Camera tự bật khi ScriptHook đang bật |
-| LB + D-pad phải | Bật/tắt camera độc lập |
-| LB + D-pad lên | Chuyển camera tiếp theo; mặc định cân bằng, rộng 115°, thể thao |
-| LB + D-pad trái | Ép camera hoạt động trong xe ngay cả khi chưa ở góc thứ nhất |
-| LB + D-pad xuống | Tắt camera khẩn cấp và khôi phục góc nhìn GTA V |
-| LB + nút X | Mở menu chỉnh camera trong game |
-| F6 (bàn phím ngoài) | Bật/tắt mod |
-| F7 (bàn phím ngoài) | Ép dùng camera dù game chưa ở góc thứ nhất |
-| F8 (bàn phím ngoài) | Đổi cấu hình |
-| F9 (bàn phím ngoài) | Khẩn cấp: tắt và trả lại camera GTA V |
-| F10 (bàn phím ngoài) | Mở/đóng menu camera |
-| F11 (bàn phím ngoài) | Chuyển kiểu nhìn quanh |
-| N / B (bàn phím ngoài) | Chuyển camera / tạm dừng tự cân giữa |
+## Build trên GitHub từ iPhone
 
-Trong menu, dùng **D-pad lên/xuống** để chọn mục; **D-pad trái/phải** để thay
-đổi giá trị; **A** để chọn; **B** để đóng. Menu hiển thị bằng phụ đề game (chưa
-có panel UIKit riêng). Không mở menu trong lúc thực hiện nhiệm vụ nhạy cảm.
+1. Tạo repository GitHub mới (hoặc nhánh riêng), upload **toàn bộ nội dung** gói nguồn này, gồm cả `.github/workflows/build-dfpv-ios.yml` và `refs/`.
+2. Vào tab **Actions → Build clean DFPV video remake → Run workflow**.
+3. Mở job **build**, kiểm tra bước compile thành công rồi tải **Artifact `DFPV_VIDEO_REBUILD_iOS_v11_1`**.
+4. Mở artifact ZIP, lấy file `DFPV_VIDEO_REBUILD_iOS_v11.1.zip` được build bên trong. ZIP này có `scripts/DynamicVehicleFirstPersonIOS.dll` và `scripts/DFPV_Camera.ini`.
 
-## Có trong bản thử nghiệm
+**Không được lấy thư mục nguồn `dfpv_video_rebuild` đưa vào game vì chưa có DLL mới.** Nếu GitHub báo lỗi build, gửi mình nguyên log bước `Compile` để sửa đúng lỗi rồi mới cài.
 
-- Camera tại vị trí đầu người lái; tương thích logic ghế lái trái/phải về mặt tọa độ.
-- FOV 92° / 100° / 115° mặc định, chỉnh 50–130° trong menu, thay đổi vị trí và các góc lệch camera.
-- Quán tính tăng tốc/phanh/vào cua/bề mặt, rung nhẹ theo vận tốc, khóa đường chân trời.
-- Ba cách nhìn quanh bằng cần analog: Direct, Classic, Directional; nút dừng tự cân giữa.
-- Mỗi mẫu xe hoặc biển số có thể giữ cấu hình độc lập với tối đa 10 camera. Có chức năng thử lưu ra `DFPV_iOS.ini` cạnh DLL khi có quyền ghi; nếu không được, chỉ giữ trong RAM.
-- Tùy chọn DOF theo tốc độ, mặc định **tắt** để tránh ảnh hưởng hiệu năng. Lỗi DOF sẽ tự tắt phần hiệu ứng này.
-- Khi ngắm bắn trong xe, trả về camera gốc của game để hạn chế lệch mục tiêu.
-- Tự giải phóng camera khi ra xe, chết, pause, cutscene, chuyển góc, mất quyền camera hoặc gặp lỗi.
-- Không can thiệp nhị phân GTA5, libgtacompat, ScriptHookV hay Menyoo.
+## Thay bản camera cũ (không mất save)
 
-## Chưa tương đương mod PC 1.3.2
+1. Trong phần quản lý script ScriptHook của launcher, **sao lưu** file `scripts/DynamicVehicleFirstPersonIOS.dll` cũ cùng các file cấu hình camera cũ của bạn; chỉ gỡ script camera DFPV cũ.
+2. Cài duy nhất `scripts/DynamicVehicleFirstPersonIOS.dll` mới và `scripts/DFPV_Camera.ini` từ ZIP build. **Không xóa Menyoo, ScriptHook, IPA, dữ liệu game hay save.**
+3. Vào Story Mode, ngồi xe, nhấn nút chuyển góc nhìn. Lần đầu chỉ có góc GTA mặc định, nhấn tiếp sẽ vào góc DFPV tùy chỉnh.
 
-- Menu hiện dùng phụ đề và nút gamepad, chưa phải menu gốc của ikt / chưa có nút chạm UIKit riêng.
-- Chưa có native hide-head chuẩn và tránh xuyên hình toàn diện; một số kiểu xe/nhân vật có thể lộ đầu hoặc lệch vị trí.
-- Chưa tái tạo hỗ trợ vô lăng Manual Transmission, lọc cửa kính khi nhìn qua vai và các memory patch của bản PC.
-- DOF và đường ngắm trong phiên bản iOS mới là triển khai tương đương, chưa được kiểm chứng với engine v2699.
-- Chưa xác minh hoạt động khi các mod camera khác đang chạy. Chưa thử thực tế trên iPhone.
-- Nếu mod không xuất hiện, cần kiểm tra `ScriptHookVDotNet.log`, `posthook.log`, `disabled-scripts.txt`.
+## Chỉnh trực tiếp trong game
 
-## Khôi phục khi có lỗi
+- **F10** hoặc **LB + D-pad lên**: mở menu camera. Nhấn lại LB + lên để đóng và lưu.
+- **D-pad lên/xuống**: chọn FOV, tiến/lùi, cao/thấp, góc cúi, NearClip.
+- **D-pad trái/phải**: giảm/tăng giá trị.
+- **A**: lưu vào `DFPV_Camera.ini` nếu launcher cho phép ghi.
+- **B**: đóng menu. **F6**: tắt/bật toàn bộ script.
+- Nếu game không cho lưu tệp, mở `scripts/DFPV_Camera.ini` trên máy tính và chỉnh lại thủ công; lần khởi động sau script đọc lại.
 
-Tắt mod trong Trainer → ScriptHook → Mods (nếu được hỗ trợ), hoặc xóa
-`mods/scripthook/scripts/DynamicVehicleFirstPersonIOS.dll` trong phần Files.
-Sau đó khởi động lại game. IPA nguyên gốc vẫn giữ nguyên.
+## Vẫn cần thử trên máy thật
 
-Đối chiếu: GTA V v11.1 dùng `.shv.dylib`/ScriptHookV .NET do posthook; Windows
-`.asi` là PE32+ x86-64 và bị launcher từ chối. Bản này sử dụng DLL .NET độc lập.
+- Thử **ô tô mui kín**, **xe thể thao mui thấp**, **xe máy thường**, **xe mô tô có kính chắn gió**, nhân vật mặc tóc/mũ mod.
+- Test ra/vào xe, đổi camera, đổi nhân vật, mở/đóng Menyoo, thoát game rồi vào lại, phanh LT.
+- Script cố tạm ẩn tóc/mũ theo component chuẩn của GTA rồi trả lại khi thoát. Với nhân vật mod thay nguyên model đầu hoặc kính xe mod lỗi, vẫn có thể xuất hiện vật thể chắn tầm nhìn; không thể khẳng định đã xử lý mọi loại xe khi chưa kiểm thử iOS.
+- Chỉ hoạt động Story Mode; Online script tự nhả camera.
+- Nếu bị crash, gỡ đúng DLL DFPV mới, giữ Menyoo và game gốc. Gửi `run.log`, `posthook.log`, crash log và ảnh để truy đúng nguyên nhân.
