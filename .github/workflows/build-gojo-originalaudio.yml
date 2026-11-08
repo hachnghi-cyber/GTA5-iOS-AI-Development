@@ -1,0 +1,57 @@
+name: Build Gojo Original WAV Audio iOS TEST
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Gojo_iOS_OriginalAudio.2.cs'
+      - 'Gojo_OriginalAudioPack.zip'
+      - '.github/workflows/build-gojo-originalaudio.yml'
+
+jobs:
+  build-gojo-originalaudio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Confirm script and ScriptHook references are available
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s Gojo_iOS_OriginalAudio.2.cs
+          test -s Gojo_OriginalAudioPack.zip
+          test -s Gojo_iOS.csproj
+          test -s refs/ScriptHookVDotNet2.dll
+          test -s refs/System.Windows.Forms.dll
+
+      - name: Build original mod WAV audio bridge with ScriptHookVDotNet v2 API
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp Gojo_iOS_OriginalAudio.2.cs Gojo_iOS.2.cs
+          dotnet build Gojo_iOS.csproj -c Release --nologo
+          test -s bin/Release/net8.0/Gojo_iOS.dll
+
+      - name: Package DLL for GTA V iOS ScriptHook
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/scripts
+          cp bin/Release/net8.0/Gojo_iOS.dll dist/scripts/
+          unzip -q Gojo_OriginalAudioPack.zip -d dist/
+          for sound in RR.wav Bl.wav HP.wav UV.wav MU.wav MU_short.wav; do
+            test -s "dist/scripts/gojomusic/$sound"
+          done
+          (cd dist && sha256sum scripts/Gojo_iOS.dll scripts/gojomusic/*.wav > SHA256SUMS.txt)
+          (cd dist && zip -q -r ../Gojo_iOS_OriginalAudio_DLL_TEST.zip scripts SHA256SUMS.txt)
+          unzip -t Gojo_iOS_OriginalAudio_DLL_TEST.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gojo_iOS_OriginalAudio_DLL_TEST
+          path: dist/
+          retention-days: 14
+
