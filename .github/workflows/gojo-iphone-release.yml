@@ -87,14 +87,23 @@ jobs:
           set -euo pipefail
           dotnet build gojo_v11_1_full/Gojo_iOS.csproj \
             --configuration Release --nologo
+          # The source ZIP is on an immutable GitHub Release. Its initial
+          # Xcode link line omitted CoreGraphics, causing undefined CGRect*
+          # and CGSizeZero symbols. Repair this one line in the runner only.
+          native_script=gojo_v11_1_full/native/build_ios.sh
+          if ! grep -q -- '-framework CoreGraphics' "$native_script"; then
+            sed -i '' 's/-framework QuartzCore /-framework QuartzCore -framework CoreGraphics /' "$native_script"
+          fi
+          grep -q -- '-framework QuartzCore -framework CoreGraphics' "$native_script"
           bash gojo_v11_1_full/native/build_ios.sh
           bridge=gojo_v11_1_full/native/build-ios/GojoTouchBridge.dylib
           test -s gojo_v11_1_full/bin/Release/net8.0/Gojo_iOS.dll
           test -s "$bridge"
           lipo -archs "$bridge" | grep -q arm64
+          nm -gU "$bridge" > "$RUNNER_TEMP/gojo_exports.txt"
           for symbol in gojo_touch_consume gojo_touch_set_enabled \
                         gojo_touch_show_vfx gojo_touch_clear_vfx; do
-            nm -gU "$bridge" | grep -q "_$symbol"
+            grep -Fq "_$symbol" "$RUNNER_TEMP/gojo_exports.txt"
           done
           mkdir -p dist
           cp "$bridge" dist/GojoTouchBridge.dylib
