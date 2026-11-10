@@ -1,4 +1,6 @@
 // Independent ScriptHookVDotNet 3 mod for GTA V iOS v11.3 (experimental).
+// F10-only activation: retain original PC key; log keyboard-bridge errors
+// and show a visible script-loaded diagnostic on iOS.
 // Does not contain or load TamedMods' Windows-only Superman.asi.
 // Requires the port's ScriptHookV .NET runtime and its GTA API bridge.
 using System;
@@ -31,9 +33,14 @@ namespace SupermanStandaloneMod
         private bool _flying;
         private int _gravityPed;
         private bool _previousToggle;
+        private bool _f10EventHeld;
+        private bool _f10EventPending;
         private bool _previousJump;
         private bool _previousShock;
         private bool _previousCycle;
+        private bool _previousPadCycle;
+        private bool _loadNoticeShown;
+        private static bool _keyApiWarningShown;
         private int _jumpPressedAt;
         private bool _jumpBecameFlight;
         private int _lastShockMs = -3000;
@@ -46,7 +53,21 @@ namespace SupermanStandaloneMod
             Interval = 0;
             Tick += OnTick;
             Aborted += OnAborted;
+            KeyDown += OnKeyDown;
+            KeyUp += OnKeyUp;
             try { Console.WriteLine("[SupermanStandalone] v11.3 expanded script initialized"); } catch { }
+        }
+
+        private void OnKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.F10 || _f10EventHeld) return;
+            _f10EventHeld = true;
+            _f10EventPending = true;
+        }
+
+        private void OnKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F10) _f10EventHeld = false;
         }
 
         private static void Notify(string text)
@@ -56,7 +77,18 @@ namespace SupermanStandaloneMod
 
         private static bool Down(Keys key)
         {
-            return Game.IsKeyPressed(key);
+            try { return Game.IsKeyPressed(key); }
+            catch (Exception ex)
+            {
+                // In some iOS ports the managed keyboard table is not wired
+                // to their on-screen virtual-key implementation.
+                if (!_keyApiWarningShown)
+                {
+                    _keyApiWarningShown = true;
+                    try { Console.WriteLine("[Superman] keyboard input unavailable: " + ex); } catch { }
+                }
+                return false;
+            }
         }
 
         private static bool ControlDown(Control control)
@@ -111,6 +143,8 @@ namespace SupermanStandaloneMod
             // for mapping on-screen controls to these keys; this script never
             // patches the app or installs its own touch overlay.
             bool toggle = Down(Keys.F10);
+            bool f10Event = _f10EventPending;
+            _f10EventPending = false;
             bool jump = Down(Keys.Space) || ControlDown(Control.Jump);
             bool shock = Down(Keys.V) || Down(Keys.B);
             bool cycle = Down(Keys.NumPad0);
@@ -131,11 +165,20 @@ namespace SupermanStandaloneMod
                 return;
             }
 
-            if (toggle && !_previousToggle)
+            if (!_loadNoticeShown)
+            {
+                _loadNoticeShown = true;
+                Notify("Superman DLL DA NAP | bam F10 de BAT");
+                try { Console.WriteLine("[Superman] DLL LOADED; waiting for F10"); } catch { }
+            }
+
+            // When both APIs see the same physical F10 press, toggle once.
+            bool f10PollingEdge = toggle && !_previousToggle && !_f10EventHeld;
+            if (f10PollingEdge || f10Event)
             {
                 _enabled = !_enabled;
                 if (!_enabled) Stop();
-                else { _assetRequested = false; Notify("Superman: BAT | Space bay, R tia, Num0 doi tia"); }
+                else { _assetRequested = false; Notify("Superman BAT | NHAY bay; NGAM+BAN laser"); }
             }
 
             if (!_enabled)
@@ -169,13 +212,19 @@ namespace SupermanStandaloneMod
 
             if (ped.IsInVehicle() && _flying) RestoreGravity();
             if (_flying) Fly(ped);
-            if (Down(Keys.R)) FireSelectedBeam(ped);
+            // Touch/gamepad fallback: AIM+ATTACK fires the selected beam.
+            // The original R key remains available with a Bluetooth keyboard.
+            if (Down(Keys.R) ||
+                (ControlDown(Control.Aim) && ControlDown(Control.Attack)))
+                FireSelectedBeam(ped);
             if (shock && !_previousShock && Game.GameTime - _lastShockMs >= 2400)
             {
                 _lastShockMs = Game.GameTime;
                 Shockwave(ped);
             }
-            if (cycle && !_previousCycle) NextBeam();
+            bool padCycle = ControlDown(Control.Aim) && ControlDown(Control.Reload);
+            if ((cycle && !_previousCycle) || (padCycle && !_previousPadCycle)) NextBeam();
+            _previousPadCycle = padCycle;
             // An unsupported native in an experimental power must not disable
             // the already-working baseline flight, laser and shockwave.
             if (!_extrasFaulted)
