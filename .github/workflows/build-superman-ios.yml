@@ -1,0 +1,34 @@
+name: Build Superman Native for GTA V iOS R7
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'superman_port/**'
+      - '.github/workflows/build-superman-ios.yml'
+
+jobs:
+  build-superman-arm64:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: xcode-select -p && xcrun --sdk iphoneos --show-sdk-path
+      - name: Test independent ScriptHook logic on host
+        run: |
+          c++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O2 \
+            superman_port/test_host.cpp -o /tmp/superman_port_host_test
+          /tmp/superman_port_host_test
+      - name: Build iOS ARM64 plugin
+        run: bash superman_port/build_ios.sh superman_port/dist
+      - name: Verify output plugin architecture
+        run: |
+          test -s superman_port/dist/SupermanR6.shv.dylib
+          file superman_port/dist/SupermanR6.shv.dylib | grep -q arm64
+          nm -gU superman_port/dist/SupermanR6.shv.dylib | grep _DllMain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SupermanR6-shv-dylib-ARM64-TEST
+          path: superman_port/dist/SupermanR6.shv.dylib
+          if-no-files-found: error
