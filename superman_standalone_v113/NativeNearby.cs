@@ -1,6 +1,7 @@
-// Near-entity sampling using GTA natives, not SHVDN.NativeMemory pools.
-// The native nearest-object queries are approximate (not full enumeration),
-// but avoid Windows-specific memory layout assumptions on iOS ARM64.
+// Near-entity sampling using GTA natives, not SHVDN.NativeMemory pool enumeration.
+// The native nearest-object queries are approximate (not full enumeration).
+// Entity.FromHandle is a public SHVDN v3 factory; it still depends on the
+// port's entity-handle support and should be verified at runtime on iOS.
 using System;
 using System.Collections.Generic;
 using GTA;
@@ -39,8 +40,8 @@ namespace SupermanStandaloneMod
                     int handle = outPed.GetResult<int>();
                     if (handle == 0 || handle == player.Handle || found.ContainsKey(handle))
                         continue;
-                    var ped = new Ped(handle);
-                    if (ped.Exists() && (ped.Position - center).Length() <= radius)
+                    var ped = Entity.FromHandle(handle) as Ped;
+                    if (ped != null && ped.Exists() && (ped.Position - center).Length() <= radius)
                         found.Add(handle, ped);
                 }
             }
@@ -59,8 +60,8 @@ namespace SupermanStandaloneMod
                 int handle = Function.Call<int>(Hash.GET_CLOSEST_VEHICLE,
                     probe.X, probe.Y, probe.Z, probeRadius, 0, 70);
                 if (handle == 0 || found.ContainsKey(handle)) continue;
-                var vehicle = new Vehicle(handle);
-                if (vehicle.Exists() && (vehicle.Position - center).Length() <= radius)
+                var vehicle = Entity.FromHandle(handle) as Vehicle;
+                if (vehicle != null && vehicle.Exists() && (vehicle.Position - center).Length() <= radius)
                     found.Add(handle, vehicle);
             }
             var result = new Vehicle[found.Count];

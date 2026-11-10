@@ -8,6 +8,12 @@ Mã này do dự án viết mới để mô phỏng các tính năng nổi bật
 > trên v11.3 trong phiên làm việc này. Các tính năng bên dưới là mã **thử nghiệm**;
 > hiệu ứng 3D, animation và âm thanh gốc cần công việc port thêm.
 
+**Sửa lỗi build 10/11/2026:** `NativeNearby.cs` đã thay lời gọi constructor
+`new Ped(handle)` và `new Vehicle(handle)` (không public trong SHVDN3) bằng
+`Entity.FromHandle(handle) as Ped/Vehicle`, kèm kiểm tra `null`. Mục tiêu là
+khắc phục hai lỗi `CS1729` từ GitHub Actions. Chưa xác nhận build xanh cho tới
+khi chạy lại workflow và chưa xác nhận hành vi gần NPC/xe trên iOS.
+
 ## Phím PC và nút C+ của launcher
 
 | Phím | Tính năng trong mã thử nghiệm |
