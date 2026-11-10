@@ -1,0 +1,39 @@
+name: Build Superman FX R15 - Flight Animations (GTA V iOS ARM64)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'superman_port/**'
+      - '.github/workflows/build-superman-fx-r15.yml'
+
+jobs:
+  build-superman-r15:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Verify installed Apple toolchain
+        run: |
+          xcode-select -p
+          xcrun --sdk iphoneos --show-sdk-path
+      - name: Test flight landing, staged slams, 3D effects and safe cooldowns
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Werror \
+            superman_port/test_host.cpp -o /tmp/superman_r15_host_test
+          /tmp/superman_r15_host_test
+      - name: Build iOS ARM64 ScriptHookV plugin
+        run: bash superman_port/build_ios.sh superman_port/dist
+      - name: Verify ARM64 Mach-O export and signing
+        run: |
+          file superman_port/dist/SupermanR6.shv.dylib | grep -q arm64
+          nm -gU superman_port/dist/SupermanR6.shv.dylib | grep -q _DllMain
+          codesign --verify --strict superman_port/dist/SupermanR6.shv.dylib
+          otool -L superman_port/dist/SupermanR6.shv.dylib
+      - name: Upload the new plugin for integration into R11 IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Superman-FX-R15-Flight-ARM64
+          path: superman_port/dist/SupermanR6.shv.dylib
+          if-no-files-found: error
