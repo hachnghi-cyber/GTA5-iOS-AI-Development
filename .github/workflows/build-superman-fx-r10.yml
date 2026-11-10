@@ -1,0 +1,36 @@
+name: Build Superman FX R10 for GTA V iOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'superman_port/**'
+      - '.github/workflows/build-superman-fx-r10.yml'
+
+jobs:
+  build-superman-fx-r10:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Apple toolchain
+        run: |
+          xcode-select -p
+          xcrun --sdk iphoneos --show-sdk-path
+      - name: Validate gameplay code on host
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+            superman_port/test_host.cpp -o /tmp/superman_host_test
+          /tmp/superman_host_test
+      - name: Build native ARM64 Superman FX plugin
+        run: bash superman_port/build_ios.sh superman_port/dist
+      - name: Validate plugin format and entry point
+        run: |
+          file superman_port/dist/SupermanR6.shv.dylib | grep -q arm64
+          nm -gU superman_port/dist/SupermanR6.shv.dylib | grep -q _DllMain
+          codesign --verify --strict superman_port/dist/SupermanR6.shv.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SupermanFX-R10-ARM64-dylib
+          path: superman_port/dist/SupermanR6.shv.dylib
+          if-no-files-found: error
