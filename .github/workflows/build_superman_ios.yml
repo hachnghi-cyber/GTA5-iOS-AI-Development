@@ -1,0 +1,30 @@
+name: Build Superman iOS ARM64 (source only)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'superman_ios_v113/**'
+      - '.github/workflows/build_superman_ios.yml'
+
+jobs:
+  build:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile iOS ARM64 dynamic library
+        run: bash superman_ios_v113/build_on_mac.sh "$RUNNER_TEMP/superman-build"
+      - name: Verify Mach-O and exported entry points
+        run: |
+          file "$RUNNER_TEMP/superman-build/libSupermanIOS.dylib"
+          xcrun dwarfdump --uuid "$RUNNER_TEMP/superman-build/libSupermanIOS.dylib"
+          codesign --verify --verbose=2 "$RUNNER_TEMP/superman-build/libSupermanIOS.dylib"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SupermanIOS-v11.3-ARM64-dylib-ADHOC
+          path: ${{ runner.temp }}/superman-build/libSupermanIOS.dylib
+          if-no-files-found: error
+          retention-days: 14
+
