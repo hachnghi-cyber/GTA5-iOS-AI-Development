@@ -9,6 +9,7 @@
 #import <objc/runtime.h>
 #import <mach-o/dyld.h>
 #import <mach-o/loader.h>
+#import <dlfcn.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -127,6 +128,29 @@ static BOOL HCCSendKeyboardUsage(uint8_t usage, BOOL down) {
         return NO;
     }
     sender(usage, down);
+    // The game's HID keyboard path may not notify the Windows-style message
+    // queue consumed by the ScriptHook .NET keyboard events. F10 is the only
+    // key for which we additionally try that compatibility message route.
+    // This is an experimental bridge; it must be verified on a real iPhone.
+    if (usage == 0x43) { // USB HID F10 -> Win32 VK_F10 (0x79)
+        typedef void *(*HCCGetWindow)(void);
+        typedef int (*HCCPostMessage)(void *, unsigned int, uintptr_t, intptr_t);
+        HCCGetWindow active = (HCCGetWindow)dlsym(RTLD_DEFAULT, "GetActiveWindow");
+        HCCGetWindow foreground = (HCCGetWindow)dlsym(RTLD_DEFAULT, "GetForegroundWindow");
+        HCCPostMessage post = (HCCPostMessage)dlsym(RTLD_DEFAULT, "PostMessageA");
+        void *window = active ? active() : NULL;
+        if (!window && foreground) window = foreground();
+        if (window && post) {
+            // Set-1 F10 scan code 0x44, key-repeat count 1. On key release,
+            // set both "previous state" and "transition" bits.
+            intptr_t keyInfo = (intptr_t)(1u | (0x44u << 16) |
+                             (down ? 0u : (0xC0000000u)));
+            int queued = post(window, down ? 0x0100u : 0x0101u, 0x79u, keyInfo);
+            NSLog(@"[CustomTouch] F10 down=%d ScriptHook message queued=%d", down, queued);
+        } else {
+            NSLog(@"[CustomTouch] F10 game HID dispatched; Win32 message bridge unavailable");
+        }
+    }
     return YES;
 }
 
@@ -187,6 +211,17 @@ static BOOL HCCSendKeyboardUsage(uint8_t usage, BOOL down) {
         [_settings addObject:[@{ @"label": label, @"key": mapping,
                                  @"x": @(MAX(0.04, MIN(0.96, x))), @"y": @(MAX(0.08, MIN(0.92, y))),
                                  @"size": @(MAX(32, MIN(100, size))), @"opacity": @(MAX(0.15, MIN(1.0, opacity))) } mutableCopy]];
+    }
+    // Append rather than replace an existing custom button. This migrates
+    // earlier C+ layouts that contain only J/K/L/M and retains their mapping.
+    BOOL hasF10 = NO;
+    for (NSDictionary *entry in _settings) {
+        if ([entry[@"key"] isEqualToString:@"KEY_F10"]) { hasF10 = YES; break; }
+    }
+    if (!hasF10 && _settings.count < 24) {
+        [_settings addObject:[@{ @"label":@"F10", @"key":@"KEY_F10",
+                                 @"x":@0.90, @"y":@0.56,
+                                 @"size":@54, @"opacity":@0.75 } mutableCopy]];
     }
     // Intentionally off after first installation: do not hijack the game's
     // controller selection without a positive user action.

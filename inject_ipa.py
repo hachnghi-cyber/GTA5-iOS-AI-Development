@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Experimental, opt-in Mach-O injection; never overwrites the original IPA.
 
-Requires macOS + Xcode code signing tools, LIEF >=0.17, and the dylib built by
-build_on_mac.sh. Output is ad-hoc signed for testing / subsequent sideload
-resigning, NOT a production Apple-distribution signature.
+Requires macOS + Xcode code signing tools and the dylib built by
+build_on_mac.sh. The v11.3-specific header patch is checked without LIEF.
+Output is ad-hoc signed for testing / subsequent sideload resigning,
+NOT a production Apple-distribution signature.
 """
 from __future__ import annotations
 
@@ -18,6 +19,8 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+
+from build_unsigned_ipa import patch_executable
 
 LIBRARY_PATH = "@executable_path/Frameworks/libCustomTouch.dylib"
 EXTRA_FILE = "Payload/GTAV.app/Frameworks/libCustomTouch.dylib"
@@ -56,19 +59,7 @@ def extract_safe(archive: pathlib.Path, destination: pathlib.Path) -> None:
 
 
 def patch_macho(executable: pathlib.Path) -> None:
-    import lief
-
-    parsed = lief.MachO.parse(str(executable))
-    if not parsed:
-        raise RuntimeError("GTA5 is not a supported Mach-O image")
-    binary = parsed.at(0)
-    if binary.header.cpu_type != lief.MachO.Header.CPU_TYPE.ARM64:
-        raise RuntimeError(f"Expected ARM64, got {binary.header.cpu_type}")
-    if binary.find_library("libCustomTouch.dylib") is not None:
-        raise RuntimeError("IPA already appears to carry this patch")
-    if binary.add_library(LIBRARY_PATH) is None:
-        raise RuntimeError("Unable to insert LC_LOAD_DYLIB")
-    binary.write(str(executable))
+    executable.write_bytes(patch_executable(executable.read_bytes()))
     executable.chmod(executable.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 

@@ -1,86 +1,159 @@
-# Superman Standalone v11.3 — F10 duy nhất để bật/tắt (iOS)
+# GTA V iOS v11.3 — CustomTouch (thử nghiệm)
 
-**Bản mod độc lập C# ScriptHookVDotNet3**; không cần chỉnh IPA GTA V v11.3.
-Không chứa, không tải và không chạy `Superman.asi` (Windows x64) của TamedMods.
-Mã này do dự án viết mới để mô phỏng các tính năng nổi bật của mod PC.
+Đây là **mã nguồn thử nghiệm**, **không phải IPA đã chạy được**. Chưa biên dịch trên
+Xcode, chưa kiểm thử trên iPhone và chưa xác minh GTA V v11.3 có nhận dữ liệu từ
+`GCVirtualController` như tay cầm của người chơi chính hay không.
 
-> **Chưa đạt mức tương đương 100% bản PC.** Chưa được biên dịch và chạy thử
-> trên v11.3 trong phiên làm việc này. Các tính năng bên dưới là mã **thử nghiệm**;
-> hiệu ứng 3D, animation và âm thanh gốc cần công việc port thêm.
+## Kết quả kiểm tra bản gốc
 
-## Phím PC và nút C+ của launcher
+- IPA: `GTAV-v11.3(1).ipa`, iOS ARM64, bundle `com.macport.gtav`, iOS tối thiểu 16.3.
+- `libgtacompat.dylib` đã có `TCOverlay`, `TCButton`, `pickCustom:` và nhập/xuất layout.
+- JSON người dùng: 40 điều khiển, `1.custom` và `2.custom`; 14 mapping hiện đều là `Menyoo`.
+- Không thêm `custom2` vào layout gốc vì parser có thể bỏ qua role không hỗ trợ.
+- Không thay `libgtacompat.dylib`, `Menyoo.shv.dylib` hay layout gốc.
 
-| Phím | Tính năng trong mã thử nghiệm |
-|---|---|
-| **F10** | Bật/tắt Superman; tự khôi phục trọng lực, hiệu ứng tạm, time scale |
-| **Space** (bấm) | Siêu nhảy đơn giản |
-| **Space** (giữ 250 ms) | Cất cánh; dùng Space / Ctrl để lên / xuống |
-| **W/A/S/D**, **Shift** | Điều hướng và tăng tốc khi bay (joystick dùng điều khiển gamepad) |
-| **R** | Bắn loại tia đang chọn |
-| **Giữ Ngắm + Bắn** | Bắn laser dự phòng qua điều khiển cảm ứng/gamepad |
-| **NumPad 0** | Chuyển 5 tia: Heat, Plasma Arc, Solar Flare, Pulse Cannon, Cryo |
-| **Giữ Ngắm + Nạp đạn** | Chuyển tia dự phòng qua nút gamepad |
-| **NumPad 1–5** | Chọn trực tiếp loại tia tương ứng |
-| **F** | Nhấc xe gần người, bấm lại để ném theo hướng nhìn |
-| **V / B** | Hai phím đều tạo sóng xung kích thử nghiệm; B chưa có hoạt ảnh đập đất |
-| **G** | Đóng băng mục tiêu ngắm trong thời gian ngắn |
-| **H** | Đẩy mục tiêu phía trước theo hình nón |
-| **T** | Lốc xoáy đẩy vật thể xung quanh |
-| **Y** | Bật/tắt thời gian chậm (bullet time đơn giản) |
-| **N** | Bật/tắt nhìn nhiệt, **chưa phải X-ray xuyên tường** |
-| **K** | Bật/tắt combat, rồi dùng U / Z / L đẩy mục tiêu |
-| **P** | Hiển thị số NPC gần bạn (chưa có radar như PC) |
-| **F8** | Chiêu Solar Flare diện rộng (EMP, lực đẩy, nổ nhẹ) |
+## Đã xây dựng
 
-**Dấu hiệu xác nhận DLL đã chạy**: vào Story Mode, dưới màn hình sẽ xuất hiện
-`Superman DLL DA NAP | bam F10 de BAT` một lần. Nếu không thấy
-dòng này, không thể khẳng định lỗi nằm ở F10: cần lấy `ScriptHookVDotNet.log`.
+### Thử nghiệm sửa F10 cho Superman (10/11/2026)
 
-**F10 là phím duy nhất bật/tắt Superman**, không có nút hoặc tổ hợp bật khác.
-Mod lắng nghe F10 bằng cả sự kiện `KeyDown/KeyUp` lẫn trạng thái phím;
-không đổi tác dụng F10 và không tự bật khi vào game.
-Các nút **C+** trên màn hình là trình gán phím của GTA V iOS, có thể **không**
-truyền phím giả lập vào `ScriptDomain.IsKeyPressed` của SHVDN3. Vì vậy cần
-kiểm tra log và thử F10 bằng bàn phím Bluetooth nếu F10 trên C+ không chạy.
-Tổ hợp Ngắm + Bắn/Nạp đạn chỉ là cách dùng chiêu sau khi Superman đã bật.
-Mod **không** tự tạo nút nổi, không sửa layout và không chỉnh IPA.
+- Khi mở C+ lần đầu, bản nguồn mới **bổ sung nút F10** cạnh J/K/L/M;
+  các nút đã lưu không bị ghi đè. Layout cũ thiếu F10 được bổ sung một lần.
+- Khi nhấn F10, ngoài `SendKey(USB_HID_F10)` của game, module thử gửi
+  `WM_KEYDOWN/WM_KEYUP` (`VK_F10`) vào hàng đợi Win32 tương thích bằng
+  `GetActiveWindow`/`PostMessageA`. Chỉ riêng F10 có đường gửi bổ sung.
+- Ghi `CustomTouch F10 down=... ScriptHook message queued=...` vào log để biết
+  hàng đợi có nhận sự kiện hay không. Giá trị `queued=1` **không bảo đảm**
+  C# ScriptHookVDotNet đã nhận và xử lý phím.
+- **Đây là bản thử nghiệm, chưa biên dịch hoặc thử trên iPhone sau khi sửa.**
+  Không khẳng định đã chữa được gốc lỗi. Nếu ScriptHook không xử lý
+  `WM_KEYDOWN`, phải tìm và sửa trực tiếp bridge keyboard của ScriptHook.
+- Giữ mod Superman độc lập (`.dll`) và không chép `.asi` Windows vào IPA.
 
-## Tự động build bằng GitHub Actions (không cần tự tạo yml)
+Workflow tự động mới: `.github/workflows/build_customtouch_f10.yml`.
+Vào Actions → **Build GTA V v11.3 C+ F10 ScriptHook bridge** → Run workflow.
+Không cần `ipa_url` nếu chỉ cần artifact `CustomTouch-v11.3-F10-Bridge-ARM64`.
+Muốn workflow đóng IPA kiểm thử thì nhập **link HTTPS tải trực tiếp IPA v11.3
+gốc** (hoặc đặt secret `GTAV_IPA_URL`) trước khi chạy. IPA tạo ra được ký
+ad-hoc, cần ký lại bằng chứng chỉ cài đặt hợp lệ. Không đưa IPA chứa file
+game lên repository công khai.
 
-1. Mở ZIP mã nguồn được cung cấp trong cuộc trò chuyện này.
-2. Tải lên repository GitHub **cả hai đường dẫn**, giữ nguyên cấu trúc:
-   - `.github/workflows/build_superman_standalone.yml`
-   - `superman_standalone_v113/` (gồm `.csproj`, ba `.cs`, README và ma trận port).
-3. Vào **Actions → Build Superman standalone v11.3 F10 only → Run workflow**.
-4. Khi build xanh, tải artifact `SupermanStandalone-v11.3-F10-Only`.
-5. Artifact GitHub là ZIP bọc ngoài: giải nén **một lớp** lấy đúng
-   `SupermanStandalone-v11.3-F10-ONLY-IMPORT.zip` chứa trực tiếp
-   `SupermanStandaloneSHVDN.dll`.
-6. Trong launcher v11.3 chọn **MOD → ScriptHook → IMPORT SCRIPT**, chọn ZIP
-   `-IMPORT.zip` rồi khởi động lại, chơi **Story Mode** để thử.
+- Overlay UIKit có 4 nút khởi tạo **J, K, L, M** và công tắc `C+` / `C−`.
+  Mặc định **chưa kích hoạt**. Đây không phải giới hạn 4 nút.
+- Khi bật `C+`, chọn **Sửa → +** để tạo nút bàn phím PC mới (tối đa 24 nút),
+  nhấn nút mới trong chế độ Sửa để đổi phím, tên, cỡ, độ mờ hoặc xoá. Kéo
+  từng nút để sắp xếp vị trí; `Xong` để dùng. Các nút được lưu lại tự động.
+- Có thể gán **A–Z**, **0–9**, **F1–F12**, **Space**, **Enter**, **Tab**, **Esc**,
+  **Backspace**, **Delete**, **Numpad 0–9**, các phím điều hướng và tổ hợp
+  **Ctrl/Shift/Alt + phím**. Ví dụ dành cho mod: `J`, `K`, `L`, `M`, `SPACE`,
+  `F10`, `NUM0`, `CTRL+J`. Nhập tên không kèm `KEY_`. Một số mod sử dụng
+  *phím Windows API* có thể chưa nhận mã phím từ bridge; phải thử trên máy.
+- Có thể chọn thêm các chức năng tay cầm A/B/X/Y, LB/RB,
+  LT/RT, 4 hướng D-pad, hoặc mapping thử nghiệm `MENYOO` (RB+D-pad trái;
+  chỉ được xác nhận ở bản cũ v10.3).
+- **iOS 16.3–16.x:** chỉ bật các nút phím PC; các hàm chỉnh trạng thái của
+  `GCVirtualController` cần iOS 17 trở lên, nên nút tay cầm ảo được vô hiệu hoá
+  trên iOS 16 để tránh ảnh hưởng hệ thống điều khiển của game.
+- Phím bàn phím gọi trực tiếp hàm nội bộ `SendKey(unsigned char, bool)` của
+  `libgtacompat.dylib`. Hàm này được tìm trong Mach-O gốc tại `0x152e3c`,
+  đối chiếu UUID `07E7118E-C3A1-380E-9192-58BCF3D30DD7` và 16 byte đầu
+  trước khi gọi. **Sai phiên bản => bỏ qua phím, không thử địa chỉ khác.**
+- Mã nút đang nhấn được giữ tới khi nhấc tay; các tổ hợp và phím chia sẻ
+  trạng thái dùng chung để hạn chế kẹt phím. Khi tắt `C−`, vào chế độ Sửa hoặc
+  app chuyển nền, code chủ động gửi sự kiện nhả phím.
+- Tùy chọn lưu qua `NSUserDefaults`, tách biệt với JSON gốc của game.
+- Không kết nối tay cầm ảo trước khi người dùng chủ động bật, tránh ảnh hưởng
+  logic touch/input của game ngay khi mới cài.
+- Nếu không tìm thấy `MacwinViewController`, module không đặt nút lên launcher.
 
-Nếu không nhìn thấy Actions: bảo đảm workflow được đặt trong **`.github/workflows/`
-ở thư mục gốc repository** và đã commit lên nhánh mặc định. Không tạo tên
-`build-custom.yml` mới khi workflow trên đã có.
+### Giới hạn cần kiểm tra
 
-## Giới hạn và xử lý lỗi
+1. Keyboard bridge sử dụng hàm **nội bộ không có API chính thức**; đã xác minh
+   tên, chữ ký, UUID và vị trí bằng đọc Mach-O. Chưa test trên thiết bị rằng
+   `GCKeyCode` USB HID được game xử lý giống phím J/K/L/M từ bàn phím thật.
+2. `GCVirtualController` (chỉ kết nối nếu một nút đã gán tay cầm) có thể được GTA V nhận thành một controller khác player 1,
+   khiến nút hiện nhưng không điều khiển được hoặc làm ẩn nút gốc. Phải kiểm tra trên
+   iPhone. **Không phát hành đại trà khi chưa qua kiểm thử này.**
+3. Các nút chưa kết nối trực tiếp vào editor `Edit controls` chính của v11.3.
+   Việc chỉnh sửa nút PC là trên overlay riêng. Chế độ ẩn nút gốc chưa tự đồng bộ.
+4. GitHub Actions đã biên dịch được `libCustomTouch.dylib` ARM64 (artifact
+   ngày 10/11/2026). **Chưa có xác nhận ứng dụng chạy và nhận phím trên iPhone.**
+5. Cần ký lại IPA bằng chứng chỉ hợp lệ khi cài; bản ký ad-hoc chỉ phục vụ kiểm tra.
 
-- **Không nhập `Superman.asi` gốc**: launcher iPhone sẽ bỏ qua plugin PE Windows.
-- Script cần bridge ScriptHookVDotNet3 hoạt động; không phải mọi native có thể
-  được GTA iOS port hỗ trợ. Nếu một chiêu mở rộng bị lỗi, mod cố gắng trở lại
-  nhóm cơ bản; log ghi thông tin để sửa.
-- Không có 19 WAV gốc: mã C# chưa có phát âm thanh iOS. Không phát hành lại
-  tài nguyên bản quyền của tác giả TamedMods.
-- Chế độ GTA Online: script **chủ động ngừng** khi phát hiện phiên mạng.
-- Cần thử trên save dự phòng ở khu vực ít NPC để theo dõi crash.
-- Nếu không nhận phím, thử **bàn phím Bluetooth** để phân biệt lỗi mod với
-  lỗi ánh xạ C+ → `System.Windows.Forms.Keys`.
-- Nếu có thông báo "DLL DA NAP" nhưng F10 không phản hồi ngay cả với bàn phím
-  Bluetooth, gửi lại `ScriptHookVDotNet.log`: cần sửa đường nạp phím bàn phím
-  vào `ScriptDomain` của bản port, không thể kết luận lỗi do mod.
-- Gửi lại `ScriptHookVDotNet.log`, `posthook.log`, `run.log` nếu không tải DLL.
+### Lỗi build macOS đã xử lý trong mã nguồn (10/11/2026)
 
-Xem [PORT_MATRIX.md](PORT_MATRIX.md) để biết chiêu nào đã viết mô phỏng và
-chiêu nào còn thiếu so với TamedMods.
+- Trước đây script gọi `clang` khi liên kết Objective-C++; log Actions báo
+  `___gxx_personality_v0` không tìm thấy. Đã chuyển sang `clang++` kèm
+  `-stdlib=libc++` và link tường minh `CoreGraphics`.
+- Thay `CGPointZero` bằng `CGPointMake(0, 0)` để tránh lỗi `_CGPointZero`.
+- Bảo vệ các API `GCVirtualController` chỉ có từ iOS 17 bằng `@available`.
+- Đây là **sửa mã theo log**, chưa có kết quả biên dịch lại từ GitHub Actions
+  và chưa kiểm thử trên thiết bị.
 
-API tham khảo: https://github.com/scripthookvdotnet/scripthookvdotnet
+## Cách build trên macOS có Xcode
+
+```bash
+bash build_on_mac.sh dist
+python3 inject_ipa.py \
+  --ipa '/path/to/GTAV-v11.3.ipa' \
+  --dylib 'dist/libCustomTouch.dylib' \
+  --output '/path/to/GTAV-v11.3-CUSTOM-TEST.ipa'
+```
+
+`inject_ipa.py` chỉ tạo **IPA mới**, không cho phép ghi đè IPA ban đầu; đọc
+cấu trúc gói, thêm duy nhất `libCustomTouch.dylib`, thêm `LC_LOAD_DYLIB` vào
+`GTA5`, ký ad-hoc, so sánh danh sách file và kiểm tra ZIP. Output kèm
+`.report.json` ghi SHA-256 và danh sách file thay đổi. Cần test cài/khởi
+động thực tế và ký lại bằng SideStore/chứng chỉ phù hợp.
+
+### Tự động đóng IPA trên GitHub Actions (không cần Mac riêng)
+
+Đưa `build_unsigned_ipa.py`, `inject_ipa.py`, `build_on_mac.sh` và
+`CustomTouch.mm` vào **thư mục gốc** repository. Đưa
+`.github/workflows/build_customtouch_ipa.yml` vào **đúng thư mục .github/workflows**.
+
+- Actions → `Package GTA V iOS v11.3 CustomTouch IPA (test)` → Run workflow.
+- Điền `ipa_url` là **URL HTTPS tải trực tiếp IPA gốc** (không phải bài đăng
+  Telegram), hoặc tạo secret `GTAV_IPA_URL`.
+- Workflow tự tải IPA, build thư viện, kiểm tra đúng phiên bản, thêm thư viện,
+  ký **ad-hoc**, đối chiếu tệp và cung cấp IPA + báo cáo trong Artifacts.
+- Đây vẫn là **IPA thử nghiệm**, cần **ký lại bằng danh tính cài đặt hợp lệ**
+  và thử trên iPhone trước khi sử dụng chính thức.
+
+Nếu chỉ có Linux và đã có ZIP artifact biên dịch, có thể đóng **IPA chưa ký**:
+
+```bash
+python3 build_unsigned_ipa.py \
+  --ipa '/path/to/GTAV-v11.3(1).ipa' \
+  --plugin-zip '/path/to/customtouch-v11-3-arm64.zip' \
+  --output '/path/to/GTAV-v11.3-CustomTouch-UNSIGNED-TEST.ipa'
+```
+
+Bản chưa ký **không thể cài nguyên trạng**; phải ký lại toàn bộ app và thư viện.
+Hai phương pháp khóa theo SHA-256 của `GTA5` và `libgtacompat` từ **IPA v11.3
+gốc được gửi trong cuộc trò chuyện này**. IPA đã qua bản vá khác sẽ bị từ
+chối cho đến khi kiểm tra tương thích lại, tránh làm hỏng bản gốc.
+
+### GitHub Actions
+
+Nếu đưa thư mục này vào **gốc repo riêng**, workflow
+`.github/workflows/build_custom_touch.yml` có thể build module cho arm64 iOS và
+trả file `.dylib` như artifact. Workflow **không** yêu cầu upload IPA lên repo
+public. Sau khi tải dylib về, chạy script inject trên macOS.
+
+## Kiểm thử và rollback
+
+```bash
+python3 -m unittest discover -s tests -v
+bash -n build_on_mac.sh
+python3 -m py_compile inject_ipa.py build_unsigned_ipa.py
+```
+
+- Trước tiên chạy game gốc, lưu phiên chơi, đo FPS và chụp bố cục cũ.
+- Bản thử nghiệm: vào game, `C+` để bật; kiểm tra không mất touch chính.
+- Chỉ khi touch vẫn dùng được mới thử J/K/L/M. `Sửa → +` để tạo nút mới,
+  chọn `SPACE`, `F10`, `NUM0` hoặc tự nhập tổ hợp; `Xong` để dùng thử mod.
+- `C−` tắt bộ nút độc lập; dùng lại IPA v11.3 gốc nếu có bất kỳ lỗi nào.
+- Kiểm tra Menyoo/Telegram/Trainer/Online và cả cảnh chuyển từ launcher vào game.
+
+Các nguồn API: [Apple GCVirtualController](https://developer.apple.com/documentation/gamecontroller/gcvirtualcontroller),
+[LIEF Mach-O `add_library`](https://lief.re/doc/stable/formats/macho/python.html).
