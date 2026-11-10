@@ -13,6 +13,7 @@
 
 namespace {
 std::array<bool, 256> keyState{};
+std::array<bool, 256> padState{};
 std::uint64_t currentNative = 0;
 std::array<std::uint64_t, 32> result{};
 std::vector<std::uint64_t> args{};
@@ -22,10 +23,16 @@ std::vector<std::string> notifications{};
 std::vector<std::string> particleNames{};
 std::vector<int> forceTargets{};
 std::vector<std::pair<float, float>> flightRotations{};
+std::vector<Point3> appliedVelocities{};
 std::vector<int> meshAlphas{};
 bool simulateNearbyEntities = false;
 bool simulatedAnimLoaded = true;
 float simulatedAltitude = 10.0f;
+float simulatedStickLR = 0.0f;
+float simulatedStickUD = 0.0f;
+float simulatedCameraPitch = 0.0f;
+bool simulatedDisabledInputOnly = false;
+bool simulatedGroundFallback = false;
 std::uint32_t ms = 1000;
 void (*scriptCallback)() = nullptr;
 int sounds = 0;
@@ -67,7 +74,34 @@ extern "C" std::uint64_t* nativeCall() {
     case hash::GET_GAMEPLAY_CAM_COORD:
     case hash::GET_PED_BONE_COORDS:
     case hash::GET_ENTITY_VELOCITY: setResult(Vec3{0, 0, 0, 0, 5, 0}); break;
-    case hash::GET_GAMEPLAY_CAM_ROT: setResult(Vec3{0, 0, 0, 0, 0, 0}); break;
+    case hash::GET_GAMEPLAY_CAM_ROT: setResult(Vec3{simulatedCameraPitch, 0, 0, 0, 0, 0}); break;
+    case hash::GET_CONTROL_NORMAL:
+    case hash::GET_DISABLED_CONTROL_NORMAL: {
+        const bool disabled = currentNative == hash::GET_DISABLED_CONTROL_NORMAL;
+        const int control = static_cast<int>(args[1]);
+        if (disabled == simulatedDisabledInputOnly)
+            setResult(control == 30 ? simulatedStickLR :
+                      control == 31 ? simulatedStickUD : 0.0f);
+        break;
+    }
+    case hash::IS_CONTROL_PRESSED:
+    case hash::IS_DISABLED_CONTROL_PRESSED:
+        setResult(args[1] < padState.size() && padState[args[1]]);
+        break;
+    case hash::GET_GROUND_Z_FOR_3D_COORD:
+        if (simulatedGroundFallback) {
+            *reinterpret_cast<float*>(args[3]) = 4.2f;
+            setResult(true);
+        }
+        break;
+    case hash::SET_ENTITY_VELOCITY: {
+        Point3 velocity{};
+        std::memcpy(&velocity.x, &args[1], sizeof(float));
+        std::memcpy(&velocity.y, &args[2], sizeof(float));
+        std::memcpy(&velocity.z, &args[3], sizeof(float));
+        appliedVelocities.push_back(velocity);
+        break;
+    }
     case hash::START_SHAPE_TEST_LOS_PROBE: setResult(7); break;
     case hash::GET_SHAPE_TEST_RESULT: {
         int status = 2;
@@ -183,6 +217,9 @@ int main() {
     keyState[F10] = true;
     gSuperman.tick();
     assert(gSuperman.enabled);
+    // R16 defaults to stable flight facing rather than camera-driven pitch.
+    assert(!gSuperman.config.flightBodyTilt);
+    gSuperman.config.flightBodyTilt = true; // retain an opt-in rotation regression test
     assert(std::find(recorded.begin(), recorded.end(),
                      shv::hash::BEGIN_TEXT_COMMAND_THEFEED_POST) != recorded.end());
     assert(notifications.size() == 1);
@@ -435,6 +472,109 @@ int main() {
     assert(std::count(recorded.begin(), recorded.end(),
                       shv::hash::ADD_EXPLOSION) == explosionsBeforeTimeout);
     unreachableGround.shutdown(42);
+
+    // R16 regression: iPhone left-stick input is not a virtual W/A/S/D key.
+    // Forward must remain world-horizontal even with the camera looking up.
+    keyState.fill(false);
+    simulatedStickUD = -1.0f;
+    simulatedStickLR = 0.0f;
+    simulatedCameraPitch = 85.0f;
+    simulatedAltitude = 30.0f;
+    Superman touchFlight;
+    touchFlight.enabled = true;
+    touchFlight.initialized = true;
+    touchFlight.flight = true;
+    touchFlight.flightStartedAt = 13500U;
+    ms = 14000;
+    touchFlight.tick();
+    assert(!touchFlight.flightBoosting);
+    assert(touchFlight.smoothedFlight.y > 0.0f);
+    assert(std::fabs(touchFlight.smoothedFlight.z) < 0.01f);
+    const float cruiseVelocity = touchFlight.smoothedFlight.y;
+    assert(!appliedVelocities.empty());
+    assert(appliedVelocities.back().y > 0.0f);
+    // Hold Fly while steering: the same touch control becomes fast forward
+    // thrust, with a sonic boom and higher speed instead of vertical ascent.
+    keyState[SPACE] = true;
+    ms = 14080;
+    touchFlight.tick();
+    assert(touchFlight.flightBoosting);
+    assert(touchFlight.smoothedFlight.y > cruiseVelocity);
+    assert(touchFlight.smoothedFlight.z == 0.0f);
+    // Analog side-to-side control must work, not just forward.
+    simulatedStickLR = 1.0f;
+    simulatedStickUD = 0.0f;
+    ms = 14110;
+    touchFlight.tick();
+    assert(touchFlight.smoothedFlight.x > 0.0f);
+    // The normal iOS sprint action also triggers Superman's supersonic speed.
+    keyState[SPACE] = false;
+    padState[21] = true;
+    ms = 14114;
+    touchFlight.tick();
+    assert(touchFlight.flightBoosting);
+    padState[21] = false;
+    // Short tap Fly with the stick released enters an automatic descent.
+    simulatedStickLR = 0.0f;
+    ms = 14120;
+    keyState[SPACE] = true;
+    touchFlight.tick();
+    ms = 14140;
+    keyState[SPACE] = false;
+    touchFlight.tick();
+    assert(touchFlight.autoLanding);
+    assert(touchFlight.smoothedFlight.z < 0.0f);
+    // A gentle touchdown still produces a visible expanding ground ring.
+    const std::size_t effectsBeforeTouchdown = particleNames.size();
+    simulatedAltitude = 1.0f;
+    ms = 14220;
+    touchFlight.tick();
+    assert(!touchFlight.flight);
+    assert(particleNames.size() > effectsBeforeTouchdown);
+    assert(std::any_of(touchFlight.waves.begin(), touchFlight.waves.end(),
+                       [](const Superman::ShockWave& wave) { return wave.active; }));
+    touchFlight.shutdown(42);
+
+    // Some iOS builds expose only disabled PAD inputs. Keep this fallback.
+    simulatedAltitude = 20.0f;
+    simulatedCameraPitch = 0.0f;
+    simulatedDisabledInputOnly = true;
+    simulatedStickUD = -0.8f;
+    Superman disabledStick;
+    disabledStick.enabled = disabledStick.initialized = disabledStick.flight = true;
+    disabledStick.flightStartedAt = 15000;
+    ms = 15500;
+    disabledStick.tick();
+    assert(disabledStick.smoothedFlight.y > 0.0f);
+    disabledStick.shutdown(42);
+    simulatedDisabledInputOnly = false;
+    simulatedStickUD = 0.0f;
+
+    // Last resort for height-above-ground -1: terrain query locates actual
+    // contact, but no phantom blast occurs without either native succeeding.
+    simulatedGroundFallback = true;
+    simulatedAltitude = -1.0f;
+    Superman fallbackLanding;
+    fallbackLanding.enabled = fallbackLanding.initialized = fallbackLanding.flight = true;
+    fallbackLanding.flightStartedAt = 16000;
+    fallbackLanding.landingStartedAt = 16100;
+    fallbackLanding.autoLanding = true;
+    ms = 17000;
+    fallbackLanding.tick();
+    assert(!fallbackLanding.flight);
+    fallbackLanding.shutdown(42);
+    simulatedGroundFallback = false;
+    // TamedMods' controller Descend (44) works without a virtual Ctrl key.
+    simulatedAltitude = 0.8f;
+    padState[44] = true;
+    Superman controllerLanding;
+    controllerLanding.enabled = controllerLanding.initialized = controllerLanding.flight = true;
+    controllerLanding.flightStartedAt = 17400;
+    ms = 18000;
+    controllerLanding.tick();
+    assert(!controllerLanding.flight);
+    controllerLanding.shutdown(42);
+    padState[44] = false;
     assert(DllMain(reinterpret_cast<void*>(1), 0, nullptr));
     assert(!scriptCallback);
 }

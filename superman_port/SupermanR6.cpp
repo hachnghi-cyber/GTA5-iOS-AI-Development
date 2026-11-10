@@ -74,9 +74,12 @@ struct Config {
     float beamDamage = 18.0f;
     float slowTimeScale = 0.25f;
     float hoverDrag = 0.12f;
+    float stickDeadzone = 0.17f;
+    float autoLandingSpeed = 24.0f;
     float bankAngle = 35.0f;
     float pitchScale = 1.0f;
-    bool flightBodyTilt = true;
+    // A pitch-follow rotation can make the mobile camera stare into the sky.
+    bool flightBodyTilt = false;
     bool supersonicTrail = true;
     bool actionChargeGlow = true;
     bool volumetricBeams = true;
@@ -218,6 +221,8 @@ struct Config {
                 setFloat("VerticalSpeed", verticalSpeed);
                 setFloat("Acceleration", acceleration);
                 setFloat("HoverDrag", hoverDrag);
+                setFloat("StickDeadzone", stickDeadzone);
+                setFloat("AutoLandingSpeed", autoLandingSpeed);
                 setFloat("BankAngle", bankAngle);
                 setFloat("PitchScale", pitchScale);
                 if (key == "HoverDict") hoverDict = value;
@@ -366,6 +371,8 @@ struct Config {
         cruiseSpeed = std::clamp(cruiseSpeed, 2.0f, 200.0f);
         supersonicSpeed = std::clamp(supersonicSpeed, cruiseSpeed, 300.0f);
         hoverDrag = std::clamp(hoverDrag, 0.02f, 1.0f);
+        stickDeadzone = std::clamp(stickDeadzone, 0.08f, 0.35f);
+        autoLandingSpeed = std::clamp(autoLandingSpeed, 8.0f, 40.0f);
         bankAngle = std::clamp(bankAngle, 0.0f, 35.0f);
         pitchScale = std::clamp(pitchScale, 0.0f, 1.0f);
         beamRange = std::clamp(beamRange, 5.0f, 450.0f);
@@ -418,6 +425,44 @@ struct Input {
     bool released(int vk) const { return !down(vk) && was[vk]; }
 };
 
+struct FlightStick {
+    float right = 0.0f;
+    float forward = 0.0f;
+    float magnitude = 0.0f;
+};
+
+FlightStick readFlightStick(const Input& keys, float deadzone) {
+    // GTA V analog player input: 30 = left/right, 31 = forward/back.
+    // Left-stick up reports negative INPUT_MOVE_UD on a controller.
+    auto axis = [](int control) {
+        float value = call<float>(hash::GET_CONTROL_NORMAL, 0, control);
+        if (std::fabs(value) <= 0.001f)
+            value = call<float>(hash::GET_CONTROL_NORMAL, 2, control);
+        if (std::fabs(value) <= 0.001f)
+            value = call<float>(hash::GET_DISABLED_CONTROL_NORMAL, 0, control);
+        if (std::fabs(value) <= 0.001f)
+            value = call<float>(hash::GET_DISABLED_CONTROL_NORMAL, 2, control);
+        return std::isfinite(value) ? std::clamp(value, -1.0f, 1.0f) : 0.0f;
+    };
+    float right = axis(30), forward = -axis(31);
+    // Preserve the Mac keyboard controls if the port emits WASD key events.
+    if (keys.down(A)) right = -1.0f;
+    if (keys.down(D)) right = 1.0f;
+    if (keys.down(W)) forward = 1.0f;
+    if (keys.down(S)) forward = -1.0f;
+    const float norm = std::sqrt(right * right + forward * forward);
+    if (norm <= deadzone) return {};
+    const float strength = (std::min(norm, 1.0f) - deadzone) / (1.0f - deadzone);
+    return {right / norm * strength, forward / norm * strength, strength};
+}
+
+bool padPressed(int control) {
+    return call<bool>(hash::IS_CONTROL_PRESSED, 0, control) ||
+           call<bool>(hash::IS_CONTROL_PRESSED, 2, control) ||
+           call<bool>(hash::IS_DISABLED_CONTROL_PRESSED, 0, control) ||
+           call<bool>(hash::IS_DISABLED_CONTROL_PRESSED, 2, control);
+}
+
 float length(Point3 p) { return std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z); }
 Point3 normalized(Point3 p) { const float d = length(p); return d > 0.001f ? scale(p, 1.0f / d) : Point3{}; }
 Point3 cross(Point3 a, Point3 b) {
@@ -439,9 +484,23 @@ Point3 cameraPosition() { return point(call<Vec3>(hash::GET_GAMEPLAY_CAM_COORD))
 Point3 entityPosition(int entity) { return point(call<Vec3>(hash::GET_ENTITY_COORDS, entity, true)); }
 Point3 entityVelocity(int entity) { return point(call<Vec3>(hash::GET_ENTITY_VELOCITY, entity)); }
 
+float groundDistance(int ped) {
+    const float height = call<float>(hash::GET_ENTITY_HEIGHT_ABOVE_GROUND, ped);
+    if (std::isfinite(height) && height >= 0.0f && height < 1200.0f) return height;
+    const Point3 p = entityPosition(ped);
+    float groundZ = 0.0f;
+    // Some iOS script builds report -1 while the ped's gravity is disabled.
+    // A failed terrain query is NOT a landing; avoid an airborne explosion.
+    if (call<bool>(hash::GET_GROUND_Z_FOR_3D_COORD,
+                   p.x, p.y, p.z + 45.0f, &groundZ, false) &&
+        std::isfinite(groundZ) && groundZ <= p.z + 1.0f)
+        return std::max(0.0f, p.z - groundZ);
+    return -1.0f;
+}
+
 Point3 groundImpactPoint(int ped) {
     Point3 result = entityPosition(ped);
-    const float altitude = call<float>(hash::GET_ENTITY_HEIGHT_ABOVE_GROUND, ped);
+    const float altitude = groundDistance(ped);
     // Keep dust and expanding rings on the road instead of hovering around
     // the ped's torso while GTA is resolving the last metre of descent.
     if (altitude >= 0.0f && altitude <= 3.0f)
@@ -577,6 +636,13 @@ public:
     std::uint32_t lastAttack = 0;
     std::uint32_t lastBreathFx = 0;
     std::uint32_t spacePressedAt = 0;
+    std::uint32_t flightStartedAt = 0;
+    std::uint32_t landingStartedAt = 0;
+    std::uint32_t lastSonicTrailFx = 0;
+    bool autoLanding = false;
+    bool landingCancelOnRelease = false;
+    bool flightBoosting = false;
+    FlightStick flightStick{};
     std::uint32_t lastLaserFx = 0;
     std::uint32_t lastLaserExplosion = 0;
     std::uint32_t lastChargeFx = 0;
@@ -693,12 +759,21 @@ public:
             call<>(hash::SET_PED_MOVE_RATE_OVERRIDE, ped,
                    std::clamp(1.0f + config.groundSpeedBoost / 45.0f, 1.0f, 1.8f));
 
-        if (input.pressed(config.fly)) spacePressedAt = now;
+        if (input.pressed(config.fly)) {
+            spacePressedAt = now;
+            if (flight && autoLanding) {
+                autoLanding = false;
+                landingCancelOnRelease = true;
+            }
+        }
         if (input.down(config.fly) && !flight) {
             call<>(hash::SET_SUPER_JUMP_THIS_FRAME, call<int>(hash::PLAYER_ID));
             if (now - spacePressedAt >= static_cast<std::uint32_t>(config.tapHoldMs) &&
                 !call<bool>(hash::IS_PED_IN_ANY_VEHICLE, ped, false)) {
                 flight = true;
+                flightStartedAt = now;
+                autoLanding = false;
+                landingCancelOnRelease = false;
                 smoothedFlight = entityVelocity(ped);
                 call<>(hash::SET_ENTITY_HAS_GRAVITY, ped, false);
                 takeoffPosePending = !playAnim(ped, config.anim(PowerAnim::Takeoff), 650, 0);
@@ -720,16 +795,28 @@ public:
             supermanPlaySound("super_jump", false);
         }
         if (flight) {
+            flightStick = readFlightStick(input, config.stickDeadzone);
+            // A short tap while hovering lands the player using the existing
+            // Fly button; the iPhone has no LCTRL virtual key by default.
+            // Long holds still drive forward thrust instead of cancelling.
+            if (input.released(config.fly)) {
+                if (landingCancelOnRelease) landingCancelOnRelease = false;
+                else if (now - flightStartedAt > 550U &&
+                         now - spacePressedAt < static_cast<std::uint32_t>(config.tapHoldMs) &&
+                         flightStick.magnitude < 0.20f) {
+                    autoLanding = true;
+                    landingStartedAt = now;
+                }
+            }
             if (takeoffPosePending && now < poseBlockUntil) {
                 const int remaining = static_cast<int>(poseBlockUntil - now + 120U);
                 if (playAnim(ped, config.anim(PowerAnim::Takeoff), remaining, 0))
                     takeoffPosePending = false;
             }
             if (now >= poseBlockUntil) takeoffPosePending = false;
-            handleFlight(ped);
+            handleFlight(ped, now);
             if (flight) updateFlightPose(ped, now);
-            if (flight) updateFlightTilt(ped, input.down(W) || input.down(A) ||
-                                             input.down(S) || input.down(D));
+            if (flight) updateFlightTilt(ped, flightStick.magnitude > 0.15f);
         }
         updateHeldPose(ped, now);
 
@@ -792,6 +879,8 @@ public:
         stopFlightPose(ped);
         resetFlightTilt(ped);
         enabled = flight = combat = bulletTime = xray = false;
+        autoLanding = landingCancelOnRelease = flightBoosting = false;
+        flightStick = {};
         readyAt.fill(0);
         laserHeat = breathHeat = {};
         groundFast = false;
@@ -964,6 +1053,10 @@ private:
     void stopFlying(int ped) {
         if (!flight) return;
         flight = false;
+        autoLanding = false;
+        flightBoosting = false;
+        landingCancelOnRelease = false;
+        flightStick = {};
         smoothedFlight = {};
         takeoffPosePending = false;
         supermanStopSound("flight_loop");
@@ -976,10 +1069,17 @@ private:
     void landFromFlight(int ped) {
         const float impactSpeed = std::max(0.0f, -smoothedFlight.z);
         stopFlying(ped);
+        setVelocity(ped, {});
         playAnim(ped, config.anim(PowerAnim::Landing), 800, 0);
         supermanPlaySound("landing_shockwave", false);
-        if (impactSpeed < config.landingShockwaveMinSpeed) return;
         const Point3 p = groundImpactPoint(ped);
+        // Even a controlled touchdown needs visible ground dust/rings. Only
+        // strong landings push away nearby NPCs and vehicles.
+        shockRing(p, std::min(config.shockRadius, 5.0f), "exp_grd_flare");
+        addShockwave(add(p, {0.0f, 0.0f, 0.09f}), 5.5f,
+                     480U, 245, 225, 190);
+        shake(0.22f);
+        if (impactSpeed < config.landingShockwaveMinSpeed) return;
         shockRing(p, config.shockRadius, "exp_grd_flare");
         addShockwave(add(p, {0.0f, 0.0f, 0.13f}), config.shockRadius,
                      430U, 255, 232, 196);
@@ -1004,9 +1104,12 @@ private:
             return;
         }
         const Vec3 cam = call<Vec3>(hash::GET_GAMEPLAY_CAM_ROT, 2);
-        const float pitch = std::clamp(cam.x * config.pitchScale, -45.0f, 45.0f);
-        const float turn = (input.down(D) ? -config.bankAngle : 0.0f) +
-                           (input.down(A) ? config.bankAngle : 0.0f);
+        // Camera pitch must NOT rotate the actor (and consequently the iOS
+        // follow camera) toward the sky. Tilt is a small steering animation.
+        const float pitch = std::clamp(-flightStick.forward * 8.0f * config.pitchScale,
+                                       -9.0f, 9.0f);
+        const float turn = std::clamp(-flightStick.right * config.bankAngle * 0.40f,
+                                       -12.0f, 12.0f);
         smoothedPitch += (pitch - smoothedPitch) * 0.20f;
         smoothedBank += (turn - smoothedBank) * 0.20f;
         call<>(hash::SET_ENTITY_ROTATION, ped, smoothedPitch, smoothedBank,
@@ -1140,10 +1243,9 @@ private:
 
     void updateFlightPose(int ped, std::uint32_t now) {
         if (now < poseBlockUntil || (action.waiting && action.playing)) return;
-        const bool moving = input.down(W) || input.down(A) || input.down(S) || input.down(D) ||
-                            input.down(config.fly) || input.down(config.descend) || input.down(CTRL);
-        const bool forwardMotion = input.down(W) || input.down(A) || input.down(S) || input.down(D);
-        const bool fast = forwardMotion && (input.down(config.boost) || input.down(SHIFT));
+        const bool moving = flightStick.magnitude > 0.15f || flightBoosting ||
+                            input.down(config.descend) || input.down(CTRL) || autoLanding;
+        const bool fast = flightBoosting;
         const std::string& wantedDict = fast ? config.supersonicDict :
                                         moving ? config.flyDict : config.hoverDict;
         const std::string& wantedAnim = fast ? config.supersonicAnim :
@@ -1196,46 +1298,65 @@ private:
         notify(enabled);
     }
 
-    void handleFlight(int ped) {
+    void handleFlight(int ped, std::uint32_t now) {
         if (action.waiting && action.playing && action.name == PowerAnim::GroundPound) {
             // Direct vertical plunge; the impact animation and shockwave are
             // handled by processAction only when the character reaches ground.
             setVelocity(ped, {smoothedFlight.x * 0.15f, smoothedFlight.y * 0.15f, -48.0f});
             return;
         }
-        const Point3 fwd = viewDirection();
-        Point3 right{fwd.y, -fwd.x, 0.0f};
-        right = normalized(right);
-        Point3 move{};
-        if (input.down(W)) move = add(move, fwd);
-        if (input.down(S)) move = sub(move, fwd);
-        if (input.down(A)) move = sub(move, right);
-        if (input.down(D)) move = add(move, right);
-        const bool ascending = input.down(config.fly);
-        const bool descending = input.down(config.descend) || input.down(CTRL);
-        if (ascending) move.z += 1.0f;
-        if (descending) move.z -= 1.0f;
-        const bool boost = input.down(config.boost) || input.down(SHIFT);
-        const bool moving = length(move) > 0.01f;
+        // The gameplay camera may point vertically on iPhone. Steering uses
+        // camera YAW only, so a forward stick movement never launches the ped
+        // straight into the sky just because the camera follows the avatar.
+        const Vec3 camera = call<Vec3>(hash::GET_GAMEPLAY_CAM_ROT, 2);
+        const float yaw = camera.z * kDeg;
+        const Point3 forward{-std::sin(yaw), std::cos(yaw), 0.0f};
+        const Point3 right{forward.y, -forward.x, 0.0f};
+        Point3 move = add(scale(forward, flightStick.forward),
+                          scale(right, flightStick.right));
+        const bool flyHeld = input.down(config.fly);
+        const bool thrust = flyHeld && now - flightStartedAt > 550U;
+        // Keep TamedMods' controller mappings: RB/cover 44 = descend, and
+        // Sprint 21 = boost. On iOS the regular Sprint button can activate it.
+        const bool manualDescend = input.down(config.descend) || input.down(CTRL) ||
+                                   padPressed(44);
+        if (manualDescend && !autoLanding) {
+            autoLanding = true;
+            landingStartedAt = now;
+        }
+        if (autoLanding && flightStick.magnitude > 0.0f)
+            move = scale(move, 0.32f); // steer gently while descending
+        // Once in the air, holding Fly without moving the stick means "fly
+        // forward fast". The short initial takeoff window is still vertical.
+        if (thrust && !autoLanding && flightStick.magnitude < 0.10f)
+            move = forward;
+        const bool moving = length(move) > 0.10f;
+        const bool boost = !autoLanding && moving &&
+                           (thrust || input.down(config.boost) ||
+                            input.down(SHIFT) || padPressed(21));
+        flightBoosting = boost;
         const float speed = boost ? config.supersonicSpeed : config.cruiseSpeed;
-        Point3 target = scale(normalized(move), speed);
-        // Hover/ascend have their own original tuning; don't launch vertically
-        // at the same 170 m/s used for forward supersonic flight.
-        if (!input.down(W) && !input.down(A) && !input.down(S) && !input.down(D))
-            target = {0.0f, 0.0f, (ascending ? 1.0f : descending ? -1.0f : 0.0f) * config.verticalSpeed};
+        Point3 target = scale(move, speed);
+        const bool takeoffAscent = flyHeld && !thrust &&
+                                   flightStick.magnitude < 0.10f && !autoLanding;
+        if (autoLanding)
+            target.z = -config.autoLandingSpeed;
+        else if (manualDescend)
+            target.z = -config.verticalSpeed;
+        else if (takeoffAscent)
+            target.z = config.verticalSpeed;
+        else
+            target.z = 0.0f;
         const float smoothing = std::clamp(config.acceleration * 2.0f, 0.02f, 0.95f);
         smoothedFlight = add(scale(smoothedFlight, 1.0f - smoothing), scale(target, smoothing));
-        if (!moving) smoothedFlight = scale(smoothedFlight, 1.0f - config.hoverDrag);
+        if (!moving && !autoLanding && !takeoffAscent)
+            smoothedFlight = scale(smoothedFlight, 1.0f - config.hoverDrag);
         setVelocity(ped, smoothedFlight);
-        // Keep the torso facing the gameplay camera as in the source flight
-        // controls. Walking heading could otherwise survive into a skydive
-        // animation and make the character fly sideways/backward.
-        if (moving && (input.down(W) || input.down(S) || input.down(A) || input.down(D))) {
-            const Vec3 cameraRot = call<Vec3>(hash::GET_GAMEPLAY_CAM_ROT, 2);
-            call<>(hash::SET_ENTITY_HEADING, ped, cameraRot.z);
-        }
-        const bool supersonic = boost &&
-            (input.down(W) || input.down(A) || input.down(S) || input.down(D));
+        // Face the actual movement vector, not an unrelated walking heading.
+        if (moving)
+            call<>(hash::SET_ENTITY_HEADING, ped,
+                   -std::atan2(move.x, move.y) / kDeg);
+        const bool supersonic = boost;
         if (supersonic && !boostPreviously && config.sonicBoom) {
             supermanPlaySound("sonic_boom", false);
             if (config.sonicCameraShake) shake(0.35f);
@@ -1247,13 +1368,29 @@ private:
         }
         if (!supersonic && supersonicFxActive) stopSupersonicFx();
         boostPreviously = supersonic;
-        if (supersonic) drawSupersonicTrail(ped);
-        if (descending && !ascending) {
-            const float altitude = call<float>(hash::GET_ENTITY_HEIGHT_ABOVE_GROUND, ped);
-            // A falling player can still be travelling at >20 m/s on impact.
-            // Requiring speed<8 previously prevented landing entirely.
-            if (altitude >= 0.0f && altitude < 1.5f)
+        if (supersonic) {
+            drawSupersonicTrail(ped);
+            if (now - lastSonicTrailFx >= 850U) {
+                lastSonicTrailFx = now;
+                const Point3 tail = sub(entityPosition(ped), scale(normalized(move), 2.2f));
+                particle("ent_dst_gen_gobstop", tail, 0.65f);
+                addShockwave(tail, 3.0f, 260U, 195, 225, 255, true);
+            }
+        }
+        if (autoLanding || manualDescend ||
+            (now - flightStartedAt > 1100U && !flyHeld && !moving)) {
+            const float altitude = groundDistance(ped);
+            if (altitude >= 0.0f && altitude < 1.8f &&
+                now - flightStartedAt > 500U) {
                 landFromFlight(ped);
+            } else if (autoLanding && now - landingStartedAt > 10000U &&
+                       altitude < 0.0f) {
+                // If terrain natives are unavailable (e.g. water or remote
+                // unloaded terrain), return physics control to GTA. Do not
+                // create a false impact shockwave in the air.
+                stopFlying(ped);
+                setVelocity(ped, {0.0f, 0.0f, -8.0f});
+            }
         }
     }
 
