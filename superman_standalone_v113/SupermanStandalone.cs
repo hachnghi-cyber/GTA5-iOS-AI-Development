@@ -1,4 +1,6 @@
 // Independent ScriptHookVDotNet 3 mod for GTA V iOS v11.3 (experimental).
+// F10-only activation: retain original PC key; log keyboard-bridge errors
+// and show a visible script-loaded diagnostic on iOS.
 // Does not contain or load TamedMods' Windows-only Superman.asi.
 // Requires the port's ScriptHookV .NET runtime and its GTA API bridge.
 using System;
@@ -9,7 +11,7 @@ using GTA.Native;
 
 namespace SupermanStandaloneMod
 {
-    public sealed class SupermanStandalone : Script
+    public sealed partial class SupermanStandalone : Script
     {
         private const ulong HNetworkIsSessionActive = 0xD83C2B94E7508980UL;
         private const ulong HSetEntityHasGravity = 0x4A4722448F18EEF5UL;
@@ -30,9 +32,17 @@ namespace SupermanStandaloneMod
         private bool _enabled;
         private bool _flying;
         private int _gravityPed;
-        private bool _previousJ;
-        private bool _previousK;
-        private bool _previousM;
+        private bool _previousToggle;
+        private bool _f10EventHeld;
+        private bool _f10EventPending;
+        private bool _previousJump;
+        private bool _previousShock;
+        private bool _previousCycle;
+        private bool _previousPadCycle;
+        private bool _loadNoticeShown;
+        private static bool _keyApiWarningShown;
+        private int _jumpPressedAt;
+        private bool _jumpBecameFlight;
         private int _lastShockMs = -3000;
         private int _lastHeatMs = -400;
         private bool _assetRequested;
@@ -43,6 +53,21 @@ namespace SupermanStandaloneMod
             Interval = 0;
             Tick += OnTick;
             Aborted += OnAborted;
+            KeyDown += OnKeyDown;
+            KeyUp += OnKeyUp;
+            try { Console.WriteLine("[SupermanStandalone] v11.3 expanded script initialized"); } catch { }
+        }
+
+        private void OnKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.F10 || _f10EventHeld) return;
+            _f10EventHeld = true;
+            _f10EventPending = true;
+        }
+
+        private void OnKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F10) _f10EventHeld = false;
         }
 
         private static void Notify(string text)
@@ -52,7 +77,18 @@ namespace SupermanStandaloneMod
 
         private static bool Down(Keys key)
         {
-            return Game.IsKeyPressed(key);
+            try { return Game.IsKeyPressed(key); }
+            catch (Exception ex)
+            {
+                // In some iOS ports the managed keyboard table is not wired
+                // to their on-screen virtual-key implementation.
+                if (!_keyApiWarningShown)
+                {
+                    _keyApiWarningShown = true;
+                    try { Console.WriteLine("[Superman] keyboard input unavailable: " + ex); } catch { }
+                }
+                return false;
+            }
         }
 
         private static bool ControlDown(Control control)
@@ -75,8 +111,12 @@ namespace SupermanStandaloneMod
 
         private void Stop()
         {
-            RestoreGravity();
-            _enabled = false;
+            try { RestoreGravity(); }
+            finally
+            {
+                ResetExtraPowers();
+                _enabled = false;
+            }
         }
 
         private void OnAborted(object sender, EventArgs e)
@@ -99,13 +139,21 @@ namespace SupermanStandaloneMod
 
         private void TickSafe()
         {
-            bool j = Down(Keys.J), k = Down(Keys.K), m = Down(Keys.M);
+            // Match TamedMods' keyboard mapping. The iOS launcher is responsible
+            // for mapping on-screen controls to these keys; this script never
+            // patches the app or installs its own touch overlay.
+            bool toggle = Down(Keys.F10);
+            bool f10Event = _f10EventPending;
+            _f10EventPending = false;
+            bool jump = Down(Keys.Space) || ControlDown(Control.Jump);
+            bool shock = Down(Keys.V) || Down(Keys.B);
+            bool cycle = Down(Keys.NumPad0);
 
             if (Online())
             {
                 // Do not touch remote players, remote vehicles, or online game rules.
                 if (_enabled || _flying) Stop();
-                UpdateEdges(j, k, m);
+                UpdateEdges(toggle, jump, shock, cycle);
                 return;
             }
 
@@ -113,52 +161,92 @@ namespace SupermanStandaloneMod
             if (ped == null || !ped.Exists() || ped.IsDead)
             {
                 if (_enabled || _flying) Stop();
-                UpdateEdges(j, k, m);
+                UpdateEdges(toggle, jump, shock, cycle);
                 return;
             }
 
-            if (j && !_previousJ)
+            if (!_loadNoticeShown)
+            {
+                _loadNoticeShown = true;
+                Notify("Superman DLL DA NAP | bam F10 de BAT");
+                try { Console.WriteLine("[Superman] DLL LOADED; waiting for F10"); } catch { }
+            }
+
+            // When both APIs see the same physical F10 press, toggle once.
+            bool f10PollingEdge = toggle && !_previousToggle && !_f10EventHeld;
+            if (f10PollingEdge || f10Event)
             {
                 _enabled = !_enabled;
                 if (!_enabled) Stop();
-                else { _assetRequested = false; Notify("Superman: BAT | K bay, L laser, M song"); }
+                else { _assetRequested = false; Notify("Superman BAT | NHAY bay; NGAM+BAN laser"); }
             }
 
             if (!_enabled)
             {
-                UpdateEdges(j, k, m);
+                UpdateEdges(toggle, jump, shock, cycle);
                 return;
             }
 
             if (_flying && _gravityPed != ped.Handle) RestoreGravity();
-            if (k && !_previousK)
+            if (jump && !_previousJump)
             {
-                if (_flying) { RestoreGravity(); Notify("Superman: ha canh"); }
-                else if (!ped.IsInVehicle())
-                {
-                    _flying = true;
-                    _gravityPed = ped.Handle;
-                    Function.Call((Hash)HSetEntityHasGravity, _gravityPed, false);
-                    Notify("Superman: dang bay");
-                }
+                _jumpPressedAt = Game.GameTime;
+                _jumpBecameFlight = false;
+            }
+            if (jump && !_flying && !ped.IsInVehicle() &&
+                Game.GameTime - _jumpPressedAt >= 250)
+            {
+                _flying = true;
+                _jumpBecameFlight = true;
+                _gravityPed = ped.Handle;
+                Function.Call((Hash)HSetEntityHasGravity, _gravityPed, false);
+                Notify("Superman: dang bay");
+            }
+            if (!jump && _previousJump && !_jumpBecameFlight && !_flying && !ped.IsInVehicle())
+            {
+                // Original Space tap: a modest super jump. The native GTA
+                // movement/animation still depends on the port's controls.
+                Vector3 v = ped.Velocity;
+                Function.Call((Hash)HSetEntityVelocity, ped.Handle, v.X, v.Y, 20f);
             }
 
             if (ped.IsInVehicle() && _flying) RestoreGravity();
             if (_flying) Fly(ped);
-            if (Down(Keys.L)) HeatVision(ped);
-            if (m && !_previousM && Game.GameTime - _lastShockMs >= 2400)
+            // Touch/gamepad fallback: AIM+ATTACK fires the selected beam.
+            // The original R key remains available with a Bluetooth keyboard.
+            if (Down(Keys.R) ||
+                (ControlDown(Control.Aim) && ControlDown(Control.Attack)))
+                FireSelectedBeam(ped);
+            if (shock && !_previousShock && Game.GameTime - _lastShockMs >= 2400)
             {
                 _lastShockMs = Game.GameTime;
                 Shockwave(ped);
             }
-            UpdateEdges(j, k, m);
+            bool padCycle = ControlDown(Control.Aim) && ControlDown(Control.Reload);
+            if ((cycle && !_previousCycle) || (padCycle && !_previousPadCycle)) NextBeam();
+            _previousPadCycle = padCycle;
+            // An unsupported native in an experimental power must not disable
+            // the already-working baseline flight, laser and shockwave.
+            if (!_extrasFaulted)
+            {
+                try { TickExtraPowers(ped); }
+                catch (Exception ex)
+                {
+                    ResetExtraPowers();
+                    _extrasFaulted = true;
+                    try { Console.WriteLine("[SupermanExtra unavailable] " + ex); } catch { }
+                    Notify("Superman: chieu mo rong loi; mod co ban van hoat dong");
+                }
+            }
+            UpdateEdges(toggle, jump, shock, cycle);
         }
 
-        private void UpdateEdges(bool j, bool k, bool m)
+        private void UpdateEdges(bool toggle, bool jump, bool shock, bool cycle)
         {
-            _previousJ = j;
-            _previousK = k;
-            _previousM = m;
+            _previousToggle = toggle;
+            _previousJump = jump;
+            _previousShock = shock;
+            _previousCycle = cycle;
         }
 
         private static Vector3 Unit(Vector3 value)
@@ -176,7 +264,7 @@ namespace SupermanStandaloneMod
             float sideways = (ControlDown(Control.MoveRightOnly) ? 1f : 0f)
                            - (ControlDown(Control.MoveLeftOnly) ? 1f : 0f);
             float up = (ControlDown(Control.Jump) || Down(Keys.Space) ? 1f : 0f)
-                     - (ControlDown(Control.Duck) ? 1f : 0f);
+                     - (ControlDown(Control.Duck) || Down(Keys.ControlKey) ? 1f : 0f);
             Vector3 planar = forward * forwards + right * sideways;
             if (planar.Length() > 1f) planar = Unit(planar);
             float speed = Down(Keys.ShiftKey) ? BoostSpeed : CruiseSpeed;
@@ -221,11 +309,11 @@ namespace SupermanStandaloneMod
         private static void Shockwave(Ped ped)
         {
             Vector3 center = ped.Position;
-            Ped[] nearbyPeds = World.GetNearbyPeds(ped, ShockRadius);
+            Ped[] nearbyPeds = NearbyPeds(ped, ShockRadius);
             for (int i = 0; i < nearbyPeds.Length && i < MaxShockEntities; i++)
                 if (nearbyPeds[i] != ped) ApplyShock(nearbyPeds[i], center);
 
-            Vehicle[] nearbyVehicles = World.GetNearbyVehicles(center, ShockRadius);
+            Vehicle[] nearbyVehicles = NearbyVehicles(center, ShockRadius);
             for (int i = 0; i < nearbyVehicles.Length && i < MaxShockEntities; i++)
                 ApplyShock(nearbyVehicles[i], center);
         }

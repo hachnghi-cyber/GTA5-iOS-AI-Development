@@ -16,5 +16,7 @@
     <!-- GTA.Game.IsKeyPressed uses System.Windows.Forms.Keys in SHVDN3. -->
     <Reference Include="System.Windows.Forms" />
     <Compile Include="SupermanStandalone.cs" />
+    <Compile Include="SupermanPowers.cs" />
+    <Compile Include="NativeNearby.cs" />
   </ItemGroup>
 </Project>
