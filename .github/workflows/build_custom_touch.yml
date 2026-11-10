@@ -1,0 +1,24 @@
+name: Build GTA V iOS v11.3 CustomTouch module
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  module:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build CustomTouch
+        run: bash ./build_on_mac.sh ./dist
+
+      - name: Check ARM64
+        run: xcrun lipo -info dist/libCustomTouch.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: customtouch-v11-3-arm64
+          path: dist/libCustomTouch.dylib
