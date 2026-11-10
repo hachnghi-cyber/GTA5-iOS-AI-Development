@@ -337,7 +337,14 @@ static BOOL HCCSendKeyboardUsage(uint8_t usage, BOOL down) {
 - (void)connectPad {
     if (_virtualPad) return;
     GCVirtualControllerConfiguration *config = [[GCVirtualControllerConfiguration alloc] init];
-    config.hidden = YES;
+    if (@available(iOS 17.0, *)) {
+        config.hidden = YES;
+    } else {
+        // Keeping the system virtual pad visible on iOS 16 could cover the
+        // game's own controls. PC-key buttons still work without this pad.
+        NSLog(@"[CustomTouch] gamepad mappings require iOS 17 or newer");
+        return;
+    }
     config.elements = [NSSet setWithArray:@[
         GCInputButtonA, GCInputButtonB, GCInputButtonX, GCInputButtonY,
         GCInputLeftShoulder, GCInputRightShoulder, GCInputLeftTrigger, GCInputRightTrigger,
@@ -391,7 +398,7 @@ static BOOL HCCSendKeyboardUsage(uint8_t usage, BOOL down) {
     center.x = MAX(20, MIN(_view.bounds.size.width - 20, center.x + delta.x));
     center.y = MAX(40, MIN(_view.bounds.size.height - 20, center.y + delta.y));
     button.center = center;
-    [gesture setTranslation:CGPointZero inView:_view];
+    [gesture setTranslation:CGPointMake(0, 0) inView:_view];
     if (gesture.state == UIGestureRecognizerStateEnded) {
         _settings[index][@"x"] = @(center.x / MAX(1, _view.bounds.size.width));
         _settings[index][@"y"] = @(center.y / MAX(1, _view.bounds.size.height));
@@ -575,11 +582,15 @@ static BOOL HCCSendKeyboardUsage(uint8_t usage, BOOL down) {
         @"LT":GCInputLeftTrigger, @"RT":GCInputRightTrigger
     };
     for (NSString *key in padKeys) {
-        [_virtualPad setValue:[active containsObject:key] ? 1 : 0 forButtonElement:padKeys[key]];
+        if (@available(iOS 17.0, *)) {
+            [_virtualPad setValue:[active containsObject:key] ? 1 : 0 forButtonElement:padKeys[key]];
+        }
     }
     CGFloat dx = ([active containsObject:@"RIGHT"] ? 1 : 0) - ([active containsObject:@"LEFT"] ? 1 : 0);
     CGFloat dy = ([active containsObject:@"UP"] ? 1 : 0) - ([active containsObject:@"DOWN"] ? 1 : 0);
-    [_virtualPad setPosition:CGPointMake(dx, dy) forDirectionPadElement:GCInputDirectionPad];
+    if (@available(iOS 17.0, *)) {
+        [_virtualPad setPosition:CGPointMake(dx, dy) forDirectionPadElement:GCInputDirectionPad];
+    }
 }
 
 @end

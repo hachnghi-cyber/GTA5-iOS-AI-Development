@@ -8,12 +8,12 @@ out_dir="${1:-$script_dir/dist}"
 mkdir -p "$out_dir"
 
 sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
-clang_path="$(xcrun --find clang)"
+clang_path="$(xcrun --find clang++)"
 
-"$clang_path" -arch arm64 -fobjc-arc -fobjc-exceptions -std=gnu++17 \
+"$clang_path" -arch arm64 -fobjc-arc -fobjc-exceptions -std=gnu++17 -stdlib=libc++ \
   -miphoneos-version-min=16.3 -isysroot "$sdk_path" \
   -dynamiclib -O2 -fvisibility=hidden \
-  -framework Foundation -framework UIKit -framework GameController \
+  -framework Foundation -framework UIKit -framework CoreGraphics -framework GameController \
   -Wl,-install_name,@rpath/libCustomTouch.dylib \
   -o "$out_dir/libCustomTouch.dylib" "$script_dir/CustomTouch.mm"
 
