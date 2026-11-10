@@ -2,7 +2,7 @@
 // Does not contain or load TamedMods' Windows-only Superman.asi.
 // Requires the port's ScriptHookV .NET runtime and its GTA API bridge.
 using System;
-using System.Windows.Forms;
+using Keys = System.Windows.Forms.Keys;
 using GTA;
 using GTA.Math;
 using GTA.Native;
