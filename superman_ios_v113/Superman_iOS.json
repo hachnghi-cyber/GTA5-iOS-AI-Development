@@ -1,0 +1,12 @@
+{
+  "cruise_speed": 30.0,
+  "boost_speed": 60.0,
+  "vertical_speed": 14.0,
+  "heat_range": 80.0,
+  "heat_damage": 10,
+  "heat_interval_ms": 180,
+  "shock_radius": 12.0,
+  "shock_force": 22.0,
+  "shock_lift": 8.0,
+  "shock_cooldown_ms": 2400
+}
