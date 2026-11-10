@@ -113,5 +113,11 @@ constexpr std::uint64_t SET_VEHICLE_ENGINE_HEALTH = 0x45F6D8EEF34ABEF1ULL;
 constexpr std::uint64_t SET_VEHICLE_ENGINE_ON = 0x2497C4717C8B881EULL;
 constexpr std::uint64_t SET_NIGHTVISION = 0x18F621F7A5B1F85DULL;
 constexpr std::uint64_t GET_GAMEPLAY_CAM_FOV = 0x65019750A0324133ULL;
+// Actor animation natives, for the visual/pose layer in R10.
+constexpr std::uint64_t REQUEST_ANIM_DICT = 0xD3BD40951412FEF6ULL;
+constexpr std::uint64_t HAS_ANIM_DICT_LOADED = 0xD031A9162D01088CULL;
+constexpr std::uint64_t TASK_PLAY_ANIM = 0xEA47FE3719165B94ULL;
+constexpr std::uint64_t IS_ENTITY_PLAYING_ANIM = 0x1F0B79228E461EC9ULL;
+constexpr std::uint64_t STOP_ANIM_TASK = 0x97FF36A1D40EA00AULL;
 } // namespace hash
 } // namespace shv

@@ -22,6 +22,12 @@ static NSString* findWav(NSString* name) {
                             stringByAppendingPathComponent:@"Superman_SFX"]];
         [folders addObject:[[document stringByAppendingPathComponent:@"scripthook"]
                             stringByAppendingPathComponent:@"Superman_SFX"]];
+        // The GTA V iOS launcher imports ScriptHook assets under GTAV/mods,
+        // not directly under Documents/mods. Keep both layouts supported.
+        [folders addObject:[document stringByAppendingPathComponent:
+                            @"GTAV/mods/scripthook/scripts/Superman_SFX"]];
+        [folders addObject:[document stringByAppendingPathComponent:
+                            @"GTAV/mods/scripthook/Superman_SFX"]];
     }
     for (NSString* folder in folders) {
         NSString* path = [folder stringByAppendingPathComponent:filename];

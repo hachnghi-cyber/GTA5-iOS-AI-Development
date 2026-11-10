@@ -223,8 +223,12 @@ RayHit traceRay(int ignorePed, float range) {
 }
 
 void drawBeam(Point3 start, Point3 end, int r, int g, int b) {
-    call<>(hash::DRAW_LINE, start.x, start.y, start.z, end.x, end.y, end.z,
-           r, g, b, 250);
+    // R8 had only a one-pixel line, which was nearly invisible on a phone.
+    // Render a thin bundle of parallel lines in world space instead of a
+    // costly custom GPU shader. Cap the count to protect mobile frame time.
+    for (float offset : {-0.045f, -0.022f, 0.0f, 0.022f, 0.045f})
+        call<>(hash::DRAW_LINE, start.x + offset, start.y, start.z + offset * 0.5f,
+               end.x + offset, end.y, end.z + offset * 0.5f, r, g, b, 255);
     call<>(hash::DRAW_LIGHT_WITH_RANGE, end.x, end.y, end.z, r, g, b, 6.5f, 3.0f);
 }
 
@@ -241,6 +245,10 @@ void particle(const char* effect, Point3 location, float scaleFactor) {
 
 class Superman {
 public:
+    static constexpr const char* kActivationDict = "amb@world_human_muscle_flex@arms_at_side@base";
+    static constexpr const char* kActivationAnim = "base";
+    static constexpr const char* kFlightDict = "skydive@base";
+    static constexpr const char* kFlightAnim = "free_idle";
     bool enabled = false;
     bool flight = false;
     bool combat = false;
@@ -254,6 +262,11 @@ public:
     std::uint32_t lastAttack = 0;
     std::uint32_t spacePressedAt = 0;
     std::uint32_t lastLaserFx = 0;
+    std::uint32_t lastFlightFx = 0;
+    std::uint32_t activationStartedAt = 0;
+    bool activationFxPending = false;
+    bool activationPosePending = false;
+    bool flightPoseActive = false;
     Point3 smoothedFlight{};
     Config config{};
     Input input{};
@@ -280,6 +293,40 @@ public:
             frozenEntity = 0;
         }
         if (!enabled) return;
+
+        // Stream particle and animation assets before calling their natives.
+        // Without this preload the R8 plugin often dropped its first effect.
+        if (!call<bool>(hash::HAS_NAMED_PTFX_ASSET_LOADED, "core"))
+            call<>(hash::REQUEST_NAMED_PTFX_ASSET, "core");
+        if (!call<bool>(hash::HAS_ANIM_DICT_LOADED, kActivationDict))
+            call<>(hash::REQUEST_ANIM_DICT, kActivationDict);
+        if (!call<bool>(hash::HAS_ANIM_DICT_LOADED, kFlightDict))
+            call<>(hash::REQUEST_ANIM_DICT, kFlightDict);
+
+        if (activationFxPending && call<bool>(hash::HAS_NAMED_PTFX_ASSET_LOADED, "core")) {
+            particle("exp_grd_flare", add(entityPosition(ped), {0, 0, 0.35f}), 1.6f);
+            particle("ent_dst_gen_gobstop", add(entityPosition(ped), {0, 0, 0.8f}), 0.9f);
+            shake(0.22f);
+            activationFxPending = false;
+        }
+        if (activationPosePending && call<bool>(hash::HAS_ANIM_DICT_LOADED, kActivationDict)) {
+            // Upper-body only + movement permitted. No permanent task lock.
+            call<>(hash::TASK_PLAY_ANIM, ped, kActivationDict, kActivationAnim,
+                   4.0f, -4.0f, 1100, 48, 1.0f, false, false, false);
+            activationPosePending = false;
+        }
+        if (now - activationStartedAt < 450U) {
+            const Point3 origin = add(entityPosition(ped), {0, 0, 1.0f});
+            call<>(hash::DRAW_LIGHT_WITH_RANGE, origin.x, origin.y, origin.z,
+                   85, 160, 255, 5.2f, 2.8f);
+        }
+        if (flight && call<bool>(hash::HAS_ANIM_DICT_LOADED, kFlightDict)) {
+            if (!call<bool>(hash::IS_ENTITY_PLAYING_ANIM, ped, kFlightDict, kFlightAnim, 3)) {
+                call<>(hash::TASK_PLAY_ANIM, ped, kFlightDict, kFlightAnim,
+                       3.0f, -3.0f, -1, 49, 1.0f, false, false, false);
+            }
+            flightPoseActive = true;
+        }
 
         if (config.invincible) call<>(hash::SET_ENTITY_INVINCIBLE, ped, true);
         if (config.noWantedLevel) {
@@ -336,14 +383,23 @@ public:
         if (carriedVehicle) call<>(hash::FREEZE_ENTITY_POSITION, carriedVehicle, false);
         if (frozenEntity) call<>(hash::FREEZE_ENTITY_POSITION, frozenEntity, false);
         if (ped && config.invincible) call<>(hash::SET_ENTITY_INVINCIBLE, ped, false);
+        if (ped && flightPoseActive)
+            call<>(hash::STOP_ANIM_TASK, ped, kFlightDict, kFlightAnim, 2.0f);
         enabled = flight = combat = bulletTime = xray = false;
+        activationFxPending = activationPosePending = flightPoseActive = false;
         carriedVehicle = frozenEntity = lockedTarget = 0;
     }
 
 private:
     void toggle(int ped) {
         if (enabled) shutdown(ped);
-        else { enabled = true; supermanPlaySound("super_jump", false); }
+        else {
+            enabled = true;
+            activationFxPending = true;
+            activationPosePending = true;
+            activationStartedAt = call<std::uint32_t>(hash::GET_GAME_TIMER);
+            supermanPlaySound("super_jump", false);
+        }
     }
 
     void handleFlight(int ped) {
@@ -368,6 +424,11 @@ private:
             supermanPlaySound("sonic_boom", false);
             shake(0.35f);
         }
+        if (boost && length(move) > 0.1f &&
+            call<std::uint32_t>(hash::GET_GAME_TIMER) - lastFlightFx >= 220U) {
+            lastFlightFx = call<std::uint32_t>(hash::GET_GAME_TIMER);
+            particle("exp_grd_flare", entityPosition(ped), 0.55f);
+        }
         boostPreviously = boost;
         if ((input.down(config.descend) || input.down(CTRL)) && !input.down(config.fly)) {
             const float speedNow = call<float>(hash::GET_ENTITY_SPEED, ped);
@@ -375,6 +436,10 @@ private:
                 flight = false;
                 smoothedFlight = {};
                 supermanStopSound("flight_loop");
+                if (flightPoseActive) {
+                    call<>(hash::STOP_ANIM_TASK, ped, kFlightDict, kFlightAnim, 2.0f);
+                    flightPoseActive = false;
+                }
             }
         }
     }
