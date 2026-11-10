@@ -1,0 +1,70 @@
+name: Build GTA V v11.3 C+ F10 ScriptHook bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'Optional direct HTTPS URL to the verified original GTA V v11.3 IPA; leave blank to build only the dylib'
+        required: false
+        type: string
+  push:
+    paths:
+      - 'custom_v113/**'
+      - '.github/workflows/build_customtouch_f10.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      IPA_URL: ${{ inputs.ipa_url || secrets.GTAV_IPA_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build new iOS ARM64 C+ F10 bridge
+        run: bash custom_v113/build_on_mac.sh custom_v113/dist
+      - name: Validate compiled module and required F10 strings
+        shell: bash
+        run: |
+          set -euo pipefail
+          file custom_v113/dist/libCustomTouch.dylib
+          test -s custom_v113/dist/libCustomTouch.dylib
+          xcrun --sdk iphoneos vtool -show-build custom_v113/dist/libCustomTouch.dylib
+          strings custom_v113/dist/libCustomTouch.dylib | grep -q 'KEY_F10'
+          codesign --verify --verbose=2 custom_v113/dist/libCustomTouch.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CustomTouch-v11.3-F10-Bridge-ARM64
+          path: custom_v113/dist/libCustomTouch.dylib
+          if-no-files-found: error
+      - name: Download optional original IPA
+        if: ${{ env.IPA_URL != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$IPA_URL" != https://* ]]; then
+            echo 'IPA_URL must use HTTPS' >&2
+            exit 1
+          fi
+          curl --fail --location --retry 3 --silent --show-error \
+            --output "$RUNNER_TEMP/GTAV-v11.3-original.ipa" "$IPA_URL"
+          file "$RUNNER_TEMP/GTAV-v11.3-original.ipa"
+      - name: Patch and ad-hoc sign optional IPA
+        if: ${{ env.IPA_URL != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 custom_v113/inject_ipa.py \
+            --ipa "$RUNNER_TEMP/GTAV-v11.3-original.ipa" \
+            --dylib custom_v113/dist/libCustomTouch.dylib \
+            --output "$RUNNER_TEMP/GTAV-v11.3-F10-BRIDGE-ADHOC-TEST.ipa"
+      - uses: actions/upload-artifact@v4
+        if: ${{ env.IPA_URL != '' }}
+        with:
+          name: GTA-v11.3-F10-Bridge-IPA-ADHOC-TEST
+          path: |
+            ${{ runner.temp }}/GTAV-v11.3-F10-BRIDGE-ADHOC-TEST.ipa
+            ${{ runner.temp }}/GTAV-v11.3-F10-BRIDGE-ADHOC-TEST.report.json
+          if-no-files-found: error
+          retention-days: 7
