@@ -1,4 +1,4 @@
-name: Build Superman standalone ScriptHook mod v11.3
+name: Build Superman standalone v11.3 expanded
 
 on:
   workflow_dispatch:
@@ -30,12 +30,12 @@ jobs:
           $stage = Join-Path $env:RUNNER_TEMP 'SupermanStandalone-import'
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Copy-Item $source (Join-Path $stage 'SupermanStandaloneSHVDN.dll')
-          $destination = Join-Path $env:RUNNER_TEMP 'SupermanStandalone-v11.3-IMPORT.zip'
+          $destination = Join-Path $env:RUNNER_TEMP 'SupermanStandalone-v11.3-Expanded-IMPORT.zip'
           Compress-Archive -Path (Join-Path $stage '*.dll') -DestinationPath $destination -Force
           Get-FileHash $source -Algorithm SHA256 | Format-List
       - uses: actions/upload-artifact@v4
         with:
-          name: SupermanStandalone-v11.3-IMPORT
-          path: ${{ runner.temp }}/SupermanStandalone-v11.3-IMPORT.zip
+          name: SupermanStandalone-v11.3-Expanded
+          path: ${{ runner.temp }}/SupermanStandalone-v11.3-Expanded-IMPORT.zip
           if-no-files-found: error
           retention-days: 14
