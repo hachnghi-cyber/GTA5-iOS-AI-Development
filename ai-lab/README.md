@@ -29,3 +29,6 @@ Hệ thống đã tích hợp 100 vai trò kỹ thuật vào 10 nhóm. Đây là
 2. Thêm repository variable ENABLE_CODEX_REVIEW, giá trị true.
 3. Sau khi merge PR, vào Actions > GTA AI Lab - Optional Codex Review > Run workflow.
 4. Đọc báo cáo trong Artifact, tự phê duyệt thay đổi bằng PR.
+
+## Giao nhiệm vụ qua GitHub Issues trên iPhone
+Sau khi Pull Request được merge vào main, tạo Issue mới có tiêu đề bắt đầu bằng [AI], ví dụ: [AI] Phân tích crash khi gọi xe bằng Menyoo. GitHub Action gta-ai-lab-issue-router.yml sẽ tự chọn 5 chuyên gia và bình luận vào Issue, không cần API key hay phí AI. Có thể dùng nhãn ai-lab với Issue đã có, nhưng nhãn phải được tạo trong repository trước. Chức năng trả lời Issue chưa được kiểm thử trên nhánh main; workflow issues chỉ hoạt động khi file có trên default branch.
