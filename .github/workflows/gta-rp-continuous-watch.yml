@@ -1,0 +1,49 @@
+name: GTA RP - Continuous Source Watch
+on:
+  schedule:
+    - cron: '11,41 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ai-lab/**'
+      - '.github/workflows/gta-rp-continuous-watch.yml'
+  pull_request:
+    paths:
+      - 'ai-lab/**'
+      - '.github/workflows/gta-rp-continuous-watch.yml'
+permissions:
+  contents: read
+concurrency:
+  group: gta-rp-watch-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inspect:
+    if: ${{ vars.DISABLE_RP_WATCH != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile diagnostic tools
+        run: python -m compileall -q ai-lab
+      - name: Run lab and Roleplay tests
+        run: python -m unittest discover -s ai-lab/tests -v
+      - name: Generate versioned continuity report
+        run: |
+          mkdir -p ai-lab/reports
+          python ai-lab/continuity.py validate
+          python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
+          python ai-lab/continuous_watch.py --output ai-lab/reports/RP_CONTINUOUS_STATUS.json
+      - name: Upload watchdog report
+        uses: actions/upload-artifact@v4
+        with:
+          name: rp-continuous-watch
+          path: |
+            ai-lab/reports/RP_HANDOFF.md
+            ai-lab/reports/RP_CONTINUOUS_STATUS.json
+          if-no-files-found: error
+          retention-days: 3

@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "baseline-inventory",
+  "phase": "ipa-v12-baselined-source-integration-pending",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -29,6 +29,11 @@
       "claim": "The AI Lab Pull Request #1 is a draft and is not merged into main",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/1",
       "scope": "observed at project bootstrap"
+    },
+    {
+      "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
+      "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
     }
   ],
   "unknowns": [
@@ -40,12 +45,15 @@
     "Apple SDK build/link/signing availability, and hardware crash/performance results"
   ],
   "baseline": {
-    "ipa_sha256": null,
-    "game_version": null,
-    "macho_uuid": null,
+    "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+    "game_version": "user-labeled v12; CFBundleShortVersionString 1.0",
+    "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
     "device_tested": false,
     "supported_ios_versions": [],
-    "actual_build_artifact": null
+    "actual_build_artifact": null,
+    "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+    "binary_count": 15,
+    "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
   },
   "decisions": [
     {
@@ -69,17 +77,22 @@
     {
       "id": "RP-001",
       "priority": 1,
-      "status": "blocked",
+      "status": "in-progress",
       "title": "Inventory authorized target IPA and establish immutable binary baseline",
       "blocked_on": [
-        "IPA sample accessible in current authorized environment"
+        "Runtime game-frame callback and authenticated game network carrier remain unverified; requires device logs/source/debug access"
       ],
       "acceptance": [
         "SHA256 recorded",
         "Info.plist version, executable, Mach-O slices/UUID, dylib deps inventoried",
         "No extracted copyrighted assets published"
       ],
-      "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2"
+      "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2",
+      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required.",
+      "evidence": [
+        "ai-lab/projects/roleplay-ios/baselines/v12-verified.json",
+        "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md"
+      ]
     },
     {
       "id": "RP-002",
@@ -98,16 +111,16 @@
     {
       "id": "RP-003",
       "priority": 3,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Inventory Roleplay source snapshots and map implemented features",
-      "blocked_on": [
-        "Locate latest RP source revision"
-      ],
+      "blocked_on": [],
       "acceptance": [
         "Mod/API dependencies documented",
         "Police/cuff/escort/jail/EMS/taxi features classified source-only vs tested",
         "Gap report"
-      ]
+      ],
+      "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
+      "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet."
     },
     {
       "id": "RP-004",
@@ -154,7 +167,7 @@
       ]
     }
   ],
-  "next_action": "Continue RP-001 in GitHub Issue #2: obtain authorized target IPA and latest Roleplay source snapshot, run static inventory without modifying original, update this state file with SHA256/UUID/provenance and verifiable evidence in a feature-branch PR.",
+  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
