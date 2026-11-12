@@ -1,0 +1,48 @@
+name: Police RP v1.8.1 - iOS SDK FIX - Network manager READ ONLY
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import source and run offline parser tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f PoliceRP_v18_Source_FIXED.zip
+          mkdir -p src_v18 out
+          unzip -oq PoliceRP_v18_Source_FIXED.zip -d src_v18
+          python3 -m unittest discover -s src_v18/Tests -p 'test_*.py' -v
+      - name: Verify iPhoneOS SDK-compatible Mach API
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '#include <mach/vm_map.h>' src_v18/Diagnostics/PoliceRPNetworkProbe.c
+          if grep -Fq 'mach_vm_read_overwrite' src_v18/Diagnostics/PoliceRPNetworkProbe.c; then
+            echo 'ERROR: old unsupported iPhoneOS mach_vm_read_overwrite code detected'
+            exit 1
+          fi
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          printf '%s\n' '#include <mach/mach.h>' '#include <mach/vm_map.h>' 'int main(void) { vm_size_t n=0; return (int)vm_read_overwrite(mach_task_self(),0,0,0,&n); }' \
+            | xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+                -std=c11 -Wall -Wextra -Werror -fsyntax-only -x c -
+      - name: Build iOS iPhone arm64 read-only probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            src_v18/Diagnostics/PoliceRPNetworkProbe.c -o out/PoliceRPProbe.dylib
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          xcrun vtool -show-build out/PoliceRPProbe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          printf '%s\n' 'v1.8.1 iPhoneOS SDK vm_read_overwrite READ ONLY; no hooks/no arrest/no multiplayer send' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v18.1-iPhone-ARM64-NETWORK-MANAGER-READ-ONLY
+          path: out/
+          retention-days: 7
