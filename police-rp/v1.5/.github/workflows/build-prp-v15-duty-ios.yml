@@ -1,0 +1,35 @@
+name: Police RP v1.5 - iOS native police duty read-only probe
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Diagnostics/PoliceRPDutyProbe.c'
+      - '.github/workflows/build-prp-v15-duty-ios.yml'
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile iOS ARM64 read-only library
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden \
+            -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            Diagnostics/PoliceRPDutyProbe.c -o out/PoliceRPProbe.dylib
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          xcrun vtool -show-build out/PoliceRPProbe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          printf '%s\n' 'READ ONLY v1.5: NO POLICE RP GAMEPLAY, NETWORK OR HOOK.' \
+            'Use original GTA V v12 IPA to replace previous v1.4 diagnostic library.' \
+            'After sign/install, check Documents/PoliceRPDuty-v15.txt.' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v15-iOS-arm64-DUTY-PROBE-NOT-GAMEPLAY
+          path: out/
+          retention-days: 7
