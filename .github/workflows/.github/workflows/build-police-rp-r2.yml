@@ -1,0 +1,829 @@
+name: Police RP R2 iPhone ARM64
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+    - name: Prepare bundled reviewed source
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p PoliceRP-R2/Source PoliceRP-R2/Tools PoliceRP-R2/Tests
+        cat > 'PoliceRP-R2/README_VI.md' <<'PRP_BUNDLE_EOF_0'
+        # PoliceRP R2 — mã nguồn thử nghiệm bắt người chơi Online trên v12
+
+        Trạng thái: đã viết mã nguồn, kiểm thử giao thức trên máy tính và đối chiếu điểm vá với IPA. CHƯA biên dịch dylib iOS trong phiên này; CHƯA thử hai iPhone; CHƯA có IPA R2 hoàn thiện. Không nhập ZIP mã nguồn này vào mục Mods.
+
+        ## Đã triển khai trong mã
+
+        - Hai máy tự giới thiệu phiên bản RP và nonce 64-bit mới mỗi lần bật.
+        - Cảnh sát gửi yêu cầu còng; máy mục tiêu kiểm tra phiên bản, người nhận, nonce, trình tự gói, vai trò đã quảng bá, khoảng cách và trạng thái nhân vật trước khi áp dụng.
+        - Chỉ báo nhận được xác nhận sau ACK của máy mục tiêu. Đây là ACK áp dụng cờ handcuffs ở máy mục tiêu, chưa phải bằng chứng animation còng và giới hạn điều khiển đã hoạt động trên thiết bị thật.
+        - Còng/tháo còng có gửi lại, giới hạn chờ 3 giây. Máy mục tiêu tự tháo khi thiếu heartbeat 2,5 giây, peer hết hạn hoặc hết 60 giây thử nghiệm.
+        - Chết, đổi ped hoặc mất trạng thái Online: dừng RP, trả cờ còng đã thay đổi nếu còn đúng thực thể, cần bật F9 lại. Hạn chế điều khiển chỉ áp dụng từng frame, không ghi vĩnh viễn vào cấu hình.
+        - Chặn thực thi MacportWorkTaskFrame khi RP bật, đang Online và nhận ca cảnh sát (job 0..2). Nhận ca/trang phục/xe do bản gốc quản lý. Không nhét player ped vào slot NPC, không gọi cleanup NPC cho player.
+        - IPA patcher kiểm SHA256/UUID, thêm dylib và hai hook tĩnh. Không sửa trang mã executable khi game đang chạy.
+        - Ghi log Documents/PoliceRP-R2.log; mỗi lần mở ứng dụng ghi mới để không tích luỹ vô hạn.
+
+        ## Chưa có
+
+        - Chưa kiểm thử Online thật; có thể đường gửi/nhận, phím custom hoặc vị trí hook chưa hoạt động ở runtime.
+        - Chưa làm áp giải, đưa lên xe, đưa về đồn, nhà tù, tiền phạt hoặc giao diện chọn tên. Bản đầu chỉ thử còng/tháo và hạn chế điều khiển.
+        - Chưa thêm animation còng đồng bộ. Không gọi MacportWorkArrestScene vì helper đó dùng trạng thái scene nghề NPC.
+        - Đây là phòng RP hợp tác: cả hai máy bật RP và cài cùng phiên bản. Chưa có host phê duyệt vai trò, chống client gian lận hay xử lý host migration được kiểm chứng. Không phải FiveM và không dùng để bắt máy chạy IPA gốc.
+        - Mục tiêu được chọn theo slot đầu tiên đủ điều kiện trong 3m, chưa phải nhân vật gần nhất hay menu chọn tên. Chỉ thử hai người, cả hai đi bộ.
+
+        ## Build bằng GitHub Actions
+
+        File `build-police-rp-r2.yml` được cung cấp riêng là workflow tự chứa toàn bộ mã nguồn. Chỉ cần tạo/thay file `.github/workflows/build-police-rp-r2.yml` trong repository, không cần upload thư mục nguồn và không cần đưa IPA lên GitHub. Workflow tự tạo nguồn trên máy build, chạy test và biên dịch dylib.
+
+        Nếu dùng cấu trúc nguồn thông thường thay cho workflow tự chứa, đặt đúng hai đường dẫn ở gốc repository:
+
+        1. `PoliceRP-R2/Source/ios_adapter.c` cùng toàn bộ thư mục PoliceRP-R2.
+        2. `.github/workflows/build-police-rp-r2.yml`.
+
+        Không đặt `.github` bên trong một thư mục bọc khác. Không cần xoá các mod cũ trong repository.
+
+        Mở Actions → Police RP R2 iPhone ARM64 → Run workflow. Khi thành công, tải artifact `PoliceRP-R2-iPhone-ARM64-EXPERIMENTAL` rồi gửi ZIP artifact lại để ghép với IPA đã cung cấp. Artifact phải có `PoliceRP_R2.dylib` và SHA256.txt; build thành công vẫn chưa chứng minh chạy được trên iPhone.
+
+        Workflow tự chứa chỉ xuất dylib và ZIP mã nguồn. Patcher trong mã nguồn dùng để ghép với IPA gốc tại đây hoặc trên Mac; không yêu cầu công khai IPA trong repository.
+
+        Build thủ công trên Mac có Xcode:
+
+        ```sh
+        mkdir -p build
+        sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
+        xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$sdk_path" \
+          -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -fstack-protector-strong \
+          -dynamiclib PoliceRP-R2/Source/rp_core.c PoliceRP-R2/Source/ios_adapter.c \
+          -Wl,-install_name,@executable_path/Frameworks/PoliceRP_R2.dylib \
+          -Wl,-exported_symbol,_PRPFrame -Wl,-exported_symbol,_PRPWorkTask \
+          -o build/PoliceRP_R2.dylib
+        python3 PoliceRP-R2/Tools/patch_ipa.py GTAV-v12.ipa build/PoliceRP_R2.dylib build/PoliceRP-R2-UNSIGNED.ipa
+        ```
+
+        IPA đầu vào phải có SHA256 `23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc`. File GTAV-v12(2).ipa đã gửi khớp hash này. Patcher giữ nguyên bản gốc và từ chối phiên bản khác. IPA đầu ra cần ký lại toàn bộ app và dylib; chữ ký cũ không còn hợp lệ.
+
+        ## Quy trình thử dự kiến sau khi build và ghép IPA
+
+        1. Sao lưu save. Hai máy dùng cùng IPA R2, vào cùng phòng Online riêng, đi bộ.
+        2. Khi chưa nhận ca, cả hai bấm F9 để bật RP. Dùng bàn phím hoặc mục phím mod/nút custom có hỗ trợ F9. Chưa thêm nút cảm ứng riêng trong R2.
+        3. Máy cảnh sát chọn nghề cảnh sát và nhận ca. Máy mục tiêu vẫn để RP bật. Đợi ít nhất 2 giây để hai máy trao đổi HELLO.
+        4. Đứng cách nhau dưới 3m, cả hai ngoài xe; cảnh sát bấm E. Thông báo chờ chưa có nghĩa bắt thành công.
+        5. Chỉ khi có thông báo máy người chơi xác nhận mới kiểm tra phía mục tiêu: cờ còng, chạy/đi bộ, bắn và nút Pause. Chưa đảm bảo có animation tay sau lưng.
+        6. Cảnh sát bấm E lần nữa để thả. Người bị còng có thể bấm F9 để thoát thử nghiệm ngay.
+        7. Cảnh sát kết thúc ca trước khi đổi chế độ RP bằng F9. Khi RP tắt, nghề NPC gốc tiếp tục hoạt động.
+        8. Nếu không hoạt động, gửi PoliceRP-R2.log của CẢ HAI máy và run.log nếu crash. `tx_attempts` chỉ là số lần gọi hàm gửi, không chứng minh gói đã đến; `rx_scan_matches` có thể đếm lại event trong ring, còn `peers` cho biết HELLO đang hợp lệ.
+
+        ## Kiểm tra đã chạy trong phiên phát triển
+
+        - Giao thức C: 14 kịch bản, 50.000 đầu vào lỗi; AddressSanitizer và UndefinedBehaviorSanitizer không báo lỗi với leak detection tắt vì môi trường chạy không hỗ trợ LeakSanitizer.
+        - 8 kiểm tra Python trên IPA gốc: hash/UUID, điểm BL, header trống, import dlsym, offset hàm/vtable và giải mã stub ARM64 bằng LLVM.
+        - Kiểm thử adapter với hàm engine giả lập: đọc ring, nhận HELLO/CUFF và phát ACK sau thay cờ, F9 khôi phục, điều khiển hết hạn, gọi JobsUpdate gốc, nhánh ngừng NPC, loại mục tiêu trong xe. Các test này chạy mã adapter thật nhưng không chạy engine iOS.
+        - C adapter: kiểm tra cú pháp với GCC và warnings-as-errors. Đây KHÔNG thay thế biên dịch bằng iPhoneOS SDK.
+        - Chưa chạy workflow GitHub, chưa tạo dylib iOS, chưa xác minh khởi động IPA hay kết nối hai máy.
+
+        ## Kết quả reverse engineering mới
+
+        - `CScriptedGameEvent::Decide` tại 0x10190f6f8 chuyển netPlayer nguồn sang constructor CEventNetworkScriptEvent.
+        - Constructor tại 0x1006aa770 sửa byte sender trong payload+8 dựa trên netPlayer+33 rồi sao chép payload vào event+25.
+        - Vtable event: 0x102647820 (symbol vtable +16). Clone cuối cùng dùng lại vtable này.
+        - Ring event: count+4016, head+4012, 500 con trỏ tại +8; receiver sao chép và không sửa/xoá event của game.
+        - Gói 244 byte dùng marker riêng ở +28, opcode 0x52500002; nhánh opcode không biết của JobsUpdate quay lại vòng quét. Các trường do stock sender quản lý không dùng làm trạng thái RP.
+        - Hai BL: 0xe5188 → JobsUpdate, 0xe6de0 → WorkTaskFrame. Stub gọi dlsym đã có trong executable, giữ x0/x1/x2/x29/LR và fallback về hàm gốc nếu thiếu export.
+
+        Tất cả địa chỉ trên là VM address chưa cộng ASLR (trừ hai BL nêu theo file offset). Vai trò police ở R2 vẫn do peer quảng bá, chưa có xác thực host; source sender do engine sửa không làm toàn bộ giao thức trở thành hệ thống chống gian lận.
+
+        Nguồn Internet tham khảo kiến trúc, không dùng offset FiveM cho iOS:
+        - https://docs.fivem.net/docs/scripting-manual/networking/ids/
+        - https://docs.fivem.net/docs/developers/server-security/
+        - https://docs.fivem.net/docs/scripting-manual/working-with-events/triggering-events/
+        PRP_BUNDLE_EOF_0
+        cat > 'PoliceRP-R2/Source/ios_adapter.c' <<'PRP_BUNDLE_EOF_1'
+        /* Exact GTA5 v12 UUID only. Experimental, cooperative RP, not FiveM. */
+        #include "rp_core.h"
+        #include <stdint.h>
+        #include <string.h>
+        #include <stdlib.h>
+        #include <stdio.h>
+        #include <time.h>
+        extern const void *_dyld_get_image_header(uint32_t);
+        typedef struct {float x;uint32_t p0;float y;uint32_t p1;float z;uint32_t p2;} Vec;
+        static uintptr_t base;
+        static RPState state;
+        static int ready, applied_ped, previous_cuffs, session_ped;
+        static uintptr_t applied_entity;
+        static unsigned session_slot;
+        static FILE *logfile;
+        static uint32_t tx_attempts,rx_matches,invalid_rings,diag_at;
+        #ifndef FN
+        #define FN(off,T) ((T)(base+(off)))
+        #endif
+        #ifndef I32
+        #define I32(off) (*(const int32_t *)(base+(off)))
+        #endif
+        #ifndef U8
+        #define U8(off) (*(const uint8_t *)(base+(off)))
+        #endif
+        static uint32_t now_ms(void){
+         struct timespec t;
+         if(clock_gettime(CLOCK_MONOTONIC,&t))return 0;
+         return (uint32_t)((uint64_t)t.tv_sec*1000+(uint64_t)t.tv_nsec/1000000);
+        }
+        static void logline(const char *s){
+         if(!logfile){const char *home=getenv("HOME");char path[1024];
+          if(home && snprintf(path,sizeof(path),"%s/Documents/PoliceRP-R2.log",home)<(int)sizeof(path))logfile=fopen(path,"w");}
+         if(logfile){fprintf(logfile,"%u %s\n",now_ms(),s);fflush(logfile);}
+        }
+        static void notice(void *ctx,const char *s){(void)ctx;logline(s);FN(0x10e6ec,void(*)(const char *))(s);}
+        static int exists(int p){return p && FN(0xc39174,int(*)(int))(p);}
+        static int alive(int p){return exists(p)&&!FN(0xc3d298,int(*)(int,int))(p,0);}
+        static int selfped(void){return FN(0xd62d70,int(*)(void))();}
+        static int active(unsigned slot){return slot<32 && FN(0xf6fbc,int(*)(int))((int)slot);}
+        static int ped(unsigned slot){return active(slot)?FN(0xd60a48,int(*)(int))((int)slot):0;}
+        static int online(void){return I32(0x27b1ae8)==3 && U8(0x355577d)==1 && U8(0x35501fc)==1;}
+        static int police(void){return I32(0x27b1b2c)>=0&&I32(0x27b1b2c)<=2&&U8(0x355ee34)==1;}
+        static int near(void *ctx,unsigned slot){
+         (void)ctx;int a=selfped(),b=ped(slot);if(a==b||!alive(a)||!alive(b))return 0;
+         if(FN(0xd252f4,int(*)(int,int))(a,0)||FN(0xd252f4,int(*)(int,int))(b,0))return 0;
+         Vec av=FN(0xc3ab68,Vec(*)(int,int))(a,1),bv=FN(0xc3ab68,Vec(*)(int,int))(b,1);
+         float dx=av.x-bv.x,dy=av.y-bv.y,dz=av.z-bv.z,d=dx*dx+dy*dy+dz*dz;
+         return d>=0.0f&&d<=9.0f; /* NaN/Inf rejected by comparisons */
+        }
+        static int cuffs(void *ctx,int on){
+         (void)ctx;
+         if(!on){
+          /* Never restore a stale GUID onto a newly spawned/reused entity. */
+          if(applied_ped && exists(applied_ped) && (uintptr_t)FN(0x22f58,void *(*)(int))(applied_ped)==applied_entity)
+           FN(0xd281c4,void(*)(int,int))(applied_ped,previous_cuffs);
+          applied_ped=0;applied_entity=0;return 1;
+         }
+         int p=selfped();if(!alive(p))return 0;
+         uintptr_t entity=(uintptr_t)FN(0x22f58,void *(*)(int))(p);if(!entity)return 0;
+         previous_cuffs=(*(const uint32_t *)(entity+5232)&0x01000000u)!=0;
+         if(previous_cuffs)return 0; /* do not take ownership of another mod's restraint */
+         FN(0xd281c4,void(*)(int,int))(p,1);
+         if(!(*(const uint32_t *)(entity+5232)&0x01000000u))return 0;
+         applied_ped=p;applied_entity=entity;return 1;
+        }
+        static void send_message(void *ctx,const RPMessage *message,uint32_t mask){
+         (void)ctx;if(!online())return;
+         unsigned me=(unsigned)FN(0xd62d30,int(*)(void))();if(me>=32)return;
+         uint32_t present=0;for(unsigned i=0;i<32;i++)if(i!=me && (mask&(1u<<i)) && active(i))present|=1u<<i;
+         if(!present)return;
+         RPMessage m=*message;
+         tx_attempts++;
+         /* This function owns sequence allocation and network event construction. */
+         FN(0xf5e34,void(*)(RPMessage *,uint32_t,uint32_t))(&m,RP_OPCODE,present);
+        }
+        static int key(int vk){
+         void *kb=(void *)(base+0x2d51c88);
+         int (*f)(void *,int,int,const char *,const char *)=FN(0xe8de64,int(*)(void *,int,int,const char *,const char *));
+         return f(kb,vk,0,0,0)||f(kb,vk,3,0,0);
+        }
+        static int check_image(void){
+         const uint8_t *b=_dyld_get_image_header(0);uint32_t magic,ncmd,size;
+         if(!b)return 0;
+         memcpy(&magic,b,4);memcpy(&ncmd,b+16,4);memcpy(&size,b+20,4);
+         if(magic!=0xfeedfacf||ncmd>100||size>0x3000)return 0;
+         const uint8_t expected[16]={0x6a,0x49,0x8e,0x32,0xe7,0x0c,0x33,0x4c,0xbc,0xa3,0xaf,0xfd,0x35,0xe8,0xd1,0x71};
+         uint32_t off=32;
+         for(uint32_t i=0;i<ncmd;i++){
+          uint32_t cmd,sz; if(off+8>32+size)return 0;
+          memcpy(&cmd,b+off,4);memcpy(&sz,b+off+4,4);
+          if(sz<8||off+sz>32+size)return 0;
+          if(cmd==0x1b&&sz==24&&!memcmp(b+off+8,expected,16)){base=(uintptr_t)b;return 1;}
+          off+=sz;
+         }return 0;
+        }
+        static void receive_messages(void){
+         uint8_t *group=FN(0x69046c,uint8_t *(*)(void))();if(!group)return;
+         int32_t count,head;memcpy(&count,group+4016,4);memcpy(&head,group+4012,4);
+         if(count<0||count>500||head<0||head>=500){invalid_rings++;return;}
+         for(int i=1;i<=count;i++){
+          uint8_t *event;memcpy(&event,group+8+8*((head+i)%500),8);if(!event)continue;
+          uintptr_t vt;memcpy(&vt,event,8);
+          /* CEventNetworkScriptEvent's exact vtable, set in constructor at 0x6aa7b8. */
+          if(vt!=base+0x2647820u)continue;
+          RPMessage m;memcpy(&m,event+25,sizeof(m));
+          /* Constructor corrects payload sender byte from engine netPlayer+33.
+             Full sender must still be <32. This is not hostile-client authentication. */
+          if(m.outer==RP_OUTER&&m.magic==RP_MAGIC&&m.opcode==RP_OPCODE){rx_matches++;rp_receive(&state,&m,sizeof(m));}
+         }
+        }
+        static void restrict_controls(void){
+         if(!state.cuffed)return;
+         /* Leave Pause, camera and custom F9 available. Per-frame disable auto-expires. */
+         static const int controls[]={21,22,23,24,25,30,31,37,44,45,47,58,140,141,142,143,257,263,264};
+         for(unsigned i=0;i<sizeof(controls)/sizeof(controls[0]);i++)FN(0xd1b904,void(*)(int,int,int))(0,controls[i],1);
+        }
+        __attribute__((visibility("default")))
+        void PRPFrame(void *player,int networkMode){
+         if(!ready){if(!check_image())return;ready=1;logline("R2 loaded; F9 toggles cooperative RP; default OFF");}
+         int valid=online();int me=valid?selfped():0;
+         unsigned slot=valid?(unsigned)FN(0xd62d30,int(*)(void))():RP_NONE;
+         if(state.enabled && (!valid||!alive(me)||me!=session_ped||slot!=session_slot)){
+          rp_stop(&state);logline("RP stopped: session/death/ped change; re-enable F9");
+         }
+         if(valid&&key(0x78)){
+          if(state.enabled && (state.cuffed||!U8(0x355ee34))){rp_stop(&state);notice(0,"RP: da tat");}
+          else if(U8(0x355ee34)){notice(0,"RP: ket thuc ca truoc khi doi che do");}
+          else if(alive(me)&&slot<32){
+           uint64_t n;do{arc4random_buf(&n,sizeof(n));}while(!n);
+           RPIO io={0,send_message,near,cuffs,notice};rp_init(&state,io,slot,n,now_ms());
+           session_ped=me;session_slot=slot;notice(0,"RP: da bat; ca hai may can bat F9");
+          }
+         }
+         if(state.enabled){
+          rp_tick(&state,now_ms(),police());receive_messages();
+          if((uint32_t)(state.now-diag_at)>=5000){
+           unsigned peers=0;for(unsigned i=0;i<32;i++)if(state.peer[i].nonce&&(uint32_t)(state.now-state.peer[i].seen)<RP_PEER_MS)peers++;
+           char line[192];snprintf(line,sizeof(line),"diag tx_attempts=%u rx_scan_matches=%u peers=%u phase=%u cuffed=%d invalid_ring=%u",
+            tx_attempts,rx_matches,peers,state.phase,state.cuffed,invalid_rings);logline(line);diag_at=state.now;
+          }
+          if(police()&&!state.cuffed && (key(0x45)||FN(0xd1aeb8,int(*)(int,int))(0,51))){
+           unsigned target=RP_NONE;
+           /* First compatible nearby peer in deterministic slot order. */
+           for(unsigned i=0;i<32;i++)if(i!=slot&&state.peer[i].nonce&&near(0,i)){target=i;break;}
+           if(!rp_action(&state,target))notice(0,"RP: chua thay nguoi choi bat RP trong 3m");
+          }
+         }
+         FN(0xea024,void(*)(void *,int))(player,networkMode);
+         restrict_controls();
+        }
+        __attribute__((visibility("default")))
+        int PRPWorkTask(void *task,int p,const void *position){
+         if(!ready && !check_image())return 0;
+         /* No player handle is ever written into stock NPC state. Return 0 = in progress. */
+         if(state.enabled&&online()&&police())return 0;
+         return FN(0x112010,int(*)(void *,int,const void *))(task,p,position);
+        }
+        PRP_BUNDLE_EOF_1
+        cat > 'PoliceRP-R2/Source/rp_core.c' <<'PRP_BUNDLE_EOF_2'
+        #include "rp_core.h"
+        #include <string.h>
+        static uint64_t nonce(uint32_t lo,uint32_t hi){return (uint64_t)lo|((uint64_t)hi<<32);}
+        static uint32_t age(uint32_t now,uint32_t then){return now-then;}
+        static int fresh(RPState *s,unsigned p){return p<32 && s->peer[p].nonce && age(s->now,s->peer[p].seen)<RP_PEER_MS;}
+        static void note(RPState *s,const char *t){if(s->io.notice)s->io.notice(s->io.ctx,t);}
+        static void emit(RPState *s,unsigned target,unsigned kind,uint32_t tx,uint64_t dst){
+         RPMessage m={0};m.outer=RP_OUTER;m.sender=s->self;m.opcode=RP_OPCODE;
+         m.magic=RP_MAGIC;m.version=RP_VERSION;m.kind=kind;m.target=target;
+         m.nonce_lo=(uint32_t)s->nonce;m.nonce_hi=(uint32_t)(s->nonce>>32);
+         m.target_lo=(uint32_t)dst;m.target_hi=(uint32_t)(dst>>32);
+         m.transaction=tx;m.sequence=++s->sequence;m.police=(uint32_t)s->police;
+         s->io.send(s->io.ctx,&m,target==RP_ALL?RP_ALL:(1u<<target));
+        }
+        static void local_release(RPState *s){
+         if(s->cuffed){s->io.cuffs(s->io.ctx,0);note(s,"RP: da thao cong");}
+         s->released_owner=s->owner;s->released_nonce=s->owner_nonce;s->released_tx=s->owner_tx;
+         s->cuffed=0;s->owner=RP_NONE;s->owner_nonce=0;s->owner_tx=0;
+        }
+        static void clear_out(RPState *s){s->phase=RP_IDLE;s->out_peer=RP_NONE;s->out_nonce=0;s->out_tx=0;}
+        void rp_init(RPState *s,RPIO io,unsigned self,uint64_t n,uint32_t now){
+         memset(s,0,sizeof(*s));s->io=io;s->self=self;s->nonce=n;s->now=now;
+         s->enabled=self<32&&n!=0;s->owner=RP_NONE;s->out_peer=RP_NONE;s->released_owner=RP_NONE;
+         s->hello_at=now-1000;
+        }
+        void rp_stop(RPState *s){
+         if(!s->enabled)return;
+         if(s->phase!=RP_IDLE)emit(s,s->out_peer,RP_RELEASE,s->out_tx,s->out_nonce);
+         local_release(s);clear_out(s);s->enabled=0;
+        }
+        int rp_action(RPState *s,unsigned target){
+         if(!s->enabled||!s->police||s->cuffed)return 0;
+         if(s->phase!=RP_IDLE){
+          s->phase=RP_RELEASING;s->out_started=s->now;s->out_sent=s->now;
+          emit(s,s->out_peer,RP_RELEASE,s->out_tx,s->out_nonce);return 1;
+         }
+         if(target==s->self||!fresh(s,target)||!s->io.near(s->io.ctx,target))return 0;
+         s->out_peer=target;s->out_nonce=s->peer[target].nonce;s->out_tx=++s->next_tx;
+         if(!s->out_tx)s->out_tx=++s->next_tx;
+         s->phase=RP_REQUESTING;s->out_started=s->out_sent=s->now;
+         emit(s,target,RP_CUFF,s->out_tx,s->out_nonce);note(s,"RP: dang cho may kia xac nhan");return 1;
+        }
+        void rp_tick(RPState *s,uint32_t now,int police){
+         if(!s->enabled)return;
+         s->now=now;int changed=s->police!=!!police;s->police=!!police;
+         if(changed||age(now,s->hello_at)>=1000){emit(s,RP_ALL,RP_HELLO,0,0);s->hello_at=now;}
+         if(s->cuffed && (!fresh(s,s->owner)||s->peer[s->owner].nonce!=s->owner_nonce||
+            !s->peer[s->owner].police||age(now,s->lease_at)>=RP_LEASE_MS||age(now,s->cuff_at)>=RP_MAX_CUFF_MS))local_release(s);
+         if(s->phase==RP_IDLE)return;
+         if(!s->police && s->phase!=RP_RELEASING){s->phase=RP_RELEASING;s->out_started=now;s->out_sent=now-500;}
+         if(!fresh(s,s->out_peer)||s->peer[s->out_peer].nonce!=s->out_nonce){clear_out(s);return;}
+         if(s->phase!=RP_HOLDING && age(now,s->out_started)>=3000){
+          if(s->phase==RP_REQUESTING){emit(s,s->out_peer,RP_RELEASE,s->out_tx,s->out_nonce);note(s,"RP: khong nhan duoc xac nhan");}
+          clear_out(s);return;
+         }
+         if(s->phase==RP_HOLDING && age(now,s->out_started)>=RP_MAX_CUFF_MS){s->phase=RP_RELEASING;s->out_started=now;s->out_sent=now-500;}
+         if(age(now,s->out_sent)>=500){
+          emit(s,s->out_peer,s->phase==RP_REQUESTING?RP_CUFF:s->phase==RP_HOLDING?RP_KEEP:RP_RELEASE,s->out_tx,s->out_nonce);
+          s->out_sent=now;
+         }
+        }
+        void rp_receive(RPState *s,const void *data,size_t len){
+         RPMessage m;
+         if(!s->enabled||!data||len!=sizeof(m))return;
+         memcpy(&m,data,sizeof(m));
+         if(m.outer!=RP_OUTER||m.opcode!=RP_OPCODE||m.magic!=RP_MAGIC||m.version!=RP_VERSION||
+            m.sender>=32||m.sender==s->self||!m.sequence||m.police>1)return;
+         uint64_t src=nonce(m.nonce_lo,m.nonce_hi),dst=nonce(m.target_lo,m.target_hi);
+         if(!src)return;
+         RPPeer *p=&s->peer[m.sender];
+         if(m.kind==RP_HELLO){
+          if(m.target!=RP_ALL||dst||m.transaction)return;
+          if(p->nonce==src && (int32_t)(m.sequence-p->sequence)<=0)return;
+          if(p->nonce!=src){
+           if(s->cuffed&&s->owner==m.sender)local_release(s);
+           if(s->phase!=RP_IDLE&&s->out_peer==m.sender)clear_out(s);
+          }
+          p->nonce=src;p->seen=s->now;p->sequence=m.sequence;p->police=(int)m.police;return;
+         }
+         if(m.kind<RP_CUFF||m.kind>RP_ACK_RELEASE||m.target!=s->self||dst!=s->nonce||
+            !m.transaction||!fresh(s,m.sender)||p->nonce!=src||(int32_t)(m.sequence-p->sequence)<=0)return;
+         p->sequence=m.sequence; /* only HELLO renews peer availability and role */
+         if(m.kind==RP_CUFF){
+          if(!p->police)return;
+          if(s->cuffed){
+           if(s->owner==m.sender&&s->owner_nonce==src&&s->owner_tx==m.transaction)
+            emit(s,m.sender,RP_ACK_CUFF,m.transaction,src);
+           return;
+          }
+          if(s->phase!=RP_IDLE||!s->io.near(s->io.ctx,m.sender))return;
+          if(s->released_owner==m.sender&&s->released_nonce==src&&s->released_tx==m.transaction)return;
+          if(!s->io.cuffs(s->io.ctx,1))return;
+          s->owner=m.sender;s->owner_nonce=src;s->owner_tx=m.transaction;s->cuffed=1;
+          s->lease_at=s->cuff_at=s->now;
+          emit(s,m.sender,RP_ACK_CUFF,m.transaction,src);note(s,"RP: ban da bi cong; F9 de thoat thu nghiem");return;
+         }
+         if(m.kind==RP_KEEP){
+          if(s->cuffed&&s->owner==m.sender&&s->owner_nonce==src&&s->owner_tx==m.transaction&&p->police)s->lease_at=s->now;
+          return;
+         }
+         if(m.kind==RP_RELEASE){
+          if(s->cuffed&&s->owner==m.sender&&s->owner_nonce==src&&s->owner_tx==m.transaction){local_release(s);emit(s,m.sender,RP_ACK_RELEASE,m.transaction,src);}
+          else if(!s->cuffed&&s->released_owner==m.sender&&s->released_nonce==src&&s->released_tx==m.transaction)emit(s,m.sender,RP_ACK_RELEASE,m.transaction,src);
+          return;
+         }
+         if(s->phase==RP_IDLE||s->out_peer!=m.sender||s->out_nonce!=src||s->out_tx!=m.transaction)return;
+         if(m.kind==RP_ACK_CUFF&&s->phase==RP_REQUESTING){s->phase=RP_HOLDING;note(s,"RP: may nguoi choi da xac nhan cong");}
+         if(m.kind==RP_ACK_RELEASE&&s->phase==RP_RELEASING){clear_out(s);note(s,"RP: may nguoi choi da xac nhan tha");}
+        }
+        PRP_BUNDLE_EOF_2
+        cat > 'PoliceRP-R2/Source/rp_core.h' <<'PRP_BUNDLE_EOF_3'
+        #ifndef RP_CORE_H
+        #define RP_CORE_H
+        #include <stdint.h>
+        #include <stddef.h>
+        #define RP_MAGIC 0x32505250u
+        #define RP_OUTER 0x324a504du
+        #define RP_OPCODE 0x52500002u
+        #define RP_VERSION 2u
+        #define RP_ALL 0xffffffffu
+        #define RP_NONE 32u
+        #define RP_PEER_MS 4000u
+        #define RP_LEASE_MS 2500u
+        #define RP_MAX_CUFF_MS 60000u
+        enum { RP_HELLO=1, RP_CUFF, RP_ACK_CUFF, RP_KEEP, RP_RELEASE, RP_ACK_RELEASE };
+        enum { RP_IDLE, RP_REQUESTING, RP_HOLDING, RP_RELEASING };
+        /* 244-byte stock envelope. Only fixed-width values go onto the network. */
+        typedef struct {
+         uint32_t outer, reserved0, sender, reserved1, opcode, stock_seq, job_token;
+         uint32_t magic, version, kind, target, nonce_lo, nonce_hi;
+         uint32_t target_lo, target_hi, transaction, sequence, police;
+         uint32_t reserved[43];
+        } RPMessage;
+        _Static_assert(sizeof(RPMessage)==244, "wire size");
+        _Static_assert(offsetof(RPMessage,sender)==8, "engine sender");
+        _Static_assert(offsetof(RPMessage,opcode)==16, "stock opcode");
+        typedef struct {
+         uint64_t nonce; uint32_t seen, sequence; int police;
+        } RPPeer;
+        typedef struct {
+         void *ctx;
+         void (*send)(void *,const RPMessage *,uint32_t);
+         int (*near)(void *,unsigned); /* local world validation, no packet positions */
+         int (*cuffs)(void *,int); /* ACK only after local adapter accepts application */
+         void (*notice)(void *,const char *);
+        } RPIO;
+        typedef struct {
+         RPIO io; RPPeer peer[32];
+         uint64_t nonce, out_nonce, owner_nonce;
+         uint32_t now, hello_at, sequence, next_tx;
+         uint32_t out_tx, out_started, out_sent, owner_tx, lease_at, cuff_at;
+         uint32_t released_tx; uint64_t released_nonce; unsigned released_owner;
+         unsigned self, out_peer, owner, phase;
+         int enabled, police, cuffed;
+        } RPState;
+        void rp_init(RPState *, RPIO, unsigned, uint64_t, uint32_t);
+        void rp_stop(RPState *);
+        void rp_tick(RPState *,uint32_t,int);
+        void rp_receive(RPState *,const void *,size_t);
+        int rp_action(RPState *,unsigned);
+        #endif
+        PRP_BUNDLE_EOF_3
+        cat > 'PoliceRP-R2/Tests/test_adapter.c' <<'PRP_BUNDLE_EOF_4'
+        /* Exercise real adapter logic with native functions substituted on the host. */
+        #include <stdint.h>
+        #include <assert.h>
+        #include <string.h>
+        #include <stdio.h>
+        static void *lookup(unsigned);
+        static int i32(unsigned),u8(unsigned);
+        #define FN(off,T) ((T)lookup(off))
+        #define I32(off) i32(off)
+        #define U8(off) u8(off)
+        #include "../Source/ios_adapter.c"
+        static int is_online=1,shift=0,job=0,jobs_calls,work_calls,disabled,press_f9,in_vehicle;
+        static unsigned char entity[6000],group_data[4024],event_data[457];
+        static RPMessage last_tx;
+        static int i32(unsigned off){return off==0x27b1ae8?(is_online?3:0):job;}
+        static int u8(unsigned off){return off==0x355ee34?shift:is_online;}
+        static int pself(void){return 10;}
+        static int playerid(void){return 0;}
+        static int exist(int p){return p>=10&&p<=12;}
+        static int dead(int p,int unused){(void)p;(void)unused;return 0;}
+        static int pactive(int id){return id>=0&&id<3;}
+        static int getped(int id){return id+10;}
+        static int inveh(int p,int b){(void)p;(void)b;return in_vehicle;}
+        static Vec coords(int p,int alive_){(void)alive_;Vec v={0};v.x=(float)(p-10);return v;}
+        static void *entityof(int p){return exist(p)?entity:0;}
+        static void setcuff(int p,int on){(void)p;uint32_t f;memcpy(&f,entity+5232,4);f=on?(f|0x1000000):(f&~0x1000000u);memcpy(entity+5232,&f,4);}
+        static void helptxt(const char *s){(void)s;}
+        static void sendstock(RPMessage *m,uint32_t op,uint32_t mask){assert(op==RP_OPCODE&&mask);last_tx=*m;}
+        static int keys(void *k,int vk,int mode,const char *a,const char *b){(void)k;(void)mode;(void)a;(void)b;if(vk==0x78&&press_f9){press_f9=0;return 1;}return 0;}
+        static int control(int a,int b){(void)a;(void)b;return 0;}
+        static void jobs(void *p,int n){(void)p;(void)n;jobs_calls++;}
+        static int work(void *t,int p,const void *v){(void)t;(void)p;(void)v;work_calls++;return 99;}
+        static void disablectl(int p,int id,int on){assert(p==0&&on==1);assert(id!=199&&id!=200);disabled++;}
+        static uint8_t *getgroup(void){return group_data;}
+        const void *_dyld_get_image_header(uint32_t i){(void)i;return 0;}
+        static void *lookup(unsigned off){
+         switch(off){
+         case 0xd62d70:return pself;case 0xd62d30:return playerid;case 0xc39174:return exist;
+         case 0xc3d298:return dead;case 0xf6fbc:return pactive;case 0xd60a48:return getped;
+         case 0xd252f4:return inveh;case 0xc3ab68:return coords;case 0x22f58:return entityof;
+         case 0xd281c4:return setcuff;case 0x10e6ec:return helptxt;case 0xf5e34:return sendstock;
+         case 0xe8de64:return keys;case 0xd1aeb8:return control;case 0xea024:return jobs;
+         case 0x112010:return work;case 0xd1b904:return disablectl;case 0x69046c:return getgroup;
+         default:assert(!"unmocked native");return 0;
+         }
+        }
+        static void event(RPMessage m){
+         uintptr_t vt=base+0x2647820;memcpy(event_data,&vt,8);memcpy(event_data+25,&m,sizeof(m));
+         int count=1,head=499;memcpy(group_data+4016,&count,4);memcpy(group_data+4012,&head,4);
+         void *e=event_data;memcpy(group_data+8,&e,8);
+        }
+        int main(void){
+         ready=1;base=0x100000000ULL;logfile=tmpfile();assert(logfile);
+         PRPFrame(0,3);assert(jobs_calls==1);assert(!state.enabled);
+         RPIO io={0,send_message,near,cuffs,notice};rp_init(&state,io,0,123,now_ms());session_ped=10;session_slot=0;
+         RPMessage m={0};m.outer=RP_OUTER;m.magic=RP_MAGIC;m.opcode=RP_OPCODE;m.version=RP_VERSION;
+         m.sender=1;m.target=RP_ALL;m.kind=RP_HELLO;m.nonce_lo=456;m.sequence=1;m.police=1;
+         event(m);PRPFrame(0,3);assert(state.peer[1].nonce==456);assert(jobs_calls==2);
+         m.kind=RP_CUFF;m.target=0;m.target_lo=123;m.transaction=9;m.sequence=2;
+         event(m);PRPFrame(0,3);assert(state.cuffed);assert(applied_ped==10);assert(disabled==19);assert(last_tx.kind==RP_ACK_CUFF);
+         press_f9=1;PRPFrame(0,3);assert(!state.enabled&&!state.cuffed&&!applied_ped);uint32_t f;memcpy(&f,entity+5232,4);assert(!(f&0x1000000));
+         /* No per-frame input writes after release; old ring event cannot re-cuff. */
+         int before=disabled;PRPFrame(0,3);assert(disabled==before);
+         rp_init(&state,io,0,999,now_ms());state.police=1;shift=1;
+         assert(PRPWorkTask(0,10,0)==0);assert(work_calls==0);
+         state.enabled=0;assert(PRPWorkTask(0,10,0)==99);assert(work_calls==1);
+         assert(near(0,1));in_vehicle=1;assert(!near(0,1));in_vehicle=0;
+         state.enabled=1;memset(state.peer,0,sizeof(state.peer));uintptr_t bad=1;memcpy(event_data,&bad,8);
+         receive_messages();assert(!state.peer[1].nonce);
+         int bad_count=501;memcpy(group_data+4016,&bad_count,4);receive_messages();assert(invalid_rings==1);
+         fclose(logfile);logfile=0;puts("PASS: adapter hooks, ring, cuff ACK, F9 restore, control expiry, NPC gate, vehicle guard");
+        }
+        PRP_BUNDLE_EOF_4
+        cat > 'PoliceRP-R2/Tests/test_binary.py' <<'PRP_BUNDLE_EOF_5'
+        #!/usr/bin/env python3
+        """Read-only checks against supplied stock IPA; disassemble generated stubs."""
+        import ctypes,importlib.util,struct,sys,zipfile,unittest
+        from pathlib import Path
+        ROOT=Path(__file__).resolve().parents[1]
+        spec=importlib.util.spec_from_file_location('patch',ROOT/'Tools/patch_ipa.py')
+        p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+        IPA=Path(sys.argv.pop(1)) if len(sys.argv)>1 else None
+        class Binary(unittest.TestCase):
+         @classmethod
+         def setUpClass(cls):
+          if not IPA:raise unittest.SkipTest('pass stock IPA path')
+          cls.raw=IPA.read_bytes()
+          with zipfile.ZipFile(IPA) as z:
+           assert z.testzip() is None
+           cls.game=z.read(p.GAME)
+          cls.m=p.parse(cls.game)
+         def test_identity(self):
+          self.assertEqual(p.sha(self.raw),p.EXPECTED_IPA);self.assertEqual(p.sha(self.game),p.EXPECTED_GAME)
+          self.assertEqual(self.m['uuid'],p.UUID)
+         def test_calls(self):
+          for off,target in [(0xe5188,0xea024),(0xe6de0,0x112010)]:
+           self.assertEqual(p.branch_target(struct.unpack_from('<I',self.game,off)[0],off),target)
+         def test_slack(self):
+          self.assertLess(self.m['end']+((24+len(p.LOAD_NAME)+7)&~7),0xe00)
+          for at,name in [(0xe00,'PRPFrame'),(0xf00,'PRPWorkTask')]:
+           code=p.stub(at,p.dlsym_stub(self.m),0xea024,name)
+           self.assertEqual(self.game[at:at+len(code)],bytes(len(code)))
+           self.assertLess(at+len(code),0x4000)
+         def test_branch_roundtrip(self):
+          for a,b in [(0xe5188,0xe00),(0xe6de0,0xf00),(0xe18,0x2313208),(0xf34,0x112010)]:
+           self.assertEqual(p.branch_target(p.branch(a,b,True),a),b)
+         def test_dlsym(self):self.assertEqual(p.dlsym_stub(self.m),0x2313208)
+         def test_stub_fields(self):
+          for at,orig,name in [(0xe00,0xea024,'PRPFrame'),(0xf00,0x112010,'PRPWorkTask')]:
+           b=p.stub(at,p.dlsym_stub(self.m),orig,name);w=struct.unpack_from('<14I',b)
+           self.assertEqual(p.branch_target(w[6],at+24),0x2313208)
+           self.assertEqual(p.branch_target(w[13],at+52),orig)
+           self.assertEqual(w[11],0xb4000050);self.assertEqual(w[12],0xd61f0200)
+           self.assertEqual(b[56:],name.encode()+b'\0')
+         def test_generated_stubs_decode(self):
+          try:lib=ctypes.CDLL('/usr/lib/x86_64-linux-gnu/libLLVM.so.19.1')
+          except OSError:self.skipTest('LLVM shared library unavailable')
+          for n in ['LLVMInitializeAArch64TargetInfo','LLVMInitializeAArch64Target','LLVMInitializeAArch64TargetMC','LLVMInitializeAArch64Disassembler']:getattr(lib,n)()
+          lib.LLVMCreateDisasm.restype=ctypes.c_void_p
+          lib.LLVMCreateDisasm.argtypes=[ctypes.c_char_p,ctypes.c_void_p,ctypes.c_int,ctypes.c_void_p,ctypes.c_void_p]
+          dc=lib.LLVMCreateDisasm(b'aarch64-apple-ios',None,0,None,None)
+          self.assertTrue(dc)
+          lib.LLVMDisasmInstruction.argtypes=[ctypes.c_void_p,ctypes.c_void_p,ctypes.c_uint64,ctypes.c_uint64,ctypes.c_void_p,ctypes.c_size_t]
+          lib.LLVMDisasmInstruction.restype=ctypes.c_size_t
+          b=p.stub(0xe00,0x2313208,0xea024,'PRPFrame');decoded=[]
+          for i in range(14):
+           src=ctypes.create_string_buffer(b[i*4:i*4+4]);dst=ctypes.create_string_buffer(256)
+           self.assertEqual(lib.LLVMDisasmInstruction(dc,src,4,0xe00+4*i,dst,256),4)
+           decoded.append(dst.value.decode().strip())
+          self.assertIn('[sp, #-48]!',decoded[0]);self.assertIn('x2, [sp, #32]',decoded[3])
+          self.assertIn('x29, x30, [sp], #48',decoded[10]);self.assertTrue(decoded[12].startswith('br'))
+          lib.LLVMDisasmDispose.argtypes=[ctypes.c_void_p];lib.LLVMDisasmDispose(dc)
+         def test_offsets_exist(self):
+          names={n:a for n,t,a in self.m['symbols'] if t&14==14}
+          expected={'__ZTV24CEventNetworkScriptEvent':0x102647810,'__ZL14MacportJobSendR13MacportJobMsgjj':0x1000f5e34,
+            '__Z26GetEventScriptNetworkGroupv':0x10069046c,'__ZN12ped_commands24CommandIsPedInAnyVehicleEib':0x100d252f4,
+            '__ZN12pad_commands27CommandDisableControlActionEiib':0x100d1b904,'__ZN4rage12fwScriptGuid15GetBaseFromGuidEi':0x100022f58}
+          for n,a in expected.items():self.assertEqual(names[n],a)
+        if __name__=='__main__':unittest.main()
+        PRP_BUNDLE_EOF_5
+        cat > 'PoliceRP-R2/Tests/test_core.c' <<'PRP_BUNDLE_EOF_6'
+        #include "../Source/rp_core.h"
+        #include <assert.h>
+        #include <stdio.h>
+        #include <string.h>
+        #include <stdlib.h>
+        typedef struct {unsigned from,to;RPMessage m;} Packet;
+        static Packet queue[8192];static unsigned qn;
+        typedef struct {RPState s;unsigned id;int cuff,on_count,off_count,close,apply_ok,success;} Client;
+        static Client clients[3];static int drop_kind,drop_from=-1;
+        static void send(void *ctx,const RPMessage *m,uint32_t mask){
+         Client *c=ctx;for(unsigned i=0;i<3;i++)if(i!=c->id&&(mask&(1u<<i))){
+          if((int)m->kind==drop_kind&&((int)c->id==drop_from||drop_from==-1))continue;
+          assert(qn<8192);queue[qn++]=(Packet){c->id,i,*m};
+         }
+        }
+        static int near(void *ctx,unsigned peer){Client *c=ctx;return peer<3&&c->close&&clients[peer].close;}
+        static int cuffs(void *ctx,int on){Client *c=ctx;if(on&&!c->apply_ok)return 0;c->cuff=on;if(on)c->on_count++;else c->off_count++;return 1;}
+        static void note(void *ctx,const char *t){Client *c=ctx;if(strstr(t,"xac nhan cong"))c->success++;}
+        static void flush(void){unsigned at=0;while(at<qn){Packet p=queue[at++];rp_receive(&clients[p.to].s,&p.m,sizeof(p.m));}qn=0;}
+        static void tick(uint32_t t){for(unsigned i=0;i<3;i++)rp_tick(&clients[i].s,t,i==0);flush();}
+        static void setup(void){
+         memset(clients,0,sizeof(clients));qn=0;drop_kind=0;drop_from=-1;
+         for(unsigned i=0;i<3;i++){Client *c=&clients[i];c->id=i;c->close=1;c->apply_ok=1;
+          RPIO io={c,send,near,cuffs,note};rp_init(&c->s,io,i,0x1122334400000000ULL+i+1,0);}
+         tick(0);
+        }
+        static void arrest(void){assert(rp_action(&clients[0].s,1));flush();assert(clients[1].cuff);assert(clients[0].s.phase==RP_HOLDING);}
+        static void happy(void){setup();arrest();assert(clients[0].success==1);assert(!clients[2].cuff);assert(rp_action(&clients[0].s,1));flush();assert(!clients[1].cuff);assert(clients[0].s.phase==RP_IDLE);}
+        static void lost_ack(void){setup();drop_kind=RP_ACK_CUFF;
+         assert(rp_action(&clients[0].s,1));flush();assert(clients[1].cuff);assert(!clients[0].success);
+         tick(500);assert(clients[1].on_count==1);drop_kind=0;tick(1000);assert(clients[0].success==1);assert(clients[1].on_count==1);
+         (void)0;
+        }
+        static void lease(void){setup();arrest();drop_kind=RP_KEEP;for(unsigned t=500;t<=2500;t+=500)tick(t);assert(!clients[1].cuff);assert(clients[1].off_count==1);}
+        static void max_time(void){setup();arrest();for(unsigned t=500;t<=61000;t+=500)tick(t);assert(!clients[1].cuff);assert(clients[0].s.phase==RP_IDLE);}
+        static void no_effect_no_ack(void){setup();clients[1].apply_ok=0;assert(rp_action(&clients[0].s,1));flush();assert(!clients[1].cuff);assert(!clients[0].success);tick(3000);assert(clients[0].s.phase==RP_IDLE);}
+        static void distance(void){setup();clients[1].close=0;assert(!rp_action(&clients[0].s,1));clients[1].close=1;assert(rp_action(&clients[0].s,1));clients[1].close=0;flush();assert(!clients[1].cuff);}
+        static void duplicate_and_stale(void){setup();assert(rp_action(&clients[0].s,1));Packet p=queue[0];flush();rp_receive(&clients[1].s,&p.m,sizeof(p.m));assert(clients[1].on_count==1);assert(rp_action(&clients[0].s,1));flush();p.m.sequence+=100;rp_receive(&clients[1].s,&p.m,sizeof(p.m));assert(!clients[1].cuff);}
+        static void wrong_sender_target_version(void){setup();assert(rp_action(&clients[0].s,1));RPMessage m=queue[0].m;qn=0;
+         m.sender=40;rp_receive(&clients[1].s,&m,sizeof(m));assert(!clients[1].cuff);
+         m.sender=0;m.target=2;rp_receive(&clients[1].s,&m,sizeof(m));assert(!clients[1].cuff);
+         m.target=1;m.version++;rp_receive(&clients[1].s,&m,sizeof(m));assert(!clients[1].cuff);
+         m.version=RP_VERSION;m.target_lo++;rp_receive(&clients[1].s,&m,sizeof(m));assert(!clients[1].cuff);
+         m.target_lo--;rp_receive(&clients[1].s,&m,sizeof(m)-1);assert(!clients[1].cuff);
+        }
+        static void restart_peer(void){setup();arrest();Client *c=&clients[0];RPIO io=c->s.io;rp_stop(&c->s);qn=0;rp_init(&c->s,io,0,999,100);rp_tick(&c->s,100,1);flush();assert(!clients[1].cuff);}
+        static void disable(void){setup();arrest();rp_stop(&clients[1].s);assert(!clients[1].cuff);assert(!clients[1].s.enabled);}
+        static void end_shift(void){setup();arrest();rp_tick(&clients[0].s,200,0);flush();assert(!clients[1].cuff);}
+        static void expired_peer(void){setup();clients[0].s.now=5000;assert(!rp_action(&clients[0].s,1));}
+        static void malformed_fuzz(void){setup();uint8_t b[300];uint32_t r=17;for(unsigned i=0;i<50000;i++){
+         for(unsigned j=0;j<300;j++){r=r*1664525+1013904223;b[j]=(uint8_t)(r>>24);}
+         rp_receive(&clients[1].s,b,i%301);
+         }assert(!clients[1].cuff);}
+        static void time_wrap(void){setup();for(unsigned i=0;i<3;i++){
+          clients[i].s.now=0xfffffff0u;clients[i].s.hello_at=0xfffffff0u-1000;
+          for(unsigned j=0;j<3;j++)clients[i].s.peer[j].seen=0xfffffff0u;
+         }tick(0xfffffff0u);arrest();tick(484);assert(clients[1].cuff);rp_stop(&clients[0].s);flush();assert(!clients[1].cuff);}
+        int main(void){happy();lost_ack();lease();max_time();no_effect_no_ack();distance();duplicate_and_stale();wrong_sender_target_version();restart_peer();disable();end_shift();expired_peer();malformed_fuzz();time_wrap();puts("PASS: 14 protocol scenarios; 50000 malformed packets");}
+        PRP_BUNDLE_EOF_6
+        cat > 'PoliceRP-R2/Tools/patch_ipa.py' <<'PRP_BUNDLE_EOF_7'
+        #!/usr/bin/env python3
+        """Exact-build offline patch. No runtime writes to executable pages."""
+        import argparse,hashlib,json,struct,zipfile
+        from pathlib import Path
+        from copy import copy
+        EXPECTED_IPA='23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc'
+        EXPECTED_GAME='d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b'
+        UUID='6a498e32e70c334cbca3affd35e8d171'
+        LOAD_NAME=b'@executable_path/Frameworks/PoliceRP_R2.dylib\0'
+        GAME='Payload/GTAV.app/GTA5'
+        DYLIB='Payload/GTAV.app/Frameworks/PoliceRP_R2.dylib'
+        def require(ok,msg):
+         if not ok:raise ValueError(msg)
+        def sha(b):return hashlib.sha256(b).hexdigest()
+        def parse(b):
+         require(len(b)>=32,'short Mach-O')
+         magic,cpu,subtype,ft,n,sz,flags,res=struct.unpack_from('<8I',b)
+         require(magic==0xfeedfacf and cpu==0x100000c and subtype==0,'requires thin arm64 Mach-O, not arm64e')
+         require(32+sz<=len(b),'load commands out of range')
+         o=32;sections=[];uuid=None;symbols=[];indirect=[];platform=None;names=[]
+         for _ in range(n):
+          require(o+8<=32+sz,'missing load command');cmd,size=struct.unpack_from('<II',b,o)
+          require(size>=8 and size%8==0 and o+size<=32+sz,'invalid command size')
+          if cmd==0x1b:uuid=b[o+8:o+24].hex()
+          if cmd==0x32:platform=struct.unpack_from('<I',b,o+8)[0]
+          if cmd in (0xc,0xd,0x80000018):
+           noff=struct.unpack_from('<I',b,o+8)[0];names.append(b[o+noff:o+size].split(b'\0')[0])
+          if cmd==2:
+           so,ns,st,ss=struct.unpack_from('<4I',b,o+8)
+           require(so+16*ns<=len(b) and st+ss<=len(b),'symbol table bounds')
+           for i in range(ns):
+            ix,typ,sec,desc,addr=struct.unpack_from('<IBBHQ',b,so+16*i)
+            require(ix<ss,'symbol string index')
+            end=b.find(b'\0',st+ix,st+ss);require(end>=0,'unterminated symbol')
+            symbols.append((b[st+ix:end].decode(),typ,addr))
+          if cmd==0xb:
+           io,ni=struct.unpack_from('<II',b,o+56);require(io+4*ni<=len(b),'indirect symbol bounds')
+           indirect=list(struct.unpack_from('<'+'I'*ni,b,io))
+          if cmd==0x19:
+           seg,va,vs,fo,fs,maxp,initp,nsec,sgf=struct.unpack_from('<16sQQQQIIII',b,o+8)
+           require(size>=72+80*nsec,'section table bounds')
+           for j in range(nsec):
+            x=struct.unpack_from('<16s16sQQIIIIIIII',b,o+72+80*j)
+            sections.append(dict(name=x[0].split(b'\0')[0].decode(),addr=x[2],size=x[3],offset=x[4],flags=x[8],r1=x[9],r2=x[10],prot=initp))
+          o+=size
+         require(o==32+sz,'command size sum')
+         return dict(n=n,sz=sz,end=o,uuid=uuid,sections=sections,symbols=symbols,indirect=indirect,platform=platform,names=names,ft=ft)
+        def branch(at,dest,link=False):
+         d=dest-at;require(d%4==0 and -(1<<27)<=d<(1<<27),'branch out of range')
+         return (0x94000000 if link else 0x14000000)|((d//4)&0x3ffffff)
+        def branch_target(word,at):
+         require(word>>26 in (5,37),'not B/BL');d=word&0x3ffffff
+         if d&(1<<25):d-=1<<26
+         return at+4*d
+        def adr(at,dest,reg):
+         d=dest-at;require(-(1<<20)<=d<(1<<20),'ADR out of range')
+         return 0x10000000|((d&3)<<29)|(((d>>2)&0x7ffff)<<5)|reg
+        def stub(at,dlsym,fallback,name):
+         # Preserve args x0..x2, frame pointer and LR across dlsym. Tailcall callback.
+         words=[0xa9bd7bfd,0x910003fd,0xa90107e0,0xf90013e2,0x92800020,
+                adr(at+20,at+56,1),branch(at+24,dlsym,True),0xaa0003f0,
+                0xa94107e0,0xf94013e2,0xa8c37bfd,0xb4000050,0xd61f0200,
+                branch(at+52,fallback)]
+         return struct.pack('<14I',*words)+name.encode()+b'\0'
+        def dlsym_stub(m):
+         for sec in m['sections']:
+          if sec['flags']&255!=8:continue
+          stride=sec['r2'];require(stride>0,'stub stride zero')
+          for i in range(sec['size']//stride):
+           idx=m['indirect'][sec['r1']+i]
+           if idx<len(m['symbols']) and m['symbols'][idx][0]=='_dlsym':return sec['addr']+i*stride-0x100000000
+         raise ValueError('dlsym import stub not found')
+        def patch(ipa,lib,out):
+         raw=Path(ipa).read_bytes();require(sha(raw)==EXPECTED_IPA,'IPA differs from verified v12; refusing')
+         dylib=Path(lib).read_bytes();dm=parse(dylib)
+         require(dm['ft']==6 and dm['platform']==2,'library must be iOS MH_DYLIB, not macOS/simulator')
+         require(LOAD_NAME[:-1] in dm['names'],'wrong dylib install name')
+         exports={x[0] for x in dm['symbols'] if x[1]&15==15}
+         require({'_PRPFrame','_PRPWorkTask'}<=exports,'missing hook exports')
+         with zipfile.ZipFile(ipa) as z:
+          require(z.testzip() is None,'input CRC');game=z.read(GAME)
+         require(sha(game)==EXPECTED_GAME,'unexpected executable');m=parse(game)
+         require(m['uuid']==UUID,'UUID mismatch')
+         first=min(s['offset'] for s in m['sections'] if s['name']=='__text')
+         require(first>=0x1000,'insufficient executable header space')
+         ds=dlsym_stub(m);b=bytearray(game);changes=[]
+         cmdsize=(24+len(LOAD_NAME)+7)&~7
+         cmd=struct.pack('<6I',0xc,cmdsize,24,0,0,0)+LOAD_NAME
+         cmd=cmd.ljust(cmdsize,b'\0')
+         require(m['end']+len(cmd)<=0xe00,'load command collides with stubs')
+         def replace(off,data,blank=False):
+          require(off+len(data)<=len(b),'write bounds')
+          if blank:require(not any(b[off:off+len(data)]),'patch space is occupied')
+          old=bytes(b[off:off+len(data)]);b[off:off+len(data)]=data
+          changes.append(dict(offset=off,size=len(data),old_sha256=sha(old),new_sha256=sha(data)))
+         replace(m['end'],cmd,True)
+         replace(16,struct.pack('<II',m['n']+1,m['sz']+cmdsize))
+         hooks=[(0xe5188,0xea024,0xe00,'PRPFrame'),(0xe6de0,0x112010,0xf00,'PRPWorkTask')]
+         for call,original,cave,name in hooks:
+          require(branch_target(struct.unpack_from('<I',game,call)[0],call)==original,'original call mismatch')
+          code=stub(cave,ds,original,name);require(cave+len(code)<first,'stub overlaps text')
+          replace(cave,code,True);replace(call,struct.pack('<I',branch(call,cave,True)))
+         require(len(b)==len(game),'executable size changed');pm=parse(b)
+         require(pm['uuid']==UUID and LOAD_NAME[:-1] in pm['names'],'patched Mach-O validation')
+         require(pm['sections']==m['sections'],'original section layout changed')
+         spans=[(c['offset'],c['offset']+c['size']) for c in changes]
+         for i,(old,new) in enumerate(zip(game,b)):
+          if old!=new:require(any(a<=i<z for a,z in spans),'unexpected byte modification')
+         with zipfile.ZipFile(ipa) as zin,zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as zout:
+          for item in zin.infolist():zout.writestr(copy(item),bytes(b) if item.filename==GAME else zin.read(item.filename))
+          info=zipfile.ZipInfo(DYLIB);info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100755<<16;zout.writestr(info,dylib)
+         with zipfile.ZipFile(ipa) as old,zipfile.ZipFile(out) as new:
+          require(new.testzip() is None,'output CRC');require(set(new.namelist())==set(old.namelist())|{DYLIB},'unexpected file set')
+          for name in old.namelist():
+           if name!=GAME:require(old.read(name)==new.read(name),'changed original resource: '+name)
+         report=dict(status='EXPERIMENTAL_UNSIGNED_NOT_DEVICE_TESTED',source_sha256=EXPECTED_IPA,output_sha256=sha(Path(out).read_bytes()),
+                     dylib_sha256=sha(dylib),changes=changes,dlsym_stub=hex(ds),original_resources_preserved=True,
+                     crc_pass=True,ios_runtime_tested=False,online_two_device_tested=False)
+         Path(str(out)+'.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))
+        if __name__=='__main__':
+         p=argparse.ArgumentParser();p.add_argument('ipa');p.add_argument('dylib');p.add_argument('output');a=p.parse_args();patch(a.ipa,a.dylib,a.output)
+        PRP_BUNDLE_EOF_7
+        cat > 'PoliceRP-R2/VALIDATION.json' <<'PRP_BUNDLE_EOF_8'
+        {
+          "status": "SOURCE_TESTED_NOT_IOS_BUILT_NOT_DEVICE_TESTED",
+          "date": "2026-11-12",
+          "source_ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+          "protocol_scenarios": 14,
+          "malformed_packets": 50000,
+          "binary_tests": 8,
+          "adapter_mock_tests": "PASS",
+          "asan_ubsan": "PASS; leak detection unavailable and disabled",
+          "ios_toolchain_build": false,
+          "two_iphone_test": false,
+          "sources": {
+            "README_VI.md": "49e32bc96363977871028194b843ec88ab2bf7cf73544d7fd06871541b7f44ac",
+            "Source/ios_adapter.c": "5e4ff0d090d36cc74fd12f1e5cb1fff1f979d6f3108371bdfda466c9e38034c3",
+            "Source/rp_core.c": "07faae0a7568a5305d3e12f7b89099020fd72a73b686fe76810135ad64c6b7c2",
+            "Source/rp_core.h": "ae33376b96f15b978ccdbf9af5951900d53af6e888cef438a672ff4bc7c84d32",
+            "Tests/test_adapter.c": "b736ae1bcfe2e4911c1973d8dfb8c9a49db09f8d40cc9eb17ee8d1d574d6e243",
+            "Tests/test_binary.py": "6163a2b263bf38e9ad544c7c80ebcbdb0028f98918800366a7dc3cdee9060474",
+            "Tests/test_core.c": "82e23eee255e646230922cf32be55dd5815b08a0abe4d25d909bd924b86e9718",
+            "Tools/patch_ipa.py": "e18966424df101d2546d191797ce9852cfec3c7086d0a805f98cdd752de2d8cb"
+          }
+        }
+        PRP_BUNDLE_EOF_8
+    - name: Locate and test source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test -f PoliceRP-R2/Source/ios_adapter.c
+        mkdir -p build
+        cc -D_DARWIN_C_SOURCE -D_DEFAULT_SOURCE -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined \
+          PoliceRP-R2/Source/rp_core.c PoliceRP-R2/Tests/test_core.c -o build/test_core
+        ASAN_OPTIONS=detect_leaks=0 build/test_core
+        cc -D_DARWIN_C_SOURCE -D_DEFAULT_SOURCE -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined \
+          PoliceRP-R2/Source/rp_core.c PoliceRP-R2/Tests/test_adapter.c -o build/test_adapter
+        ASAN_OPTIONS=detect_leaks=0 build/test_adapter
+        python3 -m py_compile PoliceRP-R2/Tools/patch_ipa.py
+    - name: Build iOS device library
+      shell: bash
+      run: |
+        set -euo pipefail
+        sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
+        xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 \
+          -isysroot "$sdk_path" -D_DARWIN_C_SOURCE -std=c11 -O2 -Wall -Wextra -Werror \
+          -fvisibility=hidden -fstack-protector-strong -dynamiclib \
+          PoliceRP-R2/Source/rp_core.c PoliceRP-R2/Source/ios_adapter.c \
+          -Wl,-install_name,@executable_path/Frameworks/PoliceRP_R2.dylib \
+          -Wl,-exported_symbol,_PRPFrame -Wl,-exported_symbol,_PRPWorkTask \
+          -o build/PoliceRP_R2.dylib
+        xcrun lipo -info build/PoliceRP_R2.dylib
+        xcrun nm -gU build/PoliceRP_R2.dylib
+        xcrun otool -l build/PoliceRP_R2.dylib > build/MachO-load-commands.txt
+        shasum -a 256 build/PoliceRP_R2.dylib > build/SHA256.txt
+        cp PoliceRP-R2/README_VI.md build/
+    - name: Archive source and validation
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 - <<'PY'
+        from pathlib import Path
+        import zipfile
+        with zipfile.ZipFile('build/PoliceRP-R2-Source.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for p in Path('PoliceRP-R2').rglob('*'):
+                if p.is_file() and '__pycache__' not in p.parts:
+                    z.write(p,str(p))
+        PY
+        cp PoliceRP-R2/VALIDATION.json build/VALIDATION-development.json
+    - uses: actions/upload-artifact@v4
+      with:
+        name: PoliceRP-R2-iPhone-ARM64-EXPERIMENTAL
+        path: |
+          build/PoliceRP_R2.dylib
+          build/SHA256.txt
+          build/MachO-load-commands.txt
+          build/README_VI.md
+          build/PoliceRP-R2-Source.zip
+          build/VALIDATION-development.json
+        if-no-files-found: error
+'on':
+  workflow_dispatch: null
