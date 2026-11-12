@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "policy": "Trusted task queue. Each task reserved exactly once as a GitHub branch to cap unattended API runs. No auto merge.",
+  "tasks": [
+    {
+      "id": "rp-003-contracts",
+      "title": "Document and test v12 Police RP engine adapter contracts",
+      "objective": "Inspect police-rp/v1.4/P2P, Integration, and NativeBridge source. Map evidenced contracts and missing callback/authenticated transport dependencies. Add an evidence-backed compatibility report and host tests if warranted. Do not claim runtime device support, preserve APIs."
+    },
+    {
+      "id": "rp-004-handshake-tests",
+      "title": "Strengthen host-only roleplay handshake and replay tests",
+      "objective": "Inspect versioned packet parsing, session authority, replay protection, host migration and bounds handling. Add narrowly scoped host tests for a real uncovered edge case, with minimal fix if supported by evidence. Never invent an engine network hook."
+    },
+    {
+      "id": "rp-003-regression",
+      "title": "Improve Police RP duty and disconnect regression coverage",
+      "objective": "Inspect duty state and disconnect/reconnect cleanup. Implement one evidenced regression test or tiny correction within Police RP source and tests. No IPA changes, no hook/offset changes, no signing."
+    }
+  ]
+}
