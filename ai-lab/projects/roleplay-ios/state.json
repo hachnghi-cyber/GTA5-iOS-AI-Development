@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "project_id": "gta-v-ios-roleplay",
+  "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
+  "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
+  "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
+  "phase": "baseline-inventory",
+  "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
+  "default_branch": "main",
+  "integration_branch": "feature/gta-ai-lab-100-agents",
+  "last_known_github_pr": 1,
+  "verified_facts": [
+    {
+      "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43271858821",
+      "scope": "8 unit tests for lab tools; no game/device test"
+    },
+    {
+      "claim": "The repository's root PROJECT_MEMORY.md still describes version v10 and has no recorded progress",
+      "evidence": "PROJECT_MEMORY.md on main",
+      "scope": "repo documentation, not proof of runtime version"
+    },
+    {
+      "claim": "The repo contains police-rp/v1.4 and police-rp/v1.5 paths and PoliceRP source archives",
+      "evidence": "repository contents inspected",
+      "scope": "content inventory; runtime compatibility unverified"
+    },
+    {
+      "claim": "The AI Lab Pull Request #1 is a draft and is not merged into main",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/1",
+      "scope": "observed at project bootstrap"
+    }
+  ],
+  "unknowns": [
+    "Current original IPA binary SHA-256, Mach-O UUID, engine and application version",
+    "Actual available source code and legal provenance for the target IPA",
+    "RAGE/native API compatibility of the specific iOS port",
+    "Which network packet transport and session lifecycle the current game build supports",
+    "Which Roleplay source snapshot is latest and already tested on a real device",
+    "Apple SDK build/link/signing availability, and hardware crash/performance results"
+  ],
+  "baseline": {
+    "ipa_sha256": null,
+    "game_version": null,
+    "macho_uuid": null,
+    "device_tested": false,
+    "supported_ios_versions": [],
+    "actual_build_artifact": null
+  },
+  "decisions": [
+    {
+      "id": "ADR-001",
+      "decision": "Build independently implemented FiveM-style RP features; do not claim an iOS port of official FiveM.exe or server protocol compatibility without a tested implementation."
+    },
+    {
+      "id": "ADR-002",
+      "decision": "Use GitHub repository + state.json + PR/issue history as source of truth between conversations; chat memory is supplemental."
+    },
+    {
+      "id": "ADR-003",
+      "decision": "Reverse engineering produces inventories, interfaces, symbols and reconstructed pseudocode; cannot guarantee recovery of original source code from IPA."
+    },
+    {
+      "id": "ADR-004",
+      "decision": "Automated writes are kept in feature branches and draft PRs. No unattended main merge, IPA release, or publication of commercial game assets."
+    }
+  ],
+  "backlog": [
+    {
+      "id": "RP-001",
+      "priority": 1,
+      "status": "blocked",
+      "title": "Inventory authorized target IPA and establish immutable binary baseline",
+      "blocked_on": [
+        "IPA sample accessible in current authorized environment"
+      ],
+      "acceptance": [
+        "SHA256 recorded",
+        "Info.plist version, executable, Mach-O slices/UUID, dylib deps inventoried",
+        "No extracted copyrighted assets published"
+      ]
+    },
+    {
+      "id": "RP-002",
+      "priority": 2,
+      "status": "not-started",
+      "title": "Document native/script-hook compatibility and API contract",
+      "blocked_on": [
+        "RP-001"
+      ],
+      "acceptance": [
+        "Versioned ABI contracts",
+        "Evidence-backed symbol and hook mapping",
+        "List of unsupported PC APIs"
+      ]
+    },
+    {
+      "id": "RP-003",
+      "priority": 3,
+      "status": "not-started",
+      "title": "Inventory Roleplay source snapshots and map implemented features",
+      "blocked_on": [
+        "Locate latest RP source revision"
+      ],
+      "acceptance": [
+        "Mod/API dependencies documented",
+        "Police/cuff/escort/jail/EMS/taxi features classified source-only vs tested",
+        "Gap report"
+      ]
+    },
+    {
+      "id": "RP-004",
+      "priority": 4,
+      "status": "not-started",
+      "title": "Create native client/server handshake proof of concept with tests",
+      "blocked_on": [
+        "RP-002"
+      ],
+      "acceptance": [
+        "Versioned protocol",
+        "Authentication/authority model",
+        "Replay and bounds tests"
+      ]
+    },
+    {
+      "id": "RP-005",
+      "priority": 5,
+      "status": "not-started",
+      "title": "Integrate roleplay controls, player interactions and authoritative sync",
+      "blocked_on": [
+        "RP-003",
+        "RP-004"
+      ],
+      "acceptance": [
+        "Input tests",
+        "Server-authoritative roleplay state",
+        "Disconnect/reconnect/rollback tests"
+      ]
+    },
+    {
+      "id": "RP-006",
+      "priority": 6,
+      "status": "not-started",
+      "title": "Build signed-on-device integration test plan and release gates",
+      "blocked_on": [
+        "IPA and source/build environment"
+      ],
+      "acceptance": [
+        "CI passes",
+        "iOS device logs attached",
+        "No new crash and regressions reported",
+        "Signing/rollback reviewed"
+      ]
+    }
+  ],
+  "next_action": "Get the target IPA baseline and latest Roleplay source snapshot into an authorized working environment; analyze without modifying original IPA; document results in an issue and update state.json via PR.",
+  "last_completed_task": null,
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+}
