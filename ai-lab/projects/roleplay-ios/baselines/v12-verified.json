@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "purpose": "read-only binary identity for authorized GTA V iOS Roleplay compatibility research",
+  "label": "user-supplied GTA V iOS v12 IPA; application Info.plist reports 1.0",
+  "observed_at": "2026-11-13",
+  "local_filename": "GTAV-v12(3).ipa",
+  "ipa_bytes": 57007208,
+  "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+  "zip_entries": 57,
+  "bundle": {
+    "CFBundleIdentifier": "com.macport.gtav",
+    "CFBundleExecutable": "GTA5",
+    "CFBundleShortVersionString": "1.0",
+    "CFBundleVersion": "1",
+    "MinimumOSVersion": "16.3",
+    "UIDeviceFamily": [
+      1,
+      2
+    ],
+    "UIRequiredDeviceCapabilities": [
+      "arm64",
+      "metal"
+    ]
+  },
+  "executable": {
+    "path": "Payload/GTAV.app/GTA5",
+    "sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+    "uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
+    "architecture": "arm64",
+    "linked_dylib_count": 18
+  },
+  "relevant_frameworks": [
+    {
+      "name": "libgtacompat.dylib",
+      "sha256": "4002034b16f90fc3c1606a9eca283664fd6bd77a4aee553eec80f395a57ca5f9",
+      "uuid": "0ED3A90E475432F2A4749B5021573130"
+    },
+    {
+      "name": "ScriptHookV.dylib",
+      "sha256": "f8272dc62894dc45bf0d8bc75ef6ff23c6b1ea35d22b6bc4a65fb7df62b6f176",
+      "uuid": "530A3466A8A231659AAB37E684B5EA30"
+    },
+    {
+      "name": "Menyoo.shv.dylib",
+      "sha256": "7dab057f15d87e50ebc5512fd4be3f5535ae6a732ca68c61294d3037d52eeee8",
+      "uuid": "3D64B5F863F634B9BCCA73D1C82C8B82"
+    },
+    {
+      "name": "d3d11.dylib",
+      "sha256": "b459c7431d8e324ec39e8d0801dc09735e4f31fdc7ba12cffb2a2c190aef139d",
+      "uuid": "6B51951DBDA73C049B461A46C5F681DF"
+    },
+    {
+      "name": "winemetal.dylib",
+      "sha256": "13ac1a26b756a14e4bc3e3e6320008279b1b59d3e82cb9f1394c55759a7aad36",
+      "uuid": "E07434F7F40D336B81D77B5C38A066B5"
+    }
+  ],
+  "observed_native_binary_count": 15,
+  "matched_historical_evidence": "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md; exact GTA5 UUID and SHA256 match",
+  "verification_level": "static analysis only. Did not validate live engine callbacks, code signing, device behavior or recover original source.",
+  "publication_policy": "Hash-only metadata. The uploaded IPA and embedded proprietary binaries must not be committed or redistributed."
+}
