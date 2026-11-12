@@ -1,0 +1,35 @@
+name: Police RP v1.8 - Build network manager READ ONLY
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import source and run offline parser tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f PoliceRP_v18_Source.zip
+          mkdir -p src_v18 out
+          unzip -oq PoliceRP_v18_Source.zip -d src_v18
+          python3 -m unittest discover -s src_v18/Tests -p 'test_*.py' -v
+      - name: Build iOS iPhone arm64 read-only probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            src_v18/Diagnostics/PoliceRPNetworkProbe.c -o out/PoliceRPProbe.dylib
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          xcrun vtool -show-build out/PoliceRPProbe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          printf '%s\n' 'v1.8 RAGE network manager READ ONLY; no hooks/no arrest/no multiplayer send' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v18-iPhone-ARM64-NETWORK-MANAGER-READ-ONLY
+          path: out/
+          retention-days: 7
