@@ -138,3 +138,7 @@ Các mục này là định hướng nghiên cứu, **không phải lệnh tự 
 Chỉ đánh dấu hoàn thành khi có sản phẩm đúng yêu cầu, diff có thể kiểm tra, kết quả kiểm thử tương ứng và hướng dẫn áp dụng/hoàn tác. Nếu mới phân tích hoặc đóng gói nhưng chưa test trên thiết bị, ghi rõ trạng thái đó.
 
 **Nguyên tắc cốt lõi: nghiên cứu có nguồn, sửa đúng phạm vi, bảo vệ bản gốc, kiểm thử trung thực, học từ lỗi và lưu tri thức có thể dùng lại.**
+
+## GTA V iOS Roleplay — trạng thái qua nhiều cuộc trò chuyện
+
+Khi nhiệm vụ liên quan đến FiveM-style Roleplay iOS, trước khi sửa mã phải đọc `ai-lab/projects/roleplay-ios/CONTINUE_HERE.md`, `state.json`, `ROADMAP.md`, và Issue/PR gần nhất. Các tệp này mô tả baseline đã kiểm chứng và việc còn bị chặn; không sử dụng phiên bản chung trong tài liệu cũ để suy đoán bản phát hành hiện tại. Sau khi sửa và có bằng chứng, cập nhật state.json trong cùng Pull Request, ghi rõ commit, test, blocker và bước tiếp theo. Không tự merge, không coi kết quả static CI là bằng chứng chơi được trên iPhone; không tuyên bố khôi phục toàn bộ mã nguồn gốc từ IPA.

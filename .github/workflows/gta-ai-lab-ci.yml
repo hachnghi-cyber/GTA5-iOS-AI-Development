@@ -1,0 +1,56 @@
+name: GTA AI Lab - Automated CI
+on:
+  push:
+    paths:
+      - 'ai-lab/**'
+      - '.github/workflows/gta-ai-lab-ci.yml'
+  pull_request:
+    paths:
+      - 'ai-lab/**'
+      - '.github/workflows/gta-ai-lab-ci.yml'
+  schedule:
+    - cron: '25 3 * * *'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Optional agent selection task'
+        required: false
+        default: 'SIGSEGV crash after Menyoo vehicle spawn'
+permissions:
+  contents: read
+concurrency:
+  group: gta-ai-lab-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile scripts
+        run: python -m compileall -q ai-lab
+      - name: Unit tests
+        run: python -m unittest discover -s ai-lab/tests -v
+      - name: Validate project state and export handoff
+        run: |
+          python ai-lab/continuity.py validate
+          python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
+      - name: Route specialists
+        env:
+          TASK: ${{ inputs.task || 'SIGSEGV crash after Menyoo vehicle spawn' }}
+        run: |
+          mkdir -p ai-lab/reports
+          python ai-lab/dispatcher.py plan --task "$TASK" --top 5 --output ai-lab/reports/plan.json
+      - name: Upload routing and continuation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta-ai-lab-plan
+          path: |
+            ai-lab/reports/plan.json
+            ai-lab/reports/RP_HANDOFF.md
+          retention-days: 7

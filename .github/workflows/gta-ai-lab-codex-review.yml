@@ -1,0 +1,32 @@
+name: GTA AI Lab - Optional Codex Review
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    if: ${{ vars.ENABLE_CODEX_REVIEW == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Prepare report
+        run: mkdir -p ai-lab/reports
+      - name: Codex read-only review
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: ai-lab/prompts/read-only-review.md
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          codex-args: '["--ephemeral"]'
+          output-file: ai-lab/reports/codex-review.md
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta-ai-lab-codex-review
+          path: ai-lab/reports/codex-review.md
+          if-no-files-found: error
+          retention-days: 7

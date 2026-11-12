@@ -1,0 +1,1257 @@
+{
+  "schema_version": 1,
+  "agents": [
+    {
+      "id": "RE-01",
+      "name": "Mach-O ARM64 header",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "mach",
+        "o",
+        "arm64",
+        "header"
+      ],
+      "mission": "Investigate mach-o arm64 header for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-02",
+      "name": "Load commands & dyld",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "load",
+        "commands",
+        "dyld"
+      ],
+      "mission": "Investigate load commands & dyld for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-03",
+      "name": "Symbols & exports",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "symbols",
+        "exports"
+      ],
+      "mission": "Investigate symbols & exports for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-04",
+      "name": "Objective-C metadata",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "objective",
+        "c",
+        "metadata"
+      ],
+      "mission": "Investigate objective-c metadata for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-05",
+      "name": "Swift ABI",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "swift",
+        "abi"
+      ],
+      "mission": "Investigate swift abi for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-06",
+      "name": "ARM64 disassembly",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "arm64",
+        "disassembly"
+      ],
+      "mission": "Investigate arm64 disassembly for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-07",
+      "name": "Control-flow graph",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "control",
+        "flow",
+        "graph"
+      ],
+      "mission": "Investigate control-flow graph for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-08",
+      "name": "Binary diff",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "binary",
+        "diff"
+      ],
+      "mission": "Investigate binary diff for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-09",
+      "name": "Crash symbolication",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "crash",
+        "symbolication",
+        "pc",
+        "lr"
+      ],
+      "mission": "Investigate crash symbolication for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RE-10",
+      "name": "Binary integrity",
+      "team": "Reverse Engineering",
+      "keywords": [
+        "binary",
+        "integrity"
+      ],
+      "mission": "Investigate binary integrity for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-01",
+      "name": "IPA inventory",
+      "team": "IPA Packaging",
+      "keywords": [
+        "ipa",
+        "inventory",
+        "zip",
+        "payload"
+      ],
+      "mission": "Investigate ipa inventory for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-02",
+      "name": "Info.plist validation",
+      "team": "IPA Packaging",
+      "keywords": [
+        "info",
+        "plist",
+        "validation"
+      ],
+      "mission": "Investigate info.plist validation for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-03",
+      "name": "Framework dependencies",
+      "team": "IPA Packaging",
+      "keywords": [
+        "framework",
+        "dependencies"
+      ],
+      "mission": "Investigate framework dependencies for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-04",
+      "name": "Code signing diagnosis",
+      "team": "IPA Packaging",
+      "keywords": [
+        "code",
+        "signing",
+        "diagnosis"
+      ],
+      "mission": "Investigate code signing diagnosis for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-05",
+      "name": "Architecture compatibility",
+      "team": "IPA Packaging",
+      "keywords": [
+        "architecture",
+        "compatibility"
+      ],
+      "mission": "Investigate architecture compatibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-06",
+      "name": "Resource audit",
+      "team": "IPA Packaging",
+      "keywords": [
+        "resource",
+        "audit"
+      ],
+      "mission": "Investigate resource audit for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-07",
+      "name": "Bundle migration",
+      "team": "IPA Packaging",
+      "keywords": [
+        "bundle",
+        "migration"
+      ],
+      "mission": "Investigate bundle migration for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-08",
+      "name": "Reproducible packages",
+      "team": "IPA Packaging",
+      "keywords": [
+        "reproducible",
+        "packages"
+      ],
+      "mission": "Investigate reproducible packages for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-09",
+      "name": "Permissions & privacy",
+      "team": "IPA Packaging",
+      "keywords": [
+        "permissions",
+        "privacy"
+      ],
+      "mission": "Investigate permissions & privacy for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IPA-10",
+      "name": "Supply-chain review",
+      "team": "IPA Packaging",
+      "keywords": [
+        "supply",
+        "chain",
+        "review"
+      ],
+      "mission": "Investigate supply-chain review for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-01",
+      "name": "UIKit touch dispatch",
+      "team": "iOS Runtime",
+      "keywords": [
+        "uikit",
+        "touch",
+        "dispatch"
+      ],
+      "mission": "Investigate uikit touch dispatch for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-02",
+      "name": "Gesture recognizers",
+      "team": "iOS Runtime",
+      "keywords": [
+        "gesture",
+        "recognizers"
+      ],
+      "mission": "Investigate gesture recognizers for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-03",
+      "name": "Swift–ObjC bridge",
+      "team": "iOS Runtime",
+      "keywords": [
+        "swift",
+        "objc",
+        "bridge"
+      ],
+      "mission": "Investigate swift–objc bridge for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-04",
+      "name": "Threading & GCD",
+      "team": "iOS Runtime",
+      "keywords": [
+        "threading",
+        "gcd"
+      ],
+      "mission": "Investigate threading & gcd for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-05",
+      "name": "Memory management",
+      "team": "iOS Runtime",
+      "keywords": [
+        "memory",
+        "management"
+      ],
+      "mission": "Investigate memory management for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-06",
+      "name": "iOS version compatibility",
+      "team": "iOS Runtime",
+      "keywords": [
+        "ios",
+        "version",
+        "compatibility"
+      ],
+      "mission": "Investigate ios version compatibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-07",
+      "name": "Foreground & lifecycle",
+      "team": "iOS Runtime",
+      "keywords": [
+        "foreground",
+        "lifecycle"
+      ],
+      "mission": "Investigate foreground & lifecycle for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-08",
+      "name": "Input & keyboard",
+      "team": "iOS Runtime",
+      "keywords": [
+        "input",
+        "keyboard",
+        "ios",
+        "ime"
+      ],
+      "mission": "Investigate input & keyboard for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-09",
+      "name": "Performance signposts",
+      "team": "iOS Runtime",
+      "keywords": [
+        "performance",
+        "signposts"
+      ],
+      "mission": "Investigate performance signposts for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "IOS-10",
+      "name": "Accessibility & localization",
+      "team": "iOS Runtime",
+      "keywords": [
+        "accessibility",
+        "localization"
+      ],
+      "mission": "Investigate accessibility & localization for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-01",
+      "name": "C++ ABI compatibility",
+      "team": "C++ and Mods",
+      "keywords": [
+        "c",
+        "abi",
+        "compatibility"
+      ],
+      "mission": "Investigate c++ abi compatibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-02",
+      "name": "ASI module lifecycle",
+      "team": "C++ and Mods",
+      "keywords": [
+        "asi",
+        "module",
+        "lifecycle"
+      ],
+      "mission": "Investigate asi module lifecycle for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-03",
+      "name": "ScriptHook adapter",
+      "team": "C++ and Mods",
+      "keywords": [
+        "scripthook",
+        "adapter"
+      ],
+      "mission": "Investigate scripthook adapter for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-04",
+      "name": "Windows API shims",
+      "team": "C++ and Mods",
+      "keywords": [
+        "windows",
+        "api",
+        "shims"
+      ],
+      "mission": "Investigate windows api shims for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-05",
+      "name": "Game native bindings",
+      "team": "C++ and Mods",
+      "keywords": [
+        "game",
+        "native",
+        "bindings"
+      ],
+      "mission": "Investigate game native bindings for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-06",
+      "name": "Memory allocator safety",
+      "team": "C++ and Mods",
+      "keywords": [
+        "memory",
+        "allocator",
+        "safety"
+      ],
+      "mission": "Investigate memory allocator safety for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-07",
+      "name": "Hook design audit",
+      "team": "C++ and Mods",
+      "keywords": [
+        "hook",
+        "design",
+        "audit"
+      ],
+      "mission": "Investigate hook design audit for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-08",
+      "name": "Event bus & overlays",
+      "team": "C++ and Mods",
+      "keywords": [
+        "event",
+        "bus",
+        "overlays"
+      ],
+      "mission": "Investigate event bus & overlays for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-09",
+      "name": "Build flags & toolchain",
+      "team": "C++ and Mods",
+      "keywords": [
+        "build",
+        "flags",
+        "toolchain"
+      ],
+      "mission": "Investigate build flags & toolchain for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "CPP-10",
+      "name": "Mod test harness",
+      "team": "C++ and Mods",
+      "keywords": [
+        "mod",
+        "test",
+        "harness"
+      ],
+      "mission": "Investigate mod test harness for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-01",
+      "name": "Metal frame capture",
+      "team": "Graphics",
+      "keywords": [
+        "metal",
+        "frame",
+        "capture"
+      ],
+      "mission": "Investigate metal frame capture for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-02",
+      "name": "DXMT translation",
+      "team": "Graphics",
+      "keywords": [
+        "dxmt",
+        "translation"
+      ],
+      "mission": "Investigate dxmt translation for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-03",
+      "name": "Shader compatibility",
+      "team": "Graphics",
+      "keywords": [
+        "shader",
+        "compatibility"
+      ],
+      "mission": "Investigate shader compatibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-04",
+      "name": "Reflection pipeline",
+      "team": "Graphics",
+      "keywords": [
+        "reflection",
+        "pipeline"
+      ],
+      "mission": "Investigate reflection pipeline for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-05",
+      "name": "Lighting & shadows",
+      "team": "Graphics",
+      "keywords": [
+        "lighting",
+        "shadows"
+      ],
+      "mission": "Investigate lighting & shadows for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-06",
+      "name": "Texture streaming",
+      "team": "Graphics",
+      "keywords": [
+        "texture",
+        "streaming"
+      ],
+      "mission": "Investigate texture streaming for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-07",
+      "name": "Draw-call performance",
+      "team": "Graphics",
+      "keywords": [
+        "draw",
+        "call",
+        "performance"
+      ],
+      "mission": "Investigate draw-call performance for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-08",
+      "name": "Camera system",
+      "team": "Graphics",
+      "keywords": [
+        "camera",
+        "system"
+      ],
+      "mission": "Investigate camera system for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-09",
+      "name": "UI compositing",
+      "team": "Graphics",
+      "keywords": [
+        "ui",
+        "compositing"
+      ],
+      "mission": "Investigate ui compositing for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "GFX-10",
+      "name": "Device presets",
+      "team": "Graphics",
+      "keywords": [
+        "device",
+        "presets"
+      ],
+      "mission": "Investigate device presets for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-01",
+      "name": "Network session diagnostics",
+      "team": "Networking and RP",
+      "keywords": [
+        "network",
+        "session",
+        "diagnostics"
+      ],
+      "mission": "Investigate network session diagnostics for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-02",
+      "name": "UDP transport",
+      "team": "Networking and RP",
+      "keywords": [
+        "udp",
+        "transport"
+      ],
+      "mission": "Investigate udp transport for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-03",
+      "name": "State synchronization",
+      "team": "Networking and RP",
+      "keywords": [
+        "state",
+        "synchronization"
+      ],
+      "mission": "Investigate state synchronization for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-04",
+      "name": "Latency & jitter",
+      "team": "Networking and RP",
+      "keywords": [
+        "latency",
+        "jitter"
+      ],
+      "mission": "Investigate latency & jitter for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-05",
+      "name": "Player authority",
+      "team": "Networking and RP",
+      "keywords": [
+        "player",
+        "authority"
+      ],
+      "mission": "Investigate player authority for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-06",
+      "name": "Police RP interactions",
+      "team": "Networking and RP",
+      "keywords": [
+        "police",
+        "rp",
+        "interactions"
+      ],
+      "mission": "Investigate police rp interactions for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-07",
+      "name": "Vehicle state replication",
+      "team": "Networking and RP",
+      "keywords": [
+        "vehicle",
+        "state",
+        "replication",
+        "sync"
+      ],
+      "mission": "Investigate vehicle state replication for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-08",
+      "name": "Anti-desync QA",
+      "team": "Networking and RP",
+      "keywords": [
+        "anti",
+        "desync",
+        "qa"
+      ],
+      "mission": "Investigate anti-desync qa for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-09",
+      "name": "Network serialization",
+      "team": "Networking and RP",
+      "keywords": [
+        "network",
+        "serialization"
+      ],
+      "mission": "Investigate network serialization for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "NET-10",
+      "name": "Security & abuse prevention",
+      "team": "Networking and RP",
+      "keywords": [
+        "security",
+        "abuse",
+        "prevention"
+      ],
+      "mission": "Investigate security & abuse prevention for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-01",
+      "name": "Launcher UI",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "launcher",
+        "ui"
+      ],
+      "mission": "Investigate launcher ui for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-02",
+      "name": "Touch button designer",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "touch",
+        "button",
+        "designer"
+      ],
+      "mission": "Investigate touch button designer for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-03",
+      "name": "Menyoo input map",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "menyoo",
+        "input",
+        "map",
+        "vehicle"
+      ],
+      "mission": "Investigate menyoo input map for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-04",
+      "name": "Trainer controls",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "trainer",
+        "controls"
+      ],
+      "mission": "Investigate trainer controls for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-05",
+      "name": "Localization extraction",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "localization",
+        "extraction"
+      ],
+      "mission": "Investigate localization extraction for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-06",
+      "name": "Vietnamese QA",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "vietnamese",
+        "qa"
+      ],
+      "mission": "Investigate vietnamese qa for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-07",
+      "name": "Overlay layout",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "overlay",
+        "layout"
+      ],
+      "mission": "Investigate overlay layout for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-08",
+      "name": "Keyboard bridge",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "keyboard",
+        "bridge"
+      ],
+      "mission": "Investigate keyboard bridge for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-09",
+      "name": "HUD visibility",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "hud",
+        "visibility"
+      ],
+      "mission": "Investigate hud visibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "UX-10",
+      "name": "Accessibility interaction",
+      "team": "UI & Vietnamese",
+      "keywords": [
+        "accessibility",
+        "interaction"
+      ],
+      "mission": "Investigate accessibility interaction for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-01",
+      "name": "SIGSEGV triage",
+      "team": "Reliability and QA",
+      "keywords": [
+        "sigsegv",
+        "triage",
+        "segfault",
+        "crash"
+      ],
+      "mission": "Investigate sigsegv triage for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-02",
+      "name": "SIGABRT triage",
+      "team": "Reliability and QA",
+      "keywords": [
+        "sigabrt",
+        "triage",
+        "abort",
+        "crash"
+      ],
+      "mission": "Investigate sigabrt triage for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-03",
+      "name": "SIGTRAP triage",
+      "team": "Reliability and QA",
+      "keywords": [
+        "sigtrap",
+        "triage",
+        "trap",
+        "crash"
+      ],
+      "mission": "Investigate sigtrap triage for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-04",
+      "name": "Memory regressions",
+      "team": "Reliability and QA",
+      "keywords": [
+        "memory",
+        "regressions"
+      ],
+      "mission": "Investigate memory regressions for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-05",
+      "name": "Concurrency race audit",
+      "team": "Reliability and QA",
+      "keywords": [
+        "concurrency",
+        "race",
+        "audit"
+      ],
+      "mission": "Investigate concurrency race audit for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-06",
+      "name": "Test matrix",
+      "team": "Reliability and QA",
+      "keywords": [
+        "test",
+        "matrix"
+      ],
+      "mission": "Investigate test matrix for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-07",
+      "name": "Regression baselines",
+      "team": "Reliability and QA",
+      "keywords": [
+        "regression",
+        "baselines"
+      ],
+      "mission": "Investigate regression baselines for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-08",
+      "name": "Crash log parser",
+      "team": "Reliability and QA",
+      "keywords": [
+        "crash",
+        "log",
+        "parser"
+      ],
+      "mission": "Investigate crash log parser for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-09",
+      "name": "Risk prioritization",
+      "team": "Reliability and QA",
+      "keywords": [
+        "risk",
+        "prioritization"
+      ],
+      "mission": "Investigate risk prioritization for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "QA-10",
+      "name": "Release gate",
+      "team": "Reliability and QA",
+      "keywords": [
+        "release",
+        "gate"
+      ],
+      "mission": "Investigate release gate for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-01",
+      "name": "GitHub Actions architecture",
+      "team": "Automation and CI",
+      "keywords": [
+        "github",
+        "actions",
+        "architecture",
+        "workflow"
+      ],
+      "mission": "Investigate github actions architecture for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-02",
+      "name": "Workflow permissions",
+      "team": "Automation and CI",
+      "keywords": [
+        "workflow",
+        "permissions"
+      ],
+      "mission": "Investigate workflow permissions for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-03",
+      "name": "Build reproducibility",
+      "team": "Automation and CI",
+      "keywords": [
+        "build",
+        "reproducibility"
+      ],
+      "mission": "Investigate build reproducibility for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-04",
+      "name": "Artifact integrity",
+      "team": "Automation and CI",
+      "keywords": [
+        "artifact",
+        "integrity"
+      ],
+      "mission": "Investigate artifact integrity for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-05",
+      "name": "Pull request reviews",
+      "team": "Automation and CI",
+      "keywords": [
+        "pull",
+        "request",
+        "reviews"
+      ],
+      "mission": "Investigate pull request reviews for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-06",
+      "name": "Test coverage",
+      "team": "Automation and CI",
+      "keywords": [
+        "test",
+        "coverage"
+      ],
+      "mission": "Investigate test coverage for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-07",
+      "name": "Dependency pinning",
+      "team": "Automation and CI",
+      "keywords": [
+        "dependency",
+        "pinning"
+      ],
+      "mission": "Investigate dependency pinning for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-08",
+      "name": "Mac runner strategy",
+      "team": "Automation and CI",
+      "keywords": [
+        "mac",
+        "runner",
+        "strategy"
+      ],
+      "mission": "Investigate mac runner strategy for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-09",
+      "name": "Release rollback",
+      "team": "Automation and CI",
+      "keywords": [
+        "release",
+        "rollback"
+      ],
+      "mission": "Investigate release rollback for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "OPS-10",
+      "name": "Incident reporting",
+      "team": "Automation and CI",
+      "keywords": [
+        "incident",
+        "reporting"
+      ],
+      "mission": "Investigate incident reporting for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-01",
+      "name": "Open-source discovery",
+      "team": "Research & Planning",
+      "keywords": [
+        "open",
+        "source",
+        "discovery"
+      ],
+      "mission": "Investigate open-source discovery for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-02",
+      "name": "Architecture decision records",
+      "team": "Research & Planning",
+      "keywords": [
+        "architecture",
+        "decision",
+        "records"
+      ],
+      "mission": "Investigate architecture decision records for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-03",
+      "name": "Experimental design",
+      "team": "Research & Planning",
+      "keywords": [
+        "experimental",
+        "design"
+      ],
+      "mission": "Investigate experimental design for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-04",
+      "name": "Failure analysis",
+      "team": "Research & Planning",
+      "keywords": [
+        "failure",
+        "analysis"
+      ],
+      "mission": "Investigate failure analysis for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-05",
+      "name": "Roadmap planning",
+      "team": "Research & Planning",
+      "keywords": [
+        "roadmap",
+        "planning"
+      ],
+      "mission": "Investigate roadmap planning for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-06",
+      "name": "Technical documentation",
+      "team": "Research & Planning",
+      "keywords": [
+        "technical",
+        "documentation"
+      ],
+      "mission": "Investigate technical documentation for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-07",
+      "name": "Performance benchmarking",
+      "team": "Research & Planning",
+      "keywords": [
+        "performance",
+        "benchmarking"
+      ],
+      "mission": "Investigate performance benchmarking for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-08",
+      "name": "Security threat modeling",
+      "team": "Research & Planning",
+      "keywords": [
+        "security",
+        "threat",
+        "modeling"
+      ],
+      "mission": "Investigate security threat modeling for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-09",
+      "name": "Compatibility matrix",
+      "team": "Research & Planning",
+      "keywords": [
+        "compatibility",
+        "matrix"
+      ],
+      "mission": "Investigate compatibility matrix for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    },
+    {
+      "id": "RES-10",
+      "name": "Independent verification",
+      "team": "Research & Planning",
+      "keywords": [
+        "independent",
+        "verification"
+      ],
+      "mission": "Investigate independent verification for GTA V iOS using verifiable evidence.",
+      "deliverable": "Evidence, risk rating, minimal solution and reproducible tests.",
+      "default_mode": "read-only"
+    }
+  ]
+}
