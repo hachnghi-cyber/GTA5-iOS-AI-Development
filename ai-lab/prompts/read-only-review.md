@@ -1,0 +1,1 @@
+Review GTA V iOS repository read-only. First inspect root AGENTS.md, README.md, and relevant code. Identify concrete high-confidence correctness, build, and security issues, citing paths and lines. Explain smallest reproducible fixes, tests and rollback. Never reveal secrets, execute game binaries, or claim a real IPA build or on-device test. Limit to ten most important findings.
