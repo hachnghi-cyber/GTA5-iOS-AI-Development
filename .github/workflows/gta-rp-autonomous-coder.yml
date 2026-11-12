@@ -3,6 +3,10 @@ on:
   schedule:
     - cron: '19 * * * *'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/gta-rp-autonomous-coder.yml'
+      - 'ai-lab/autocode/**'
 permissions:
   contents: read
 concurrency:
@@ -10,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   key_check:
-    if: ${{ vars.ENABLE_RP_AUTOCODE == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.ENABLE_RP_AUTOCODE == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
@@ -82,6 +86,7 @@ jobs:
           prompt-file: ai-lab/reports/autocode-prompt.md
           output-file: ai-lab/reports/autocode-response.md
           permission-profile: ':workspace'
+          allow-bots: true
           safety-strategy: drop-sudo
           codex-args: '["--ephemeral"]'
       - name: Serialize unprivileged patch
