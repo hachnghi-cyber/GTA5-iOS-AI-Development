@@ -1,0 +1,39 @@
+name: Police RP v1.6 - Import ZIP and build iOS session diagnostic
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f PoliceRP_v16_Source.zip || { echo 'Missing PoliceRP_v16_Source.zip in repository root'; exit 1; }
+          mkdir -p src_v16
+          unzip -oq PoliceRP_v16_Source.zip -d src_v16
+          test -f src_v16/Diagnostics/PoliceRPOnlineProbe.c
+          test -f src_v16/Tools/check_online_v16.py
+          python3 -m unittest discover -s src_v16/Tests -p 'test_online_v16.py' -v
+      - name: Build iPhone ARM64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            src_v16/Diagnostics/PoliceRPOnlineProbe.c -o out/PoliceRPProbe.dylib
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          xcrun vtool -show-build out/PoliceRPProbe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          echo 'READ-ONLY v1.6; no online player IDs verified; no hooks or gameplay' > out/README.txt
+      - name: Upload built library
+        uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v16-iPhone-ARM64-ONLINE-SESSION-DIAGNOSTIC-ONLY
+          path: out/
+          retention-days: 7
