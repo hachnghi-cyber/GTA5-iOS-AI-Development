@@ -1,0 +1,74 @@
+{
+  "source": "GTAV-v12(1).ipa/Payload/GTAV.app/GTA5",
+  "sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "uuid": "6a498e32e70c334cbca3affd35e8d171",
+  "read_only": true,
+  "findings": {
+    "sandbox_registration_guard": "CTheScripts::LaunchStartupScript checks MacportSandboxMode before registering native",
+    "native_command_callback": "MacportSandboxProgram builds address MacportSandboxNative and registers it with rage::scrThread::RegisterCommand",
+    "online_invocation": "MacportSandboxNative tail-branches (B) to MacportOnlineUpdate",
+    "job_event_carrier": "MacportJobSend constructs CScriptedGameEvent with 244-byte MPJ2 payload",
+    "not_proven": "PRP delivery, authenticated sender metadata, safe hook, UI, iOS dylib, actual game operation"
+  },
+  "arm64_verified_branches": [
+    {
+      "at": "0x100e30584",
+      "kind": "BL",
+      "target": "0x100039d88",
+      "opcode": "0x97c82601"
+    },
+    {
+      "at": "0x100039dbc",
+      "kind": "BL",
+      "target": "0x101f952bc",
+      "opcode": "0x947d6d40"
+    },
+    {
+      "at": "0x100039e34",
+      "kind": "B",
+      "target": "0x1000e01a0",
+      "opcode": "0x140298db"
+    },
+    {
+      "at": "0x1000e5188",
+      "kind": "BL",
+      "target": "0x1000ea024",
+      "opcode": "0x940013a7"
+    },
+    {
+      "at": "0x1000e6de0",
+      "kind": "BL",
+      "target": "0x100112010",
+      "opcode": "0x9400ac8c"
+    },
+    {
+      "at": "0x1000f5f3c",
+      "kind": "BL",
+      "target": "0x10190ef20",
+      "opcode": "0x946063f9"
+    }
+  ],
+  "native_command": "MacportSandboxNative",
+  "job_message": {
+    "magic": "MPJ2",
+    "bytes": 244,
+    "constructor_call": "0x1000f5f3c",
+    "warning": "Do not overwrite MPJ2 messages or reuse this type without receiver checks"
+  },
+  "existing_game_arrest_events": {
+    "CStartNetworkPedArrestEvent::EventHandler": {
+      "vmaddr": "0x101914e68",
+      "first_instruction": "0xd10203ff",
+      "meaning": "event handler present; player applicability NOT verified"
+    },
+    "CStartNetworkPedUncuffEvent::EventHandler": {
+      "vmaddr": "0x101915030",
+      "first_instruction": "0xd101c3ff",
+      "meaning": "event handler present; player applicability NOT verified"
+    }
+  },
+  "ipa_changed": false,
+  "hook_installed": false,
+  "online_transport_connected": false,
+  "playable": false
+}

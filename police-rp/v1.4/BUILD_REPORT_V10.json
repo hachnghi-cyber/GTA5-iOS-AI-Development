@@ -1,0 +1,47 @@
+{
+  "project": "GTA V iOS v12 Police RP Only",
+  "version": "1.0",
+  "status": "SOURCE-ONLY: no iOS dylib/IPA patch, no engine integration, no real player arrest",
+  "based_on": "Police RP Only v0.9",
+  "original_ipa_zip_test": "passed",
+  "original_ipa_bytes": 57007208,
+  "original_GTA5_SHA256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "confirmed_registration": "MacportSandboxNative 0x100039e34 B MacportOnlineUpdate 0x1000e01a0",
+  "candidate_online_event": "MacportJobSend constructs CScriptedGameEvent 244-byte MPJ2, PRP1 not integrated",
+  "observed_arrest_event_handlers": [
+    "CStartNetworkPedArrestEvent",
+    "CStartNetworkPedUncuffEvent"
+  ],
+  "new_tests": {
+    "source_trace_unittest": 4,
+    "carrier_C_assertions": 22,
+    "ASan_UBSan": "pass"
+  },
+  "regression_tests": {
+    "Python_http": 33,
+    "P2P_assertions": 60,
+    "two_player_simulation_assertions": 21,
+    "fuzz_inputs": 25000
+  },
+  "arm64_macho_objects": [
+    "police_rp_adapter.o",
+    "police_rp_only.o",
+    "prp_candidate_carrier.o",
+    "prp_engine_binding.o",
+    "prp_mailbox.o",
+    "prp_p2p.o",
+    "prp_runtime.o"
+  ],
+  "needs": [
+    "engine callback hook with correct ABI",
+    "authenticated RAGE sender/session metadata",
+    "game-network delivery with separate message ID",
+    "iOS Xcode dylib linking and code signing",
+    "two-device tests",
+    "actual player animations and prison handling"
+  ],
+  "game_modified": false,
+  "server_modified": false,
+  "playable_ipa": false,
+  "workflow_macOS_ran": false
+}

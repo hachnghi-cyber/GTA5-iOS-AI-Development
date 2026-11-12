@@ -1,0 +1,47 @@
+name: Police RP Only v1.1 - research build (NOT injected)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'NativeBridge/**'
+      - 'P2P/**'
+      - 'Integration/**'
+      - 'Tools/verify_v12_job_receiver.py'
+      - 'Tools/test_v11_event.sh'
+      - '.github/workflows/build-prp-v11-ios.yml'
+jobs:
+  linux-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test standalone state machine and carrier with sanitizers
+        run: |
+          bash Tools/test_v09_full.sh
+          bash Tools/test_v11_event.sh
+  ios-object-and-link:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build iOS arm64 dylib using actual Apple SDK (unhooked, unsigned)
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 \
+            -std=c11 -Wall -Wextra -Werror -O2 -dynamiclib \
+            -install_name '@rpath/libPoliceRPOnly.dylib' \
+            NativeBridge/police_rp_only.c \
+            NativeBridge/police_rp_adapter.c \
+            NativeBridge/ios_native_work_probe.c \
+            P2P/prp_p2p.c P2P/prp_runtime.c \
+            Integration/prp_mailbox.c Integration/prp_engine_binding.c \
+            Integration/prp_candidate_carrier.c \
+            Integration/prp_event_isolation.c \
+            -o out/libPoliceRPOnly.dylib
+          xcrun lipo -info out/libPoliceRPOnly.dylib
+          xcrun otool -l out/libPoliceRPOnly.dylib > out/load_commands.txt
+          shasum -a 256 out/libPoliceRPOnly.dylib > out/sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRP-v11-unhooked-ios-arm64-DYLIB-NOT-IPA
+          path: out/

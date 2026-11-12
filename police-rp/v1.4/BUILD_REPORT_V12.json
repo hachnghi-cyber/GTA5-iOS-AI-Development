@@ -1,0 +1,12 @@
+{
+  "version": "1.2",
+  "machine": "Linux x86_64 and ARM64 Mach-O cross compile",
+  "native_objects": 9,
+  "test_transport": 25,
+  "python_tests": 33,
+  "stock_ipa_modified": false,
+  "real_game_event_hook": false,
+  "real_ios_dylib": false,
+  "real_iphone_tests": false,
+  "notes": "A future authenticated transport and GTA5 game-loop hook remain mandatory."
+}

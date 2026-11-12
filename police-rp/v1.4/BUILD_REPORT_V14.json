@@ -1,0 +1,26 @@
+{
+  "version": "1.4",
+  "date": "2026-11-12",
+  "artifact_kind": "diagnostic_source_only",
+  "original_ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+  "original_GTA5_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "original_GTA5_uuid": "6a498e32e70c334cbca3affd35e8d171",
+  "ios_documents_file_sharing_enabled": true,
+  "probe_marker": "Documents/PoliceRPProbe-v14.txt",
+  "offline_loader_tests": 17,
+  "offline_loader_tests_status": "passed",
+  "PoliceRP_baseline_regression": "passed (Tools/test_v12_all.sh)",
+  "probe_C_host_syntax": "passed using simulated Mach-O headers, NOT iOS SDK",
+  "macos_xcode_build": "NOT_RUN",
+  "ios_dylib_created": false,
+  "ipa_modified": false,
+  "on_device_test": "NOT_RUN",
+  "police_gameplay_online_working": false,
+  "native_hook_installed": false,
+  "real_rage_transport_bound": false,
+  "notes": [
+    "Only reports library load+GTA5 UUID in marker if document write succeeds",
+    "IPA patcher requires proper iOS dylib artifact, refuses wrong version and duplicate injection",
+    "Future device run required before native game-thread hook work."
+  ]
+}

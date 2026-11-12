@@ -1,0 +1,52 @@
+name: Police RP Only v1.2 - verified candidate interface (NOT injected)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'NativeBridge/**'
+      - 'P2P/**'
+      - 'Integration/**'
+      - 'Tools/verify_v12_job_receiver.py'
+      - 'Tools/test_v11_event.sh'
+      - 'Tools/test_v12_transport.sh'
+      - '.github/workflows/build-prp-v12-ios.yml'
+jobs:
+  linux-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test standalone state machine and carrier with sanitizers
+        run: |
+          bash Tools/test_v09_full.sh
+          bash Tools/test_v11_event.sh
+          bash Tools/test_v12_transport.sh
+  ios-object-and-link:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build iOS arm64 framework using Apple SDK (unhooked, unsigned)
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out/PoliceRPOnly.framework
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 \
+            -std=c11 -Wall -Wextra -Werror -O2 -dynamiclib \
+            -install_name '@rpath/PoliceRPOnly.framework/PoliceRPOnly' \
+            NativeBridge/police_rp_only.c \
+            NativeBridge/police_rp_adapter.c \
+            NativeBridge/ios_native_work_probe.c \
+            P2P/prp_p2p.c P2P/prp_runtime.c \
+            Integration/prp_mailbox.c Integration/prp_engine_binding.c \
+            Integration/prp_candidate_carrier.c \
+            Integration/prp_event_isolation.c \
+            Integration/prp_transport_port.c \
+            -o out/PoliceRPOnly.framework/PoliceRPOnly
+          cp Integration/PoliceRPOnly-Info.plist out/PoliceRPOnly.framework/Info.plist
+          xcrun lipo -info out/PoliceRPOnly.framework/PoliceRPOnly
+          xcrun otool -l out/PoliceRPOnly.framework/PoliceRPOnly > out/load_commands.txt
+          shasum -a 256 out/PoliceRPOnly.framework/PoliceRPOnly > out/sha256.txt
+          printf "Not signed or linked to GTA5; not installable as-is\n" > out/NOT_AN_IPA.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRP-v12-unhooked-ios-arm64-FRAMEWORK-NOT-IPA
+          path: out/

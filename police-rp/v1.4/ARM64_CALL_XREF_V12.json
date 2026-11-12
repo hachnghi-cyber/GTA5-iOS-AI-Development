@@ -1,0 +1,51 @@
+{
+  "read_only": true,
+  "source_gta5_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "uuid": "6a498e32e70c334cbca3affd35e8d171",
+  "text_section_va": "0x0000000100004000",
+  "text_section_bytes": 36757644,
+  "targets": {
+    "MacportOnlineUpdate": {
+      "vmaddr": "0x00000001000e01a0",
+      "direct_BL_calls": [],
+      "direct_BL_count": 0
+    },
+    "MacportJobsUpdate": {
+      "vmaddr": "0x00000001000ea024",
+      "direct_BL_calls": [
+        {
+          "caller_vmaddr": "0x00000001000e5188",
+          "call_instruction": "0x940013a7",
+          "target_vmaddr": "0x00000001000ea024"
+        }
+      ],
+      "direct_BL_count": 1
+    },
+    "MacportWorkTaskFrame": {
+      "vmaddr": "0x0000000100112010",
+      "direct_BL_calls": [
+        {
+          "caller_vmaddr": "0x00000001000e6de0",
+          "call_instruction": "0x9400ac8c",
+          "target_vmaddr": "0x0000000100112010"
+        }
+      ],
+      "direct_BL_count": 1
+    },
+    "MacportWorkArrestScene": {
+      "vmaddr": "0x000000010011bc8c",
+      "direct_BL_calls": [
+        {
+          "caller_vmaddr": "0x0000000100117d08",
+          "call_instruction": "0x94000fe1",
+          "target_vmaddr": "0x000000010011bc8c"
+        }
+      ],
+      "direct_BL_count": 1
+    }
+  },
+  "interpretation": "MacportJobsUpdate and MacportWorkTaskFrame receive direct BL calls from within MacportOnlineUpdate. A zero direct BL count for MacportOnlineUpdate does not rule out an indirect callback. No game-thread/transport hook is verified.",
+  "ipa_modified": false,
+  "hook_installed": false,
+  "ipa_playable": false
+}

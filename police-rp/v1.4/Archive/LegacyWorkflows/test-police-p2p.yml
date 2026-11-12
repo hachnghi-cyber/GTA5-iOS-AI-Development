@@ -1,0 +1,35 @@
+name: Police RP Only v0.6 - P2P tests and unsigned iOS build
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'P2P/**'
+      - 'NativeBridge/**'
+      - 'Tools/test_v06_native.sh'
+      - '.github/workflows/test-police-p2p.yml'
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run sanitizer and 2-player simulation tests
+        run: bash Tools/test_v06_native.sh
+  ios-link-only:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated, UNSIGNED ARM64 iOS dylib (NOT game-integrated)
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 -std=c11 -Wall -Wextra -Werror \
+            -dynamiclib -install_name @rpath/PoliceRPP2P.dylib \
+            NativeBridge/police_rp_only.c NativeBridge/police_rp_adapter.c \
+            NativeBridge/ios_native_work_probe.c \
+            P2P/prp_p2p.c P2P/prp_runtime.c \
+            -o out/PoliceRPP2P.dylib
+          file out/PoliceRPP2P.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRP-v0.6-unsigned-NOT-INTEGRATED
+          path: out/PoliceRPP2P.dylib

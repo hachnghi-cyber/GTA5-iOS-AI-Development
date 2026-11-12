@@ -1,0 +1,40 @@
+name: Police RP Only v0.9 - iOS build and test (unhooked)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Integration/**'
+      - 'P2P/**'
+      - 'NativeBridge/**'
+      - 'Tools/test_v08_bridge.sh'
+      - '.github/workflows/build-prp-v08-ios.yml'
+jobs:
+  linux-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate native code and protocol
+        run: bash Tools/test_v08_bridge.sh
+  ios-compile:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link ARM64 iOS dylib with Apple SDK (not wired into GTA5)
+        run: |
+          set -euo pipefail
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 \
+            -std=c11 -Wall -Wextra -Werror -O2 -dynamiclib \
+            -install_name @rpath/libPoliceRPOnly.dylib \
+            NativeBridge/police_rp_only.c NativeBridge/police_rp_adapter.c \
+            NativeBridge/ios_native_work_probe.c \
+            P2P/prp_p2p.c P2P/prp_runtime.c \
+            Integration/prp_mailbox.c Integration/prp_engine_binding.c \
+            -o out/libPoliceRPOnly.dylib
+          xcrun lipo -info out/libPoliceRPOnly.dylib
+          xcrun otool -l out/libPoliceRPOnly.dylib > out/load_commands.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRP-v09-unhooked-unsigned-ios-dylib
+          path: out/

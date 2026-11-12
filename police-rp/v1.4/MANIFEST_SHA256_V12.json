@@ -1,0 +1,468 @@
+{
+  "version": "1.2",
+  "nature": "source-and-tests-only; not injected, not playable",
+  "original_ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+  "verified_game_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "source_files": [
+    {
+      "path": ".github/workflows/build-prp-v12-ios.yml",
+      "size": 2202,
+      "sha256": "aff6e9b8377d4223b24028f213c952053a126eb118fd35a4b5699ff6c7bbf8ee"
+    },
+    {
+      "path": "ARM64_CALL_XREF_V12.json",
+      "size": 1614,
+      "sha256": "89606b663ed125b87e8ab5b8a587910b1d6d605b8e2969f92200f7e3bb3050d3"
+    },
+    {
+      "path": "ARM64_JOB_RECEIVE_V12.json",
+      "size": 2150,
+      "sha256": "5ee90a7178b291fdd657195c425f190c7b25150ea0e809f38102a643dc559baf"
+    },
+    {
+      "path": "ARM64_SANDBOX_NETWORK_CARRIER_V12.json",
+      "size": 2349,
+      "sha256": "bde98f2f879ddb68e21cabc70a995536f035bd026bf2540afa673174d88f310b"
+    },
+    {
+      "path": "Archive/LegacyWorkflows/build-prp-v09-ios.yml",
+      "size": 1461,
+      "sha256": "22c52fd28be6bddc49eadf2ece0278ae4180214d2fc091214a8ab4eec68700d9"
+    },
+    {
+      "path": "Archive/LegacyWorkflows/build-prp-v10-ios.yml",
+      "size": 1742,
+      "sha256": "cf1f8bb7cc4cd7a66c85d2af17ca81f12833cb14cad44df3285fd3ce83426cbb"
+    },
+    {
+      "path": "Archive/LegacyWorkflows/build-prp-v11-ios.yml",
+      "size": 1785,
+      "sha256": "904130e7fca92b7ab6332ee3534d6f35442027a74335d04a409e1e8c0406e06f"
+    },
+    {
+      "path": "Archive/LegacyWorkflows/test-police-only.yml",
+      "size": 1793,
+      "sha256": "82ce3f4f1cd89d69bb974fe10bfa7e87b31ef62f2bfb0ee87e7912badd3bdaa1"
+    },
+    {
+      "path": "Archive/LegacyWorkflows/test-police-p2p.yml",
+      "size": 1251,
+      "sha256": "fff56e693dd9fe8056a650f65473501cd68eaa53d6f8daf5a5d9f4f5b1ffc4aa"
+    },
+    {
+      "path": "BUILD_REPORT_V10.json",
+      "size": 1546,
+      "sha256": "67ca2b52d041f35dffb7d4079b6bf4654b2d30db2f0afe6b63c76f53d74949af"
+    },
+    {
+      "path": "BUILD_REPORT_V11.json",
+      "size": 1599,
+      "sha256": "808c833aa9a09644d8af61af3191a489142b03b925f0c244f533374b129d37eb"
+    },
+    {
+      "path": "BuildProof/headers/math.h",
+      "size": 55,
+      "sha256": "990fb2d50ffdac53fc2b2defb9b3b17c37616557bfca39e58bb8e174cbf7ef53"
+    },
+    {
+      "path": "BuildProof/headers/stddef.h",
+      "size": 135,
+      "sha256": "06386224790bce5bd557244295bb2328236549cd71a2dcb37ca41012bdb0d3d2"
+    },
+    {
+      "path": "BuildProof/headers/stdint.h",
+      "size": 963,
+      "sha256": "48658eeaa94474b1e4fe2c618515f38c08c7271cc942ad2bdd26c01e787357af"
+    },
+    {
+      "path": "BuildProof/headers/string.h",
+      "size": 160,
+      "sha256": "cc49dd34ab85289bd07a1018f62596cd07ee461a413ceae5f1c8360b06775201"
+    },
+    {
+      "path": "BuildProof/police_rp_adapter.o",
+      "size": 1800,
+      "sha256": "31013526af1dc71ac3b84c08da5ed505dddce6d30d54dc3082386b7dbef98c01"
+    },
+    {
+      "path": "BuildProof/police_rp_only.o",
+      "size": 1216,
+      "sha256": "1d189da056c598208aeacba57eba0cafb4231555c7eec36c25f91ca0c790e241"
+    },
+    {
+      "path": "BuildProof/prp_candidate_carrier.o",
+      "size": 2448,
+      "sha256": "0e6f5a431b8f97905c4e08e48c4a558b808a452160c4c99ec0a5fd08e94f8581"
+    },
+    {
+      "path": "BuildProof/prp_engine_binding.o",
+      "size": 3872,
+      "sha256": "76d127103f057d70ee56dd6abfa20ff03cfbf032b3a96636a057c0300da9bbde"
+    },
+    {
+      "path": "BuildProof/prp_event_isolation.o",
+      "size": 680,
+      "sha256": "26c7fa20966d7739c8388e7d2828b38543abc3853c805feff16c34bea8d558c5"
+    },
+    {
+      "path": "BuildProof/prp_mailbox.o",
+      "size": 2080,
+      "sha256": "a077ac7830adf536e60d32f63093fdf843f9dbd66bd9e5f41374e13fa2d2241a"
+    },
+    {
+      "path": "BuildProof/prp_p2p.o",
+      "size": 5456,
+      "sha256": "2ed73e58cb52167876e5c4553037e7d7c96c843aa63b87ed182363ff8c0d4a8c"
+    },
+    {
+      "path": "BuildProof/prp_runtime.o",
+      "size": 3736,
+      "sha256": "266cd209ce660a3dbecf29d13be8a50e7f36307aa858a2280b0a8cd1f9083d49"
+    },
+    {
+      "path": "BuildProof/prp_transport_port.o",
+      "size": 2040,
+      "sha256": "2fd141309b84d991f5ba5bf6632959ea0f3227e93015b60925e7c15498823f86"
+    },
+    {
+      "path": "CHANGELOG_V07.md",
+      "size": 609,
+      "sha256": "2b5c1d0dfd2df0f58500bed1d447e86b3808faea5622ec274611fb0a55c25641"
+    },
+    {
+      "path": "CHANGELOG_V08.md",
+      "size": 2464,
+      "sha256": "08d3a9ba420c1c64b4bf497c406a8673b7255953407c91a2e942357b86bb62f5"
+    },
+    {
+      "path": "CHANGELOG_V09.md",
+      "size": 2459,
+      "sha256": "97ab356f47ddc365268303e3b7a3e93092cfcb0e133f7f94804c56ad7f238d88"
+    },
+    {
+      "path": "CHANGELOG_V10.md",
+      "size": 3094,
+      "sha256": "fe582e49b7c91e899daac2126068277bfa3eae2300d05362fc28aaefba9fc0b1"
+    },
+    {
+      "path": "CHANGELOG_V11.md",
+      "size": 2601,
+      "sha256": "2e3a64c0b923a35a9324ad8eef5d67d5df7449dcd8650395113e5ab3fbb31357"
+    },
+    {
+      "path": "CHANGELOG_V12.md",
+      "size": 2143,
+      "sha256": "46b5ace536eb4409ba0f01e32f09b1e012baebdab1134423a3efbc0ddd417765"
+    },
+    {
+      "path": "HOOK_CANDIDATES_V12.json",
+      "size": 1826,
+      "sha256": "7b55a4a8278e6500abe4f4a71a91377c55ae8f1aba5b49da36fb00aaafa6ecdf"
+    },
+    {
+      "path": "Integration/GTA_ENGINE_BINDINGS.md",
+      "size": 3332,
+      "sha256": "2a1d24dab586422842c228491b08d735ecf8cc14a8748d587237985a3862a6c9"
+    },
+    {
+      "path": "Integration/PoliceRPOnly-Info.plist",
+      "size": 705,
+      "sha256": "87184fc67782802300a92aa2a245b202189b276aa4a099ddc5bd2c386aa77430"
+    },
+    {
+      "path": "Integration/REAL_ENGINE_BINDING_TODO.md",
+      "size": 1909,
+      "sha256": "b065e8d3fb2eae5f8365184d48e885d53475ed8a8dac1d4f7ea99d9af5297d9a"
+    },
+    {
+      "path": "Integration/prp_candidate_carrier.c",
+      "size": 2423,
+      "sha256": "85a5b81c6cec39a47cf3b05c2858714951ba97978bcf9cf6f3c9b0798570ede3"
+    },
+    {
+      "path": "Integration/prp_candidate_carrier.h",
+      "size": 1572,
+      "sha256": "59b7481408778f33b30c0b300edd91176cc9299b9fccb84f7b6b821da72424f1"
+    },
+    {
+      "path": "Integration/prp_engine_binding.c",
+      "size": 6508,
+      "sha256": "bcd050ec8a6777e7bfd3bd4b449480e11c5f9ce3797983d3e1b3cb55e95cbf22"
+    },
+    {
+      "path": "Integration/prp_engine_binding.h",
+      "size": 2479,
+      "sha256": "b84fe697e9db9568c53faa3f6b8e35af2d018f9081d0825e9d78c91ad19a7b15"
+    },
+    {
+      "path": "Integration/prp_event_isolation.c",
+      "size": 859,
+      "sha256": "b13c441d1f145a26b732845676d2fa11a2dda7b4fde52c7b7e8dccaebf0c657d"
+    },
+    {
+      "path": "Integration/prp_event_isolation.h",
+      "size": 780,
+      "sha256": "068240e5f76fd1ab7b1701db6e69da67fb1a55e9fc5069a2127d2519bce57c20"
+    },
+    {
+      "path": "Integration/prp_mailbox.c",
+      "size": 2063,
+      "sha256": "3922f3f119842411b3d4c5220a5bf9711402c03dc0af176c9cd6837e856b802b"
+    },
+    {
+      "path": "Integration/prp_mailbox.h",
+      "size": 1297,
+      "sha256": "c0341d8f57b95f597cbd5e3413a9b6d17e286ff00a16477de4f2327d986858f9"
+    },
+    {
+      "path": "Integration/prp_transport_port.c",
+      "size": 2403,
+      "sha256": "f49fc70315e0e12bb5a0f1ae13dbb17998dad273ad934749687c96d0e6a36fa4"
+    },
+    {
+      "path": "Integration/prp_transport_port.h",
+      "size": 1856,
+      "sha256": "d1122096db3b5246f3777524615d24da291f473136706b724d18ffd00f80d91d"
+    },
+    {
+      "path": "Integration/test_candidate_carrier.c",
+      "size": 2394,
+      "sha256": "8727ae38d0e46c4a5e7c678256af1a336a475aec54a163d123cc0d71dec58991"
+    },
+    {
+      "path": "Integration/test_engine_binding.c",
+      "size": 4212,
+      "sha256": "615e18eff96970931786fd9fdf83e4049029c4e9f6d5c1ff91d1882937c9189a"
+    },
+    {
+      "path": "Integration/test_event_isolation.c",
+      "size": 1683,
+      "sha256": "994fce97733f4f4a72ca8a9289197d641b1ee136e31dd35d9c91882794fb7a08"
+    },
+    {
+      "path": "Integration/test_mailbox.c",
+      "size": 1848,
+      "sha256": "b85ab705cdc1b0f91914beae7c0f0a08519075520892fd91a812ce8520560180"
+    },
+    {
+      "path": "Integration/test_transport_port.c",
+      "size": 4952,
+      "sha256": "e7b20944e9e0dcebbcbd9bec7d223e19e8c6d68992e660086d6bd989666a637c"
+    },
+    {
+      "path": "MANIFEST_SHA256_V08.json",
+      "size": 5432,
+      "sha256": "8d8eaf6c45cfafde3ead8c56869cf61ef5a2ea45697ccd7569ed7de5ef49efbb"
+    },
+    {
+      "path": "MANIFEST_SHA256_V09.json",
+      "size": 9170,
+      "sha256": "615e9d05b8e2e9fb4ac3da20a2e88d52969bc51c9cf2574e8344f6fd298eb4ae"
+    },
+    {
+      "path": "MANIFEST_SHA256_V10.json",
+      "size": 6864,
+      "sha256": "b1243700f4d9f2ab353ee5eb38f24ba32f0219a4a278408bdb3eea9e6cde1921"
+    },
+    {
+      "path": "MANIFEST_SHA256_V11.json",
+      "size": 8210,
+      "sha256": "503fedf710c3cb6ec026416bcf476e07cc5536da2446f1638fe55140c6031ce0"
+    },
+    {
+      "path": "NativeBridge/ENGINE_INTEGRATION.md",
+      "size": 722,
+      "sha256": "dd9e2f4c70cd5c93a0fac6ca2db88ae177a34674bb7d420d36989706211523fe"
+    },
+    {
+      "path": "NativeBridge/ios_native_work_probe.c",
+      "size": 2745,
+      "sha256": "9ceb25f4e768561879e0d73377f2b4115df1499e3ee95dd6453480134723a328"
+    },
+    {
+      "path": "NativeBridge/police_rp_adapter.c",
+      "size": 3249,
+      "sha256": "5c2e07657527275a8758a8c40733929debf20106c40e8849a651b2d4a6a77f71"
+    },
+    {
+      "path": "NativeBridge/police_rp_adapter.h",
+      "size": 2234,
+      "sha256": "254cbe1e85357e6c77a0f63d04f78aa41b69f5dd7e2897c136c48a08c0eb8382"
+    },
+    {
+      "path": "NativeBridge/police_rp_only.c",
+      "size": 2019,
+      "sha256": "affe297c4a30bc1c922f99315b5d3337a2fe782080510de933004b1964daa287"
+    },
+    {
+      "path": "NativeBridge/police_rp_only.h",
+      "size": 1799,
+      "sha256": "8b387ec1f5ed7a3aac2ca5db88f060e78c445f479860b4967a60e7a6dbeb5661"
+    },
+    {
+      "path": "NativeBridge/test_native_adapter.c",
+      "size": 2981,
+      "sha256": "42971728399ab55d7674bfe756e7d6b1005db46ebff40de255043914cbdb273b"
+    },
+    {
+      "path": "NativeBridge/test_native_policy.c",
+      "size": 2483,
+      "sha256": "3176bb563f73176e614d9354062abd70963d1880a13dcf15eb33065edef9cddb"
+    },
+    {
+      "path": "P2P/ENGINE_BINDINGS_REQUIRED.md",
+      "size": 4835,
+      "sha256": "e17e6fc6a5f06a832ddd0a4130497e2143feede1885c427f3f7715efa7749606"
+    },
+    {
+      "path": "P2P/prp_p2p.c",
+      "size": 10684,
+      "sha256": "9a20c23965778e422fb4bbd8b0117435a95173ad0c98faffe5a21ff1bd402cec"
+    },
+    {
+      "path": "P2P/prp_p2p.h",
+      "size": 4015,
+      "sha256": "6066a93dd1e7f81b2117130cbe2cb05758f06f619017f3d9f6aaca204c6cfa70"
+    },
+    {
+      "path": "P2P/prp_runtime.c",
+      "size": 5757,
+      "sha256": "f1957880a2a6d99af49656460c1bd03736f3505d10b925201aaf27d486bb27f3"
+    },
+    {
+      "path": "P2P/prp_runtime.h",
+      "size": 2207,
+      "sha256": "fe3d90183efb480d044233f406e9cf208022af49237ab40a5d6e1c33aeebe230"
+    },
+    {
+      "path": "P2P/test_duty_exit.c",
+      "size": 3126,
+      "sha256": "3688e0086edfc47a230650261fa28d3141667337ab88d24b5a0a641e309a7f42"
+    },
+    {
+      "path": "P2P/test_p2p.c",
+      "size": 7038,
+      "sha256": "507a1892fbc8d96d357b7c004d9a5c5cb4749959d504e68408af146c8186e3d5"
+    },
+    {
+      "path": "P2P/test_runtime.c",
+      "size": 4208,
+      "sha256": "de09733f30d0d18265d1fb9cda6d97f35305ca8ea93a48484f35df4bfc43baa6"
+    },
+    {
+      "path": "README_VI.md",
+      "size": 1470,
+      "sha256": "31d7e3d967ca518c81f637c8cb4bca26ff520f4368ffd3aafdc7ea2b24d39c98"
+    },
+    {
+      "path": "Server/gtav_online_server.py",
+      "size": 53313,
+      "sha256": "2b1e69da0e3b92cbabbd8479d28e229105b5734144eef0ab1c2f510cf5067592"
+    },
+    {
+      "path": "Server/police_rp_server.py",
+      "size": 19171,
+      "sha256": "b2d8016bf2c19ceb2e39c9b0d6632f56a064d6082c29e10e9d60882f3559a459"
+    },
+    {
+      "path": "Tests/test_native_duty.py",
+      "size": 4271,
+      "sha256": "cf6c92d8d560e9024f06a2fd06ed32e45353066f37bcd24a231f38b25e126db9"
+    },
+    {
+      "path": "Tests/test_police_only_v04.py",
+      "size": 4372,
+      "sha256": "848ad4547ca871dae93ff835cfec7d8ecc25f98306d78922a758eca7b6425db8"
+    },
+    {
+      "path": "Tests/test_police_rp_v2.py",
+      "size": 11373,
+      "sha256": "02a4b208076b386d81de8fd8325c24c65f5e6cf61996b29b675b0bca0b84e458"
+    },
+    {
+      "path": "Tools/build_manifest_v08.py",
+      "size": 760,
+      "sha256": "70bc1538420079079e9b3e38be14e484cf1d35ed7cb198079c9c161ff395442a"
+    },
+    {
+      "path": "Tools/build_v08_arm64_objects.sh",
+      "size": 840,
+      "sha256": "3de1c1675bc38ef1db59f58d9f6e3fd92166e471557e87f6ac93247457ee4bd0"
+    },
+    {
+      "path": "Tools/inspect_v12_calls.py",
+      "size": 4090,
+      "sha256": "85fde13ba0ffb3167a210b5215d4c22eb6b18b03e7769f178e01034ef18abedd"
+    },
+    {
+      "path": "Tools/inspect_v12_hook_sites.py",
+      "size": 3724,
+      "sha256": "0ae56edaa027383471512d0603ad06a07f4b4b3006c3756062bf22d3bd7a041c"
+    },
+    {
+      "path": "Tools/test_v06_native.sh",
+      "size": 463,
+      "sha256": "2c8bd6f4194b6ba4e28700ce86f84a3a9bbbef6e7c8dafe8057ccffa1dae9134"
+    },
+    {
+      "path": "Tools/test_v08_bridge.sh",
+      "size": 890,
+      "sha256": "9d75fd47a4f3f2a10c435a365b8e176365bc5c3a981307e5861189cc3d014065"
+    },
+    {
+      "path": "Tools/test_v09_full.sh",
+      "size": 277,
+      "sha256": "d0469ade0258f96359f60771a13190f52fb7833100a203a8254d63955a2119be"
+    },
+    {
+      "path": "Tools/test_v10_carrier.sh",
+      "size": 571,
+      "sha256": "47beb957c57b0ce81b01f94cdc380b3f7df5196050be1be4273d590373123e1e"
+    },
+    {
+      "path": "Tools/test_v10_trace.py",
+      "size": 1503,
+      "sha256": "d3f0fa4222fc8f58b2691c5daae678bff220809e46e68bfc312c7c3b11876506"
+    },
+    {
+      "path": "Tools/test_v11_event.sh",
+      "size": 610,
+      "sha256": "c8cb61d1affe535a582223694facdb385a7f67662e5cecfbc493395ce4b9a787"
+    },
+    {
+      "path": "Tools/test_v11_receiver.py",
+      "size": 2177,
+      "sha256": "f6635a84faf85ac073f25b23e1dae38d904ab16e1cc393f4ec0652c51da34c18"
+    },
+    {
+      "path": "Tools/test_v12_all.sh",
+      "size": 331,
+      "sha256": "c09b001e8518fc7547619dc71b6997c52a748d9113bd33d4358222b7e102e7c3"
+    },
+    {
+      "path": "Tools/test_v12_transport.sh",
+      "size": 581,
+      "sha256": "a132973f871cbe05c79563a68fdb9131fff2c72f2eb57883c91b75f8ebca708f"
+    },
+    {
+      "path": "Tools/trace_v12_police_carrier.py",
+      "size": 5693,
+      "sha256": "5558ae27acba73457b908bfdb5a2668b3fd2292df05387c8264ba61ffb67a7f4"
+    },
+    {
+      "path": "Tools/verify_v12_base.py",
+      "size": 1909,
+      "sha256": "d01be7e6127d3e4272d4632b10c9a019c2c3c54cdf06d1aabf27d71208577024"
+    },
+    {
+      "path": "Tools/verify_v12_job_receiver.py",
+      "size": 3055,
+      "sha256": "9832491d88a87c3ac16c5a8278897b2adb44b5ba4ac372da6189320b242d0ffb"
+    },
+    {
+      "path": "Tools/verify_v12_native_job.py",
+      "size": 3913,
+      "sha256": "588a85d7aca8565ec9b59bc7e536fff1b807d949d21b3b1c4eaaaa5727dcddc1"
+    }
+  ]
+}

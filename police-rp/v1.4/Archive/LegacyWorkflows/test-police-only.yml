@@ -1,0 +1,42 @@
+name: Police RP Only v0.5 - isolated ARM64 bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'NativeBridge/**'
+      - 'Server/**'
+      - 'Tests/**'
+      - '.github/workflows/test-police-only.yml'
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify server regression
+        run: python3 -m unittest discover -s Tests -p 'test_*.py' -q
+      - name: Native sanitizers and simulated 120-frame adapter
+        run: |
+          clang -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined NativeBridge/police_rp_only.c NativeBridge/test_native_policy.c -o /tmp/police-policy-test
+          /tmp/police-policy-test
+          clang -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined NativeBridge/police_rp_only.c NativeBridge/police_rp_adapter.c NativeBridge/test_native_adapter.c -o /tmp/police-adapter-test
+          /tmp/police-adapter-test
+  ios-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned iOS ARM64 dynamic library (not attached to GTA)
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 -std=c11 -Wall -Wextra -Werror \
+            -dynamiclib -install_name @rpath/PoliceRPOnly.dylib \
+            NativeBridge/police_rp_only.c NativeBridge/police_rp_adapter.c \
+            NativeBridge/ios_native_work_probe.c \
+            -o out/PoliceRPOnly.dylib
+          file out/PoliceRPOnly.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRPOnly-v0.5-ARM64-UNSIGNED-NOT-INTEGRATED
+          path: out/PoliceRPOnly.dylib

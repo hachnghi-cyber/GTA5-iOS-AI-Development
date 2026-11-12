@@ -1,0 +1,43 @@
+{
+  "GTA5_SHA256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "GTA5_UUID": "6a498e32e70c334cbca3affd35e8d171",
+  "arch": "arm64",
+  "read_only": true,
+  "patched": false,
+  "ipa_playable": false,
+  "candidate_sites": {
+    "MacportOnlineUpdate": {
+      "vmaddr": "0x00000001000e01a0",
+      "file_offset": 917920,
+      "prologue_hex_32": "ed33b76deb2b016de923026dfc6f03a9fa6704a9f85f05a9f65706a9f44f07a9",
+      "segment": "__TEXT",
+      "assessment": "Online update path; still need to prove game-thread callback and transport provenance.",
+      "hook_installed": false
+    },
+    "MacportJobsUpdate": {
+      "vmaddr": "0x00000001000ea024",
+      "file_offset": 958500,
+      "prologue_hex_32": "eb2bb86de923016dfc6f02a9fa6703a9f85f04a9f65705a9f44f06a9fd7b07a9",
+      "segment": "__TEXT",
+      "assessment": "Jobs frame logic; cannot assume it runs when a local player is outside the job UI.",
+      "hook_installed": false
+    },
+    "MacportWorkTaskFrame": {
+      "vmaddr": "0x0000000100112010",
+      "file_offset": 1122320,
+      "prologue_hex_32": "ef3bb66ded33016deb2b026de923036dfc6f04a9fa6705a9f85f06a9f65707a9",
+      "segment": "__TEXT",
+      "assessment": "NPC task-specific; NOT suitable as a global Police RP frame callback.",
+      "hook_installed": false
+    },
+    "MacportWorkArrestScene": {
+      "vmaddr": "0x000000010011bc8c",
+      "file_offset": 1162380,
+      "prologue_hex_32": "ed33b86deb2b016de923026dfc6f03a9f85f04a9f65705a9f44f06a9fd7b07a9",
+      "segment": "__TEXT",
+      "assessment": "NPC arrest animation; DO NOT pass remote player ped handles to this function.",
+      "hook_installed": false
+    }
+  },
+  "findings": "No safe native event-loop or authenticated RAGE packet dispatch has been verified as injectable; do not patch IPA from this report."
+}

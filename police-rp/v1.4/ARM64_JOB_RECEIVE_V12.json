@@ -1,0 +1,71 @@
+{
+  "gta_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "gta_uuid": "6a498e32e70c334cbca3affd35e8d171",
+  "function": "MacportJobsUpdate",
+  "receiver_event_type": 174,
+  "receiver_payload_bytes": 244,
+  "required_magic": "MPJ2",
+  "accepts_PRC1_without_changes": false,
+  "trusted_sender_confirmed": false,
+  "private_rp_event_registered": false,
+  "event_receive_hook_installed": false,
+  "ipa_modified": false,
+  "verified_arm64_instructions": [
+    {
+      "vmaddr": "0x1000ea13c",
+      "word": "0x7102b81f",
+      "evidence": "Checks RAGE event type = 0xAE"
+    },
+    {
+      "vmaddr": "0x1000ea154",
+      "word": "0x52801e82",
+      "evidence": "Requests 244 bytes from the event object"
+    },
+    {
+      "vmaddr": "0x1000ea168",
+      "word": "0x528a09a9",
+      "evidence": "Loads low half of MPJ2 magic"
+    },
+    {
+      "vmaddr": "0x1000ea16c",
+      "word": "0x72a64949",
+      "evidence": "Loads upper half of MPJ2 magic"
+    },
+    {
+      "vmaddr": "0x1000ea170",
+      "word": "0x7a491100",
+      "evidence": "Compares received magic against MPJ2"
+    },
+    {
+      "vmaddr": "0x1000ea174",
+      "word": "0x7a5f0b02",
+      "evidence": "Checks claimed slot against 31"
+    },
+    {
+      "vmaddr": "0x1000ea1a0",
+      "word": "0x54fffae0",
+      "evidence": "Skips event claiming own slot"
+    },
+    {
+      "vmaddr": "0x1000ea1bc",
+      "word": "0xf001a3a9",
+      "evidence": "Addresses replay-state page"
+    },
+    {
+      "vmaddr": "0x1000ea1c0",
+      "word": "0x9129b129",
+      "evidence": "Addresses replay-state + 0xA6C"
+    },
+    {
+      "vmaddr": "0x1000ea1c8",
+      "word": "0x6b09011f",
+      "evidence": "Compares sequence against stored value"
+    },
+    {
+      "vmaddr": "0x1000ea1d8",
+      "word": "0xb8207928",
+      "evidence": "Stores updated sequence"
+    }
+  ],
+  "interpretation": "Original jobs receiver only handles the existing MPJ2 protocol. The sender-slot number is read from the received message, so this observation does not establish the identity of its network origin. Do not reuse 0xAE/MPJ2 for Police RP without a dedicated authenticated receiver."
+}

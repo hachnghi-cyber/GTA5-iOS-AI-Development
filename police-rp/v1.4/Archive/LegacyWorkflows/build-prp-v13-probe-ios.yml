@@ -1,0 +1,42 @@
+name: Police RP v1.3 - noninvasive loader diagnostic (NOT Police RP gameplay)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Diagnostics/PoliceRPProbe.c'
+      - 'Tools/inject_prp_probe.py'
+      - 'Tests/test_v13_loader.py'
+      - '.github/workflows/build-prp-v13-probe-ios.yml'
+jobs:
+  verify-loader:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline loader/unit tests (no game files)
+        run: python3 -m unittest discover -s Tests -p 'test_v13_loader.py' -v
+  build-probe:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ARM64 iPhone dylib without hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden \
+            -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            Diagnostics/PoliceRPProbe.c -o out/PoliceRPProbe.dylib
+          python3 -c 'import sys;sys.path.insert(0,"Tools");from inject_prp_probe import dylib_check; print("PASS iOS platform", dylib_check(open("out/PoliceRPProbe.dylib","rb").read())["platform"])'
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -l out/PoliceRPProbe.dylib > out/load_commands.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          printf '%s\n' 'DIAGNOSTIC ONLY. NO GAMEPLAY HOOK, NO POLICE RP NETWORK.' \
+            'Use Tools/inject_prp_probe.py LOCALLY with YOUR ORIGINAL v12 IPA.' \
+            'Output IPA is unsigned and must be re-signed.' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v13-iOS-arm64-loader-PROBE-NOT-GAMEPLAY
+          path: out/

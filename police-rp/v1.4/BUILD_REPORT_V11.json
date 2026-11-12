@@ -1,0 +1,45 @@
+{
+  "version": "1.1",
+  "date": "2026-11-12",
+  "original_ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+  "GTA5_SHA256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "verified_GTA5_UUID": "6a498e32e70c334cbca3affd35e8d171",
+  "original_ipa_was_modified": false,
+  "new_files": [
+    ".github/workflows/build-prp-v11-ios.yml",
+    "ARM64_JOB_RECEIVE_V12.json",
+    "Archive/LegacyWorkflows/build-prp-v09-ios.yml",
+    "Archive/LegacyWorkflows/build-prp-v10-ios.yml",
+    "Archive/LegacyWorkflows/test-police-only.yml",
+    "Archive/LegacyWorkflows/test-police-p2p.yml",
+    "BuildProof/prp_event_isolation.o",
+    "CHANGELOG_V11.md",
+    "Integration/prp_event_isolation.c",
+    "Integration/prp_event_isolation.h",
+    "Integration/test_event_isolation.c",
+    "Tools/test_v11_event.sh",
+    "Tools/test_v11_receiver.py",
+    "Tools/verify_v12_job_receiver.py"
+  ],
+  "changed_files": [
+    "README_VI.md",
+    "Tools/build_v08_arm64_objects.sh"
+  ],
+  "tests": {
+    "server_python": 33,
+    "p2p_assertions": 60,
+    "bad_fuzz_inputs": 25000,
+    "two_player_simulation_assertions": 21,
+    "new_isolation_checks": 7,
+    "signature_unit_tests": 4,
+    "mach_o_arm64_object_files": 8
+  },
+  "status": {
+    "RAGE_authenticated_transport_connected": false,
+    "RAGE_game_frame_hook_installed": false,
+    "valid_ios_dylib_linked": false,
+    "IPA_playable": false,
+    "tested_2_iphones": false
+  },
+  "discovery": "Native jobs receiver filters event type 0xAE and requires MPJ2; untrusted packet slot does not prove sender identity."
+}

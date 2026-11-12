@@ -1,0 +1,22 @@
+{
+  "input_ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+  "input_gta5_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+  "input_gta5_uuid": "6a498e32e70c334cbca3affd35e8d171",
+  "initial_load_commands": 39,
+  "initial_sizeofcmds": 3408,
+  "existing_commands_end": 3440,
+  "first_file_backed_section_offset": 16384,
+  "verified_header_padding_bytes": 12944,
+  "dry_run": {
+    "load_cmd_offset": 3440,
+    "load_cmd_bytes": 72,
+    "bytes_changed": 55,
+    "original_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+    "diagnostic_sha256": "81e534ab57644c557c1e4866d3bc61c38d8eaed06e0864f51e5729f752b720fb"
+  },
+  "p2p_online_hook_installed": false,
+  "ios_dylib_built": false,
+  "real_network_connected": false,
+  "iphone_tested": false,
+  "ipa_generated": false
+}
