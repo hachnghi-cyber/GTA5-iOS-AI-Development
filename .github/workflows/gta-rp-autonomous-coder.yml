@@ -1,0 +1,163 @@
+name: GTA RP - Autonomous Codex Draft PR
+on:
+  schedule:
+    - cron: '19 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gta-rp-autocode-queue
+  cancel-in-progress: false
+jobs:
+  key_check:
+    if: ${{ vars.ENABLE_RP_AUTOCODE == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      present: ${{ steps.key.outputs.present }}
+    steps:
+      - name: Check API key availability (do not print it)
+        id: key
+        env:
+          RP_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$RP_API_KEY" ]; then
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo 'OPENAI_API_KEY missing; no paid run will start'
+          fi
+  reserve:
+    needs: key_check
+    if: ${{ needs.key_check.outputs.present == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      selected: ${{ steps.select.outputs.selected }}
+      task_id: ${{ steps.select.outputs.task_id }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reserve one task exactly once
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python ai-lab/autocode/select_autocode.py reserve --github-output "$GITHUB_OUTPUT"
+  code:
+    needs: reserve
+    if: ${{ needs.reserve.outputs.selected == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    outputs:
+      has_patch: ${{ steps.patch.outputs.has_patch }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate immutable scoped prompt
+        env:
+          TASK_ID: ${{ needs.reserve.outputs.task_id }}
+        run: |
+          mkdir -p ai-lab/reports
+          python ai-lab/autocode/select_autocode.py prompt --task-id "$TASK_ID" --output ai-lab/reports/autocode-prompt.md
+      - name: Codex implements one bounded change
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: ai-lab/reports/autocode-prompt.md
+          output-file: ai-lab/reports/autocode-response.md
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
+          codex-args: '["--ephemeral"]'
+      - name: Serialize unprivileged patch
+        id: patch
+        run: |
+          git add -N .
+          git diff --binary HEAD > "$RUNNER_TEMP/proposed.patch"
+          if [ -s "$RUNNER_TEMP/proposed.patch" ]; then
+            echo 'has_patch=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_patch=false' >> "$GITHUB_OUTPUT"
+            echo 'Codex produced no source change; reserved task will not be re-billed'
+          fi
+      - name: Upload patch artifact for separate trusted job
+        if: ${{ steps.patch.outputs.has_patch == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rp-autocode-patch
+          path: ${{ runner.temp }}/proposed.patch
+          if-no-files-found: error
+          retention-days: 7
+  submit:
+    needs: [reserve, code]
+    if: ${{ needs.code.outputs.has_patch == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: rp-autocode-patch
+          path: ${{ runner.temp }}
+      - name: Apply AI patch without unsafe paths
+        run: git apply --index "$RUNNER_TEMP/proposed.patch"
+      - name: Enforce safe source scope
+        run: python ai-lab/autocode/guard_autocode.py --check-staged
+      - name: Validate Python and Roleplay state
+        run: |
+          python -m compileall -q ai-lab
+          python -m unittest discover -s ai-lab/tests -v
+          python ai-lab/continuity.py validate
+      - name: Push reserved branch and open draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK_ID: ${{ needs.reserve.outputs.task_id }}
+        run: |
+          set -euo pipefail
+          branch="autocode/$TASK_ID"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -m "feat(rp): autonomous draft patch for $TASK_ID"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          trap 'git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"' EXIT
+          git push origin "HEAD:refs/heads/$branch"
+          cat > "$RUNNER_TEMP/pr-body.md" <<EOF
+          Automated source-only candidate for task $TASK_ID.
+
+          - This is a draft for manual review, NEVER auto-merged.
+          - Python unit tests and state validator passed in this workflow.
+          - IPA v12 was NOT patched or signed and the game was NOT device-tested.
+          - Codex API usage is billed separately from ChatGPT.
+          - Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          gh pr create --draft --base main --head "$branch" \
+            --title "[RP AutoCode] $TASK_ID - source-only candidate" \
+            --body-file "$RUNNER_TEMP/pr-body.md"
+          gh workflow run gta-ai-lab-ci.yml --ref "$branch"
