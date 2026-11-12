@@ -36,15 +36,21 @@ jobs:
         run: python -m compileall -q ai-lab
       - name: Unit tests
         run: python -m unittest discover -s ai-lab/tests -v
+      - name: Validate project state and export handoff
+        run: |
+          python ai-lab/continuity.py validate
+          python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
       - name: Route specialists
         env:
           TASK: ${{ inputs.task || 'SIGSEGV crash after Menyoo vehicle spawn' }}
         run: |
           mkdir -p ai-lab/reports
           python ai-lab/dispatcher.py plan --task "$TASK" --top 5 --output ai-lab/reports/plan.json
-      - name: Upload plan
+      - name: Upload routing and continuation reports
         uses: actions/upload-artifact@v4
         with:
           name: gta-ai-lab-plan
-          path: ai-lab/reports/plan.json
+          path: |
+            ai-lab/reports/plan.json
+            ai-lab/reports/RP_HANDOFF.md
           retention-days: 7
