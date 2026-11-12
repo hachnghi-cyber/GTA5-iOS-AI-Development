@@ -78,7 +78,8 @@
         "SHA256 recorded",
         "Info.plist version, executable, Mach-O slices/UUID, dylib deps inventoried",
         "No extracted copyrighted assets published"
-      ]
+      ],
+      "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2"
     },
     {
       "id": "RP-002",
@@ -153,7 +154,7 @@
       ]
     }
   ],
-  "next_action": "Get the target IPA baseline and latest Roleplay source snapshot into an authorized working environment; analyze without modifying original IPA; document results in an issue and update state.json via PR.",
+  "next_action": "Continue RP-001 in GitHub Issue #2: obtain authorized target IPA and latest Roleplay source snapshot, run static inventory without modifying original, update this state file with SHA256/UUID/provenance and verifiable evidence in a feature-branch PR.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
