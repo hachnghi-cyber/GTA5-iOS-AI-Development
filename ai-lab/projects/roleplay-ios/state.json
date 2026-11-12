@@ -34,6 +34,11 @@
       "claim": "Police RP v1.4 README explicitly states SOURCE + PROBE, not a playable IPA; v1.5 README states only duty state probing (no gameplay network hook).",
       "evidence": "police-rp/v1.4/README_VI.md and police-rp/v1.5/README_VI.md",
       "scope": "Repository documentation; not verified device behavior"
+    },
+    {
+      "claim": "GitHub Actions for RP source inventory completed successfully: 16 unit tests passed; source inventory found 112 files, including 25 source files and 16 documentation files.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43274885127",
+      "scope": "CI file inventory and host tests only; no IPA or on-device game validation"
     }
   ],
   "unknowns": [
@@ -112,7 +117,11 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory CI is being added on a separate feature branch; does not require IPA. Feature compatibility still unverified."
+      "note": "Initial read-only inventory CI succeeded (16/16 tests; 112 files, 25 source, 16 documentation). Feature compatibility matrix and runtime engine bindings remain unverified.",
+      "evidence": [
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43274885127",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/4"
+      ]
     },
     {
       "id": "RP-004",
