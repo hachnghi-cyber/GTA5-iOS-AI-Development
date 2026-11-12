@@ -1,0 +1,78 @@
+name: Police RP v1.4 - Import ZIP and build iOS diagnostic
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack-and-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack the single ZIP safely (keep all directories)
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import zipfile
+          archive = Path('PoliceRP_v1.4_Source.zip')
+          dest_base = Path('police-rp/v1.4')
+          if not archive.is_file():
+              raise SystemExit('Upload PoliceRP_v1.4_Source.zip to repo root first!')
+          with zipfile.ZipFile(archive) as z:
+              files = [i for i in z.infolist() if not i.is_dir()]
+              if len(files) != 107 or z.testzip():
+                  raise SystemExit('ZIP file is incomplete or modified')
+              base = dest_base.resolve()
+              for info in files:
+                  dst = (dest_base / info.filename).resolve()
+                  if not dst.is_relative_to(base):
+                      raise SystemExit('Unsafe path: '+info.filename)
+                  if info.file_size > 2_000_000:
+                      raise SystemExit('Unexpected huge file: '+info.filename)
+                  data = z.read(info)
+                  if dst.exists() and dst.read_bytes() != data:
+                      raise SystemExit('File already exists with different content: '+info.filename)
+                  dst.parent.mkdir(parents=True,exist_ok=True)
+                  dst.write_bytes(data)
+          print('Extracted',len(files),'files preserving paths')
+          PYCODE
+      - name: Test loader scripts
+        shell: bash
+        working-directory: police-rp/v1.4
+        run: |
+          python3 -m unittest discover -s Tests -p 'test_v13_loader.py' -v
+          python3 -m unittest discover -s Tests -p 'test_v14_probe.py' -v
+      - name: Build iPhone arm64 probe dylib (diagnostic only)
+        shell: bash
+        working-directory: police-rp/v1.4
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            Diagnostics/PoliceRPProbe.c -o out/PoliceRPProbe.dylib
+          python3 -c 'import sys;sys.path.insert(0,"Tools");from inject_prp_probe import dylib_check; print("PASS iOS", dylib_check(open("out/PoliceRPProbe.dylib","rb").read())["platform"])'
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          cp Tools/check_prp_probe_log.py out/check_prp_probe_log.py
+          printf '%s\n' 'DIAGNOSTIC ONLY. DOES NOT IMPLEMENT POLICE RP GAMEPLAY.' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v14-iPhone-ARM64-DIAGNOSTIC-ONLY
+          path: police-rp/v1.4/out/
+          retention-days: 7
+      - name: Commit source into police-rp/v1.4 (no overwrite of other project files)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf police-rp/v1.4/out
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- police-rp/v1.4
+          if ! git diff --cached --quiet; then
+            git commit -m 'Import Police RP v1.4 source (diagnostic only)'
+            git push
+          fi
