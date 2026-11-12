@@ -1,0 +1,76 @@
+name: Police RP v1.5 - Import small ZIP and build duty diagnostic iOS
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-duty-probe:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack small source ZIP safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import zipfile
+          archive=Path('PoliceRP_v1.5_DutySource.zip')
+          dest=Path('police-rp/v1.5')
+          if not archive.is_file():
+              raise SystemExit('Missing PoliceRP_v1.5_DutySource.zip in repository root')
+          expected={'Diagnostics/PoliceRPDutyProbe.c',
+                    '.github/workflows/build-prp-v15-duty-ios.yml',
+                    'Tools/check_duty_v15.py',
+                    'Tests/test_duty_v15.py',
+                    'README_VI.md'}
+          with zipfile.ZipFile(archive) as z:
+              files=[i for i in z.infolist() if not i.is_dir()]
+              if set(i.filename for i in files)!=expected or z.testzip():
+                  raise SystemExit('Unexpected/missing ZIP entries or bad CRC')
+              base=dest.resolve()
+              for item in files:
+                  out=(base/item.filename).resolve()
+                  if not out.is_relative_to(base) or item.file_size>100_000:
+                      raise SystemExit('Invalid ZIP entry: '+item.filename)
+                  out.parent.mkdir(parents=True,exist_ok=True)
+                  out.write_bytes(z.read(item))
+          print('Imported source files:',len(expected))
+          PYCODE
+      - name: Test duty log format
+        working-directory: police-rp/v1.5
+        run: python3 -m unittest discover -s Tests -p 'test_duty_v15.py' -v
+      - name: Build iOS ARM64 read-only diagnostic
+        shell: bash
+        working-directory: police-rp/v1.5
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p out
+          xcrun clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPProbe.dylib \
+            Diagnostics/PoliceRPDutyProbe.c -o out/PoliceRPProbe.dylib
+          xcrun lipo -info out/PoliceRPProbe.dylib
+          xcrun otool -D out/PoliceRPProbe.dylib
+          xcrun vtool -show-build out/PoliceRPProbe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPProbe.dylib > out/sha256.txt
+          cp Tools/check_duty_v15.py out/check_duty_v15.py
+          printf '%s\n' 'v1.5 iOS DUTY STATE PROBE. NO GAMEPLAY, NETWORK, OR HOOKS.' > out/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRP-v15-iPhone-ARM64-DUTY-DIAGNOSTIC-ONLY
+          path: police-rp/v1.5/out/
+          retention-days: 7
+      - name: Commit v1.5 source into repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf police-rp/v1.5/out
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- police-rp/v1.5
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Police RP read-only v1.5 duty diagnostic source'
+            git push
+          fi
