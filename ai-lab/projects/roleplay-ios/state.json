@@ -29,6 +29,11 @@
       "claim": "The AI Lab Pull Request #1 is a draft and is not merged into main",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/1",
       "scope": "observed at project bootstrap"
+    },
+    {
+      "claim": "Police RP v1.4 README explicitly states SOURCE + PROBE, not a playable IPA; v1.5 README states only duty state probing (no gameplay network hook).",
+      "evidence": "police-rp/v1.4/README_VI.md and police-rp/v1.5/README_VI.md",
+      "scope": "Repository documentation; not verified device behavior"
     }
   ],
   "unknowns": [
@@ -98,16 +103,16 @@
     {
       "id": "RP-003",
       "priority": 3,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Inventory Roleplay source snapshots and map implemented features",
-      "blocked_on": [
-        "Locate latest RP source revision"
-      ],
+      "blocked_on": [],
       "acceptance": [
         "Mod/API dependencies documented",
         "Police/cuff/escort/jail/EMS/taxi features classified source-only vs tested",
         "Gap report"
-      ]
+      ],
+      "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
+      "note": "Source inventory CI is being added on a separate feature branch; does not require IPA. Feature compatibility still unverified."
     },
     {
       "id": "RP-004",
@@ -154,7 +159,7 @@
       ]
     }
   ],
-  "next_action": "Continue RP-001 in GitHub Issue #2: obtain authorized target IPA and latest Roleplay source snapshot, run static inventory without modifying original, update this state file with SHA256/UUID/provenance and verifiable evidence in a feature-branch PR.",
+  "next_action": "Continue RP-003 in Issue #3: run inventory on main after PR review/merge, inspect P2P and native bridge actual source and host test logs, create feature contract matrix. RP-001 remains blocked until authorized target IPA provided.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
