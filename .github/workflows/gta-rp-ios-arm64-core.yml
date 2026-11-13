@@ -53,6 +53,7 @@ jobs:
           xcrun nm -gU out/libPoliceRPCore.dylib > out/exports.txt
           grep -Fq _prp_runtime_tick out/exports.txt
           grep -Fq _prp_runtime_receive out/exports.txt
+          grep -Fq _prp_host_find_nearest_cuff_target out/exports.txt
           shasum -a 256 out/libPoliceRPCore.dylib > out/SHA256.txt
           printf '%s\n' \
             'Source-only iPhoneOS ARM64 Police RP C core, UNSIGNED.' \
