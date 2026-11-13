@@ -52,6 +52,7 @@ jobs:
         if: github.head_ref == 'feature/rp-p0-integration-preview-20261113' || github.ref_name == 'feature/rp-p0-integration-preview-20261113'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python ai-lab/p0_review_readiness.py --output ai-lab/reports/RP_P0_REVIEW_STATUS.json
       - name: Inventory Roleplay sources (no IPA required)
         run: python ai-lab/source_inventory.py --output ai-lab/reports/RP_SOURCE_INVENTORY.json
