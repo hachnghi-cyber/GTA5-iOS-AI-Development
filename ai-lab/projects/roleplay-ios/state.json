@@ -8,7 +8,7 @@
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/rp-v13-session-lifecycle-guard-20261113",
-  "last_known_github_pr": 1,
+  "last_known_github_pr": 14,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -39,6 +39,11 @@
       "claim": "v13 session lifecycle metadata gate and 48 C assertions passed GCC and Clang ASan+UBSan host execution; source blobs SHA-1 exactly match the locally compiled files",
       "evidence": "police-rp/v13/rp_v13_session_gate.c; police-rp/v13/test_rp_v13_session_gate.c; ai-lab/projects/roleplay-ios/V13_SESSION_GATE_CONTRACT.md; local GCC/Clang commands recorded on 2026-11-13",
       "scope": "Source-only test with fabricated trusted-evidence fixtures. No real loader attestation, game-frame hook, session network transport, iPhone hardware or IPA build."
+    },
+    {
+      "claim": "A separate stacked draft PR #14 was created from the v13 identity baseline PR #12 without changing main or the v12 P0 integration PR #10.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14; source commit 2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
+      "scope": "GitHub branch/PR metadata only. PR unmerged and source-only; CI/device tests remain separately gated."
     }
   ],
   "unknowns": [
@@ -195,6 +200,10 @@
       "police-rp/v13/rp_v13_session_gate.h": "d678da942c4aeef116332a234a443dccdfe2656e63bb0b2c6124bc3b2009924f",
       "police-rp/v13/rp_v13_session_gate.c": "4aa0834da3c289a663bcde2925769fb1b3f8e979d817c55e3e66f6e883c30ac6",
       "police-rp/v13/test_rp_v13_session_gate.c": "1932af4fa74ca4452208a32f3d982a77e560fe8064992460e298ac4aa5d3d359"
-    }
+    },
+    "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
+    "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
+    "pr_base": "feature/rp-v13-identity-baseline-20261113",
+    "ci_status": "not yet confirmed for this PR head; do not infer from previous passing commits"
   }
 }
