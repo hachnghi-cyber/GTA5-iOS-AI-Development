@@ -128,7 +128,8 @@ int prp_bridge_frame(PRP_GameBridge *b) {
     PRP_SendCallbacks s=send_cb(b);
     if(b->pending_opt_out) {
         /* Revoke on a valid, engine-attested frame. Never opt back in before
-         * the queued revocation has been delivered to the host. */
+         * the authenticated carrier has accepted the revoke send. This
+         * is NOT proof that the host applied it; protocol ACK is pending. */
         if(prp_runtime_consent(&b->runtime,0,&ctx,&s))
             b->pending_opt_out=0;
         b->runtime.local_opt_in=0;
