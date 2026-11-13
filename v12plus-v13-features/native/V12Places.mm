@@ -61,21 +61,21 @@ UIViewController *frontView(){
 void updateTitle(NSString *title){
  dispatch_async(dispatch_get_main_queue(),^{if(mainButton)[mainButton setTitle:title forState:UIControlStateNormal];});
 }
-bool loadSaved(Point *out){
+bool loadSaved(v12plus::Point *out){
  NSArray *a=[[NSUserDefaults standardUserDefaults] arrayForKey:@"v12plus.saved_place.v1"];
  if(![a isKindOfClass:NSArray.class]||a.count!=3)return false;
  for(id item in a)if(![item isKindOfClass:NSNumber.class])return false;
- Point p{[a[0] floatValue],[a[1] floatValue],[a[2] floatValue]};
+ v12plus::Point p{[a[0] floatValue],[a[1] floatValue],[a[2] floatValue]};
  if(!valid(p))return false;*out=p;return true;
 }
-void savePoint(Point p){
+void savePoint(v12plus::Point p){
  if(valid(p))[[NSUserDefaults standardUserDefaults] setObject:@[@(p.x),@(p.y),@(p.z)] forKey:@"v12plus.saved_place.v1"];
 }
-Point getPosition(int ped){
+v12plus::Point getPosition(int ped){
  auto v=invoke<SHVVec3>(GET_ENTITY_COORDS,ped,false);
  return {v.x,v.y,v.z};
 }
-void teleport(int ped,Point p){
+void teleport(int ped,v12plus::Point p){
  invoke<void>(SET_ENTITY_COORDS_NO_OFFSET,ped,p.x,p.y,p.z,false,false,true);
 }
 void gameMain(){
@@ -88,11 +88,11 @@ void gameMain(){
     bool online=invoke<uint64_t>(NETWORK_IS_SESSION_STARTED)!=0;
     int ped=static_cast<int>(invoke<uint64_t>(PLAYER_PED_ID));
     bool exists=ped>0&&invoke<uint64_t>(DOES_ENTITY_EXIST,ped)!=0;
-    Point saved{};
+    v12plus::Point saved{};
     bool hasSaved=loadSaved(&saved);
     if(!allowAction(a,online,exists,hasSaved))updateTitle(online?@"Chỉ Story":@"Chưa có vị trí");
     else if(a==Action::Save){
-     Point p=getPosition(ped);
+     v12plus::Point p=getPosition(ped);
      if(valid(p)){savePoint(p);updateTitle(@"Đã lưu");}
      else updateTitle(@"Vị trí lỗi");
     }else if(a==Action::Return){
@@ -104,7 +104,7 @@ void gameMain(){
       if(blip<=0||!invoke<uint64_t>(DOES_BLIP_EXIST,blip))updateTitle(@"Không có waypoint");
       else{
        SHVVec3 v=invoke<SHVVec3>(GET_BLIP_INFO_ID_COORD,blip);
-       Point p{v.x,v.y,v.z};float ground=0;bool found=false;
+       v12plus::Point p{v.x,v.y,v.z};float ground=0;bool found=false;
        if(valid(p)){
         for(float height=950.f;height>=0.f;height-=50.f){
          if(invoke<uint64_t>(GET_GROUND_Z_FOR_3D_COORD,p.x,p.y,height,&ground,false,false)){
