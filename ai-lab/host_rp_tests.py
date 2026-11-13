@@ -35,7 +35,7 @@ def _hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def run_suite(root=ROOT, compiler=None):
+def run_suite(root=ROOT, compiler=None, sanitize_undefined=False):
     root = Path(root).resolve()
     if compiler is None:
         compiler = shutil.which("cc") or shutil.which("clang") or shutil.which("gcc")
@@ -46,12 +46,16 @@ def run_suite(root=ROOT, compiler=None):
     if missing:
         raise FileNotFoundError("Missing required C sources: " + ", ".join(missing))
     evidence = [{"path":path.as_posix(), "sha256":_hash(root/path)} for path in required]
+    flags = list(FLAGS)
+    if sanitize_undefined:
+        flags += ["-fsanitize=undefined", "-fno-sanitize-recover=all"]
     report = {
         "schema_version": 1,
         "status": "host-tests-failed",
         "scope": "Police RP C host tests ONLY; not GTA engine, authenticated transport, iOS build or device",
         "compiler": compiler,
-        "compiler_flags": list(FLAGS),
+        "compiler_flags": flags,
+        "sanitizer": "undefined" if sanitize_undefined else "none",
         "source_fingerprints": evidence,
         "cases": [],
         "gameplay_verified": False,
@@ -60,7 +64,7 @@ def run_suite(root=ROOT, compiler=None):
     with tempfile.TemporaryDirectory(prefix="rp-host-tests-") as temp:
         for index, (name, test) in enumerate(CASES):
             binary = Path(temp) / ("test_" + str(index))
-            command = [compiler, *FLAGS, *map(str, (root / s for s in SOURCES)),
+            command = [compiler, *flags, *map(str, (root / s for s in SOURCES)),
                        str(root / test), "-lm", "-o", str(binary)]
             case = {"name":name, "source":test.as_posix(),
                     "compiled": False, "passed": False}
@@ -93,9 +97,12 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--root", type=Path, default=ROOT)
     p.add_argument("--compiler")
+    p.add_argument("--sanitize-undefined", action="store_true",
+                   help="Build with UndefinedBehaviorSanitizer and fail on first finding")
     p.add_argument("--output", type=Path)
     args = p.parse_args(argv)
-    report = run_suite(root=args.root, compiler=args.compiler)
+    report = run_suite(root=args.root, compiler=args.compiler,
+                       sanitize_undefined=args.sanitize_undefined)
     encoded = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
