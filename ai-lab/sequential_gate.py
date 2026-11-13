@@ -69,6 +69,13 @@ def validate(plan, state=None):
             if not isinstance(approval, dict) or approval.get("approved") is not True:
                 raise ValueError("P9 requires explicit manual release approval")
     phase = stages[first_unverified] if first_unverified is not None else None
+    if state is not None and "sequential_execution" in state:
+        execution = state["sequential_execution"]
+        expected_phase = phase["id"] if phase else None
+        if (not isinstance(execution, dict) or
+                execution.get("strict_order") is not True or
+                execution.get("current_phase") != expected_phase):
+            raise ValueError("state.json sequential_execution phase conflicts with gate plan")
     return {
         "schema_version": 1,
         "status": "all-gates-declared-verified" if phase is None else "work-in-progress",
