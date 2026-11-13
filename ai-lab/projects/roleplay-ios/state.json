@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "RP-006 release readiness evaluator and continuous-watch report passed GitHub CI with 33 host tests (10 release-gate tests)",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43342812563; ai-lab/release_readiness.py; ai-lab/tests/test_release_readiness.py",
+      "scope": "CI returned status blocked, auto_publish_allowed=false and signed_ipa_created=false; artifact rp-continuous-watch produced; no IPA build, signing or device test"
     }
   ],
   "unknowns": [
@@ -154,7 +159,7 @@
     {
       "id": "RP-006",
       "priority": 6,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Build signed-on-device integration test plan and release gates",
       "blocked_on": [
         "IPA and source/build environment"
@@ -164,10 +169,16 @@
         "iOS device logs attached",
         "No new crash and regressions reported",
         "Signing/rollback reviewed"
+      ],
+      "note": "Source-only release readiness gate implemented with strict fail-closed CLI and CI report; signed IPA/device integration remains blocked.",
+      "evidence": [
+        "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+        "ai-lab/release_readiness.py",
+        "ai-lab/tests/test_release_readiness.py"
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Review draft PR #8 and merge only after review to activate release readiness reports on scheduled main watch. Source-only RP-006 gate is blocked correctly; next real blocker is verified v12 game-frame and authenticated Online transport with logs, followed by local signed build and two-device testing.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
