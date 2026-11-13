@@ -347,6 +347,13 @@
       "reviewed_integration_git_blob_sha1": "25490c1ed8b18a5a541b7eed2c4bbf7b0eb00216",
       "reason": "P0 provenance tests run in Continuous Source Watch as well as main AI Lab CI, so the scheduled/test workflow must fetch full Git history for the pinned base SHA. No new write/merge privileges.",
       "commit": "53709837aab4852df0a2dc53bb93b7ec96ce9a1b"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.c",
+      "original_git_blob_sha1": "3631a3ee355a2006dc7c4269cca5e8e7cc4a8fc3",
+      "reviewed_integration_git_blob_sha1": "8da3ce37c216c4413a2d62ba5cde27f8fcd04a4f",
+      "reason": "Review-required P0 C core fix: completed PR_JAILED sentences survive arresting officer disconnection/off-duty/opt-out; their officer_id is detached, so a later recycled numeric peer ID cannot inherit manual-release authority. Transient cuffs/escort still fail open. This changes behavior and is NOT verified on an iPhone.",
+      "commit": "62f03c09663ef5d8b83181fde1fbbed4fe971421"
     }
   ],
   "required_task_progress": [
@@ -400,7 +407,7 @@
       ]
     }
   ],
-  "expected_total_changed_paths": 49,
+  "expected_total_changed_paths": 50,
   "self_manifest_path": "ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json",
   "integration_only_files": [
     {
@@ -411,7 +418,7 @@
     },
     {
       "path": "ai-lab/p0_integration_audit.py",
-      "expected_git_blob_sha1": "6f712658697a15c0f817834205ed212548190f49",
+      "expected_git_blob_sha1": "1315d9fad8a013b39fbc81c281fe94af5806118c",
       "status": "added",
       "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
     },
@@ -456,7 +463,13 @@
       "expected_git_blob_sha1": "fa321d6ff2705c87e297f83ad9dbdab53899b88e",
       "status": "added",
       "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_duty_exit.c",
+      "expected_git_blob_sha1": "bd229efa20aa976a46bd8bc582481f1dda326af6",
+      "status": "modified",
+      "reason": "New modified-from-base P0 host C regression preserving jail after secondary-officer disconnect/off-duty/opt-out, rejecting recycled-ID manual release; transient restraints still release and jailed target leave clears own state."
     }
   ],
-  "path_coverage": "Git diff base_commit..CI HEAD must equal declared 38 source PR paths + 9 integration-only exact Git blobs + reconciled state.json + self-manifest, no deleted or unreviewed files."
+  "path_coverage": "Git diff immutable base_commit..CI HEAD must equal 38 source paths (including any reviewed dual-hash overrides), 10 integration-owned exact Git blobs (9 added and 1 modified), reconciled state.json, and self-manifest: 50 distinct paths. No omitted or deleted paths."
 }
