@@ -4,10 +4,10 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "v13-source-session-contract-stacked-pr-review",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
-  "integration_branch": "feature/gta-ai-lab-100-agents",
+  "integration_branch": "feature/rp-v13-session-lifecycle-guard-20261113",
   "last_known_github_pr": 1,
   "verified_facts": [
     {
@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "v13 session lifecycle metadata gate and 48 C assertions passed GCC and Clang ASan+UBSan host execution; source blobs SHA-1 exactly match the locally compiled files",
+      "evidence": "police-rp/v13/rp_v13_session_gate.c; police-rp/v13/test_rp_v13_session_gate.c; ai-lab/projects/roleplay-ios/V13_SESSION_GATE_CONTRACT.md; local GCC/Clang commands recorded on 2026-11-13",
+      "scope": "Source-only test with fabricated trusted-evidence fixtures. No real loader attestation, game-frame hook, session network transport, iPhone hardware or IPA build."
     }
   ],
   "unknowns": [
@@ -97,16 +102,17 @@
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
-        "RP-001"
+        "Actual v13 engine attestation and authenticated Online callback/peer generation remain unverified."
       ],
       "acceptance": [
         "Versioned ABI contracts",
         "Evidence-backed symbol and hook mapping",
         "List of unsupported PC APIs"
-      ]
+      ],
+      "note": "v13 metadata-only session gate tested locally; authenticated RAGE callback/carrier is not implemented."
     },
     {
       "id": "RP-003",
@@ -167,7 +173,28 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "First verify on exact v13 IPA a genuine loader-provided image identity, GTA game-thread frame callback and authenticated Online session/peer generation. Then wire the session gate ahead of prp_port_frame and guarantee prp_port_stop before acknowledge_released, with real two-iPhone logs. Review PR #12 parent and v12 PR #10 independently; do not assume v12 offsets or merge without review.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "v13_research": {
+    "upstream_pr": 12,
+    "parent_sha": "5e3cafeaba0ab5d6b2b510018c89f1be189b862e",
+    "exact_ipa_baseline": "ai-lab/projects/roleplay-ios/baselines/v13-20261113-gtav4.json",
+    "v13_gta5_uuid": "DBF9CECA-C973-3AFD-BFA0-435F453DDFCF",
+    "v13_gtacompat_uuid": "8FBCB3AA-625B-316C-A5D2-64DA46C6CEFC",
+    "gates": "binary UUID + trusted Online session metadata; fail closed and require acknowledged game-thread release on identity change",
+    "host_assertions_gcc": 48,
+    "host_assertions_clang_asan_ubsan": 48,
+    "local_test_date": "2026-11-13",
+    "test_status": "host-only-pass; Apple SDK CI/device validation pending",
+    "iphone_device_tested": false,
+    "game_callback_verified": false,
+    "authenticated_transport_verified": false,
+    "rpf_or_ipa_modified": false,
+    "code_sha256": {
+      "police-rp/v13/rp_v13_session_gate.h": "d678da942c4aeef116332a234a443dccdfe2656e63bb0b2c6124bc3b2009924f",
+      "police-rp/v13/rp_v13_session_gate.c": "4aa0834da3c289a663bcde2925769fb1b3f8e979d817c55e3e66f6e883c30ac6",
+      "police-rp/v13/test_rp_v13_session_gate.c": "1932af4fa74ca4452208a32f3d982a77e560fe8064992460e298ac4aa5d3d359"
+    }
+  }
 }
