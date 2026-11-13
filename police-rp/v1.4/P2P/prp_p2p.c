@@ -45,6 +45,44 @@ static int close_enough(const PRP_Peer *a,const PRP_Peer *b,float r){
     double x=(double)a->x-b->x,y=(double)a->y-b->y,z=(double)a->z-b->z;
     return x*x+y*y+z*z<=(double)r*r;
 }
+/* Read-only target proposal for a host-controlled player interaction menu.
+   The host MUST still authorize a subsequent PRP_OP_CUFF using fresh state. */
+int prp_host_find_nearest_cuff_target(const PRP_Host *h,uint64_t officer_id,
+                                      uint64_t now,uint64_t *target_id){
+    if(!target_id)return 0;
+    *target_id=0;
+    if(!h||!h->session_id||!h->host_id)return 0;
+    int officer_index=idx(h,officer_id);
+    if(officer_index<0)return 0;
+    const PRP_Peer *officer=&h->peers[officer_index];
+    if(!officer->connected||!officer->opt_in||!officer->job_verified||
+       !officer->on_shift||officer->native_job<0||officer->native_job>2||
+       !location_fresh(officer,now))return 0;
+
+    const double radius_sq=(double)PRP_CUFF_RADIUS_M*PRP_CUFF_RADIUS_M;
+    double nearest_sq=radius_sq;
+    uint64_t nearest_id=0;
+    for(unsigned i=0;i<PRP_MAX_PEERS;i++){
+        const PRP_Peer *candidate=&h->peers[i];
+        if(candidate->player_id==0||candidate->player_id==officer_id||
+           !candidate->connected||!candidate->opt_in||
+           h->states[i].status!=PR_FREE||
+           !location_fresh(candidate,now))continue;
+        double dx=(double)candidate->x-officer->x;
+        double dy=(double)candidate->y-officer->y;
+        double dz=(double)candidate->z-officer->z;
+        double distance_sq=dx*dx+dy*dy+dz*dz;
+        if(distance_sq<=radius_sq &&
+           (!nearest_id||distance_sq<nearest_sq||
+            (distance_sq==nearest_sq&&candidate->player_id<nearest_id))){
+            nearest_sq=distance_sq;
+            nearest_id=candidate->player_id;
+        }
+    }
+    *target_id=nearest_id;
+    return nearest_id!=0;
+}
+
 static void set_free(PRP_Host *h,int t){
     if(t<0)return;
     PRP_TargetState *s=&h->states[t];
