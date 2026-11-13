@@ -155,6 +155,53 @@ def audit(root, manifest, state, phases):
             add("fact:" + str(i), fact in facts,
                 "Preserve source evidence claim, scope, and citation: " +
                 str(fact.get("claim", ""))[:90])
+    # P0 reconciliation must preserve WORK PROGRESS as well as source file
+    # fingerprints. In particular, source PR #8 marks RP-006 in progress;
+    # silently reverting it to not-started loses context without changing code
+    # or any verified fact. P9 (game IPA release) remains independently blocked.
+    progress = manifest.get("required_task_progress")
+    expected_task_ids = {"RP-001", "RP-002", "RP-003", "RP-006"}
+    tasks = state.get("backlog")
+    if not isinstance(progress, list) or not isinstance(tasks, list):
+        add("task_inventory", False, "P0 required task progress/backlog missing")
+    else:
+        ids = [t.get("id") for t in progress if isinstance(t, dict)]
+        add("task_inventory", len(progress) == len(expected_task_ids) and
+            len(ids) == len(progress) and len(set(ids)) == len(ids) and
+            set(ids) == expected_task_ids,
+            "Every changed workstream from upstream PRs must be declared once")
+        actual = {t.get("id"): t for t in tasks if isinstance(t, dict)}
+        for i, expected in enumerate(progress):
+            if not isinstance(expected, dict):
+                add("invalid_task", False, f"Malformed required task record {i}")
+                continue
+            task_id = expected.get("id")
+            task = actual.get(task_id)
+            if not isinstance(task, dict):
+                add("task:" + str(task_id), False, "Missing reconciled task")
+                continue
+            required_evidence = expected.get("required_evidence")
+            note_parts = expected.get("note_contains")
+            meta_keys = expected.get("required_metadata_keys", [])
+            valid_required = (
+                isinstance(required_evidence, list) and
+                isinstance(note_parts, list) and
+                isinstance(meta_keys, list) and
+                all(isinstance(v, str) and v.strip()
+                    for v in required_evidence + note_parts + meta_keys))
+            if not valid_required:
+                add("invalid_task_spec", False, f"Malformed task expectations: {task_id}")
+                continue
+            evidence = task.get("evidence")
+            note = task.get("note")
+            add("task:" + str(task_id),
+                task.get("status") == expected.get("status") and
+                isinstance(evidence, list) and
+                all(v in evidence for v in required_evidence) and
+                isinstance(note, str) and
+                all(v in note for v in note_parts) and
+                all(isinstance(task.get(k), dict) for k in meta_keys),
+                f"Preserve {task_id} task status, source notes, evidence and metadata")
     passed = all(v["passed"] for v in checks)
     return {
         "schema_version": 1, "status": "p0-source-consistent" if passed else "blocked",
