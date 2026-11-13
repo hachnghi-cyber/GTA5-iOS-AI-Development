@@ -129,3 +129,34 @@ https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/approving-
 
 **Rủi ro còn lại:** PR #10 chưa có reviewer độc lập. Dù CI xanh,
 `P0` vẫn `in-progress`. Không tự tạo review để vượt gate.
+
+## P0 cross-PR source integration và build Apple SDK (13/11/2026)
+
+Đã kiểm thử thực tế source C của PR #4 và PR #9 **trong cùng một chương
+trình host**, thay vì chỉ chạy các regression riêng lẻ. Test
+`test_p0_combined_selection.c` xác minh quy trình chọn mục tiêu gần,
+host kiểm tra lại khoảng cách sau khi mục tiêu di chuyển, đồng bộ
+`PRP_OP_STATE` chỉ cho người nhận đúng ID và opt-out giải phóng local ped.
+Lệnh compile và assertions nằm trong
+`ai-lab/tests/test_p0_combined_target_bridge.py` và được chạy với
+compiler host thông thường cùng Clang ASan+UBSan.
+Bằng chứng: [CI 43399382390](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43399382390)
+**104/104 Python tests**, các 7 chương trình C host đều đạt
+trong ba cấu hình.
+
+Đã tạo **workflow ARM64 bridge tích hợp** riêng:
+`.github/workflows/gta-rp-ios-arm64-bridge.yml`.
+[Build 43399591380](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43399591380)
+thành công, cùng lúc biên dịch nguồn P2P/NativeBridge/Integration,
+kiểm tra Mach-O `ARM64 DYLIB`, deployment min iOS 16.3,
+SDK 18.5 và các symbol `_prp_bridge_frame`,
+`_prp_host_find_nearest_cuff_target`, `_prp_inbox_push`.
+Thư viện `libPoliceRPBridge.dylib` SHA-256:
+`5da9aabdf9dc1ce0ddc6df83afeff4e13eec1cb0f01c5a2971b6abe79eff3381`.
+Tệp bằng chứng và cách tái lập:
+`P0_INTEGRATED_BRIDGE_PROOF.md`.
+
+**Giới hạn bắt buộc:** đây là chương trình C với game snapshot/carrier
+giả lập và dylib iPhoneOS độc lập **chưa tích hợp GTA5**; chưa chứng minh
+entrypoint RAGE v12, carrier có xác thực, 2 iPhone chơi RP, ký hay IPA.
+`P0` vẫn `in-progress` cho tới khi review và merge có chứng cứ.
