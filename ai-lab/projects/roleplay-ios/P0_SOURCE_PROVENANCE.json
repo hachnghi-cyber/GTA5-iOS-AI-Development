@@ -392,5 +392,64 @@
         "ai-lab/tests/test_release_readiness.py"
       ]
     }
-  ]
+  ],
+  "expected_total_changed_paths": 49,
+  "self_manifest_path": "ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json",
+  "integration_only_files": [
+    {
+      "path": ".github/workflows/gta-rp-ios-arm64-bridge.yml",
+      "expected_git_blob_sha1": "00fd23242e63a4bc11f88beaaebce26fab4a1439",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/p0_integration_audit.py",
+      "expected_git_blob_sha1": "352125dbc6818fa6499699ceeac4015237cfb9af",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/p0_review_readiness.py",
+      "expected_git_blob_sha1": "44cd46050b8361f699346069df159df15293559b",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATED_BRIDGE_PROOF.md",
+      "expected_git_blob_sha1": "96b15293064f9f16592fab8e2b4d8877cd880164",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
+      "expected_git_blob_sha1": "8fe26447948c0460be3a9e24966b749d6593bc3f",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_combined_target_bridge.py",
+      "expected_git_blob_sha1": "75325926d749718380491a02f5143608dca411db",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_integration_audit.py",
+      "expected_git_blob_sha1": "f07038ab7a32e856847a67d99f402a678d3a9fe9",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_review_readiness.py",
+      "expected_git_blob_sha1": "f83de3f41afaa798ff5ed5bece75204048cbdad6",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "police-rp/v1.4/Integration/test_p0_combined_selection.c",
+      "expected_git_blob_sha1": "fa321d6ff2705c87e297f83ad9dbdab53899b88e",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    }
+  ],
+  "path_coverage": "Git diff base_commit..CI HEAD must equal declared 38 source PR paths + 9 integration-only exact Git blobs + reconciled state.json + self-manifest, no deleted or unreviewed files."
 }
