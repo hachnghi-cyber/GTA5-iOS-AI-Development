@@ -26,6 +26,7 @@ CASES = (
     ("runtime_session_and_consent", P2P / "test_runtime.c"),
     ("off_duty_releases_restraints", P2P / "test_duty_exit.c"),
     ("versioned_native_api_contract", P2P / "test_abi_contract.c"),
+    ("host_peer_lifecycle_and_sequence_rollover", P2P / "test_peer_lifecycle.c"),
 )
 FLAGS = ("-std=c11", "-O2", "-Wall", "-Wextra", "-Werror")
 
