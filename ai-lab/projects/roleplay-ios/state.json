@@ -129,6 +129,11 @@
       "claim": "P0 live GitHub review gate now ties current PR HEAD SHA to the CI event SHA (push HEAD or pull_request head), preventing prior-source-CI review of a newer commit; all 95 Python tests and 7 C host programs across three configurations pass",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43394341355; ai-lab/p0_review_readiness.py; ai-lab/tests/test_p0_review_readiness.py; ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
       "scope": "Source-only P0 approval/SHA anti-staleness, no iPhone game test or IPA. Live report status blocked-review with independent_head_approval still missing."
+    },
+    {
+      "claim": "P0 GitHub review gate now preserves decisive review status across later COMMENTED/PENDING submissions, excludes bot/unassociated approvals, and compares author usernames case-insensitively; 102 Python unit tests and 7 C host regressions x3 configurations passed",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43396348981; ai-lab/p0_review_readiness.py; ai-lab/tests/test_p0_review_readiness.py; ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
+      "scope": "GitHub review metadata decision logic and source-only CI; no independent approval yet, no merge, no IPA or on-device GTA V gameplay."
     }
   ],
   "unknowns": [
@@ -327,15 +332,15 @@
       "note": "PR #8 source-only release readiness evaluator and CI reporting have been integrated into the P0 preview. This records engineering work underway; P9 actual signed IPA release remains not-started and blocked by P1-P8 and device/manual approval."
     }
   ],
-  "next_action": "P0 remains blocked pending authorized non-author APPROVED review on exact PR #10 head SHA; independent CI head SHA and source audit checks now pass. Do not self-approve/auto-merge; once external review arrives, re-run P0 audit/review checks and decide source PR #7/#4/#9/#8 integration merge strategy. P1 engine hook and trusted multiplayer identity are blocked on real v12 iPhone evidence.",
+  "next_action": "P0: PR #10 has source audit + 102 Python tests + 7 C test executables passing; no independent associated-human APPROVED review on current SHA yet. Ask an authorized GitHub human collaborator to review PR #10 and require CI on that exact commit; do not auto merge or self-approve. After authorized review, decide PR #7/#4/#9/#8 merge strategy and run post-merge CI before marking P0 verified. P1 engine callback and authenticated Online identity remain blocked by real v12 device evidence.",
   "last_completed_task": {
-    "id": "P0-CI-EVENT-SHA-BOUND-REVIEW",
+    "id": "P0-REVIEW-DECISION-SEMANTICS",
     "branch": "feature/rp-p0-integration-preview-20261113",
-    "source_commit": "1209fb9a5a21f2cc7c2c0d20227f875a4204d345",
-    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43394341355",
-    "test_summary": "95/95 Python test cases; 7 C host suites passed for normal, UBSan, ASan+UBSan; P0 source audit passes and live head_matches_ci_event passes; PR approval still missing",
-    "status": "source-ci-success-review-still-blocked",
-    "device_tested": false
+    "source_commit": "c583a68f904f66b260813282c714f084a045d098",
+    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43396348981",
+    "test_summary": "102/102 Python tests passed, 7/7 C executables passed in normal/UBSan/ASan+UBSan; P0 source audit clean; live review still blocked only by independent_head_approval",
+    "device_tested": false,
+    "status": "source-ci-success-human-review-pending"
   },
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "sequential_execution": {
@@ -369,7 +374,9 @@
       "review_status": "blocked-review",
       "blocking_checks": [
         "independent_head_approval"
-      ]
+      ],
+      "latest_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43396348981",
+      "review_semantics": "Only decisive review states supersede; trusted associated human approvals only"
     }
   },
   "p0_integration_preview": {
