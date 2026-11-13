@@ -38,7 +38,7 @@ Rollback: delete this standalone preview branch/PR after review. Original branch
 - [ ] Kiểm tra test CI trên merge tip cuối và rà warning, ABI, dependency/rollback.
 - [ ] Chỉ sau khi phê duyệt và có kết quả kiểm tra `main`, cập nhật `PHASE_GATES.json` P0=verified kèm bằng chứng và reviewer.
 
-**Chưa hoàn thành P0:** PR #10 vẫn là bản nháp, người review chưa phê duyệt, P0 vẫn `in-progress`. Bước sau khi P0 được duyệt: P1 xác minh game-frame callback và danh tính Online bằng log iPhone v12 thật. Không tự merge, tự ký hoặc xuất bản IPA.
+**Chưa hoàn thành P0:** PR #10 đã chuyển sang **Ready for review** (không phải đã merge); chưa có review phê duyệt từ người khác, P0 vẫn `in-progress`. Bước sau khi P0 được duyệt: P1 xác minh game-frame callback và danh tính Online bằng log iPhone v12 thật. Không tự merge, tự ký hoặc xuất bản IPA.
 
 ## P0 bổ sung: bảo toàn tiến độ backlog khi hợp nhất PR
 
@@ -58,3 +58,25 @@ thật sự từ chối mất tiến độ khi merge.
 
 Các kiểm tra P0 chỉ xác thực dữ liệu khai báo của repository, chưa tự
 xác minh IPA/gameplay; review hợp nhất và P1 vẫn phải theo gate riêng.
+
+## P0 review-readiness: kiểm tra live trạng thái GitHub (13/11/2026)
+
+Đã bổ sung `ai-lab/p0_review_readiness.py` và 12 unit test độc lập,
+chạy ngay sau `RP_P0_AUDIT.json` trong GitHub Actions của nhánh review.
+Bộ kiểm tra gọi **chỉ đọc** GitHub REST API để xác minh: PR #10 đang mở,
+không còn Draft, nhánh/base SHA vẫn đúng manifest, GitHub báo mergeable,
+audit 38 file + 21 nguồn bằng chứng đạt, và có **ít nhất một reviewer
+khác tác giả** phê duyệt đúng commit mới nhất (không chấp nhận approval cũ
+hoặc `CHANGES_REQUESTED` còn hiệu lực). Không làm thay đổi `PHASE_GATES.json`.
+
+Khi lần đầu chạy ở chế độ Draft, CI #43378573784 đạt **92 Python tests**
+và phát hành `RP_P0_REVIEW_STATUS.json` có kết quả `blocked-review`,
+chỉ rõ `not_draft` và `independent_head_approval` còn chặn. Sau đó
+PR #10 đã được đưa sang **Ready for review**, không merge `main`,
+không cấp quyền phát hành IPA. Những lần CI tiếp theo phải xác minh
+lại bằng GitHub REST và vẫn chặn khi chưa có approval độc lập.
+
+**Quyền kiểm tra không phải quyền merge:** script luôn trả
+`auto_merge_allowed=false` và
+`p0_phase_verified_by_this_check=false` ngay cả khi có reviewer phê duyệt.
+Review cuối phải xem cả source diff, cổng test, xung đột và kế hoạch rollback.
