@@ -64,6 +64,11 @@
       "claim": "An independent Police RP C core dylib was compiled using Apple's iPhoneOS SDK into a thin arm64 Mach-O linked for iOS 16.3; artifact hash checked against downloaded Actions ZIP",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43347091287; ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md; dylib SHA256 0c47c248a31996b60d61fcf14be04bdd0711cd4b263c0c5ab2fa4650efd2acf2",
       "scope": "source-only unsigned 50,840-byte dylib; not integrated with GTA5 or authentic multiplayer, not an IPA or iPhone device test"
+    },
+    {
+      "claim": "Host-side nearest consenting human player selection added to RP native source, with 49 new C assertions and 7/7 C regressions passing across GCC, Clang UBSan, and Clang ASan+UBSan",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_target_selection.c; ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+      "scope": "Source-only target suggestion based on engine-attested peer snapshots; host must revalidate. Does not implement touch UI, RAGE transport or actual on-device arrest."
     }
   ],
   "unknowns": [
@@ -159,13 +164,16 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof.",
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration.",
       "evidence": [
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
         "ai-lab/host_rp_tests.py",
         "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780",
-        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682"
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576710",
+        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md"
       ]
     },
     {
@@ -195,7 +203,8 @@
         "Input tests",
         "Server-authoritative roleplay state",
         "Disconnect/reconnect/rollback tests"
-      ]
+      ],
+      "note": "Host-side prototype for nearest consenting player target selection exists, but RP-005 remains blocked by integration with authenticated transport and engine game-frame callbacks; no iPhone gameplay test."
     },
     {
       "id": "RP-006",
@@ -217,7 +226,7 @@
       ]
     }
   ],
-  "next_action": "Review PR #4 CI and download standalone ARM64 source-core artifact as evidence. Next engineer trusted GTA v12 game-thread/native callback and authenticated online transport adapter; only then prepare signed IPA, two-device logs and rollbacks. Keep PR #7/#8 drafts separate; no unattended merge.",
-  "last_completed_task": "RP-002 host safety suite and actual iPhoneOS ARM64 standalone core compilation; proof run 43347091287 and SHA256 recorded; no IPA integration",
+  "next_action": "Review PR #4 and CI results (host 43361576701 and iPhoneOS unsigned core 43361576710), then identify authenticated GTA Online host/client carrier and trusted game-frame callback on exact v12 before integrating the player-target selection into the in-game Police RP UI. Do not publish IPA or claim live arrests without two-device evidence.",
+  "last_completed_task": "RP-003 / RP-005 source-only subtask: host-side nearest consenting player selection, 49 C assertions and 7/7 host test suites with sanitizers (run 43361576701)",
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
