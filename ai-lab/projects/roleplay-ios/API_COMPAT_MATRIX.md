@@ -44,6 +44,28 @@ RAGE event compatibility, a signed IPA, or iPhone stability.** `test_p2p.c`
 uses synthetic authenticated contexts; it does not establish an engine-level
 trusted-sender source.
 
+## RP-002: source-level ABI and transport-disconnect guarantees
+
+`police-rp/v1.4/P2P/test_abi_contract.c` uses C11 `_Static_assert`
+and typed function pointers to catch accidental drift in `PRP_WIRE_SIZE`,
+`PRP_VERSION`, `PR_ADAPTER_ABI`, `PR_ABI_VERSION`, and the signatures of
+`prp_runtime_tick`, `prp_runtime_receive`, `prp_runtime_stop` and
+`prp_runtime_consent`. This test is compiled and executed by the same **host**
+runner used for Police RP protocol regressions.
+
+`prp_runtime_consent(enable=0)` now always clears local consent even if the
+authenticated channel is unavailable or the session context is lost. Sending a
+remote opt-out may fail, and the function correctly reports that failure;
+however, local player restrictions are released on the next **game thread**
+tick. Neither a failed packet nor a stale server can force consent to remain
+locally enabled. This is validated using a synthetic host test in
+`test_runtime.c`. The device-dependent game-thread callback is still
+unverified.
+
+The type signature checks validate the **source contract on the host
+compiler**, not byte offsets of native RAGE objects, the Objective-C/ARM64
+calling convention in GTA5, or successful integration with an iOS app.
+
 ## Next integration evidence required
 
 1. Identify an exact-version **game-thread** callback for both host/guest;
