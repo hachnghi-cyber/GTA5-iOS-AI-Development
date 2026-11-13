@@ -74,6 +74,11 @@
       "claim": "Latest iPhoneOS ARM64 source-only core build passed exported-symbol validation for _prp_host_find_nearest_cuff_target",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244; .github/workflows/gta-rp-ios-arm64-core.yml; artifact GTA-RP-iPhoneOS-ARM64-CORE-UNSIGNED-NOT-GAMEPLAY (ID 14008123793)",
       "scope": "macOS iPhoneOS build and exported symbol check only; library unsigned, not injected into GTA V IPA, no game device test"
+    },
+    {
+      "claim": "Sequential P0-P9 Roleplay execution plan and read-only gate validator added to PR #4; 31 Python unit tests and P0 status check passed GitHub CI",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903; ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md; ai-lab/projects/roleplay-ios/PHASE_GATES.json; ai-lab/sequential_gate.py",
+      "scope": "Plan/CI validation only. Status P0 in-progress, verified_prefix_count=0, auto_release_allowed=false. No GTA game-frame or iPhone gameplay evidence."
     }
   ],
   "unknowns": [
@@ -251,6 +256,7 @@
     ],
     "current_gate": "Reconcile v12 baseline, PR conflicts/state.json and verify integration CI; obtain human review before merging",
     "following_gate": "P1 real GTA v12 game-frame hook + trusted Online identity proof; do not substitute host CI",
-    "auto_release_allowed": false
+    "auto_release_allowed": false,
+    "last_gate_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903"
   }
 }
