@@ -46,9 +46,9 @@
       "scope": "CI file inventory and host tests only; no IPA or on-device game validation"
     },
     {
-      "claim": "Police RP v1.4 actual C protocol/bridge source compiled and all three host regression executables passed GitHub Actions, including 25,000 deterministic malformed packet inputs, 60 P2P assertions, 21 runtime assertions and duty-exit tests.",
-      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548; ai-lab/host_rp_tests.py; ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
-      "scope": "Host-only GCC tests on code source; NO confirmed GTA engine binding, multiplayer RAGE transport, iOS build, signing or iPhone device test."
+      "claim": "Police RP v1.4 actual C protocol/bridge sources compiled and all three host regression executables passed GitHub Actions, including 25,000 deterministic malformed packet inputs, 64 P2P assertions, 21 runtime assertions, and off-duty tests.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_p2p.c",
+      "scope": "Host GCC tests only; newly rejects wrong authenticated local receiver and cross-target consent. No proven engine event dispatch, actual multiplayer transport, iOS build/signing, or iPhone test."
     }
   ],
   "unknowns": [
@@ -135,11 +135,12 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory PR #4 extended with GCC/Clang host build and actual execution of 3 C protocol/runtime/duty regression executables. GitHub CI successful (run 43344113548); API/feature compatibility matrix documented. Still no game-engine callback or authenticated game transport evidence.",
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified.",
       "evidence": [
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
         "ai-lab/host_rp_tests.py",
-        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md"
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780"
       ]
     },
     {
@@ -188,6 +189,6 @@
     }
   ],
   "next_action": "Review and merge PR #4 after CI, preserving the verified v12 baseline; continue RP-002 exact-version native ABI/engine callback mapping and authenticated GTA Online carrier proof before packaging any IPA. Review open PR #7/#8 without overwriting concurrent state.json changes.",
-  "last_completed_task": null,
+  "last_completed_task": "RP-003 subtask: native C host regression execution, consent/recipient validation, and API contract matrix; device runtime still open",
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
