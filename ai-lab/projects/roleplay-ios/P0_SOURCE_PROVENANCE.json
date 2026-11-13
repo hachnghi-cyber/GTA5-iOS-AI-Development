@@ -448,7 +448,7 @@
     },
     {
       "path": "ai-lab/tests/test_p0_integration_audit.py",
-      "expected_git_blob_sha1": "807eb265eb08cca8d14e1428ae31208b443617e4",
+      "expected_git_blob_sha1": "4e2b367471be39068da2b717b6dfa741603a148b",
       "status": "added",
       "reason": "P0 source/full-diff audit regression tests, including both CI workflows full-history invariant."
     },
