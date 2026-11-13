@@ -30,8 +30,10 @@ class P0ReviewReadinessTests(unittest.TestCase):
         self.reviews = [{"user": {"login": "reviewer"},
                          "state": "APPROVED", "commit_id": "a"*40}]
 
-    def check(self):
-        return mod.evaluate(self.pr, self.reviews, self.manifest, self.audit)
+    def check(self, ci_head=None):
+        if ci_head is None:
+            ci_head = "a"*40
+        return mod.evaluate(self.pr, self.reviews, self.manifest, self.audit, ci_head)
 
     def test_approval_on_current_commit_is_only_advisory(self):
         result = self.check()
@@ -83,6 +85,24 @@ class P0ReviewReadinessTests(unittest.TestCase):
     def test_no_approvals_after_head_update(self):
         self.pr["head"]["sha"] = "b"*40
         self.assertIn("independent_head_approval", self.check()["blocking_checks"])
+
+    def test_new_commit_during_ci_invalidates_previous_review(self):
+        # Simulates an approved new commit appearing while CI is still running
+        # against the old event SHA. Approval alone must never hide the drift.
+        self.pr["head"]["sha"] = "b"*40
+        self.reviews[0]["commit_id"] = "b"*40
+        blockers = self.check(ci_head="a"*40)["blocking_checks"]
+        self.assertIn("head_matches_ci_event", blockers)
+        self.assertNotIn("independent_head_approval", blockers)
+
+    def test_missing_ci_head_sha_fails_closed(self):
+        result = self.check(ci_head="")
+        self.assertIn("head_matches_ci_event", result["blocking_checks"])
+        self.assertFalse(result["source_review_ready"])
+
+    def test_malformed_ci_head_sha_fails_closed(self):
+        self.assertIn("head_matches_ci_event",
+                      self.check(ci_head="not-a-sha")["blocking_checks"])
 
     def test_closed_pr_blocks(self):
         self.pr["state"] = "closed"
