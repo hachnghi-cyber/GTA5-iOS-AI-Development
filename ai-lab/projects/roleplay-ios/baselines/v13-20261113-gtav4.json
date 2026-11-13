@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "target": "user-supplied GTAV-v13(4).ipa",
+  "scope": "static P0 v13 binary baseline only; no IPA in repository",
+  "inspected_on": "2026-11-13",
+  "identity": {
+    "ipa_sha256": "cb1dd746c1fdc2faeb251aaaad9b7eedf4e46876b40a71b71d5b1180f4933361",
+    "ipa_size_bytes": 57616405,
+    "zip_crc_pass": true,
+    "non_directory_members": 53,
+    "macho_images": 14,
+    "executable": {
+      "path": "Payload/GTAV.app/GTA5",
+      "sha256": "51b9a52ca00b8bbbd21ed901f636a30ee784dd10e8cfcd201f68756f0ff3333c",
+      "uuid": "DBF9CECA-C973-3AFD-BFA0-435F453DDFCF",
+      "min_ios": "16.3",
+      "lc_build_version_sdk": "27.2",
+      "cryptid": 0
+    },
+    "compat": {
+      "path": "Payload/GTAV.app/Frameworks/libgtacompat.dylib",
+      "sha256": "2180df91a00c4d57f21af8a97c637c36a433378c79c55a5ca8240affa806b271",
+      "uuid": "8FBCB3AA-625B-316C-A5D2-64DA46C6CEFC"
+    },
+    "info_plist": {
+      "bundle_id": "com.macport.gtav",
+      "bundle_version": "1",
+      "short_version": "1.0",
+      "macport_build_date": "20261113",
+      "min_ios": "16.3",
+      "dt_sdk_name": "iphoneos27.0",
+      "development_region": "vi"
+    }
+  },
+  "static_observations": {
+    "keyboard_bridge": {
+      "path": "Payload/GTAV.app/Frameworks/MenyooKeyboardBridge.dylib",
+      "uuid": "B62534B3-3548-300E-B6F5-575A3D9B78C8",
+      "loaded_by": "Menyoo.shv.dylib declares LC_LOAD_DYLIB @rpath/MenyooKeyboardBridge.dylib; runtime activation unverified"
+    },
+    "network_exports": [
+      "__Z17online_job_statusv",
+      "__Z18online_work_statusv",
+      "__Z17online_in_sessionv",
+      "__Z19p2p_current_sessionPb",
+      "_compat_OnlineServerPlayerId",
+      "_compat_OnlineHostProof",
+      "_compat_OnlineJoinProof",
+      "_compat_OnlineSetWorkStatus"
+    ],
+    "mismatch_note": "Info.plist DTSDKName iphoneos27.0 differs from GTA5 LC_BUILD_VERSION.sdk 27.2; do not infer runtime incompatibility without Xcode/device logs."
+  },
+  "verified": {
+    "static_ipa_crc": true,
+    "macho_uuid_extracted": true,
+    "hashes_extracted": true,
+    "c_signature_trust_verified": false,
+    "dyld_loading_verified": false,
+    "real_rage_game_tick": false,
+    "authenticated_online_sender": false,
+    "peer_connection_generation": false,
+    "two_iphone_gameplay": false,
+    "police_rp_ipa_built": false
+  },
+  "rules": [
+    "Never inherit v12 LC_UUID or offsets",
+    "Do not treat exported symbols as verified callable typed APIs",
+    "Do not use client-provided identity or packet sender as authenticated metadata",
+    "No automatic IPA signing, injection or release"
+  ]
+}
