@@ -78,6 +78,13 @@ int main(void){
     assert(!g.runtime.local_opt_in && !g.want_opt_in && g.pending_opt_out);
     assert(prp_bridge_frame(&g) && g.pending_opt_out);
     assert(!g.runtime.local_opt_in && gm.sends==before_off);
+    /* A user changing their mind during the outage cannot send opt-in
+     * before the queued opt-out; local cuff controls stay released. */
+    prp_bridge_set_consent(&g,1);
+    assert(prp_bridge_frame(&g) && g.pending_opt_out);
+    assert(!g.runtime.local_opt_in && !gm.cuffed && !gm.ctrl);
+    prp_bridge_set_consent(&g,0);
+    assert(g.pending_opt_out && !g.runtime.local_opt_in);
     gm.fail_send=0;
     assert(prp_bridge_frame(&g) && !g.pending_opt_out);
     assert(!g.runtime.local_opt_in && gm.sends==before_off+1u);
