@@ -69,6 +69,11 @@
       "claim": "Host-side nearest consenting human player selection added to RP native source, with 49 new C assertions and 7/7 C regressions passing across GCC, Clang UBSan, and Clang ASan+UBSan",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_target_selection.c; ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
       "scope": "Source-only target suggestion based on engine-attested peer snapshots; host must revalidate. Does not implement touch UI, RAGE transport or actual on-device arrest."
+    },
+    {
+      "claim": "Latest iPhoneOS ARM64 source-only core build passed exported-symbol validation for _prp_host_find_nearest_cuff_target",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244; .github/workflows/gta-rp-ios-arm64-core.yml; artifact GTA-RP-iPhoneOS-ARM64-CORE-UNSIGNED-NOT-GAMEPLAY (ID 14008123793)",
+      "scope": "macOS iPhoneOS build and exported symbol check only; library unsigned, not injected into GTA V IPA, no game device test"
     }
   ],
   "unknowns": [
@@ -164,7 +169,7 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration.",
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244.",
       "evidence": [
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
         "ai-lab/host_rp_tests.py",
@@ -173,7 +178,8 @@
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682",
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701",
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576710",
-        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md"
+        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244"
       ]
     },
     {
@@ -226,7 +232,7 @@
       ]
     }
   ],
-  "next_action": "Review PR #4 and CI results (host 43361576701 and iPhoneOS unsigned core 43361576710), then identify authenticated GTA Online host/client carrier and trusted game-frame callback on exact v12 before integrating the player-target selection into the in-game Police RP UI. Do not publish IPA or claim live arrests without two-device evidence.",
+  "next_action": "PR #4 host selector and iPhoneOS ARM64 export gate have passed CI. Manual review/merge remains required; find verified v12 game-thread callback and authenticated Online packet carrier, then implement in-game touch selection and two-device test before IPA release. Check other open development branches for conflicts before any merge.",
   "last_completed_task": "RP-003 / RP-005 source-only subtask: host-side nearest consenting player selection, 49 C assertions and 7/7 host test suites with sanitizers (run 43361576701)",
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
