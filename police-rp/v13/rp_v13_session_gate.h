@@ -58,6 +58,15 @@ RP_V13_SessionDecision rp_v13_session_gate_update(
 /* ONLY call after the game-thread release/bridge stop actually completed.
  * An acknowledgement cannot verify the engine callback itself. */
 void rp_v13_session_gate_acknowledge_released(RP_V13_SessionGate *gate);
+/* Prefer this fail-closed helper over calling acknowledge_released() directly.
+ * stop_local must run on the verified game thread and return EXACTLY 1 only
+ * after it has stopped the RP bridge and released local controls.
+ * A missing/failed stop callback leaves RELEASE_REQUIRED latched.
+ * This source-only function never installs a GTA callback by itself. */
+typedef int (*RP_V13_SessionStopLocal)(void *ctx);
+int rp_v13_session_gate_release_with_stop(RP_V13_SessionGate *gate,
+                                            RP_V13_SessionStopLocal stop_local,
+                                            void *ctx);
 int rp_v13_session_gate_is_ready(const RP_V13_SessionGate *gate);
 
 #ifdef __cplusplus

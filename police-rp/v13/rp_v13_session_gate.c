@@ -62,6 +62,15 @@ void rp_v13_session_gate_acknowledge_released(RP_V13_SessionGate *gate) {
     memset(gate, 0, sizeof(*gate));
 }
 
+int rp_v13_session_gate_release_with_stop(RP_V13_SessionGate *gate,
+                                            RP_V13_SessionStopLocal stop_local,
+                                            void *ctx) {
+    if (!gate || !gate->release_pending || !stop_local) return 0;
+    if (stop_local(ctx) != 1) return 0;
+    rp_v13_session_gate_acknowledge_released(gate);
+    return 1;
+}
+
 int rp_v13_session_gate_is_ready(const RP_V13_SessionGate *gate) {
     return gate && gate->ready == 1u && gate->release_pending == 0u;
 }

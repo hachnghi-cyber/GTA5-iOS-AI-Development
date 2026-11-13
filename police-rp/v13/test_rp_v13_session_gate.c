@@ -113,10 +113,63 @@ static void expect_every_identity_transition(void) {
     }
 }
 
+typedef struct {
+    unsigned calls;
+    int result;
+} StopProbe;
+
+static int fake_stop_local(void *ctx) {
+    StopProbe *p = (StopProbe *)ctx;
+    if (!p) return 0;
+    ++p->calls;
+    return p->result;
+}
+
+static void expect_release_requires_successful_stop(void) {
+    RP_V13_SessionGate gate;
+    RP_V13_IdentityEvidence binary = good_binary();
+    RP_V13_SessionEvidence s = good_session();
+    StopProbe probe = {0u, 0};
+    rp_v13_session_gate_init(&gate);
+    CHECK(rp_v13_session_gate_release_with_stop(NULL, fake_stop_local, &probe) == 0);
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 0);
+    CHECK(probe.calls == 0u);
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_READY);
+    ++s.host_player_id; /* a verified host transition must release RP state */
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_RELEASE_REQUIRED);
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, NULL, &probe) == 0);
+    CHECK(probe.calls == 0u);
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 0);
+    CHECK(probe.calls == 1u);
+    CHECK(!rp_v13_session_gate_is_ready(&gate));
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_RELEASE_REQUIRED);
+    probe.result = -1; /* even an unusual nonzero error is not success */
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 0);
+    CHECK(probe.calls == 2u);
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_RELEASE_REQUIRED);
+    probe.result = 1;
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 1);
+    CHECK(probe.calls == 3u);
+    CHECK(!rp_v13_session_gate_is_ready(&gate));
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 0);
+    CHECK(probe.calls == 3u); /* stop is not repeated after acknowledgement */
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_READY);
+    CHECK(rp_v13_session_gate_is_ready(&gate));
+
+    /* Authenticated carrier loss also requires successful local release. */
+    s.carrier_authenticated = 0u;
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_RELEASE_REQUIRED);
+    CHECK(rp_v13_session_gate_release_with_stop(&gate, fake_stop_local, &probe) == 1);
+    CHECK(probe.calls == 4u);
+    CHECK(rp_v13_session_gate_update(&gate, &binary, &s) == RP_V13_SESSION_BLOCKED);
+    CHECK(!rp_v13_session_gate_is_ready(&gate));
+}
+
 int main(void) {
     expect_blocked_on_bad_evidence();
     expect_release_and_rearm();
     expect_every_identity_transition();
+    expect_release_requires_successful_stop();
     printf("RP v13 session gate PASS: %u assertions, host-only; no device test\n", checks);
     return 0;
 }

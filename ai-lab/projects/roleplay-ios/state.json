@@ -49,6 +49,16 @@
       "claim": "PR #14 CI checks at source head 75c64edc completed with FAILURE; job steps were absent and job log download returned HTTP 404 BlobNotFound, therefore no CI pass can be claimed.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
       "scope": "GitHub Actions metadata and unsuccessful log retrieval on 2026-11-13; failure cause not determined."
+    },
+    {
+      "claim": "A source-only RP v13 explicit stop-callback helper passed 74 C assertions using GCC 14.2 and Clang 17 ASan+UBSan; uploaded Git blob SHA-1 matches the three exact locally compiled C files.",
+      "evidence": "police-rp/v13/test_rp_v13_session_gate.c; ai-lab/projects/roleplay-ios/V13_STOP_CALLBACK_TEST_REPORT.md; SHA256 hashes in v13_research.code_sha256",
+      "scope": "Linux host test only, C fake stop callback. No verified GTA5 engine callback, authenticated transport, Apple SDK compilation, device session or IPA."
+    },
+    {
+      "claim": "CI jobs for v13 identity run 43446132796 failed before runner assignment (runner_id=0, steps=[]; host and iPhoneOS both), so source test execution did not occur in that run.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43446132796; corresponding GitHub Actions jobs REST metadata",
+      "scope": "GitHub Actions job observation only; neither account billing nor workflow bug proven."
     }
   ],
   "unknowns": [
@@ -183,7 +193,7 @@
       ]
     }
   ],
-  "next_action": "Investigate GitHub Actions PR #14 runner/log availability (both host and iPhoneOS jobs failed without retrievable logs), then obtain a passing CI run before review. In parallel confirm exact v13 engine game-frame callback and authenticated online session/peer generation on device. Bind the session gate ahead of prp_port_frame and call prp_port_stop before acknowledging release; do not reuse v12 offsets or merge until independently reviewed.",
+  "next_action": "Inspect repository owner's GitHub Actions run 43446132796 annotations and Settings > Billing and licensing > Usage/Budgets plus Settings > Actions > Runners/General. Jobs failed before assignment (runner_id=0), so do not claim CI build. Once runners work, rerun PR #14 and check 74 assertion host/ASan + iPhoneOS ARM64 unsigned dylib. Then get v13 device proof for trusted game-frame, authenticated online carrier, peer generation and actual prp_port_stop; no IPA publishing/merge before real evidence.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -193,8 +203,8 @@
     "v13_gta5_uuid": "DBF9CECA-C973-3AFD-BFA0-435F453DDFCF",
     "v13_gtacompat_uuid": "8FBCB3AA-625B-316C-A5D2-64DA46C6CEFC",
     "gates": "binary UUID + trusted Online session metadata; fail closed and require acknowledged game-thread release on identity change",
-    "host_assertions_gcc": 48,
-    "host_assertions_clang_asan_ubsan": 48,
+    "host_assertions_gcc": 74,
+    "host_assertions_clang_asan_ubsan": 74,
     "local_test_date": "2026-11-13",
     "test_status": "host-only-pass; Apple SDK CI/device validation pending",
     "iphone_device_tested": false,
@@ -202,14 +212,14 @@
     "authenticated_transport_verified": false,
     "rpf_or_ipa_modified": false,
     "code_sha256": {
-      "police-rp/v13/rp_v13_session_gate.h": "d678da942c4aeef116332a234a443dccdfe2656e63bb0b2c6124bc3b2009924f",
-      "police-rp/v13/rp_v13_session_gate.c": "4aa0834da3c289a663bcde2925769fb1b3f8e979d817c55e3e66f6e883c30ac6",
-      "police-rp/v13/test_rp_v13_session_gate.c": "1932af4fa74ca4452208a32f3d982a77e560fe8064992460e298ac4aa5d3d359"
+      "police-rp/v13/rp_v13_session_gate.h": "88585fed44895f98426b7c137fb778c8de8309c7f39c9c417ded3a5878b8a720",
+      "police-rp/v13/rp_v13_session_gate.c": "eadd5dc89cf1042561030df92ea637331ecc67148292c49bd5793e11453d81e2",
+      "police-rp/v13/test_rp_v13_session_gate.c": "036219397e64632b029e1d89a448ba6da93d5784ef0f7e6e3c6df88c541ae35d"
     },
     "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
     "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
     "pr_base": "feature/rp-v13-identity-baseline-20261113",
-    "ci_status": "FAILURE on PR #14 commit 75c64edc162c0fdd3d765b66c69dd833f67c1436; cause unknown (job steps unavailable, log download 404 BlobNotFound)",
+    "ci_status": "PRE-RUN FAILURE on head 1b82f116 (run 43446132796): both ubuntu-latest and macos-15 jobs runner_id=0, steps=[]; exact cause unconfirmed; new 74-assertion patch tested locally but not yet CI-tested",
     "ci_failure_evidence": [
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
@@ -219,6 +229,17 @@
     "local_compilers": {
       "gcc": "Debian GCC 14.2.0",
       "clang": "Clang 17.0.0"
+    },
+    "release_stop_callback_contract": "rp_v13_session_gate_release_with_stop: only stop callback returning exactly 1 clears release_pending; failed/null stop blocks rearm",
+    "ci_runner_observation": {
+      "run_id": 43446132796,
+      "head_sha": "1b82f11665dbd4441e58cdfc4de82cab55463794",
+      "job_steps": "empty",
+      "host_runner_id": 0,
+      "iphoneos_runner_id": 0,
+      "job_duration_approx_seconds": 2,
+      "interpretation": "failed before any workflow step; cause unknown, account billing/runner policy to verify manually",
+      "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43446132796"
     }
   }
 }
