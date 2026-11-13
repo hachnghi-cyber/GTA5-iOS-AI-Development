@@ -1,6 +1,11 @@
 name: GTA RP - iPhoneOS ARM64 Core Build (NO IPA)
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'police-rp/v1.4/P2P/**'
+      - 'police-rp/v1.4/NativeBridge/**'
+      - '.github/workflows/gta-rp-ios-arm64-core.yml'
   pull_request:
     paths:
       - 'police-rp/v1.4/P2P/**'
