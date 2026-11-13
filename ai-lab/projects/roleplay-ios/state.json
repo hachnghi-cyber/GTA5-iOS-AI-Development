@@ -114,6 +114,11 @@
       "claim": "RP-006 release readiness evaluator and continuous-watch report passed GitHub CI with 33 host tests (10 release-gate tests)",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43342812563; ai-lab/release_readiness.py; ai-lab/tests/test_release_readiness.py",
       "scope": "CI returned status blocked, auto_publish_allowed=false and signed_ipa_created=false; artifact rp-continuous-watch produced; no IPA build, signing or device test"
+    },
+    {
+      "claim": "P0 integration preview retained all 38 upstream source paths (37 exact upstream Git blobs, one explicitly pinned review-only workflow override) and all 21 source evidence claims, with 75 Python tests and 7 C host tests across three configurations passing",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43371346949; ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json; ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
+      "scope": "Host-only exact source copy and metadata consistency; no iPhone gameplay, game-frame/carrier proof or IPA signing. Preview remains draft and P0 unreviewed."
     }
   ],
   "unknowns": [
@@ -310,17 +315,15 @@
       ]
     }
   ],
-  "next_action": "P0: Review integration preview branch combining PR #7, #4, #9, #8 and exact main baseline. Run combined GitHub CI, fix source incompatibilities, audit state.json and obtain manual review before merging. Only then begin P1 trusted game-frame/Online carrier mapping. No IPA release or device claim.",
+  "next_action": "P0 manual review of PR #10 combined diff, especially the explicit workflow override and reconciled state.json; resolve PR overlap/merge strategy for #7/#4/#9/#8 and retest final integration tip. Do NOT promote P0 until authorized human reviewer approves and CI passes. Only then begin P1 exact-v12 game-frame/authenticated Online identity analysis with device logs; no IPA release.",
   "last_completed_task": {
-    "id": "P0-INTEGRATION-PREVIEW",
-    "status": "combined-CI-pending",
+    "id": "P0-INTEGRATION-SOURCE-RECONCILIATION",
+    "branch": "feature/rp-p0-integration-preview-20261113",
+    "review_pr": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/10",
+    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43371346949",
+    "summary": "Pinned 38 git blob source paths (37 unmodified plus 1 audited CI override), reconciled 21 source claims, 75 Python tests and 7 host C programs x3 configurations passed",
     "device_tested": false,
-    "source_commits": [
-      "5ca26698fad9425cf5c059674f3c984a5bd3b00f",
-      "784c9e257e84707e3896982c280002697f5344ea",
-      "e32415c3184cdaca1338613a425014dd57552c27",
-      "61d42522b7efa9df196a08f31ed8acc9697c150f"
-    ]
+    "status": "source-audit-passed-p0-manual-review-pending"
   },
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "sequential_execution": {
@@ -340,7 +343,8 @@
     "current_gate": "P0 integration preview requires combined CI and human approval; source-only build is not IPA gameplay validation",
     "following_gate": "P1 real GTA v12 game-frame hook + trusted Online identity proof; do not substitute host CI",
     "auto_release_allowed": false,
-    "last_gate_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903"
+    "last_gate_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903",
+    "last_p0_review_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43371346949"
   },
   "p0_integration_preview": {
     "source_main": "d83bcd049649856411595b8cbf7d5c7c4288311e",
