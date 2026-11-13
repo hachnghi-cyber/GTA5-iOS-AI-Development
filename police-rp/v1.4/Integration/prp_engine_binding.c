@@ -10,19 +10,23 @@ static int valid(const PRP_GameSnapshot *s) {
       s->channel_authenticated &&
       (s->local_is_host == (s->host_player_id == s->local.local_player_id))))
         return 0;
-    /* A trusted engine snapshot cannot describe two distinct connected
-     * peers using the same identity, or a connected peer with no identity.
-     * Reject the whole frame rather than letting the last entry win. */
+    /* A trusted snapshot must contain the connected local player and
+     * current host. Incomplete peer lists are not sufficient to bind
+     * local-ped state or accept authoritative host status packets. */
+    int has_local=0,has_host=0;
     for (unsigned i=0; i<s->peer_count; ++i) {
         const PRP_Peer *peer=&s->trusted_peers[i];
         if (!peer->connected) continue;
         if (!peer->player_id) return 0;
+        if (peer->player_id==s->local.local_player_id)has_local=1;
+        if (peer->player_id==s->host_player_id)has_host=1;
+        /* No two connected peers may share one authenticated ID. */
         for (unsigned j=0; j<i; ++j)
             if (s->trusted_peers[j].connected &&
                 s->trusted_peers[j].player_id==peer->player_id)
                 return 0;
     }
-    return 1;
+    return has_local && has_host;
 }
 static PRP_TransportContext context(const PRP_GameBridge *b,uint64_t sender) {
     PRP_TransportContext ctx={0};
