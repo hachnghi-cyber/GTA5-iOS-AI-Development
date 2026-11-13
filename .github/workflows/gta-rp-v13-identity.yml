@@ -1,0 +1,101 @@
+name: GTA RP v13 - Binary Identity Gate (SOURCE ONLY)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'police-rp/v13/**'
+      - 'ai-lab/projects/roleplay-ios/baselines/v13-*.json'
+      - '.github/workflows/gta-rp-v13-identity.yml'
+  pull_request:
+    paths:
+      - 'police-rp/v13/**'
+      - 'ai-lab/projects/roleplay-ios/baselines/v13-*.json'
+      - '.github/workflows/gta-rp-v13-identity.yml'
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Check v13 identity manifest (no IPA or game assets)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('ai-lab/projects/roleplay-ios/baselines/v13-20261113-gtav4.json')
+          m=json.loads(p.read_text())
+          assert m['identity']['ipa_sha256']=='cb1dd746c1fdc2faeb251aaaad9b7eedf4e46876b40a71b71d5b1180f4933361'
+          assert m['identity']['executable']['uuid']=='DBF9CECA-C973-3AFD-BFA0-435F453DDFCF'
+          assert m['identity']['compat']['uuid']=='8FBCB3AA-625B-316C-A5D2-64DA46C6CEFC'
+          assert m['verified']['two_iphone_gameplay'] is False
+          assert m['verified']['real_rage_game_tick'] is False
+          assert m['verified']['police_rp_ipa_built'] is False
+          print('v13 static baseline JSON PASS; gameplay remains unverified')
+          PY
+      - name: Compile and run host C regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+            police-rp/v13/rp_v13_identity_gate.c \
+            police-rp/v13/test_rp_v13_identity_gate.c \
+            -o out/test_rp_v13_identity
+          out/test_rp_v13_identity
+      - name: Clang ASan and UBSan source regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          clang -std=c11 -O1 -g -fno-omit-frame-pointer \
+            -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-sanitize-recover=all \
+            police-rp/v13/rp_v13_identity_gate.c \
+            police-rp/v13/test_rp_v13_identity_gate.c \
+            -o out/test_rp_v13_identity_sanitized
+          out/test_rp_v13_identity_sanitized
+  iphoneos:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Build UNSIGNED v13 identity-only iPhoneOS arm64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          xcodebuild -version > out/XCODE.txt
+          xcrun --sdk iphoneos --show-sdk-version > out/SDK.txt
+          SDK_PATH="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK_PATH" \
+            -miphoneos-version-min=16.3 -std=c11 -O2 \
+            -Wall -Wextra -Werror -fstack-protector-strong -dynamiclib \
+            police-rp/v13/rp_v13_identity_gate.c \
+            -Wl,-install_name,@rpath/libRPV13IdentityOnly.dylib \
+            -o out/libRPV13IdentityOnly.dylib
+          xcrun lipo -info out/libRPV13IdentityOnly.dylib > out/ARCH.txt
+          xcrun vtool -show-build out/libRPV13IdentityOnly.dylib > out/BUILD_VERSION.txt
+          xcrun otool -L out/libRPV13IdentityOnly.dylib > out/DEPENDENCIES.txt
+          xcrun nm -gU out/libRPV13IdentityOnly.dylib > out/EXPORTS.txt
+          grep -Fq arm64 out/ARCH.txt
+          grep -Fq 'platform IOS' out/BUILD_VERSION.txt
+          grep -Fq '_rp_v13_identity_check' out/EXPORTS.txt
+          shasum -a 256 out/libRPV13IdentityOnly.dylib > out/SHA256.txt
+          printf '%s\n' \
+            'Only Mach-O binary UUID gate source compiled. UNSIGNED source-only library.' \
+            'No GTA v13 IPA, RAGE hooks, authenticated network or gameplay.' \
+            'Never install/publish as a playable Roleplay IPA.' > out/README.txt
+      - name: Upload source-only build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: RP-V13-IDENTITY-ARM64-SOURCE-ONLY-NOT-IPA
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
