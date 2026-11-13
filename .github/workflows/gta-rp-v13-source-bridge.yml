@@ -1,0 +1,116 @@
+name: GTA RP v13 - Pinned Core + v13 Gate Link (NO IPA)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'police-rp/v13/**'
+      - '.github/workflows/gta-rp-v13-source-bridge.yml'
+  pull_request:
+    paths:
+      - 'police-rp/v13/**'
+      - '.github/workflows/gta-rp-v13-source-bridge.yml'
+permissions:
+  contents: read
+env:
+  V12_RP_RESEARCH_HEAD: cb5bbfe63ebf084024a4e66e0ac7b404d15bd83d
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: target
+          persist-credentials: false
+      # Immutable commit from source-only PR #10. Not merged, reviewed or
+      # included in v13's main branch. This only tests source compatibility.
+      - uses: actions/checkout@v5
+        with:
+          ref: cb5bbfe63ebf084024a4e66e0ac7b404d15bd83d
+          path: rp-source-pinned
+          persist-credentials: false
+      - name: Compile combined v13 gate and pinned RP core C host scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fno-omit-frame-pointer -fsanitize=address,undefined \
+            -fno-sanitize-recover=all \
+            target/police-rp/v13/rp_v13_identity_gate.c \
+            rp-source-pinned/police-rp/v1.4/NativeBridge/police_rp_only.c \
+            rp-source-pinned/police-rp/v1.4/NativeBridge/police_rp_adapter.c \
+            rp-source-pinned/police-rp/v1.4/P2P/prp_p2p.c \
+            rp-source-pinned/police-rp/v1.4/P2P/prp_runtime.c \
+            rp-source-pinned/police-rp/v1.4/Integration/prp_mailbox.c \
+            rp-source-pinned/police-rp/v1.4/Integration/prp_engine_binding.c \
+            rp-source-pinned/police-rp/v1.4/Integration/test_p0_combined_selection.c \
+            -lm -o out/v13_combined_host
+          out/v13_combined_host
+          printf '%s\n' "$V12_RP_RESEARCH_HEAD" > out/PINNED_SOURCE_COMMIT.txt
+          printf '%s\n' 'Host C combined only. Authenticated carrier and GTA callbacks are FAKE.' > out/README.txt
+      - name: Upload host source-only proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: RP-V13-HOST-COMPAT-NOT-GAMEPLAY
+          path: |
+            out/PINNED_SOURCE_COMMIT.txt
+            out/README.txt
+          if-no-files-found: error
+          retention-days: 7
+  iphoneos:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: target
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          ref: cb5bbfe63ebf084024a4e66e0ac7b404d15bd83d
+          path: rp-source-pinned
+          persist-credentials: false
+      - name: Link pinned PR10 C core + source-only v13 identity gate as iPhoneOS ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcodebuild -version > out/XCODE.txt
+          xcrun --sdk iphoneos --show-sdk-version > out/SDK.txt
+          xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
+            -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror \
+            -fstack-protector-strong -dynamiclib \
+            target/police-rp/v13/rp_v13_identity_gate.c \
+            rp-source-pinned/police-rp/v1.4/NativeBridge/police_rp_only.c \
+            rp-source-pinned/police-rp/v1.4/NativeBridge/police_rp_adapter.c \
+            rp-source-pinned/police-rp/v1.4/P2P/prp_p2p.c \
+            rp-source-pinned/police-rp/v1.4/P2P/prp_runtime.c \
+            rp-source-pinned/police-rp/v1.4/Integration/prp_mailbox.c \
+            rp-source-pinned/police-rp/v1.4/Integration/prp_engine_binding.c \
+            -Wl,-install_name,@rpath/libPoliceRPV13SourceBridge.dylib \
+            -o out/libPoliceRPV13SourceBridge.dylib
+          xcrun lipo -info out/libPoliceRPV13SourceBridge.dylib | tee out/ARCH.txt
+          xcrun vtool -show-build out/libPoliceRPV13SourceBridge.dylib | tee out/BUILD_VERSION.txt
+          xcrun otool -L out/libPoliceRPV13SourceBridge.dylib | tee out/DEPS.txt
+          xcrun nm -gU out/libPoliceRPV13SourceBridge.dylib | tee out/EXPORTS.txt
+          grep -Fq arm64 out/ARCH.txt
+          grep -Fq 'platform IOS' out/BUILD_VERSION.txt
+          grep -Fq '_rp_v13_identity_check' out/EXPORTS.txt
+          grep -Fq '_prp_bridge_frame' out/EXPORTS.txt
+          grep -Fq '_prp_host_find_nearest_cuff_target' out/EXPORTS.txt
+          shasum -a 256 out/libPoliceRPV13SourceBridge.dylib > out/SHA256.txt
+          printf '%s\n' "$V12_RP_RESEARCH_HEAD" > out/PINNED_SOURCE_COMMIT.txt
+          printf '%s\n' \
+            'UNSIGNED source-only v13 UUID guard + unmerged pinned RP C core.' \
+            'No RAGE engine hook, online carrier, code-signing, device testing or IPA.' \
+            'Do NOT treat this build as playable Police RP.' > out/README.txt
+      - name: Upload iPhoneOS Mach-O proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: RP-V13-PINNED-BRIDGE-ARM64-UNSIGNED-NO-IPA
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
