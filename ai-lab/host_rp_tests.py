@@ -35,7 +35,8 @@ def _hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def run_suite(root=ROOT, compiler=None, sanitize_undefined=False):
+def run_suite(root=ROOT, compiler=None, sanitize_undefined=False,
+              sanitize_address=False):
     root = Path(root).resolve()
     if compiler is None:
         compiler = shutil.which("cc") or shutil.which("clang") or shutil.which("gcc")
@@ -47,15 +48,20 @@ def run_suite(root=ROOT, compiler=None, sanitize_undefined=False):
         raise FileNotFoundError("Missing required C sources: " + ", ".join(missing))
     evidence = [{"path":path.as_posix(), "sha256":_hash(root/path)} for path in required]
     flags = list(FLAGS)
+    sanitizers = []
+    if sanitize_address:
+        sanitizers.append("address")
     if sanitize_undefined:
-        flags += ["-fsanitize=undefined", "-fno-sanitize-recover=all"]
+        sanitizers.append("undefined")
+    if sanitizers:
+        flags += ["-fsanitize=" + ",".join(sanitizers), "-fno-sanitize-recover=all"]
     report = {
         "schema_version": 1,
         "status": "host-tests-failed",
         "scope": "Police RP C host tests ONLY; not GTA engine, authenticated transport, iOS build or device",
         "compiler": compiler,
         "compiler_flags": flags,
-        "sanitizer": "undefined" if sanitize_undefined else "none",
+        "sanitizer": ",".join(sanitizers) if sanitizers else "none",
         "source_fingerprints": evidence,
         "cases": [],
         "gameplay_verified": False,
@@ -97,12 +103,15 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--root", type=Path, default=ROOT)
     p.add_argument("--compiler")
+    p.add_argument("--sanitize-address", action="store_true",
+                   help="Build with AddressSanitizer for host memory safety checks")
     p.add_argument("--sanitize-undefined", action="store_true",
                    help="Build with UndefinedBehaviorSanitizer and fail on first finding")
     p.add_argument("--output", type=Path)
     args = p.parse_args(argv)
     report = run_suite(root=args.root, compiler=args.compiler,
-                       sanitize_undefined=args.sanitize_undefined)
+                       sanitize_undefined=args.sanitize_undefined,
+                       sanitize_address=args.sanitize_address)
     encoded = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
