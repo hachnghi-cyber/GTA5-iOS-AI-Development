@@ -44,6 +44,11 @@
       "claim": "A separate stacked draft PR #14 was created from the v13 identity baseline PR #12 without changing main or the v12 P0 integration PR #10.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14; source commit 2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
       "scope": "GitHub branch/PR metadata only. PR unmerged and source-only; CI/device tests remain separately gated."
+    },
+    {
+      "claim": "PR #14 CI checks at source head 75c64edc completed with FAILURE; job steps were absent and job log download returned HTTP 404 BlobNotFound, therefore no CI pass can be claimed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
+      "scope": "GitHub Actions metadata and unsuccessful log retrieval on 2026-11-13; failure cause not determined."
     }
   ],
   "unknowns": [
@@ -178,7 +183,7 @@
       ]
     }
   ],
-  "next_action": "First verify on exact v13 IPA a genuine loader-provided image identity, GTA game-thread frame callback and authenticated Online session/peer generation. Then wire the session gate ahead of prp_port_frame and guarantee prp_port_stop before acknowledge_released, with real two-iPhone logs. Review PR #12 parent and v12 PR #10 independently; do not assume v12 offsets or merge without review.",
+  "next_action": "Investigate GitHub Actions PR #14 runner/log availability (both host and iPhoneOS jobs failed without retrievable logs), then obtain a passing CI run before review. In parallel confirm exact v13 engine game-frame callback and authenticated online session/peer generation on device. Bind the session gate ahead of prp_port_frame and call prp_port_stop before acknowledging release; do not reuse v12 offsets or merge until independently reviewed.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -204,6 +209,16 @@
     "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
     "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
     "pr_base": "feature/rp-v13-identity-baseline-20261113",
-    "ci_status": "not yet confirmed for this PR head; do not infer from previous passing commits"
+    "ci_status": "FAILURE on PR #14 commit 75c64edc162c0fdd3d765b66c69dd833f67c1436; cause unknown (job steps unavailable, log download 404 BlobNotFound)",
+    "ci_failure_evidence": [
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869615",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869621"
+    ],
+    "local_compilers": {
+      "gcc": "Debian GCC 14.2.0",
+      "clang": "Clang 17.0.0"
+    }
   }
 }
