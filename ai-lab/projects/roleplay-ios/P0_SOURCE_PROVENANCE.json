@@ -337,9 +337,9 @@
     {
       "path": ".github/workflows/gta-ai-lab-ci.yml",
       "original_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b",
-      "reviewed_integration_git_blob_sha1": "5ca8603b27494a9064ed4b2fc922055ad61fa395",
-      "reason": "P0 preview-only source provenance CI and live GitHub PR review-readiness (read-only, no merge), plus artifacts; original PR #4 workflow preserved in source SHA.",
-      "commit": "9288e02fc5afe44795d62370736e1055091c49b2"
+      "reviewed_integration_git_blob_sha1": "a541aa2056aa348550f6995505b4528c0f8e8b12",
+      "reason": "P0 preview CI source audit and GitHub PR review readiness; binds live approval head to GitHub event PR_HEAD_SHA, with report artifact; no merge/release permissions.",
+      "commit": "4d4c53ba2ee396e02e7dbe3f7f4192ce43f83716"
     }
   ],
   "required_task_progress": [
