@@ -61,6 +61,7 @@ void prp_bridge_stop(PRP_GameBridge *b) {
     b->have_snapshot=0;
     b->active=0;
     b->want_opt_in=0;
+    b->pending_opt_out=0;
     memset(&b->last,0,sizeof(b->last));
 }
 void prp_bridge_set_consent(PRP_GameBridge *b,int enable) {
@@ -70,8 +71,12 @@ void prp_bridge_set_consent(PRP_GameBridge *b,int enable) {
         if(b->active&&b->runtime.local_opt_in) {
             PRP_TransportContext ctx=context(b,b->runtime.local_id);
             PRP_SendCallbacks s=send_cb(b);
-            (void)prp_runtime_consent(&b->runtime,0,&ctx,&s);
+            /* Local release must NOT depend on the host receiving a packet.
+             * Keep retrying revocation if the authenticated send failed. */
+            b->pending_opt_out=(uint8_t)
+                !prp_runtime_consent(&b->runtime,0,&ctx,&s);
         }
+        b->runtime.local_opt_in=0;
         pr_adapter_stop(&b->runtime.client.adapter,&b->callbacks.local_ped);
     }
 }
@@ -121,7 +126,14 @@ int prp_bridge_frame(PRP_GameBridge *b) {
     }
     PRP_TransportContext ctx=context(b,snap.local.local_player_id);
     PRP_SendCallbacks s=send_cb(b);
-    if(b->runtime.local_opt_in!=b->want_opt_in) {
+    if(b->pending_opt_out) {
+        /* Revoke on a valid, engine-attested frame. Never opt back in before
+         * the queued revocation has been delivered to the host. */
+        if(prp_runtime_consent(&b->runtime,0,&ctx,&s))
+            b->pending_opt_out=0;
+        b->runtime.local_opt_in=0;
+    }
+    if(!b->pending_opt_out && b->runtime.local_opt_in!=b->want_opt_in) {
         (void)prp_runtime_consent(&b->runtime,b->want_opt_in,&ctx,&s);
     }
     /* Consume only on the verified game thread; do not let transport threads
