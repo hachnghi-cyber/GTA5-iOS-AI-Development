@@ -42,6 +42,7 @@ class SequentialGateTests(unittest.TestCase):
         p0["gate_evidence"] = ["synthetic-CI-evidence"]
         p0["reviewed_by"] = "test-only-reviewer"
         self.plan["stages"][1]["status"] = "in-progress"
+        self.state["sequential_execution"]["current_phase"] = "P1"
         result = gate.validate(self.plan, self.state)
         self.assertEqual(result["current_phase"], "P1")
         self.assertEqual(result["verified_prefix_count"], 1)
@@ -76,9 +77,15 @@ class SequentialGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "approval"):
             gate.validate(self.plan, self.state)
         self.state["release_evidence"] = {"manual_approval": {"approved": True}}
+        self.state["sequential_execution"]["current_phase"] = None
         result = gate.validate(self.plan, self.state)
         self.assertEqual(result["status"], "all-gates-declared-verified")
         self.assertFalse(result["auto_release_allowed"])
+
+    def test_state_and_plan_phase_disagreement_fails(self):
+        self.state["sequential_execution"]["current_phase"] = "P1"
+        with self.assertRaisesRegex(ValueError, "conflicts"):
+            gate.validate(self.plan, self.state)
 
     def test_boolean_order_is_not_integer(self):
         self.plan["stages"][0]["order"] = False
