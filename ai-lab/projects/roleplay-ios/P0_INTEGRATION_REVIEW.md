@@ -102,3 +102,30 @@ review cho commit mới; SHA CI thiếu; SHA CI không hợp lệ. Bằng chứn
 không có quyền phát hành tự động. iPhoneOS ARM64 dylib build ở
 <https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43394341359>
 chỉ là thư viện độc lập, không phải IPA/gameplay.
+
+## P0: review có hiệu lực, loại trừ bot, bỏ qua comment (13/11/2026)
+
+Rà soát API GitHub phát hiện hai trường hợp sai ở
+`ai-lab/p0_review_readiness.py`:
+
+- `COMMENTED`/`PENDING` của **cùng reviewer** từng bị dùng thay
+  thế `APPROVED` hoặc `CHANGES_REQUESTED`. Một bình luận sau khi
+  phê duyệt không phải lệnh rút phê duyệt; bình luận sau khi yêu cầu
+  sửa cũng không xóa yêu cầu sửa. Bộ chọn giờ chỉ lấy quyết định
+  mới nhất trong `APPROVED`, `CHANGES_REQUESTED`, `DISMISSED`.
+- `APPROVED` từ bot hoặc tài khoản chỉ đọc không được tính như
+  review độc lập có thẩm quyền. Chỉ chấp nhận `user.type=User`
+  và `author_association` thuộc `OWNER`, `MEMBER`, `COLLABORATOR`
+  trên **đúng CI event head SHA**. So sánh login tác giả không phân
+  biệt hoa/thường. Đây là gate thận trọng, **không thay thế** GitHub
+  branch-protection hoặc quyết định của người duyệt.
+
+Đã thêm các test hồi quy cho comment sau approve/request-changes,
+dismissed review, approve lại sau request-changes, bot, người lạ và
+tên đăng nhập khác cách viết. Nguồn tham chiếu:
+https://docs.github.com/en/pull-requests/reference/pull-request-reviews
+và
+https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/approving-a-pull-request-with-required-reviews.
+
+**Rủi ro còn lại:** PR #10 chưa có reviewer độc lập. Dù CI xanh,
+`P0` vẫn `in-progress`. Không tự tạo review để vượt gate.
