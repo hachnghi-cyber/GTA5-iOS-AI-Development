@@ -44,6 +44,8 @@ jobs:
           python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
       - name: Inventory Roleplay sources (no IPA required)
         run: python ai-lab/source_inventory.py --output ai-lab/reports/RP_SOURCE_INVENTORY.json
+      - name: Compile and execute Police RP C host regressions (not iPhone)
+        run: python ai-lab/host_rp_tests.py --output ai-lab/reports/RP_HOST_C_TESTS.json
       - name: Route specialists
         env:
           TASK: ${{ inputs.task || 'SIGSEGV crash after Menyoo vehicle spawn' }}
@@ -58,4 +60,5 @@ jobs:
             ai-lab/reports/plan.json
             ai-lab/reports/RP_HANDOFF.md
             ai-lab/reports/RP_SOURCE_INVENTORY.json
+            ai-lab/reports/RP_HOST_C_TESTS.json
           retention-days: 7
