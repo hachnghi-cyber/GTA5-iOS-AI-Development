@@ -39,6 +39,11 @@
       "claim": "On draft PR #9, the v1.4 source bridge rejects connected peers with duplicated or missing player identity; a Linux-host compiled C simulation passes via ai-lab 24-test CI run",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
       "scope": "Branch-only synthetic source contract and host CI; no GTA5 RAGE callback, authenticated Online carrier, iOS build, or iPhone device validation"
+    },
+    {
+      "claim": "The RP-003 draft PR #9 host CI on 03059e8 passed 25/25 Python tests, including the C bridge's active-session invalid-snapshot reset and Clang AddressSanitizer/UndefinedBehaviorSanitizer checks",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+      "scope": "Linux-only synthetic bridge paths; neither iOS native integration nor iPhone gameplay verified"
     }
   ],
   "unknowns": [
@@ -128,18 +133,18 @@
       "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet.",
       "bridge_snapshot_guard": {
         "branch": "feature/rp003-bridge-snapshot-identity-20261113",
-        "source_commit": "2e67615198c4a432ad1b615775af4a31f26cb698",
+        "source_commit": "03059e8247d4238aa72ec86bd427b259122f7213",
         "source_paths": [
           "police-rp/v1.4/Integration/prp_engine_binding.c",
           "police-rp/v1.4/Integration/test_engine_binding.c",
           "ai-lab/tests/test_engine_bridge_host.py"
         ],
-        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/commit/2e67615198c4a432ad1b615775af4a31f26cb698",
-        "scope": "Reject duplicate or zero player_id for connected trusted peers; locally synthetic host C bridge validation only",
-        "verification": "GitHub Actions Linux host: 24/24 ai-lab Python tests passed, including C bridge test compilation and execution; NOT a game/iPhone test",
+        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/commit/03059e8247d4238aa72ec86bd427b259122f7213",
+        "scope": "Reject duplicate/zero connected peer IDs and clear live RP consent/inbox on invalid engine snapshot; synthetic host regressions and sanitizer validation",
+        "verification": "GitHub Actions Linux: 25/25 Python tests passed, including compiled C engine-bridge simulator with active-session consent/inbox reset; Clang ASan+UBSan test passed. No iPhone/GTA Online validation.",
         "host_ci_runs": [
-          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
-          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854458"
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461858"
         ],
         "pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/9"
       }
@@ -189,13 +194,13 @@
       ]
     }
   ],
-  "next_action": "Review draft PR #9 source identity guard (host CI 24/24), then review draft PR #4's RP-003 compatibility matrix/source inventory without duplicate changes. Confirm authenticated v12 game-thread callback and GTA-owned packet carrier using actual device logs before any gameplay/network integration; no automatic merge or IPA release.",
+  "next_action": "Review PR #9's documented 25/25 host CI with bridge ASan/UBSan, then PR #4's source contract inventory for merge conflicts. To implement actual RP player interactions, obtain verified GTA v12 game-thread and authenticated transport callbacks with non-sensitive device logs; do not assume Linux tests establish iOS gameplay.",
   "last_completed_task": {
     "id": "RP-003-SNAPSHOT-IDENTITY-HOST-GUARD",
     "branch": "feature/rp003-bridge-snapshot-identity-20261113",
-    "source_commit": "2e67615198c4a432ad1b615775af4a31f26cb698",
-    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
-    "test_summary": "24/24 Python unit tests passed; embedded host C bridge simulation passed",
+    "source_commit": "03059e8247d4238aa72ec86bd427b259122f7213",
+    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+    "test_summary": "25/25 Python tests passed, including a host C bridge simulator and Clang ASan/UBSan run; malformed live-session snapshot drops RP consent and queued input",
     "device_tested": false,
     "status": "draft-pr-review-pending"
   },
