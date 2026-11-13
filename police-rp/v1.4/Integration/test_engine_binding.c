@@ -95,6 +95,21 @@ int main(void){
     assert(!prp_bridge_frame(&b) && !b.active);
     bad.snapshot=snap(1,1,999);
     assert(prp_bridge_frame(&b) && b.runtime.host.peer_count==2);
+    /* A live RP session must not retain consent or queued packets if
+     * the next authenticated engine snapshot becomes ambiguous. */
+    prp_bridge_set_consent(&b,1);
+    assert(prp_bridge_frame(&b) && b.runtime.local_opt_in);
+    uint8_t pending[PRP_WIRE_SIZE]={0};
+    assert(prp_bridge_enqueue(&b,999,2,1,pending,sizeof(pending)));
+    assert(b.inbox.count==1);
+    bad.snapshot.trusted_peers[1].player_id=1;
+    assert(!prp_bridge_frame(&b) && !b.active);
+    assert(b.inbox.count==0 && !b.want_opt_in && !b.runtime.local_opt_in);
+    assert(b.runtime.host.peer_count==0);
+    /* The user must explicitly opt back in after identity recovery. */
+    bad.snapshot=snap(1,1,999);
+    assert(prp_bridge_frame(&b) && b.runtime.host.peer_count==2);
+    assert(!b.runtime.local_opt_in && !b.want_opt_in);
     prp_bridge_stop(&b);
     printf("Police RP v0.7 engine binding simulation passed\n");
     return 0;
