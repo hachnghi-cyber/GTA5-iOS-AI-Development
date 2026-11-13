@@ -7,7 +7,12 @@ extern "C" {
 #endif
 /* Called ONLY from GTA5's game thread. The engine integrator MUST supply
  * authoritative values from the exact v12 GTA5 runtime, never inferred
- * from a player label, config, raw UDP, or remote client packet. */
+ * from a player label, config, raw UDP, or remote client packet.
+ * A verified peer snapshot must include a CONNECTED entry for both the
+ * local_player_id and host_player_id with unique, nonzero player IDs.
+ * Missing either causes an immediate fail-open stop and drops queued RP
+ * messages and local consent. The list cannot be a partial visible-player
+ * shortlist; it must represent the trusted current game session. */
 #define PRP_BRIDGE_ABI 1u
 typedef struct {
     uint32_t abi;
@@ -33,6 +38,9 @@ typedef struct {
     uint8_t active;
     uint8_t want_opt_in;
     uint8_t have_snapshot;
+    /* Only touched on the verified game thread. A failed consent revocation
+     * must be retried without retaining local restraints or re-enabling RP. */
+    uint8_t pending_opt_out;
 } PRP_GameBridge;
 
 void prp_bridge_init(PRP_GameBridge *b, const PRP_EngineCallbacks *cb);

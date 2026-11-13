@@ -2,13 +2,31 @@
 #include <string.h>
 
 static int valid(const PRP_GameSnapshot *s) {
-    return s && s->abi==PRP_BRIDGE_ABI &&
+    if (!(s && s->abi==PRP_BRIDGE_ABI &&
       s->local.abi_version==PR_ADAPTER_ABI &&
       s->local.online && s->local.session_verified &&
       s->local.verified_session_id && s->local.local_player_id &&
       s->host_player_id && s->peer_count<=PRP_MAX_PEERS &&
       s->channel_authenticated &&
-      (s->local_is_host == (s->host_player_id == s->local.local_player_id));
+      (s->local_is_host == (s->host_player_id == s->local.local_player_id))))
+        return 0;
+    /* A trusted snapshot must contain the connected local player and
+     * current host. Incomplete peer lists are not sufficient to bind
+     * local-ped state or accept authoritative host status packets. */
+    int has_local=0,has_host=0;
+    for (unsigned i=0; i<s->peer_count; ++i) {
+        const PRP_Peer *peer=&s->trusted_peers[i];
+        if (!peer->connected) continue;
+        if (!peer->player_id) return 0;
+        if (peer->player_id==s->local.local_player_id)has_local=1;
+        if (peer->player_id==s->host_player_id)has_host=1;
+        /* No two connected peers may share one authenticated ID. */
+        for (unsigned j=0; j<i; ++j)
+            if (s->trusted_peers[j].connected &&
+                s->trusted_peers[j].player_id==peer->player_id)
+                return 0;
+    }
+    return has_local && has_host;
 }
 static PRP_TransportContext context(const PRP_GameBridge *b,uint64_t sender) {
     PRP_TransportContext ctx={0};
@@ -43,6 +61,7 @@ void prp_bridge_stop(PRP_GameBridge *b) {
     b->have_snapshot=0;
     b->active=0;
     b->want_opt_in=0;
+    b->pending_opt_out=0;
     memset(&b->last,0,sizeof(b->last));
 }
 void prp_bridge_set_consent(PRP_GameBridge *b,int enable) {
@@ -52,8 +71,12 @@ void prp_bridge_set_consent(PRP_GameBridge *b,int enable) {
         if(b->active&&b->runtime.local_opt_in) {
             PRP_TransportContext ctx=context(b,b->runtime.local_id);
             PRP_SendCallbacks s=send_cb(b);
-            (void)prp_runtime_consent(&b->runtime,0,&ctx,&s);
+            /* Local release must NOT depend on the host receiving a packet.
+             * Keep retrying revocation if the authenticated send failed. */
+            b->pending_opt_out=(uint8_t)
+                !prp_runtime_consent(&b->runtime,0,&ctx,&s);
         }
+        b->runtime.local_opt_in=0;
         pr_adapter_stop(&b->runtime.client.adapter,&b->callbacks.local_ped);
     }
 }
@@ -75,27 +98,43 @@ int prp_bridge_frame(PRP_GameBridge *b) {
     }
     b->last=snap;b->have_snapshot=1;
     if(b->runtime.is_host) {
-        for(unsigned i=0;i<snap.peer_count;i++) {
-            const PRP_Peer *p=&snap.trusted_peers[i];
-            if(!p->player_id || !p->connected)continue;
-            /* Host must supply attested peer info; peer snapshot's opt_in is
-             * ignored in prp_host_update_peer (only consent packet can change it). */
-            (void)prp_host_update_peer(&b->runtime.host,p);
-        }
-        /* Drop peers missing from latest authoritative snapshot. */
+        /* Prune departed players BEFORE joining/updating current peers.
+         * At 32/32 capacity a leave + join in one verified frame otherwise
+         * rejects the newcomer until the following frame. Removal also
+         * clears consent, replay counters and restraints of departed IDs. */
         for(unsigned i=0;i<PRP_MAX_PEERS;i++) {
             uint64_t id=b->runtime.host.peers[i].player_id;
             if(!id)continue;
             int present=0;
             for(unsigned k=0;k<snap.peer_count;k++)
-                if(snap.trusted_peers[k].player_id==id && snap.trusted_peers[k].connected)
+                if(snap.trusted_peers[k].connected &&
+                   snap.trusted_peers[k].player_id==id)
                     {present=1;break;}
             if(!present)(void)prp_host_remove_peer(&b->runtime.host,id);
+        }
+        for(unsigned i=0;i<snap.peer_count;i++) {
+            const PRP_Peer *p=&snap.trusted_peers[i];
+            if(!p->connected)continue;
+            /* Snapshot identity was validated above; the host must never
+             * silently accept partial membership when building RP state.
+             * Engine-supplied opt_in is ignored by prp_host_update_peer. */
+            if(!prp_host_update_peer(&b->runtime.host,p)) {
+                prp_bridge_stop(b);
+                return 0;
+            }
         }
     }
     PRP_TransportContext ctx=context(b,snap.local.local_player_id);
     PRP_SendCallbacks s=send_cb(b);
-    if(b->runtime.local_opt_in!=b->want_opt_in) {
+    if(b->pending_opt_out) {
+        /* Revoke on a valid, engine-attested frame. Never opt back in before
+         * the authenticated carrier has accepted the revoke send. This
+         * is NOT proof that the host applied it; protocol ACK is pending. */
+        if(prp_runtime_consent(&b->runtime,0,&ctx,&s))
+            b->pending_opt_out=0;
+        b->runtime.local_opt_in=0;
+    }
+    if(!b->pending_opt_out && b->runtime.local_opt_in!=b->want_opt_in) {
         (void)prp_runtime_consent(&b->runtime,b->want_opt_in,&ctx,&s);
     }
     /* Consume only on the verified game thread; do not let transport threads

@@ -9,6 +9,21 @@
 - Đọc các PR/Issue mới nhất, workflow Actions, log test liên quan; đối chiếu nhánh hiện tại. Không tin dữ liệu cũ hơn GitHub.
 - `state.json` chứa việc đã kiểm chứng, việc chưa thử, blocker và `next_action`.
 
+## Ưu tiên theo kế hoạch tuần tự P0–P9
+
+Trước khi chọn task, **bắt buộc** đọc `SEQUENTIAL_EXECUTION_PLAN.md`,
+`PHASE_GATES.json` cùng với `state.json`. Chạy
+`python ai-lab/sequential_gate.py` để xác định **giai đoạn đầu tiên
+chưa verified**. Không tự chọn một nhiệm vụ ở giai đoạn sau để
+"tiến nhanh"; chỉ thực hiện bước thuộc giai đoạn hiện hành hoặc các
+điều kiện nghiệm thu của nó.
+
+Trạng thái hiện tại là **P0: chuẩn hóa repo/baseline/PR #7→#4→#9→#8**,
+chưa hoàn thành khi các PR vẫn là draft. `P1` cần log hook/game-frame
+và trusted identity ở GTA v12; `P9` tuyệt đối không được ký/phát hành
+IPA nếu thiếu kiểm thử thiết bị và duyệt thủ công. CI host/ARM64
+source-only không phải bằng chứng chạy Online.
+
 ## Cách phát triển liên tục
 1. Đọc commit/PR trạng thái mới nhất và kiểm tra quyền công cụ GitHub.
 2. Chọn duy nhất một nhiệm vụ khả thi từ `backlog`, ưu tiên đang dở rồi tới task chưa bị chặn. Không đoán nội dung IPA chưa có.

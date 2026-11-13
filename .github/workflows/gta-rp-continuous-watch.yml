@@ -38,6 +38,7 @@ jobs:
           python ai-lab/continuity.py validate
           python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
           python ai-lab/continuous_watch.py --output ai-lab/reports/RP_CONTINUOUS_STATUS.json
+          python ai-lab/release_readiness.py --output ai-lab/reports/RP_RELEASE_READINESS.json
       - name: Upload watchdog report
         uses: actions/upload-artifact@v4
         with:
@@ -45,5 +46,6 @@ jobs:
           path: |
             ai-lab/reports/RP_HANDOFF.md
             ai-lab/reports/RP_CONTINUOUS_STATUS.json
+            ai-lab/reports/RP_RELEASE_READINESS.json
           if-no-files-found: error
           retention-days: 3

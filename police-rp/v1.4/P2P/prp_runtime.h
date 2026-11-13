@@ -23,7 +23,11 @@ typedef struct {
 } PRP_Runtime;
 void prp_runtime_init(PRP_Runtime *r, uint64_t session_id, uint64_t local_id,
                       uint64_t host_id, uint8_t is_host);
-/* Must originate from explicit user consent, NEVER a remote packet. */
+/* Must originate from explicit user consent, NEVER a remote packet.
+   enable=0 always clears the local opt-in flag, even when the context is
+   missing or the network send fails; release callbacks execute on the next
+   game-thread tick. Return 1 indicates host handling or delivery succeeded,
+   NOT a guarantee the remote host applied the requested change. */
 int prp_runtime_consent(PRP_Runtime *r,uint8_t enable,
                         const PRP_TransportContext *ctx,
                         const PRP_SendCallbacks *send);

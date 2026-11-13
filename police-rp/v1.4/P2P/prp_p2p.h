@@ -86,6 +86,16 @@ void prp_host_init(PRP_Host *h, uint64_t session_id, uint64_t host_id);
    Calling it for a disconnected peer clears any existing cuff/escort/jail. */
 int prp_host_update_peer(PRP_Host *h, const PRP_Peer *trusted_snapshot);
 int prp_host_remove_peer(PRP_Host *h, uint64_t id);
+/* Host-side target suggestion from engine-attested peer snapshots only.
+   Returns 1 and writes the nearest eligible OPTED-IN player ID within the
+   cuff radius, or returns 0 and clears *target_id. Excludes self, disconnected,
+   stale/non-finite positions and already restrained targets. Equal distances
+   choose the smaller player ID for deterministic behavior. This is NOT arrest
+   authorization: prp_host_receive must revalidate after a user action.
+   Caller must supply a trusted host monotonic timestamp, not packet time. */
+int prp_host_find_nearest_cuff_target(const PRP_Host *h, uint64_t officer_id,
+                                      uint64_t host_monotonic_ms,
+                                      uint64_t *target_id);
 PRP_Outcome prp_host_receive(PRP_Host *h, const PRP_TransportContext *ctx,
                              const PRP_Msg *m, PRP_HostResult *result);
 void prp_host_expire(PRP_Host *h, uint64_t monotonic_ms);

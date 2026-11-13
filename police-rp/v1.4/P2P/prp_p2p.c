@@ -45,6 +45,44 @@ static int close_enough(const PRP_Peer *a,const PRP_Peer *b,float r){
     double x=(double)a->x-b->x,y=(double)a->y-b->y,z=(double)a->z-b->z;
     return x*x+y*y+z*z<=(double)r*r;
 }
+/* Read-only target proposal for a host-controlled player interaction menu.
+   The host MUST still authorize a subsequent PRP_OP_CUFF using fresh state. */
+int prp_host_find_nearest_cuff_target(const PRP_Host *h,uint64_t officer_id,
+                                      uint64_t now,uint64_t *target_id){
+    if(!target_id)return 0;
+    *target_id=0;
+    if(!h||!h->session_id||!h->host_id)return 0;
+    int officer_index=idx(h,officer_id);
+    if(officer_index<0)return 0;
+    const PRP_Peer *officer=&h->peers[officer_index];
+    if(!officer->connected||!officer->opt_in||!officer->job_verified||
+       !officer->on_shift||officer->native_job<0||officer->native_job>2||
+       !location_fresh(officer,now))return 0;
+
+    const double radius_sq=(double)PRP_CUFF_RADIUS_M*PRP_CUFF_RADIUS_M;
+    double nearest_sq=radius_sq;
+    uint64_t nearest_id=0;
+    for(unsigned i=0;i<PRP_MAX_PEERS;i++){
+        const PRP_Peer *candidate=&h->peers[i];
+        if(candidate->player_id==0||candidate->player_id==officer_id||
+           !candidate->connected||!candidate->opt_in||
+           h->states[i].status!=PR_FREE||
+           !location_fresh(candidate,now))continue;
+        double dx=(double)candidate->x-officer->x;
+        double dy=(double)candidate->y-officer->y;
+        double dz=(double)candidate->z-officer->z;
+        double distance_sq=dx*dx+dy*dy+dz*dz;
+        if(distance_sq<=radius_sq &&
+           (!nearest_id||distance_sq<nearest_sq||
+            (distance_sq==nearest_sq&&candidate->player_id<nearest_id))){
+            nearest_sq=distance_sq;
+            nearest_id=candidate->player_id;
+        }
+    }
+    *target_id=nearest_id;
+    return nearest_id!=0;
+}
+
 static void set_free(PRP_Host *h,int t){
     if(t<0)return;
     PRP_TargetState *s=&h->states[t];
@@ -53,7 +91,8 @@ static void set_free(PRP_Host *h,int t){
     }
 }
 void prp_host_init(PRP_Host *h,uint64_t session,uint64_t host){
-    if(!h)return;memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
+    if(!h)return;
+    memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
 }
 int prp_host_update_peer(PRP_Host *h,const PRP_Peer *trusted){
     if(!h||!trusted||!trusted->player_id)return 0;
@@ -115,6 +154,9 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
     /* Validly received events consume sequence even if denied. */
     h->last_client_seq[i]=m->seq;
     if(m->op==PRP_OP_CONSENT){
+        /* Consent may only concern the authenticated sender, not a target. */
+        if(m->target_id!=m->sender_id)
+            return finish(result,PRP_ERR_PACKET);
         h->peers[i].opt_in=(m->consent==1);
         if(!m->consent){
             set_free(h,i);
@@ -199,7 +241,8 @@ int prp_host_state_for(PRP_Host *h,uint64_t target_id,
     return 1;
 }
 void prp_client_init(PRP_Client *c,uint64_t session,uint64_t local,uint64_t host){
-    if(!c)return;memset(c,0,sizeof(*c));
+    if(!c)return;
+    memset(c,0,sizeof(*c));
     c->session_id=session;c->local_id=local;c->expected_host_id=host;
     pr_adapter_init(&c->adapter);
 }
@@ -210,7 +253,8 @@ int prp_client_receive_state(PRP_Client *c,const PRP_TransportContext *ctx,
        !ctx->trusted_sender_id||ctx->trusted_sender_id!=c->expected_host_id||
        ctx->host_player_id!=c->expected_host_id||m->sender_id!=c->expected_host_id||
        m->session_id!=c->session_id||ctx->session_id!=c->session_id||
-       m->target_id!=c->local_id||v->verified_session_id!=c->session_id||
+       m->target_id!=c->local_id||ctx->local_player_id!=c->local_id||
+       v->verified_session_id!=c->session_id||
        v->local_player_id!=c->local_id||!m->consent||!valid_status(m->status)||
        !m->seq||(c->last_seq&&!newer(m->seq,c->last_seq)))return 0;
     PR_AuthenticatedStatus s={.abi_version=PR_ADAPTER_ABI,

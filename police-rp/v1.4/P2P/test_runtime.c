@@ -78,6 +78,32 @@ int main(void){
     int sent_before=net.sent;
     prp_runtime_tick(&host,5400,&hv,NULL,&tx);
     ENSURE(host.session_id==0&&net.sent==sent_before);
+    /* RP-002 regression: when transport fails or session identity is missing,
+       local opt-out must still release local-only cuffs on the next tick. */
+    PRP_Runtime isolated;
+    prp_runtime_init(&isolated,233,2,1,0);
+    isolated.local_opt_in=1;
+    PR_EngineView isolated_view={.abi_version=PR_ADAPTER_ABI,
+        .monotonic_ms=6000,.verified_session_id=233,.local_player_id=2,
+        .online=1,.session_verified=1,.local_opt_in=1};
+    PR_AuthenticatedStatus cuff_state={.abi_version=PR_ADAPTER_ABI,
+        .session_id=233,.local_player_id=2,.status=PR_CUFFED,.authenticated=1};
+    ENSURE(pr_adapter_accept(&isolated.client.adapter,&isolated_view,&cuff_state));
+    prp_runtime_tick(&isolated,6000,&isolated_view,&local_cb,NULL);
+    ENSURE(cuffed&&restricted);
+    PRP_TransportContext isolated_ctx=c(2,2,6001);
+    ENSURE(!prp_runtime_consent(&isolated,0,&isolated_ctx,NULL)); /* cannot send */
+    ENSURE(!isolated.local_opt_in); /* local refusal is unconditional */
+    isolated_view.monotonic_ms=6001;
+    prp_runtime_tick(&isolated,6001,&isolated_view,&local_cb,NULL);
+    ENSURE(!cuffed&&!restricted);
+    isolated.local_opt_in=1;
+    ENSURE(!prp_runtime_consent(&isolated,0,NULL,NULL)); /* context lost */
+    ENSURE(!isolated.local_opt_in);
+    isolated.local_opt_in=1;
+    ENSURE(!prp_runtime_consent(&isolated,2,&isolated_ctx,NULL)); /* invalid flag */
+    ENSURE(isolated.local_opt_in);
+    prp_runtime_stop(&isolated,&local_cb);
     puts("Police RP v0.6: end-to-end simulated 2-player game transport OK");
     printf("%u runtime assertions passed\n",asserts_count);
     return 0;

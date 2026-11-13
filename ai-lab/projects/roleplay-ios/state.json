@@ -4,10 +4,10 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "p0-repository-baseline-pr-review",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
-  "integration_branch": "feature/gta-ai-lab-100-agents",
+  "integration_branch": "feature/rp-p0-integration-preview-20261113",
   "last_known_github_pr": 1,
   "verified_facts": [
     {
@@ -34,6 +34,86 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "Police RP v1.4 README explicitly states SOURCE + PROBE, not a playable IPA; v1.5 README states only duty state probing (no gameplay network hook).",
+      "evidence": "police-rp/v1.4/README_VI.md and police-rp/v1.5/README_VI.md",
+      "scope": "Repository documentation; not verified device behavior"
+    },
+    {
+      "claim": "GitHub Actions for RP source inventory completed successfully: 16 unit tests passed; source inventory found 112 files, including 25 source files and 16 documentation files.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43274885127",
+      "scope": "CI file inventory and host tests only; no IPA or on-device game validation"
+    },
+    {
+      "claim": "Police RP v1.4 actual C protocol/bridge sources compiled and all three host regression executables passed GitHub Actions, including 25,000 deterministic malformed packet inputs, 64 P2P assertions, 21 runtime assertions, and off-duty tests.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_p2p.c",
+      "scope": "Host GCC tests only; newly rejects wrong authenticated local receiver and cross-target consent. No proven engine event dispatch, actual multiplayer transport, iOS build/signing, or iPhone test."
+    },
+    {
+      "claim": "RP-002 source-side contract tests and offline-safe opt-out regression pass with four real C host binaries and 19 Python tests; runtime suite increased to 30 assertions",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43345467699; police-rp/v1.4/P2P/test_abi_contract.c; police-rp/v1.4/P2P/test_runtime.c; ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+      "scope": "Host-only tests; changes on PR #4 branch, no iPhone SDK build, RAGE game callback, authenticated network carrier, signing or on-device test"
+    },
+    {
+      "claim": "Police RP host regression suite expanded to 6 real C executables with GCC, Clang UBSan and Clang ASan+UBSan all passing; 32-player lifecycle, sequence wrap, 10,000 valid wire roundtrips and 25,000 malformed packets covered",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/test_peer_lifecycle.c; police-rp/v1.4/P2P/test_wire_codec.c",
+      "scope": "Host CI only, 21 Python unit tests; sanitizers found no issues in exercised paths; no iOS or game-engine device validation"
+    },
+    {
+      "claim": "An independent Police RP C core dylib was compiled using Apple's iPhoneOS SDK into a thin arm64 Mach-O linked for iOS 16.3; artifact hash checked against downloaded Actions ZIP",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43347091287; ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md; dylib SHA256 0c47c248a31996b60d61fcf14be04bdd0711cd4b263c0c5ab2fa4650efd2acf2",
+      "scope": "source-only unsigned 50,840-byte dylib; not integrated with GTA5 or authentic multiplayer, not an IPA or iPhone device test"
+    },
+    {
+      "claim": "Host-side nearest consenting human player selection added to RP native source, with 49 new C assertions and 7/7 C regressions passing across GCC, Clang UBSan, and Clang ASan+UBSan",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_target_selection.c; ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+      "scope": "Source-only target suggestion based on engine-attested peer snapshots; host must revalidate. Does not implement touch UI, RAGE transport or actual on-device arrest."
+    },
+    {
+      "claim": "Latest iPhoneOS ARM64 source-only core build passed exported-symbol validation for _prp_host_find_nearest_cuff_target",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244; .github/workflows/gta-rp-ios-arm64-core.yml; artifact GTA-RP-iPhoneOS-ARM64-CORE-UNSIGNED-NOT-GAMEPLAY (ID 14008123793)",
+      "scope": "macOS iPhoneOS build and exported symbol check only; library unsigned, not injected into GTA V IPA, no game device test"
+    },
+    {
+      "claim": "Sequential P0-P9 Roleplay execution plan and read-only gate validator added to PR #4; 31 Python unit tests and P0 status check passed GitHub CI",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903; ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md; ai-lab/projects/roleplay-ios/PHASE_GATES.json; ai-lab/sequential_gate.py",
+      "scope": "Plan/CI validation only. Status P0 in-progress, verified_prefix_count=0, auto_release_allowed=false. No GTA game-frame or iPhone gameplay evidence."
+    },
+    {
+      "claim": "RP-001 has a source-only, fail-closed identity metadata gate with six host unit test cases; not evidence of runtime compatibility",
+      "evidence": "PR #7; commits 2c4f49a5adf1bba84c583806b08aebfa65399d25 and c48fe90b7a31d035c8bd4c95a06a3195c754beb8; ai-lab/rp_identity_gate.py; ai-lab/tests/test_rp_identity_gate.py",
+      "scope": "9 unit test cases in source, latest CI pending; earlier 6-test revision passed CI. No live IPA rehash or iPhone testing."
+    },
+    {
+      "claim": "On draft PR #9, the v1.4 source bridge rejects connected peers with duplicated or missing player identity; a Linux-host compiled C simulation passes via ai-lab 24-test CI run",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
+      "scope": "Branch-only synthetic source contract and host CI; no GTA5 RAGE callback, authenticated Online carrier, iOS build, or iPhone device validation"
+    },
+    {
+      "claim": "The RP-003 draft PR #9 host CI on 03059e8 passed 25/25 Python tests, including the C bridge's active-session invalid-snapshot reset and Clang AddressSanitizer/UndefinedBehaviorSanitizer checks",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+      "scope": "Linux-only synthetic bridge paths; neither iOS native integration nor iPhone gameplay verified"
+    },
+    {
+      "claim": "PR #9 bridge rejects verified Online snapshots missing connected local-player or host identity and fail-opens an already cuffed local player; 25 host tests including C simulator and Clang ASan/UBSan passed",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c",
+      "scope": "Source-only Linux C simulation; genuine GTA RAGE runtime and iPhone hardware/Online transport NOT tested"
+    },
+    {
+      "claim": "PR #9 repaired 32/32 RP host peer churn: a departing ID is pruned before a replacement arrives in the same verified snapshot, preserving surviving peers' consent without inheriting retired peer restraints/sequence",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c; ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md",
+      "scope": "25/25 host Python tests passed including C bridge simulator and Clang ASan+UBSan. No iPhone/RAGE game-frame or authenticated carrier integration; no IPA build, signing or device test"
+    },
+    {
+      "claim": "RP bridge now fail-opens local opt-out when authenticated transport send fails and retries consent revocation on valid frames before re-enabling RP; 25 Python host tests including C/ASan+UBSan simulation passed",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43367353028; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c; ai-lab/projects/roleplay-ios/CONSENT_OUTAGE_RETRY.md",
+      "scope": "Source-only synthetic host test. Send callback success is NOT a host ACK; real GTA v12 engine thread, network carrier, two iPhones, IPA signing and gameplay remain unverified"
+    },
+    {
+      "claim": "RP-006 release readiness evaluator and continuous-watch report passed GitHub CI with 33 host tests (10 release-gate tests)",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43342812563; ai-lab/release_readiness.py; ai-lab/tests/test_release_readiness.py",
+      "scope": "CI returned status blocked, auto_publish_allowed=false and signed_ipa_created=false; artifact rp-continuous-watch produced; no IPA build, signing or device test"
     }
   ],
   "unknowns": [
@@ -97,7 +177,7 @@
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
         "RP-001"
@@ -106,6 +186,15 @@
         "Versioned ABI contracts",
         "Evidence-backed symbol and hook mapping",
         "List of unsupported PC APIs"
+      ],
+      "note": "Source-only ABI drift checks now compile/run under GitHub CI; local opt-out clears even when network context or sending fails, with C regression tests. Genuine GTA5 v12 native game-frame and authenticated transport integration remain blocked on RP-001 evidence. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Actual iPhoneOS ARM64 source-only dylib built successfully via macos-15, SHA256 0c47c248a31996b60d61fcf14be04bdd0711cd4b263c0c5ab2fa4650efd2acf2; still missing GTA Online/game-frame bindings.",
+      "evidence": [
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43345467699",
+        "police-rp/v1.4/P2P/test_abi_contract.c",
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43347091287",
+        "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md"
       ]
     },
     {
@@ -120,7 +209,51 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet."
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244.",
+      "evidence": [
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
+        "ai-lab/host_rp_tests.py",
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576710",
+        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244"
+      ],
+      "bridge_snapshot_guard": {
+        "branch": "feature/rp003-bridge-snapshot-identity-20261113",
+        "source_commit": "b7d4a04d42aff7522e20f0d114d7fd03bf71983a",
+        "source_paths": [
+          "police-rp/v1.4/Integration/prp_engine_binding.c",
+          "police-rp/v1.4/Integration/test_engine_binding.c",
+          "ai-lab/tests/test_engine_bridge_host.py",
+          "ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md"
+        ],
+        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979",
+        "scope": "Reject duplicate/missing connected IDs and local/host omissions; clear restraints on invalid snapshot. Host also prunes departed members BEFORE adding new identities at full 32-player capacity.",
+        "verification": "25/25 Linux host Python tests including C bridge simulator with same-frame 32-player peer replacement and Clang ASan+UBSan; no GTA device testing",
+        "host_ci_runs": [
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461858",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979"
+        ],
+        "pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/9"
+      },
+      "consent_outage_retry": {
+        "branch": "feature/rp003-bridge-snapshot-identity-20261113",
+        "source_commit": "01f06cd982179b796b1b91e93e300186f973ff67",
+        "test_commit": "427bc040a6d0748e4f15ea378d2002bd24c37251",
+        "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43367353028",
+        "paths": [
+          "police-rp/v1.4/Integration/prp_engine_binding.c",
+          "police-rp/v1.4/Integration/prp_engine_binding.h",
+          "police-rp/v1.4/Integration/test_engine_binding.c",
+          "ai-lab/projects/roleplay-ios/CONSENT_OUTAGE_RETRY.md"
+        ],
+        "scope": "Game-thread only retry of failed opt-out send, local controls released immediately; host ACK missing; simulated C test only"
+      }
     },
     {
       "id": "RP-004",
@@ -134,7 +267,8 @@
         "Versioned protocol",
         "Authentication/authority model",
         "Replay and bounds tests"
-      ]
+      ],
+      "evidence": []
     },
     {
       "id": "RP-005",
@@ -149,7 +283,9 @@
         "Input tests",
         "Server-authoritative roleplay state",
         "Disconnect/reconnect/rollback tests"
-      ]
+      ],
+      "note": "Host-side prototype for nearest consenting player target selection exists, but RP-005 remains blocked by integration with authenticated transport and engine game-frame callbacks; no iPhone gameplay test.",
+      "evidence": []
     },
     {
       "id": "RP-006",
@@ -164,10 +300,63 @@
         "iOS device logs attached",
         "No new crash and regressions reported",
         "Signing/rollback reviewed"
+      ],
+      "evidence": [
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43347091287",
+        "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md",
+        "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+        "ai-lab/release_readiness.py",
+        "ai-lab/tests/test_release_readiness.py"
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
-  "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "next_action": "P0: Review integration preview branch combining PR #7, #4, #9, #8 and exact main baseline. Run combined GitHub CI, fix source incompatibilities, audit state.json and obtain manual review before merging. Only then begin P1 trusted game-frame/Online carrier mapping. No IPA release or device claim.",
+  "last_completed_task": {
+    "id": "P0-INTEGRATION-PREVIEW",
+    "status": "combined-CI-pending",
+    "device_tested": false,
+    "source_commits": [
+      "5ca26698fad9425cf5c059674f3c984a5bd3b00f",
+      "784c9e257e84707e3896982c280002697f5344ea",
+      "e32415c3184cdaca1338613a425014dd57552c27",
+      "61d42522b7efa9df196a08f31ed8acc9697c150f"
+    ]
+  },
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "sequential_execution": {
+    "plan": "ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md",
+    "gates": "ai-lab/projects/roleplay-ios/PHASE_GATES.json",
+    "validator": "ai-lab/sequential_gate.py",
+    "strict_order": true,
+    "current_phase": "P0",
+    "current_status": "in-progress",
+    "review_required": true,
+    "manual_merge_pending": [
+      "PR #7",
+      "PR #4",
+      "PR #9",
+      "PR #8"
+    ],
+    "current_gate": "P0 integration preview requires combined CI and human approval; source-only build is not IPA gameplay validation",
+    "following_gate": "P1 real GTA v12 game-frame hook + trusted Online identity proof; do not substitute host CI",
+    "auto_release_allowed": false,
+    "last_gate_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903"
+  },
+  "p0_integration_preview": {
+    "source_main": "d83bcd049649856411595b8cbf7d5c7c4288311e",
+    "pr_heads": {
+      "PR #7": "5ca26698fad9425cf5c059674f3c984a5bd3b00f",
+      "PR #4": "784c9e257e84707e3896982c280002697f5344ea",
+      "PR #9": "e32415c3184cdaca1338613a425014dd57552c27",
+      "PR #8": "61d42522b7efa9df196a08f31ed8acc9697c150f"
+    },
+    "resolution": [
+      "P0 plan/state from PR #4 retained, with union of unique verified facts",
+      "PR #9 bridge_snapshot_guard and consent_outage_retry metadata retained",
+      "PR #8 release readiness source included, RP006 remains not-started pending real IPA validation",
+      "PR #4 test_continuity.py supersedes main version"
+    ],
+    "device_tested": false,
+    "merged_to_main": false
+  }
 }
