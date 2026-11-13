@@ -49,6 +49,11 @@
       "claim": "PR #9 bridge rejects verified Online snapshots missing connected local-player or host identity and fail-opens an already cuffed local player; 25 host tests including C simulator and Clang ASan/UBSan passed",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c",
       "scope": "Source-only Linux C simulation; genuine GTA RAGE runtime and iPhone hardware/Online transport NOT tested"
+    },
+    {
+      "claim": "PR #9 repaired 32/32 RP host peer churn: a departing ID is pruned before a replacement arrives in the same verified snapshot, preserving surviving peers' consent without inheriting retired peer restraints/sequence",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c; ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md",
+      "scope": "25/25 host Python tests passed including C bridge simulator and Clang ASan+UBSan. No iPhone/RAGE game-frame or authenticated carrier integration; no IPA build, signing or device test"
     }
   ],
   "unknowns": [
@@ -138,19 +143,21 @@
       "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet.",
       "bridge_snapshot_guard": {
         "branch": "feature/rp003-bridge-snapshot-identity-20261113",
-        "source_commit": "bc9b57ed1e1136ed57f04643493d890b6294aabc",
+        "source_commit": "b7d4a04d42aff7522e20f0d114d7fd03bf71983a",
         "source_paths": [
           "police-rp/v1.4/Integration/prp_engine_binding.c",
           "police-rp/v1.4/Integration/test_engine_binding.c",
-          "ai-lab/tests/test_engine_bridge_host.py"
+          "ai-lab/tests/test_engine_bridge_host.py",
+          "ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md"
         ],
-        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090",
-        "scope": "Reject duplicate/missing connected peer IDs AND absent local/host identities; clear pending packets and opt-in on invalid snapshot, release local cuff/control state",
-        "verification": "25/25 Linux host Python tests including C engine binding bridge, Clang ASan+UBSan; no real GTA Online native callback or iPhone testing",
+        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979",
+        "scope": "Reject duplicate/missing connected IDs and local/host omissions; clear restraints on invalid snapshot. Host also prunes departed members BEFORE adding new identities at full 32-player capacity.",
+        "verification": "25/25 Linux host Python tests including C bridge simulator with same-frame 32-player peer replacement and Clang ASan+UBSan; no GTA device testing",
         "host_ci_runs": [
           "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
           "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461858",
-          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090"
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979"
         ],
         "pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/9"
       }
@@ -200,13 +207,13 @@
       ]
     }
   ],
-  "next_action": "Review PR #9 host snapshot identity contract plus CI (25/25 host tests), and PR #4 engine source inventory before merge. Obtain validated GTA v12 game-frame and authenticated player transport hooks and on-device logs for any actual multiplayer police arrest. Keep signed IPA and release blocked until two-device proof.",
+  "next_action": "Review PR #9 host membership churn CI and branch docs; review PR #4/#7/#8 and resolve state.json conflicts before any authorized merge. Next integration blocker: exact GTA V iOS v12 trusted game-frame callback and authenticated multiplayer sender/session context; obtain real iPhone logs and two-device tests before IPA release.",
   "last_completed_task": {
-    "id": "RP-003-SNAPSHOT-IDENTITY-HOST-GUARD",
+    "id": "RP-003-FULL-CAPACITY-PEER-CHURN",
     "branch": "feature/rp003-bridge-snapshot-identity-20261113",
-    "source_commit": "bc9b57ed1e1136ed57f04643493d890b6294aabc",
-    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090",
-    "test_summary": "25/25 host Python tests passed including C bridge simulator and Clang ASan+UBSan; missing local/host snapshot rejects active session and releases local restraints",
+    "source_commit": "b7d4a04d42aff7522e20f0d114d7fd03bf71983a",
+    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979",
+    "test_summary": "25/25 Python host tests, with C simulation covering leave+join in one 32-player snapshot, consent/sequence isolation, Clang ASan+UBSan",
     "device_tested": false,
     "status": "draft-pr-review-pending"
   },
