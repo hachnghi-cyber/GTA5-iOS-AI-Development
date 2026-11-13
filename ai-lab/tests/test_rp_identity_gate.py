@@ -44,6 +44,21 @@ class RPIdentityGateTests(unittest.TestCase):
         evidence["observed_native_binary_count"] += 1
         self.assertTrue(gate.validate_identity(self.state, evidence))
 
+    def test_malformed_document_rejected_without_exception(self):
+        for evidence in (None, [], {"executable": []}, {"bundle": None}):
+            with self.subTest(evidence=evidence):
+                self.assertTrue(gate.validate_identity(self.state, evidence))
+
+    def test_invalid_state_fingerprint_rejected(self):
+        state = copy.deepcopy(self.state)
+        state["baseline"]["ipa_sha256"] = "not-a-sha"
+        self.assertTrue(gate.validate_identity(state, self.evidence))
+
+    def test_boolean_binary_count_rejected(self):
+        state = copy.deepcopy(self.state)
+        state["baseline"]["binary_count"] = True
+        self.assertTrue(gate.validate_identity(state, self.evidence))
+
 
 if __name__ == "__main__":
     unittest.main()
