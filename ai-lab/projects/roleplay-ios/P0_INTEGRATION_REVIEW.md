@@ -202,3 +202,60 @@ không chứng minh nội dung đó an toàn về mặt kiến trúc. Reviewer v
 workflow CI; xác nhận phụ thuộc, quyền Actions và kế hoạch merge không
 đưa trùng bản sao của PR #7/#4/#9/#8. Không tự hoàn thành P0 chỉ vì
 CI đã xanh.
+
+
+## P0 — Sửa lỗi giữ án tù khi cảnh sát rời phiên (13/11/2026)
+
+**Phát hiện trên mã C thật, không suy đoán:** trước bản vá,
+`prp_host_remove_peer()` gọi `set_free()` với **mọi** trạng thái
+do cảnh sát tạo, kể cả `PR_JAILED`. Trong khi đó
+`prp_host_update_peer()` đã ghi rõ án tù hoàn tất thuộc phiên RP,
+không phụ thuộc cảnh sát tiếp tục làm việc. Đường `PRP_OP_CONSENT`
+với `consent=0` cũng có lỗi tương tự.
+
+**Bản vá tối thiểu** trong
+`police-rp/v1.4/P2P/prp_p2p.c` giới thiệu
+`revoke_officer_authority()`, được gọi khi cảnh sát nghỉ ca/mất
+chứng thực nghề, rút consent hoặc ngắt kết nối. Hàm này:
+
+- Nhả **CUFFED / ESCORTED** ngay, giữ hành vi fail-open.
+- Giữ **JAILED**, giữ nguyên `release_at_ms`, nhưng xóa
+  `officer_id` (chuyển sang session-owned) và tăng generation.
+- Vì `officer_id=0`, một tài khoản khác nhận lại **cùng numeric
+  player ID** không thể gửi `PRP_OP_RELEASE` để chiếm quyền cũ.
+  Đối với án tù đã mất người quản lý, hệ thống hiện chỉ tự hết hạn
+  theo đồng hồ host. **Phóng thích thủ công bởi cảnh sát khác cần
+  thiết kế phân quyền mới**; không tự cho phép trước khi xác minh
+  authenticated connection epoch.
+- Nếu **người đang bị giam** tự rời phiên, trạng thái của chính
+  người đó vẫn bị xóa; không giữ tù trên peer đã disconnect.
+
+Regression được thêm vào `test_duty_exit.c`: cảnh sát phụ ID 30
+khác host ID 10; cuff → escort → jail → disconnect; tái sử dụng
+ID 30 không được thả tù; hết hạn; cuff/escort giải phóng khi
+disconnect/opt-out; opt-out sau khi đưa vào tù không hủy án;
+và tù nhân rời phiên xóa trạng thái của chính họ. Thời gian host
+được tăng đơn điệu, vị trí verified được làm mới đúng lúc.
+
+**Cổng provenance mới:** PR #10 có **50 đường dẫn**, gồm
+38 tệp từ PR nguồn (35 giữ nguyên byte, **3 review_overrides**
+có original/review hash và lý do), 10 integration-owned
+(9 added, **1 modified** test C so với base), `state.json`
+và recursive manifest. CI không được bỏ qua thay đổi behavior ở
+`prp_p2p.c`.
+
+Bằng chứng trên commit `ba45dc8a8321080aa996ce1a1a70f12d5b643c2d`:
+[AI Lab CI #43408204816](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408204816)
+**112/112 Python unit tests** (bao gồm C host),
+**7/7 C executables mỗi chế độ normal, UBSan, ASan+UBSan**;
+P0 audit `p0-source-consistent`, không có blocker.
+[Apple ARM64 bridge #43408205275](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408205275)
+và
+[ARM64 core #43408204874](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408204874)
+đều thành công (unsigned source dylib, không phải GTA IPA).
+
+**Chưa xác minh:** danh tính player incarnation/connection epoch từ
+RAGE v12, chống replay consent toàn diện khi ID được dùng lại, gameplay
+trên 2 iPhone, signed IPA. Review thủ công phải quyết định rõ về
+thay đổi behavior (jail còn đến khi timeout, không chuyển giao manual
+release khi officer rời ca) trước khi merge. P0 vẫn `in-progress`.
