@@ -90,6 +90,26 @@ static void set_free(PRP_Host *h,int t){
         s->status=PR_FREE;s->officer_id=0;s->release_at_ms=0;s->generation++;
     }
 }
+/* Officer authority ends on duty loss, opt-out or disconnection.
+   Cuff/escort are temporary and must fail open. A completed jail sentence
+   belongs to the session, not to the departed officer: preserve its timer
+   but orphan the officer reference so a RECYCLED numeric player ID cannot
+   inherit the ability to release that prisoner. With officer_id=0, the
+   original host state machine permits timer expiry, not manual RELEASE;
+   an authenticated identity-generation contract is required for transfer. */
+static void revoke_officer_authority(PRP_Host *h,uint64_t player_id){
+    if(!h||!player_id)return;
+    for(int k=0;k<(int)PRP_MAX_PEERS;k++){
+        PRP_TargetState *s=&h->states[k];
+        if(s->officer_id!=player_id)continue;
+        if(s->status==PR_CUFFED||s->status==PR_ESCORTED){
+            set_free(h,k);
+        }else if(s->status==PR_JAILED){
+            s->officer_id=0;
+            s->generation++;
+        }
+    }
+}
 void prp_host_init(PRP_Host *h,uint64_t session,uint64_t host){
     if(!h)return;
     memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
@@ -113,20 +133,13 @@ int prp_host_update_peer(PRP_Host *h,const PRP_Peer *trusted){
        Never trust a peer-supplied job flag: trusted is engine-sourced only. */
     if (!trusted->job_verified || !trusted->on_shift ||
         trusted->native_job < 0 || trusted->native_job > 2) {
-        for (int k=0;k<(int)PRP_MAX_PEERS;k++) {
-            PRP_TargetState *state=&h->states[k];
-            if (state->officer_id==trusted->player_id &&
-                (state->status==PR_CUFFED || state->status==PR_ESCORTED))
-                set_free(h,k);
-        }
+        revoke_officer_authority(h,trusted->player_id);
     }
     return 1;
 }
 int prp_host_remove_peer(PRP_Host *h,uint64_t id){
     int i=idx(h,id);if(i<0)return 0;
-    for(int k=0;k<(int)PRP_MAX_PEERS;k++){
-        if(h->states[k].officer_id==id)set_free(h,k);
-    }
+    revoke_officer_authority(h,id);
     memset(&h->peers[i],0,sizeof(h->peers[i]));
     memset(&h->states[i],0,sizeof(h->states[i]));
     h->last_client_seq[i]=0;
@@ -160,8 +173,7 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
         h->peers[i].opt_in=(m->consent==1);
         if(!m->consent){
             set_free(h,i);
-            for(int k=0;k<(int)PRP_MAX_PEERS;k++)
-                if(h->states[k].officer_id==m->sender_id)set_free(h,k);
+            revoke_officer_authority(h,m->sender_id);
         }
         if(result){result->target_id=m->sender_id;result->target_state=h->states[i];}
         return finish(result,PRP_ACCEPTED);
