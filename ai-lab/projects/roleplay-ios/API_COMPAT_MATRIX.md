@@ -66,6 +66,35 @@ The type signature checks validate the **source contract on the host
 compiler**, not byte offsets of native RAGE objects, the Objective-C/ARM64
 calling convention in GTA5, or successful integration with an iOS app.
 
+## Extended host stress and memory-safety CI
+
+Verified host CI: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682
+
+- `test_peer_lifecycle.c`: 32-player capacity, reconnection/slot reuse,
+  prevention of consent inheritance, cuff cleanup on disconnect, replay
+  rejection and `uint32_t` sequence rollover; 85 assertions.
+- `test_wire_codec.c`: 10,000 deterministic valid packet encode/decode
+  roundtrips, 160,016 checks covering field preservation, reserved bytes,
+  payload length and invalid fields.
+- `test_p2p.c`: 64 assertions and 25,000 deterministic malformed input
+  samples.
+- `test_runtime.c`: 30 assertions including transport-independent local
+  opt-out when authentication/delivery is unavailable.
+- `test_duty_exit.c` and `test_abi_contract.c`: additional C regressions.
+
+All **six C test programs** were compiled and executed successfully with
+the default GCC host build, Clang UndefinedBehaviorSanitizer, and Clang
+AddressSanitizer + UndefinedBehaviorSanitizer. The source checks ran on
+GitHub's Linux host runner; no iPhone SDK, game executable, GTA Online
+transport or device was involved. Sanitizers found no reportable issues
+in these test paths; this does **not** establish that unexecuted code
+paths are memory-safe.
+
+The CI artifact contains three separate JSON result files:
+`RP_HOST_C_TESTS.json`, `RP_HOST_C_UBSAN.json`, and
+`RP_HOST_C_ASAN_UBSAN.json`. Every report includes source SHA256
+fingerprints and an explicit `iphone_tested: false`.
+
 ## Next integration evidence required
 
 1. Identify an exact-version **game-thread** callback for both host/guest;
