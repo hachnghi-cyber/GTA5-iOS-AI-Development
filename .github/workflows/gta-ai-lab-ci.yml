@@ -42,6 +42,8 @@ jobs:
         run: |
           python ai-lab/continuity.py validate
           python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
+      - name: Enforce P0-P9 sequential phase gate (read-only)
+        run: python ai-lab/sequential_gate.py --output ai-lab/reports/RP_PHASE_STATUS.json
       - name: Inventory Roleplay sources (no IPA required)
         run: python ai-lab/source_inventory.py --output ai-lab/reports/RP_SOURCE_INVENTORY.json
       - name: Compile and execute Police RP C host regressions (not iPhone)
@@ -68,6 +70,7 @@ jobs:
             ai-lab/reports/plan.json
             ai-lab/reports/RP_HANDOFF.md
             ai-lab/reports/RP_SOURCE_INVENTORY.json
+            ai-lab/reports/RP_PHASE_STATUS.json
             ai-lab/reports/RP_HOST_C_TESTS.json
             ai-lab/reports/RP_HOST_C_UBSAN.json
             ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
