@@ -79,6 +79,11 @@
       "claim": "A bounded ARM64 Mach-O LC_UUID parser and synthetic dyld loader API branch compiled and passed GCC 14.2 plus Clang 17 ASan/UBSan tests: 46 portable assertions, 14 dyld-shim assertions, 12,000 deterministic mutated headers on host.",
       "evidence": "ai-lab/projects/roleplay-ios/V13_DYLD_IDENTITY_REPORT.md; police-rp/v13/test_rp_v13_dyld_identity.c; police-rp/v13/tests/test_rp_v13_dyld_shim.c",
       "scope": "Genuine host executions, artificial Mach-O fixtures and fake dyld; no Apple SDK, dyld runtime attestation, GTA session hook, IPA or device gameplay."
+    },
+    {
+      "claim": "GitHub Actions identity run 43455287379 at source commit e09c2d7b did not allocate host or iPhoneOS runners (both runner_id=0, steps=[]), so neither GitHub CI nor Apple SDK build ran.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
+      "scope": "Observed GitHub job metadata; not evidence of compilation failures or billing root cause."
     }
   ],
   "unknowns": [
@@ -213,7 +218,7 @@
       ]
     }
   ],
-  "next_action": "Restore GitHub Actions runner availability (previous runs host/macOS runner_id=0, steps=[]); verify Apple iPhoneOS SDK compilation for source-only dyld provider and check exported symbol. Then collect read-only evidence on exact GTAV-v13(4).ipa from running iPhone: dyld image path/LC_UUID, trusted RAGE game-frame entry point, authenticated Online player/session/host/peer generation and transport. Only after these are proven wire provider/dispatcher to PRP bridge and test two devices. Never infer gameplay from host unit tests, no auto merge or IPA publication.",
+  "next_action": "Enable GitHub Actions runner allocation or inspect failed-job annotation for run 43455287379, then rerun source-only host/sanitizer and iPhoneOS ARM64 build. Use verified loaded-image dyld metadata only at controlled lifecycle points; record real iPhone loaded GTA5/libgtacompat UUID/path and Apple SDK results. Continue native GTA Online host/game-frame/authenticated transport discovery, do not invent packet send, hooks or offsets, and do not merge PR #14 before review/device evidence.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -239,7 +244,7 @@
     "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
     "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
     "pr_base": "feature/rp-v13-identity-baseline-20261113",
-    "ci_status": "LATEST PR #14 source head 2dea964e, Actions run 43451257554: both ubuntu-latest and macos-15 jobs failed prior to runner assignment, runner_id=0, steps=[]; no GitHub-hosted or Apple build started; root cause unknown.",
+    "ci_status": "On dyld source commit e09c2d7b GitHub Actions run 43455287379: both host and iphoneos jobs fail before runner allocation, runner_id=0 and steps=[]; root cause not determined; local GCC/Clang tests PASS independently.",
     "ci_failure_evidence": [
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
@@ -262,7 +267,7 @@
       "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
     },
     "release_stop_commit": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
-    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43451257554",
+    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
     "frame_dispatcher": {
       "status": "implemented-and-host-tested-only",
       "source_commit": "2dea964e88fc2f589355760269a6ca7da17f23f3",
@@ -303,7 +308,10 @@
       "run_on_iphone": false,
       "verified_live_dyld_identity": false,
       "network_engine_binding": false,
-      "notes": "dyld image enumeration is not thread-safe if images concurrently load/unload; loaded LC_UUID alone does not prove code signing/integrity; exact app basename and UUIDs are version-specific, require iPhone device diagnostics and Apple SDK CI"
+      "notes": "dyld image enumeration is not thread-safe if images concurrently load/unload; loaded LC_UUID alone does not prove code signing/integrity; exact app basename and UUIDs are version-specific, require iPhone device diagnostics and Apple SDK CI",
+      "source_commit": "e09c2d7b5d30a7d7adfeaa767f6a4ae2b38b7c55",
+      "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
+      "ci_status": "FAILED BEFORE RUNNER ALLOCATION: host and iphoneos runner_id=0, steps=[] (no CI code executed), cause not proven"
     }
   }
 }
