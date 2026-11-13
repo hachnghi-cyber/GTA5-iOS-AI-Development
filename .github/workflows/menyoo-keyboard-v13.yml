@@ -1,0 +1,103 @@
+name: Menyoo v13 iOS Keyboard Bridge (experimental)
+on:
+  push:
+    branches:
+      - feature/menyoo-v13-ios-keyboard-bridge
+    paths:
+      - 'menyoo-keyboard-v13/**'
+      - 'menyoo-keyboard-v12/**'
+      - '.github/workflows/menyoo-keyboard-v13.yml'
+  pull_request:
+    paths:
+      - 'menyoo-keyboard-v13/**'
+      - 'menyoo-keyboard-v12/**'
+      - '.github/workflows/menyoo-keyboard-v13.yml'
+  workflow_dispatch:
+    inputs:
+      package_ipa:
+        description: 'Package exact v13 VI+Telegram IPA from private URL?'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile iOS ARM64 bridge using Xcode
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p dist
+          xcrun --sdk iphoneos clang++ \
+            -arch arm64 -isysroot "$SDK" \
+            -miphoneos-version-min=16.0 \
+            -std=c++17 -fobjc-arc -fblocks \
+            -Wall -Wextra -Werror \
+            -fvisibility=hidden -O2 -dynamiclib \
+            menyoo-keyboard-v13/src/MKBBridge.mm \
+            -framework UIKit -framework Foundation \
+            -install_name '@rpath/MenyooKeyboardBridge.dylib' \
+            -o dist/MenyooKeyboardBridge.dylib
+          file dist/MenyooKeyboardBridge.dylib
+          nm -gU dist/MenyooKeyboardBridge.dylib | grep '_nativeInit$'
+          nm -gU dist/MenyooKeyboardBridge.dylib | grep '_nativePush64$'
+          nm -gU dist/MenyooKeyboardBridge.dylib | grep '_nativeCall$'
+          codesign --force --sign - --timestamp=none dist/MenyooKeyboardBridge.dylib
+          codesign --verify --verbose=2 dist/MenyooKeyboardBridge.dylib
+      - name: Python syntax test
+        run: |
+          python3 -m py_compile menyoo-keyboard-v13/tools/patch_ipa.py
+          python3 -m py_compile menyoo-keyboard-v12/tools/patch_ipa.py
+      - name: Upload source-only bridge dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: Menyoo-v13-Keyboard-Bridge-ARM64-EXPERIMENTAL
+          path: dist/MenyooKeyboardBridge.dylib
+          retention-days: 7
+          if-no-files-found: error
+
+  package-ipa:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_ipa }}
+    needs: build-ios
+    runs-on: macos-15
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Menyoo-v13-Keyboard-Bridge-ARM64-EXPERIMENTAL
+          path: dist/
+      - name: Fetch exact IPA and repackage (unsigned)
+        env:
+          PRIVATE_IPA_URL: ${{ secrets.GTAV_V13_IPA_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PRIVATE_IPA_URL:-}" ]; then
+            echo "::error::Configure secret GTAV_V13_IPA_URL as a private HTTPS link to exact v13 VI+Telegram IPA."
+            exit 1
+          fi
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --retry 2 --silent --show-error \
+            --output "$RUNNER_TEMP/v13.ipa" "$PRIVATE_IPA_URL"
+          python3 menyoo-keyboard-v13/tools/patch_ipa.py \
+            --ipa "$RUNNER_TEMP/v13.ipa" \
+            --dylib dist/MenyooKeyboardBridge.dylib \
+            --out dist/GTAV-v13-Menyoo-Keyboard-UNSIGNED.ipa
+      - name: Upload unsigned IPA and report for device QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTAV-v13-Menyoo-Keyboard-UNSIGNED-TEST-ONLY
+          path: |
+            dist/GTAV-v13-Menyoo-Keyboard-UNSIGNED.ipa
+            dist/GTAV-v13-Menyoo-Keyboard-UNSIGNED.json
+          retention-days: 1
+          if-no-files-found: error
