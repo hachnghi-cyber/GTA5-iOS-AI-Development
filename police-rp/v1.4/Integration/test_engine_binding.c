@@ -128,12 +128,21 @@ int main(void){
     assert(prp_bridge_frame(&isolated) && isolated.active);
     prp_bridge_set_consent(&isolated,1);
     assert(prp_bridge_frame(&isolated) && isolated.runtime.local_opt_in);
+    /* A missing host must fail open even if the local ped is restrained. */
+    PRP_Msg host_state={0};
+    host_state.op=PRP_OP_STATE;host_state.session_id=1001;
+    host_state.sender_id=1;host_state.target_id=2;
+    host_state.seq=1;host_state.consent=1;host_state.status=PR_CUFFED;
+    uint8_t host_wire[PRP_WIRE_SIZE];
+    assert(prp_encode(host_wire,&host_state));
+    assert(prp_bridge_receive(&isolated,1,1,host_wire,sizeof(host_wire))==PRP_ACCEPTED);
+    assert(prp_bridge_frame(&isolated) && missing.cuffed && missing.ctrl);
     assert(prp_bridge_enqueue(&isolated,1001,1,1,pending,sizeof(pending)));
     assert(isolated.inbox.count==1);
     missing.snapshot.trusted_peers[0].connected=0;
     assert(!prp_bridge_frame(&isolated) && !isolated.active);
     assert(isolated.inbox.count==0 && !isolated.want_opt_in &&
-           !isolated.runtime.local_opt_in);
+           !isolated.runtime.local_opt_in && !missing.cuffed && !missing.ctrl);
     missing.snapshot=snap(2,1,1001);
     assert(prp_bridge_frame(&isolated) && isolated.active);
     assert(!isolated.runtime.local_opt_in);
