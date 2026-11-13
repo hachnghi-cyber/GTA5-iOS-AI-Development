@@ -160,3 +160,45 @@ Tệp bằng chứng và cách tái lập:
 giả lập và dylib iPhoneOS độc lập **chưa tích hợp GTA5**; chưa chứng minh
 entrypoint RAGE v12, carrier có xác thực, 2 iPhone chơi RP, ký hay IPA.
 `P0` vẫn `in-progress` cho tới khi review và merge có chứng cứ.
+
+
+## P0 audit hoàn chỉnh cho mọi thay đổi trên PR #10 (13/11/2026)
+
+Phát hiện và sửa **thiếu bao phủ file** của công cụ provenance: phiên bản
+trước kiểm tra 38 file sao chép từ PR #7/#4/#9/#8 và 21 claim gốc, nhưng
+không kiểm tra các file do riêng nhánh P0 tạo ra. Một file CI mới hoặc
+test thay đổi trên preview có thể không bị phát hiện.
+
+Bộ kiểm tra `ai-lab/p0_integration_audit.py` giờ yêu cầu Git history
+từ base SHA `d83bcd049649856411595b8cbf7d5c7c4288311e`
+(`fetch-depth: 0` trong CI) và đọc diff thực
+`git diff --name-status -z --no-renames BASE HEAD`:
+
+- **38 path của PR nguồn**: kiểm tra Git blob; riêng workflow AI Lab có
+  dual-hash review override đã khai báo.
+- **9 path riêng của PR #10**: pin Git blob SHA-1 của từng file và trạng thái
+  `A` (tạo mới), gồm code kiểm tra, test, workflow Apple ARM64,
+  báo cáo tích hợp và test bridge tổng hợp.
+- **1 `state.json`**: phải là thay đổi `M`; kiểm tra **nội dung có ngữ
+  nghĩa**: baseline, 21 claim gốc và backlog. Không được tính là đã test iPhone.
+- **1 `P0_SOURCE_PROVENANCE.json`**: self-manifest không thể pin hash
+  của chính nó mà không dẫn đến tham chiếu đệ quy; bắt buộc đúng path,
+  đúng schema, review và đúng tổng số file.
+
+**Tổng 49 path.** Mọi path không khai báo, path bị xóa, hash file tạo
+riêng sai, Git base thiếu hoặc trạng thái Git khác quy định đều
+`blocked`. Chi tiết nằm trong report `RP_P0_AUDIT.json`.
+
+Bằng chứng: <https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43401470546>
+— **110/110 Python tests**, 7 C tests ở cả ba chế độ,
+`p0-source-consistent`, `expected_total_changed_paths=49`,
+`integration_only_count=9`, `blocking_checks=[]`.
+
+### Phạm vi kiểm tra thủ công còn bắt buộc
+
+Cổng CI này chứng minh **nội dung mã so với manifest và đường thay đổi Git**,
+không chứng minh nội dung đó an toàn về mặt kiến trúc. Reviewer vẫn phải
+đọc kỹ 9 file tạo riêng, `state.json`, manifest tự mô tả và
+workflow CI; xác nhận phụ thuộc, quyền Actions và kế hoạch merge không
+đưa trùng bản sao của PR #7/#4/#9/#8. Không tự hoàn thành P0 chỉ vì
+CI đã xanh.
