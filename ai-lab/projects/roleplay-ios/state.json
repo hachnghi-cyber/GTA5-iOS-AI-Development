@@ -89,6 +89,11 @@
       "claim": "Source-only v13 dladdr anchored image-provider tests completed on Linux: 5 GCC non-Apple checks, 32 GCC fake-Apple, 32 Clang ASan/UBSan fake-Apple assertions; existing dyld tests also passed 46 and 14 assertions with 12,000 bounded header mutations.",
       "evidence": "ai-lab/projects/roleplay-ios/V13_DLADDR_ANCHORED_LOOKUP.md; local RP_V13_DLADDR_HOST_VALIDATION_20261113.log; Git blob SHA-1 and SHA-256 records",
       "scope": "Actual local GCC/Clang host tests, not Apple SDK/dyld runtime, real code-address provenance, native game-frame, Online carrier, or iPhone gameplay."
+    },
+    {
+      "claim": "At GitHub PR #14 source commit c8d465fc, Actions run 43457469996 failed before either host or iPhoneOS runner was assigned (runner_id=0, steps=[]); no code compilation in that run.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
+      "scope": "GitHub Actions metadata; not proof of billing cause or source compilation failure."
     }
   ],
   "unknowns": [
@@ -223,7 +228,7 @@
       ]
     }
   ],
-  "next_action": "Review/restore GitHub Actions runner allocation, then rerun PR #14 host/sanitizer and iPhoneOS ARM64 unsigned source library including _rp_v13_dladdr_collect_identity. Next obtain genuine v13 GTA5 and libgtacompat code anchor addresses via trusted loader/symbol provenance without copying v12 offsets. Pin image lifetime and verify dladdr paths and Mach-O UUID on actual iPhone; only after that study verified game frame, peer/session generation and authenticated multiplayer carrier. Keep PR Draft and do not merge/release IPA without evidence.",
+  "next_action": "Inspect GitHub Actions failed-run annotations and repository Actions billing/runner access for run 43457469996, then rerun host/sanitizer and unsigned iPhoneOS ARM64 code compilation. Separately obtain trusted live code anchors from exact v13 GTA5 and libgtacompat, with pinned lifetime; validate dladdr Mach-O identities on an actual iPhone. Only then connect RAGE game-frame, Online authenticated sender/session/peer generation and PRP bridge, followed by two-device gameplay regression. Keep PR #14 Draft; no merge/IPA release.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -249,7 +254,7 @@
     "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
     "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
     "pr_base": "feature/rp-v13-identity-baseline-20261113",
-    "ci_status": "On dyld source commit e09c2d7b GitHub Actions run 43455287379: both host and iphoneos jobs fail before runner allocation, runner_id=0 and steps=[]; root cause not determined; local GCC/Clang tests PASS independently.",
+    "ci_status": "FAILED BEFORE RUNNER ALLOCATION at c8d465fc: host and iphoneos have runner_id=0 and steps=[]; compiler/SDK never ran; root cause unknown",
     "ci_failure_evidence": [
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
@@ -272,7 +277,7 @@
       "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
     },
     "release_stop_commit": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
-    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
+    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
     "frame_dispatcher": {
       "status": "implemented-and-host-tested-only",
       "source_commit": "2dea964e88fc2f589355760269a6ca7da17f23f3",
@@ -347,7 +352,11 @@
         "Requires pinned loaded module lifetime",
         "dladdr metadata/UUID are not Apple code-signature verification",
         "iPhoneOS SDK compilation and 2-iPhone gameplay not tested"
-      ]
+      ],
+      "implementation_commit": "c8d465fc734797971e02d67381d80e2fa33384a7",
+      "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
+      "ci_status": "FAILED BEFORE RUNNER ALLOCATION at c8d465fc: host and iphoneos have runner_id=0 and steps=[]; compiler/SDK never ran; root cause unknown",
+      "local_test_log": "RP_V13_DLADDR_HOST_VALIDATION_20261113.log (handoff local, not CI)"
     }
   }
 }
