@@ -173,7 +173,7 @@
         "No extracted copyrighted assets published"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2",
-      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required.",
+      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required. PR #7 metadata identity gate verifies source fingerprints against the recorded v12 baseline; no new IPA read/device confirmation.",
       "evidence": [
         "ai-lab/projects/roleplay-ios/baselines/v12-verified.json",
         "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md"
@@ -214,7 +214,7 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244.",
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244. PR #9 bridge snapshot identity guard, 32-player peer replacement and consent-outage retry are present in this preview; remain host-only simulations.",
       "evidence": [
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
         "ai-lab/host_rp_tests.py",
@@ -295,7 +295,7 @@
     {
       "id": "RP-006",
       "priority": 6,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Build signed-on-device integration test plan and release gates",
       "blocked_on": [
         "IPA and source/build environment"
@@ -311,8 +311,10 @@
         "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md",
         "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
         "ai-lab/release_readiness.py",
-        "ai-lab/tests/test_release_readiness.py"
-      ]
+        "ai-lab/tests/test_release_readiness.py",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43342951579"
+      ],
+      "note": "PR #8 source-only release readiness evaluator and CI reporting have been integrated into the P0 preview. This records engineering work underway; P9 actual signed IPA release remains not-started and blocked by P1-P8 and device/manual approval."
     }
   ],
   "next_action": "P0 manual review of PR #10 combined diff, especially the explicit workflow override and reconciled state.json; resolve PR overlap/merge strategy for #7/#4/#9/#8 and retest final integration tip. Do NOT promote P0 until authorized human reviewer approves and CI passes. Only then begin P1 exact-v12 game-frame/authenticated Online identity analysis with device logs; no IPA release.",
