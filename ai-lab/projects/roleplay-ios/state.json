@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13-source-session-contract-stacked-pr-review",
+  "phase": "v13-dyld-source-provider-pr-review",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/rp-v13-session-lifecycle-guard-20261113",
@@ -74,6 +74,11 @@
       "claim": "At v13 dispatcher source commit 2dea964e, the GitHub workflow run 43451257554 failed before runner assignment for both Linux and iPhoneOS (runner_id=0, steps=[]); no CI build/test executed.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43451257554",
       "scope": "Live Github Actions job metadata; does not identify billing/policy/root cause and is not source compile evidence."
+    },
+    {
+      "claim": "A bounded ARM64 Mach-O LC_UUID parser and synthetic dyld loader API branch compiled and passed GCC 14.2 plus Clang 17 ASan/UBSan tests: 46 portable assertions, 14 dyld-shim assertions, 12,000 deterministic mutated headers on host.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_DYLD_IDENTITY_REPORT.md; police-rp/v13/test_rp_v13_dyld_identity.c; police-rp/v13/tests/test_rp_v13_dyld_shim.c",
+      "scope": "Genuine host executions, artificial Mach-O fixtures and fake dyld; no Apple SDK, dyld runtime attestation, GTA session hook, IPA or device gameplay."
     }
   ],
   "unknowns": [
@@ -208,7 +213,7 @@
       ]
     }
   ],
-  "next_action": "Investigate GitHub Actions early runner allocation failure for PR #14 (run 43451257554, host and iphoneos both runner_id=0/steps=[]). Restore runner access and rerun all 59 dispatcher assertions, older 74 gate assertions and Apple unsigned source-only compile. Then obtain real v13 engine frame + trusted Online peer metadata/transport provenance; integrate rp_v13_dispatcher_tick only after ABI evidence, and verify local ped release and cross-player RP behavior on two iPhones. Keep PR #14 Draft and do not merge/release IPA.",
+  "next_action": "Restore GitHub Actions runner availability (previous runs host/macOS runner_id=0, steps=[]); verify Apple iPhoneOS SDK compilation for source-only dyld provider and check exported symbol. Then collect read-only evidence on exact GTAV-v13(4).ipa from running iPhone: dyld image path/LC_UUID, trusted RAGE game-frame entry point, authenticated Online player/session/host/peer generation and transport. Only after these are proven wire provider/dispatcher to PRP bridge and test two devices. Never infer gameplay from host unit tests, no auto merge or IPA publication.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -278,6 +283,27 @@
       "rollback": "Revert isolated dispatcher commit; main/IPA/PR12 unaffected",
       "ci_source_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43451257554",
       "ci_source_result": "FAILED BEFORE RUNNER ASSIGNMENT; both jobs 0 steps, runner_id=0; not a source test"
+    },
+    "dyld_identity": {
+      "status": "host-validated-source-only",
+      "checked_at_utc": "2026-11-13T15:37:21Z",
+      "entrypoint": "rp_v13_dyld_collect_identity",
+      "portable_tests": "46 assertions passed with GCC 14.2 and Clang 17 ASan+UBSan; 12000 deterministic Mach-O header mutations",
+      "fake_apple_dyld_tests": "14 assertions passed with GCC and Clang ASan+UBSan using stub mach-o headers; NOT Apple SDK or real dyld test",
+      "changes": "bounded MH_MAGIC_64 ARM64 LC_UUID parser; reject missing/truncated/duplicate UUID and wrong file type/path; same GTAV.app prefix for GTA5 and libgtacompat; portable fixture cannot assert dyld loader flags; Apple path returns flags only after exact v13 UUID match",
+      "hashes_sha256": {
+        "police-rp/v13/rp_v13_dyld_identity.h": "474c705606984160843d4de66a68f80fe8c9308b85788cdee16a2a98a8a07040",
+        "police-rp/v13/rp_v13_dyld_identity.c": "fbd86f2ba1a21ee7eb3fcdf9e32cdebd5a58bbd92e9dafe281a55068052c2632",
+        "police-rp/v13/test_rp_v13_dyld_identity.c": "fc8d08f3885d62260803e8ef6a9d0c8cf77868659b6158fe41476fe4c69dac52",
+        "police-rp/v13/tests/fixtures/mach-o/loader.h": "c2d29f27605b17c15d3eb95b52cce79efe202611121e43f7b1911155a6fd4f52",
+        "police-rp/v13/tests/fixtures/mach-o/dyld.h": "ac18e55c6ec1f88d9ccd52b9437d0f0abab892362703cfd539530e8c20764759",
+        "police-rp/v13/tests/test_rp_v13_dyld_shim.c": "864744983badf0f93886644d5d4e63b993e0b8bd6d5c39ab9c77f62b3de59676"
+      },
+      "apple_sdk_compiled": false,
+      "run_on_iphone": false,
+      "verified_live_dyld_identity": false,
+      "network_engine_binding": false,
+      "notes": "dyld image enumeration is not thread-safe if images concurrently load/unload; loaded LC_UUID alone does not prove code signing/integrity; exact app basename and UUIDs are version-specific, require iPhone device diagnostics and Apple SDK CI"
     }
   }
 }
