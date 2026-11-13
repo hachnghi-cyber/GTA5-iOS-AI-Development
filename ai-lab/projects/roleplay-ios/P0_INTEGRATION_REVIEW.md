@@ -80,3 +80,25 @@ lại bằng GitHub REST và vẫn chặn khi chưa có approval độc lập.
 `auto_merge_allowed=false` và
 `p0_phase_verified_by_this_check=false` ngay cả khi có reviewer phê duyệt.
 Review cuối phải xem cả source diff, cổng test, xung đột và kế hoạch rollback.
+
+## P0 cổng chống CI cũ được dùng cho commit PR mới (13/11/2026)
+
+Một lượt kiểm tra review lấy trạng thái mới nhất từ GitHub REST có thể chạy
+đồng thời với push mới. Khi đó source audit đã kiểm tra commit A nhưng
+review API lại trả về commit B. Trước đây bộ kiểm tra chỉ xác nhận
+`head.sha` có định dạng hợp lệ; nay đã thêm **`head_matches_ci_event`**
+để ràng buộc SHA mới nhất với commit từ **cùng sự kiện GitHub Actions**.
+Trên sự kiện push, `PR_HEAD_SHA` là `github.sha`; trên
+`pull_request`, `PR_HEAD_SHA` dùng `github.event.pull_request.head.sha`
+(thay vì synthetic merge commit). Nếu thiếu hoặc khác SHA thì
+`source_review_ready=false`, không tự merge và không nâng P0.
+
+Ba test mới kiểm tra: PR được push commit mới trong lúc job chạy dù đã có
+review cho commit mới; SHA CI thiếu; SHA CI không hợp lệ. Bằng chứng:
+<https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43394341355>
+— 95/95 Python unit tests, audit P0 không có blocker, 7/7 C programs
+ở mỗi cấu hình host normal/UBSan/ASan+UBSan. Review hiện vẫn
+`blocked-review` **duy nhất vì `independent_head_approval`**,
+không có quyền phát hành tự động. iPhoneOS ARM64 dylib build ở
+<https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43394341359>
+chỉ là thư viện độc lập, không phải IPA/gameplay.
