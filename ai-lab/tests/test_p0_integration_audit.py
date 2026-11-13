@@ -103,6 +103,32 @@ class P0IntegrationAuditTests(unittest.TestCase):
         self.state["baseline"]["device_tested"] = True
         self.assertIn("baseline", self.run_audit()["blocking_checks"])
 
+    def test_preserves_rp006_source_progress(self):
+        task = next(t for t in self.state["backlog"] if t["id"] == "RP-006")
+        self.assertEqual(task["status"], "in-progress")
+        self.assertNotEqual(self.phases["stages"][9]["status"], "verified")
+        self.assertTrue(self.run_audit()["source_verified"])
+
+    def test_reject_rp006_status_regression(self):
+        task = next(t for t in self.state["backlog"] if t["id"] == "RP-006")
+        task["status"] = "not-started"
+        report = self.run_audit()
+        self.assertIn("task:RP-006", report["blocking_checks"])
+
+    def test_reject_missing_release_readiness_evidence(self):
+        task = next(t for t in self.state["backlog"] if t["id"] == "RP-006")
+        task["evidence"].remove("ai-lab/release_readiness.py")
+        self.assertIn("task:RP-006", self.run_audit()["blocking_checks"])
+
+    def test_reject_lost_pr9_bridge_metadata(self):
+        task = next(t for t in self.state["backlog"] if t["id"] == "RP-003")
+        task.pop("consent_outage_retry", None)
+        self.assertIn("task:RP-003", self.run_audit()["blocking_checks"])
+
+    def test_reject_missing_task_progress_manifest(self):
+        self.manifest.pop("required_task_progress")
+        self.assertIn("task_inventory", self.run_audit()["blocking_checks"])
+
     def test_reject_gate_promoted_without_review(self):
         self.phases["stages"][0]["status"] = "verified"
         self.assertIn("phase_p0", self.run_audit()["blocking_checks"])
