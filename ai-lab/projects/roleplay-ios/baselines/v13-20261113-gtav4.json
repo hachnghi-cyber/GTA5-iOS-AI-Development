@@ -48,7 +48,14 @@
       "_compat_OnlineJoinProof",
       "_compat_OnlineSetWorkStatus"
     ],
-    "mismatch_note": "Info.plist DTSDKName iphoneos27.0 differs from GTA5 LC_BUILD_VERSION.sdk 27.2; do not infer runtime incompatibility without Xcode/device logs."
+    "mismatch_note": "Info.plist DTSDKName iphoneos27.0 differs from GTA5 LC_BUILD_VERSION.sdk 27.2; do not infer runtime incompatibility without Xcode/device logs.",
+    "code_directory_signatures": {
+      "inspected_macho_images": 14,
+      "ad_hoc_flags_count": 14,
+      "code_directory_flags": "0x2",
+      "empty_cms_slot_count": 14,
+      "interpretation": "CodeDirectory CS_ADHOC=1 with empty CMS. Structural metadata only; NOT a cryptographically trusted Apple developer signature or stock iOS deployability proof."
+    }
   },
   "verified": {
     "static_ipa_crc": true,
@@ -67,5 +74,14 @@
     "Do not treat exported symbols as verified callable typed APIs",
     "Do not use client-provided identity or packet sender as authenticated metadata",
     "No automatic IPA signing, injection or release"
-  ]
+  ],
+  "source_only_build_proof": {
+    "identity_gate": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43434799463",
+    "pinned_unmerged_core_plus_v13_gate": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43435187807",
+    "upstream_source_sha": "cb5bbfe63ebf084024a4e66e0ac7b404d15bd83d",
+    "host_asan_ubsan_pass": true,
+    "iphoneos_arm64_compiler_link_pass": true,
+    "device_tested": false,
+    "ipa_created": false
+  }
 }
