@@ -119,6 +119,7 @@ int main(void) {
     /* At the exact cuff radius boundary an opted-in free human is eligible. */
     officer.native_job=0;
     CHECK(prp_host_update_peer(&host,&officer));
+    CHECK(prp_host_remove_peer(&host,2)); /* no closer candidate in range */
     five.x=PRP_CUFF_RADIUS_M;
     CHECK(prp_host_update_peer(&host,&five));
     CHECK(prp_host_find_nearest_cuff_target(&host,1,5000,&nearest));
