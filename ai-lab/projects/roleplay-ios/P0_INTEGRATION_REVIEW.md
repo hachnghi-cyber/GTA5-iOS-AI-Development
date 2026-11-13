@@ -11,7 +11,7 @@ Source parent: `d83bcd049649856411595b8cbf7d5c7c4288311e` (2026-11-13).
 
 Combined 38 non-state file blobs using the PR order #7 → #4 → #9 → #8. The only shared changed path between PRs is `ai-lab/projects/roleplay-ios/state.json`. Main also changed `ai-lab/tests/test_continuity.py` since PR #4 split: this preview deliberately uses the PR #4 fix that makes the negative test independent of current evidence.
 
-`state.json` starts from the PR #4 P0 phase/state and retains the v12 IPA/executable SHA256 and UUID; it adds unique verified facts, provenance, PR #9 snapshot and offline opt-out metadata and source-only release documentation. RP-006 is **not-started** and P0 gate remains **in-progress**.
+`state.json` starts from the PR #4 P0 phase/state and retains the v12 IPA/executable SHA256 and UUID; it adds unique verified facts, provenance, PR #9 snapshot and offline opt-out metadata and source-only release documentation. RP-006 source-level release-readiness engineering is **in-progress** (from PR #8), while P9 actual signed IPA release is **not-started** and P0 gate remains **in-progress**. This distinction was corrected after checking all source PR backlogs; it does not imply readiness to release.
 
 ## Review gate
 
@@ -39,3 +39,22 @@ Rollback: delete this standalone preview branch/PR after review. Original branch
 - [ ] Chỉ sau khi phê duyệt và có kết quả kiểm tra `main`, cập nhật `PHASE_GATES.json` P0=verified kèm bằng chứng và reviewer.
 
 **Chưa hoàn thành P0:** PR #10 vẫn là bản nháp, người review chưa phê duyệt, P0 vẫn `in-progress`. Bước sau khi P0 được duyệt: P1 xác minh game-frame callback và danh tính Online bằng log iPhone v12 thật. Không tự merge, tự ký hoặc xuất bản IPA.
+
+## P0 bổ sung: bảo toàn tiến độ backlog khi hợp nhất PR
+
+Rà đối chiếu task-level `state.json` cho PR #7/#4/#9/#8 phát hiện
+`RP-006` ở PR #8 đã `in-progress` nhưng preview vẫn `not-started`.
+Đã khôi phục trạng thái **`in-progress` chỉ cho công việc tạo bộ kiểm tra
+phát hành**, bổ sung nguồn PR #7 identity gate vào RP-001 và mô tả
+bridge/consent của PR #9 vào RP-003. Cổng phát hành cuối P9 vẫn
+`not-started`; `auto_release_allowed=false`.
+
+Manifest `P0_SOURCE_PROVENANCE.json` hiện pin `required_task_progress`.
+`ai-lab/p0_integration_audit.py` bắt buộc mỗi task giữ đúng status,
+bằng chứng, mốc mô tả và các khóa metadata quan trọng của PR #9.
+Các unit test mới cố ý loại bỏ lần lượt status RP-006, nguồn
+`release_readiness.py`, metadata `consent_outage_retry` để xác minh CI
+thật sự từ chối mất tiến độ khi merge.
+
+Các kiểm tra P0 chỉ xác thực dữ liệu khai báo của repository, chưa tự
+xác minh IPA/gameplay; review hợp nhất và P1 vẫn phải theo gate riêng.
