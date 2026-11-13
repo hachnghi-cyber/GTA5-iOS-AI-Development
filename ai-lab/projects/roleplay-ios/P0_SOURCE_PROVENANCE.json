@@ -341,5 +341,56 @@
       "reason": "P0 preview-only read-only provenance CI step plus report artifact; original PR #4 workflow copied verbatim before this review-specific addition.",
       "commit": "a77ebb393dd1b9d066f60c7b76ebf025030acc17"
     }
+  ],
+  "required_task_progress": [
+    {
+      "id": "RP-001",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #7 metadata identity gate"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+      ]
+    },
+    {
+      "id": "RP-002",
+      "status": "in-progress",
+      "note_contains": [
+        "Source-only ABI drift checks"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+        "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md"
+      ]
+    },
+    {
+      "id": "RP-003",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #9 bridge snapshot identity guard"
+      ],
+      "required_evidence": [
+        "ai-lab/host_rp_tests.py",
+        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md"
+      ],
+      "required_metadata_keys": [
+        "bridge_snapshot_guard",
+        "consent_outage_retry"
+      ]
+    },
+    {
+      "id": "RP-006",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #8 source-only release readiness evaluator",
+        "P9 actual signed IPA release remains not-started"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+        "ai-lab/release_readiness.py",
+        "ai-lab/tests/test_release_readiness.py"
+      ]
+    }
   ]
 }
