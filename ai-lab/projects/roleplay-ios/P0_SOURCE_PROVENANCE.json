@@ -332,5 +332,14 @@
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
     }
   ],
-  "expected_unique_fact_count": 21
+  "expected_unique_fact_count": 21,
+  "review_overrides": [
+    {
+      "path": ".github/workflows/gta-ai-lab-ci.yml",
+      "original_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b",
+      "reviewed_integration_git_blob_sha1": "c6f0f3554e690ad13233041546d1a1791ea41dc2",
+      "reason": "P0 preview-only read-only provenance CI step plus report artifact; original PR #4 workflow copied verbatim before this review-specific addition.",
+      "commit": "a77ebb393dd1b9d066f60c7b76ebf025030acc17"
+    }
+  ]
 }
