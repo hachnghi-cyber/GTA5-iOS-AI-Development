@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "p0-repository-baseline-pr-review",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -232,7 +232,25 @@
       ]
     }
   ],
-  "next_action": "PR #4 host selector and iPhoneOS ARM64 export gate have passed CI. Manual review/merge remains required; find verified v12 game-thread callback and authenticated Online packet carrier, then implement in-game touch selection and two-device test before IPA release. Check other open development branches for conflicts before any merge.",
+  "next_action": "P0 ONLY: Review draft PR #7 baseline, #4 Police RP source/CI, #9 bridge snapshot lifecycle, #8 release gate in this order. Resolve cross-branch state.json conflicts and retest integration tip; do not merge without approval. Run python ai-lab/sequential_gate.py and read SEQUENTIAL_EXECUTION_PLAN.md before selecting another task. P1 engine-frame/trusted Online evidence remains blocked; no IPA release or on-device claims.",
   "last_completed_task": "RP-003 / RP-005 source-only subtask: host-side nearest consenting player selection, 49 C assertions and 7/7 host test suites with sanitizers (run 43361576701)",
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "sequential_execution": {
+    "plan": "ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md",
+    "gates": "ai-lab/projects/roleplay-ios/PHASE_GATES.json",
+    "validator": "ai-lab/sequential_gate.py",
+    "strict_order": true,
+    "current_phase": "P0",
+    "current_status": "in-progress",
+    "review_required": true,
+    "manual_merge_pending": [
+      "#7 RP-001",
+      "#4 RP-003",
+      "#9 RP-003 bridge",
+      "#8 RP-006 release-gate"
+    ],
+    "current_gate": "Reconcile v12 baseline, PR conflicts/state.json and verify integration CI; obtain human review before merging",
+    "following_gate": "P1 real GTA v12 game-frame hook + trusted Online identity proof; do not substitute host CI",
+    "auto_release_allowed": false
+  }
 }
