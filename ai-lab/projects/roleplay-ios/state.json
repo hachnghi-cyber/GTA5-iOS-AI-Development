@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13-dyld-source-provider-pr-review",
+  "phase": "v13-dladdr-anchor-source-proof",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/rp-v13-session-lifecycle-guard-20261113",
@@ -84,6 +84,11 @@
       "claim": "GitHub Actions identity run 43455287379 at source commit e09c2d7b did not allocate host or iPhoneOS runners (both runner_id=0, steps=[]), so neither GitHub CI nor Apple SDK build ran.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
       "scope": "Observed GitHub job metadata; not evidence of compilation failures or billing root cause."
+    },
+    {
+      "claim": "Source-only v13 dladdr anchored image-provider tests completed on Linux: 5 GCC non-Apple checks, 32 GCC fake-Apple, 32 Clang ASan/UBSan fake-Apple assertions; existing dyld tests also passed 46 and 14 assertions with 12,000 bounded header mutations.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_DLADDR_ANCHORED_LOOKUP.md; local RP_V13_DLADDR_HOST_VALIDATION_20261113.log; Git blob SHA-1 and SHA-256 records",
+      "scope": "Actual local GCC/Clang host tests, not Apple SDK/dyld runtime, real code-address provenance, native game-frame, Online carrier, or iPhone gameplay."
     }
   ],
   "unknowns": [
@@ -218,7 +223,7 @@
       ]
     }
   ],
-  "next_action": "Enable GitHub Actions runner allocation or inspect failed-job annotation for run 43455287379, then rerun source-only host/sanitizer and iPhoneOS ARM64 build. Use verified loaded-image dyld metadata only at controlled lifecycle points; record real iPhone loaded GTA5/libgtacompat UUID/path and Apple SDK results. Continue native GTA Online host/game-frame/authenticated transport discovery, do not invent packet send, hooks or offsets, and do not merge PR #14 before review/device evidence.",
+  "next_action": "Review/restore GitHub Actions runner allocation, then rerun PR #14 host/sanitizer and iPhoneOS ARM64 unsigned source library including _rp_v13_dladdr_collect_identity. Next obtain genuine v13 GTA5 and libgtacompat code anchor addresses via trusted loader/symbol provenance without copying v12 offsets. Pin image lifetime and verify dladdr paths and Mach-O UUID on actual iPhone; only after that study verified game frame, peer/session generation and authenticated multiplayer carrier. Keep PR Draft and do not merge/release IPA without evidence.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -312,6 +317,37 @@
       "source_commit": "e09c2d7b5d30a7d7adfeaa767f6a4ae2b38b7c55",
       "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
       "ci_status": "FAILED BEFORE RUNNER ALLOCATION: host and iphoneos runner_id=0, steps=[] (no CI code executed), cause not proven"
+    },
+    "dladdr_identity": {
+      "status": "host-tested-Apple-API-shim-only",
+      "upstream_source_commit": "e09c2d7b5d30a7d7adfeaa767f6a4ae2b38b7c55",
+      "api": "rp_v13_dladdr_collect_identity(const void *gta5_code_anchor, const void *compat_code_anchor, RP_V13_IdentityEvidence *out)",
+      "base_image_list_race": "_dyld_image_count index iteration not thread-safe per Apple dyld docs",
+      "regression_root_cause": "order-insensitive image selector initially allowed reversed anchor roles; caught in first GCC mock test and fixed with ordered path role checks",
+      "tests": {
+        "gcc_non_apple": 5,
+        "gcc_fake_apple": 32,
+        "clang_asan_ubsan_fake_apple": 32,
+        "existing_parser_gcc": 46,
+        "existing_dyld_shim_clang_asan_ubsan": 14,
+        "malformed_header_mutations": 12000,
+        "device": false,
+        "apple_sdk_build": false
+      },
+      "evidence_report": "ai-lab/projects/roleplay-ios/V13_DLADDR_ANCHORED_LOOKUP.md",
+      "sha256": {
+        "police-rp/v13/rp_v13_dladdr_identity.h": "cf82b163983401584a89672c9b0c411bc4d8788b51e3420f0941ed7429145318",
+        "police-rp/v13/rp_v13_dladdr_identity.c": "765dd078d023ce9e00994cdbd62af7771ce2e8151439e1ba83b1e29c7d407b4c",
+        "police-rp/v13/test_rp_v13_dladdr_portable.c": "e603689e94449eb270c365914befee60f8d226a3d226ac3afddbcd869cad013e",
+        "police-rp/v13/tests/fixtures/dlfcn.h": "4fa15754d2d2f95ed5c586f2dfff1094cad8f64634b9ef673a30785ece061dfa",
+        "police-rp/v13/tests/test_rp_v13_dladdr_identity.c": "f33199807c4358c94d6191ae758112fce86256a7f3c265b287d04bfe7fc60d20"
+      },
+      "limitations": [
+        "No trusted GTA main/compat code-anchor provider verified",
+        "Requires pinned loaded module lifetime",
+        "dladdr metadata/UUID are not Apple code-signature verification",
+        "iPhoneOS SDK compilation and 2-iPhone gameplay not tested"
+      ]
     }
   }
 }

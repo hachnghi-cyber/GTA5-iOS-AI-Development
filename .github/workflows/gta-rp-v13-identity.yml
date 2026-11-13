@@ -64,6 +64,19 @@ jobs:
             -o out/test_rp_v13_dyld
           out/test_rp_v13_dyld
           cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+            police-rp/v13/rp_v13_dladdr_identity.c \
+            police-rp/v13/test_rp_v13_dladdr_portable.c \
+            -o out/test_rp_v13_dladdr_portable
+          out/test_rp_v13_dladdr_portable
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+            -D__APPLE__ -Ipolice-rp/v13/tests/fixtures -Ipolice-rp/v13 \
+            police-rp/v13/rp_v13_identity_gate.c \
+            police-rp/v13/rp_v13_dyld_identity.c \
+            police-rp/v13/rp_v13_dladdr_identity.c \
+            police-rp/v13/tests/test_rp_v13_dladdr_identity.c \
+            -o out/test_rp_v13_dladdr_apple_fake
+          out/test_rp_v13_dladdr_apple_fake
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
             -D__APPLE__ -Ipolice-rp/v13/tests/fixtures -Ipolice-rp/v13 \
             police-rp/v13/rp_v13_identity_gate.c \
             police-rp/v13/rp_v13_dyld_identity.c \
@@ -109,6 +122,16 @@ jobs:
             police-rp/v13/tests/test_rp_v13_dyld_shim.c \
             -o out/test_rp_v13_dyld_shim_sanitized
           ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/test_rp_v13_dyld_shim_sanitized
+          clang -std=c11 -O1 -g -fno-omit-frame-pointer \
+            -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-sanitize-recover=all \
+            -D__APPLE__ -Ipolice-rp/v13/tests/fixtures -Ipolice-rp/v13 \
+            police-rp/v13/rp_v13_identity_gate.c \
+            police-rp/v13/rp_v13_dyld_identity.c \
+            police-rp/v13/rp_v13_dladdr_identity.c \
+            police-rp/v13/tests/test_rp_v13_dladdr_identity.c \
+            -o out/test_rp_v13_dladdr_apple_fake_sanitized
+          ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/test_rp_v13_dladdr_apple_fake_sanitized
   iphoneos:
     runs-on: macos-15
     timeout-minutes: 15
@@ -131,6 +154,7 @@ jobs:
             police-rp/v13/rp_v13_session_gate.c \
             police-rp/v13/rp_v13_frame_dispatcher.c \
             police-rp/v13/rp_v13_dyld_identity.c \
+            police-rp/v13/rp_v13_dladdr_identity.c \
             -Wl,-install_name,@rpath/libRPV13IdentityOnly.dylib \
             -o out/libRPV13IdentityOnly.dylib
           xcrun lipo -info out/libRPV13IdentityOnly.dylib > out/ARCH.txt
@@ -143,9 +167,10 @@ jobs:
           grep -Fq '_rp_v13_session_gate_update' out/EXPORTS.txt
           grep -Fq '_rp_v13_dispatcher_tick' out/EXPORTS.txt
           grep -Fq '_rp_v13_dyld_collect_identity' out/EXPORTS.txt
+          grep -Fq '_rp_v13_dladdr_collect_identity' out/EXPORTS.txt
           shasum -a 256 out/libRPV13IdentityOnly.dylib > out/SHA256.txt
           printf '%s\n' \
-            'Only Mach-O UUID/session gate, callback dispatcher and dyld image identity source compiled. UNSIGNED source-only library.' \
+            'Only Mach-O UUID/session gate, callback dispatcher and dyld/dladdr source compiled. UNSIGNED source-only library.' \
             'No GTA v13 IPA, RAGE hooks, authenticated network or gameplay.' \
             'Never install/publish as a playable Roleplay IPA.' > out/README.txt
       - name: Upload source-only build evidence
