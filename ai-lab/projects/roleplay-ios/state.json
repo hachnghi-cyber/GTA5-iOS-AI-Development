@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "On draft PR #9, the v1.4 source bridge rejects connected peers with duplicated or missing player identity; a Linux-host compiled C simulation passes via ai-lab 24-test CI run",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
+      "scope": "Branch-only synthetic source contract and host CI; no GTA5 RAGE callback, authenticated Online carrier, iOS build, or iPhone device validation"
     }
   ],
   "unknowns": [
@@ -123,15 +128,20 @@
       "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet.",
       "bridge_snapshot_guard": {
         "branch": "feature/rp003-bridge-snapshot-identity-20261113",
-        "source_commit": "edf05f1e00e6902d83be2237ded37c2768381b22",
+        "source_commit": "2e67615198c4a432ad1b615775af4a31f26cb698",
         "source_paths": [
           "police-rp/v1.4/Integration/prp_engine_binding.c",
           "police-rp/v1.4/Integration/test_engine_binding.c",
           "ai-lab/tests/test_engine_bridge_host.py"
         ],
-        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/commit/edf05f1e00e6902d83be2237ded37c2768381b22",
+        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/commit/2e67615198c4a432ad1b615775af4a31f26cb698",
         "scope": "Reject duplicate or zero player_id for connected trusted peers; locally synthetic host C bridge validation only",
-        "verification": "pending GitHub Actions; no game transport, GTA hook, IPA or iPhone test"
+        "verification": "GitHub Actions Linux host: 24/24 ai-lab Python tests passed, including C bridge test compilation and execution; NOT a game/iPhone test",
+        "host_ci_runs": [
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
+          "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854458"
+        ],
+        "pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/9"
       }
     },
     {
@@ -179,7 +189,15 @@
       ]
     }
   ],
-  "next_action": "Review host-C CI for RP-003 snapshot identity guard, then review the already-open RP-003 source-inventory PR #4; require authenticated GTA game-frame/transport evidence and device logs before real multiplayer integration. Do not merge draft PRs automatically.",
-  "last_completed_task": null,
+  "next_action": "Review draft PR #9 source identity guard (host CI 24/24), then review draft PR #4's RP-003 compatibility matrix/source inventory without duplicate changes. Confirm authenticated v12 game-thread callback and GTA-owned packet carrier using actual device logs before any gameplay/network integration; no automatic merge or IPA release.",
+  "last_completed_task": {
+    "id": "RP-003-SNAPSHOT-IDENTITY-HOST-GUARD",
+    "branch": "feature/rp003-bridge-snapshot-identity-20261113",
+    "source_commit": "2e67615198c4a432ad1b615775af4a31f26cb698",
+    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
+    "test_summary": "24/24 Python unit tests passed; embedded host C bridge simulation passed",
+    "device_tested": false,
+    "status": "draft-pr-review-pending"
+  },
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
