@@ -166,6 +166,7 @@ def audit(root, manifest, state, phases):
         add("integration_inventory", False, "Integration-only file list missing")
         extras = []
     extra_paths = set()
+    extra_statuses = {}
     for item in extras:
         if not isinstance(item, dict):
             add("invalid_integration_entry", False, "Invalid integration-only entry")
@@ -175,7 +176,7 @@ def audit(root, manifest, state, phases):
         status = item.get("status")
         if (not _relative_path(path) or
                 not isinstance(sha, str) or not HEX40.fullmatch(sha) or
-                status != "added" or
+                status not in ("added", "modified") or
                 not isinstance(item.get("reason"), str) or
                 not item["reason"].strip() or
                 path in extra_paths or path in seen or
@@ -185,6 +186,7 @@ def audit(root, manifest, state, phases):
                 f"Unpinned/duplicate/disallowed integration-only path {path!r}")
             continue
         extra_paths.add(path)
+        extra_statuses[path] = "A" if status == "added" else "M"
         target = root.joinpath(*path.split("/"))
         if target.is_symlink() or not target.is_file():
             add("missing_integration_file", False, f"Missing/symlink: {path}")
@@ -210,9 +212,10 @@ def audit(root, manifest, state, phases):
         actual_changes = git_diff_changed_paths(root, manifest.get("base_commit"))
         exact = set(actual_changes) == expected_paths
         statuses = all(
-            actual_changes.get(path) == ("A" if path in extra_paths or path == self_path else
-                                        "M" if path in state_paths else
-                                        actual_changes.get(path))
+            actual_changes.get(path) == (
+                extra_statuses[path] if path in extra_statuses else
+                "A" if path == self_path else
+                "M" if path in state_paths else actual_changes.get(path))
             for path in expected_paths
         )
         # No deleted files or unexpected status such as typechange/rename.
