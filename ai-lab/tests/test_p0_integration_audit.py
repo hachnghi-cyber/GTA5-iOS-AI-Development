@@ -51,6 +51,24 @@ class P0IntegrationAuditTests(unittest.TestCase):
         self.assertFalse(report["source_verified"])
         self.assertTrue(any(x.startswith("git_blob:") for x in report["blocking_checks"]))
 
+    def test_changed_workflow_without_matching_review_hash_is_blocked(self):
+        override = self.manifest["review_overrides"][0]
+        override["reviewed_integration_git_blob_sha1"] = "0"*40
+        report = self.run_audit()
+        self.assertFalse(report["source_verified"])
+        self.assertIn("git_blob:" + override["path"], report["blocking_checks"])
+
+    def test_review_override_for_unlisted_source_is_blocked(self):
+        self.manifest["review_overrides"].append({
+            "path": "ai-lab/not-in-source.py",
+            "original_git_blob_sha1": "a"*40,
+            "reviewed_integration_git_blob_sha1": "b"*40,
+            "reason": "synthetic invalid review",
+        })
+        report = self.run_audit()
+        self.assertFalse(report["source_verified"])
+        self.assertIn("override_coverage", report["blocking_checks"])
+
     def test_missing_source_is_blocked(self):
         self.manifest["source_files"][0]["path"] = "missing/definitely_not_a_file.c"
         report = self.run_audit()
