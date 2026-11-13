@@ -19,9 +19,13 @@ UUID = re.compile(r"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12
 def validate_identity(state, evidence):
     """Return a list of mismatches. An empty list means metadata agrees ONLY."""
     errors = []
-    baseline = state.get("baseline", {})
-    executable = evidence.get("executable", {})
-    bundle = evidence.get("bundle", {})
+    if not isinstance(state, dict) or not isinstance(evidence, dict):
+        return ["input: expected JSON objects"]
+    baseline = state.get("baseline")
+    executable = evidence.get("executable")
+    bundle = evidence.get("bundle")
+    if not all(isinstance(item, dict) for item in (baseline, executable, bundle)):
+        return ["structure: missing or invalid baseline/executable/bundle objects"]
     pairs = (
         ("ipa_sha256", baseline.get("ipa_sha256"), evidence.get("ipa_sha256")),
         ("executable_sha256", baseline.get("executable_sha256"), executable.get("sha256")),
@@ -41,6 +45,14 @@ def validate_identity(state, evidence):
         errors.append("architecture: expected arm64")
     if bundle.get("CFBundleExecutable") != "GTA5":
         errors.append("bundle executable: expected GTA5")
+    for key, value in (("ipa_sha256", baseline.get("ipa_sha256")),
+                       ("executable_sha256", baseline.get("executable_sha256"))):
+        if not isinstance(value, str) or not SHA256.fullmatch(value):
+            errors.append(f"state.{key}: invalid SHA-256")
+    if not isinstance(baseline.get("macho_uuid"), str) or not UUID.fullmatch(baseline["macho_uuid"]):
+        errors.append("state.macho_uuid: invalid Mach-O UUID")
+    if not isinstance(baseline.get("binary_count"), int) or isinstance(baseline.get("binary_count"), bool) or baseline["binary_count"] < 1:
+        errors.append("state.binary_count: invalid")
     if baseline.get("device_tested") is not False:
         errors.append("device_tested: static evidence cannot establish device testing")
     if not isinstance(evidence.get("observed_native_binary_count"), int) or isinstance(evidence.get("observed_native_binary_count"), bool) or evidence["observed_native_binary_count"] < 1:
