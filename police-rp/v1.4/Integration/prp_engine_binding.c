@@ -2,13 +2,27 @@
 #include <string.h>
 
 static int valid(const PRP_GameSnapshot *s) {
-    return s && s->abi==PRP_BRIDGE_ABI &&
+    if (!(s && s->abi==PRP_BRIDGE_ABI &&
       s->local.abi_version==PR_ADAPTER_ABI &&
       s->local.online && s->local.session_verified &&
       s->local.verified_session_id && s->local.local_player_id &&
       s->host_player_id && s->peer_count<=PRP_MAX_PEERS &&
       s->channel_authenticated &&
-      (s->local_is_host == (s->host_player_id == s->local.local_player_id));
+      (s->local_is_host == (s->host_player_id == s->local.local_player_id))))
+        return 0;
+    /* A trusted engine snapshot cannot describe two distinct connected
+     * peers using the same identity, or a connected peer with no identity.
+     * Reject the whole frame rather than letting the last entry win. */
+    for (unsigned i=0; i<s->peer_count; ++i) {
+        const PRP_Peer *peer=&s->trusted_peers[i];
+        if (!peer->connected) continue;
+        if (!peer->player_id) return 0;
+        for (unsigned j=0; j<i; ++j)
+            if (s->trusted_peers[j].connected &&
+                s->trusted_peers[j].player_id==peer->player_id)
+                return 0;
+    }
+    return 1;
 }
 static PRP_TransportContext context(const PRP_GameBridge *b,uint64_t sender) {
     PRP_TransportContext ctx={0};
