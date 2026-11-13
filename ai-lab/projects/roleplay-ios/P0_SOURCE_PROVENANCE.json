@@ -422,9 +422,9 @@
     },
     {
       "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
-      "expected_git_blob_sha1": "8fe26447948c0460be3a9e24966b749d6593bc3f",
+      "expected_git_blob_sha1": "294edbe51c3fdcdff70836ee130e25dbe7095aed",
       "status": "added",
-      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+      "reason": "P0 integration review handoff including verified complete 49-path base..HEAD Git diff audit and explicit human review boundaries."
     },
     {
       "path": "ai-lab/tests/test_p0_combined_target_bridge.py",
