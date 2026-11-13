@@ -6,10 +6,11 @@ typedef struct {
   PRP_GameSnapshot snapshot;
   uint8_t sent[PRP_WIRE_SIZE];uint64_t to;unsigned sends;
   int cuffed,ctrl;
+  int fail_send;
 } Mock;
 static int read_snapshot(void *ud,PRP_GameSnapshot *out){*out=((Mock*)ud)->snapshot;return 1;}
 static int send_authenticated(void *ud,uint64_t receiver,const uint8_t *p,size_t n){
-  Mock *m=ud;if(n!=PRP_WIRE_SIZE)return 0;
+  Mock *m=ud;if(n!=PRP_WIRE_SIZE || m->fail_send)return 0;
   memcpy(m->sent,p,n);m->to=receiver;m->sends++;return 1;
 }
 static void set_cuffed(void *ud,int value){((Mock*)ud)->cuffed=value;}
@@ -67,6 +68,22 @@ int main(void){
     assert(prp_bridge_enqueue(&g,776,1,1,hm.sent,PRP_WIRE_SIZE));
     assert(prp_bridge_frame(&g));
     assert(gm.cuffed);
+    /* Transport outage during an explicit opt-out must release this local
+     * player immediately. Retry revocation without resuming RP on each frame,
+     * then submit it only after the authenticated carrier recovers. */
+    gm.fail_send=1;
+    unsigned before_off=gm.sends;
+    prp_bridge_set_consent(&g,0);
+    assert(!gm.cuffed && !gm.ctrl);
+    assert(!g.runtime.local_opt_in && !g.want_opt_in && g.pending_opt_out);
+    assert(prp_bridge_frame(&g) && g.pending_opt_out);
+    assert(!g.runtime.local_opt_in && gm.sends==before_off);
+    gm.fail_send=0;
+    assert(prp_bridge_frame(&g) && !g.pending_opt_out);
+    assert(!g.runtime.local_opt_in && gm.sends==before_off+1u);
+    assert(prp_bridge_receive(&h,2,1,gm.sent,PRP_WIRE_SIZE)==PRP_ACCEPTED);
+    assert(!h.runtime.host.peers[1].opt_in);
+    assert(h.runtime.host.states[1].status==PR_FREE);
     /* Attestation is dropped => immediately release local controls. */
     gm.snapshot.channel_authenticated=0;
     assert(!prp_bridge_frame(&g) && !gm.cuffed && !gm.ctrl);
