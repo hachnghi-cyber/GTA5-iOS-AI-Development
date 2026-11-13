@@ -50,6 +50,10 @@ jobs:
         run: |
           command -v clang
           python ai-lab/host_rp_tests.py --compiler clang --sanitize-undefined --output ai-lab/reports/RP_HOST_C_UBSAN.json
+      - name: Clang AddressSanitizer and UBSan Police RP host regressions
+        run: |
+          command -v clang
+          python ai-lab/host_rp_tests.py --compiler clang --sanitize-address --sanitize-undefined --output ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
       - name: Route specialists
         env:
           TASK: ${{ inputs.task || 'SIGSEGV crash after Menyoo vehicle spawn' }}
@@ -66,4 +70,5 @@ jobs:
             ai-lab/reports/RP_SOURCE_INVENTORY.json
             ai-lab/reports/RP_HOST_C_TESTS.json
             ai-lab/reports/RP_HOST_C_UBSAN.json
+            ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
           retention-days: 7
