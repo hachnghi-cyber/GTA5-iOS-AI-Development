@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -128,6 +129,48 @@ class P0IntegrationAuditTests(unittest.TestCase):
     def test_reject_missing_task_progress_manifest(self):
         self.manifest.pop("required_task_progress")
         self.assertIn("task_inventory", self.run_audit()["blocking_checks"])
+
+    def test_manifest_covers_all_49_pr_change_paths(self):
+        self.assertEqual(self.manifest["expected_total_changed_paths"], 49)
+        self.assertEqual(len(self.manifest["integration_only_files"]), 9)
+        self.assertEqual(len(self.manifest["source_files"]), 38)
+        all_paths = {x["path"] for x in self.manifest["source_files"]}
+        all_paths.update(x["path"] for x in self.manifest["integration_only_files"])
+        all_paths.add(self.manifest["self_manifest_path"])
+        all_paths.update(self.manifest["excluded_reconciled_paths"])
+        self.assertEqual(len(all_paths), 49)
+
+    def test_reject_tampered_integration_owned_blob(self):
+        self.manifest["integration_only_files"][0]["expected_git_blob_sha1"] = "0"*40
+        report = self.run_audit()
+        self.assertIn("integration_blob:" +
+                      self.manifest["integration_only_files"][0]["path"],
+                      report["blocking_checks"])
+
+    def test_reject_dropped_integration_file_manifest_entry(self):
+        self.manifest["integration_only_files"].pop()
+        blockers = self.run_audit()["blocking_checks"]
+        self.assertIn("integration_inventory", blockers)
+        self.assertIn("git_diff_coverage", blockers)
+
+    def test_reject_unreviewed_new_pr_file_even_with_38_sources_intact(self):
+        original_diff = gate.git_diff_changed_paths(ROOT, self.manifest["base_commit"])
+        original_diff["ai-lab/unaudited-extra-file.py"] = "A"
+        with patch.object(gate, "git_diff_changed_paths", return_value=original_diff):
+            report = self.run_audit()
+        self.assertIn("git_diff_coverage", report["blocking_checks"])
+
+    def test_reject_deletion_in_diff(self):
+        changes = gate.git_diff_changed_paths(ROOT, self.manifest["base_commit"])
+        changes["ai-lab/p0_review_readiness.py"] = "D"
+        with patch.object(gate, "git_diff_changed_paths", return_value=changes):
+            self.assertIn("git_diff_coverage",
+                          self.run_audit()["blocking_checks"])
+
+    def test_reject_missing_base_commit_even_if_all_files_match(self):
+        with patch.object(gate, "git_diff_changed_paths", side_effect=ValueError("missing base")):
+            self.assertIn("git_diff_coverage",
+                          self.run_audit()["blocking_checks"])
 
     def test_reject_gate_promoted_without_review(self):
         self.phases["stages"][0]["status"] = "verified"
