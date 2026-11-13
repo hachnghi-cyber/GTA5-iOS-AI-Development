@@ -337,9 +337,9 @@
     {
       "path": ".github/workflows/gta-ai-lab-ci.yml",
       "original_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b",
-      "reviewed_integration_git_blob_sha1": "a541aa2056aa348550f6995505b4528c0f8e8b12",
-      "reason": "P0 preview CI source audit and GitHub PR review readiness; binds live approval head to GitHub event PR_HEAD_SHA, with report artifact; no merge/release permissions.",
-      "commit": "4d4c53ba2ee396e02e7dbe3f7f4192ce43f83716"
+      "reviewed_integration_git_blob_sha1": "c91d4ad1c58f0d1bd8f93fdb23cb4353544a3205",
+      "reason": "P0 CI review/source provenance plus full Git checkout for all 49 changed-path coverage (38 copied, 9 pinned integration-only, reviewed state, recursive manifest); no merge/release rights.",
+      "commit": "b287101a6b7c25c93cd8575dc9bf18bdab55e399"
     }
   ],
   "required_task_progress": [
@@ -404,7 +404,7 @@
     },
     {
       "path": "ai-lab/p0_integration_audit.py",
-      "expected_git_blob_sha1": "352125dbc6818fa6499699ceeac4015237cfb9af",
+      "expected_git_blob_sha1": "6f712658697a15c0f817834205ed212548190f49",
       "status": "added",
       "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
     },
@@ -434,7 +434,7 @@
     },
     {
       "path": "ai-lab/tests/test_p0_integration_audit.py",
-      "expected_git_blob_sha1": "f07038ab7a32e856847a67d99f402a678d3a9fe9",
+      "expected_git_blob_sha1": "942331eb36f98f2a4fb309ede82c6ced5a05c721",
       "status": "added",
       "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
     },
