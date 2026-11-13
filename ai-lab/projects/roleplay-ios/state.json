@@ -49,6 +49,11 @@
       "claim": "Police RP v1.4 actual C protocol/bridge sources compiled and all three host regression executables passed GitHub Actions, including 25,000 deterministic malformed packet inputs, 64 P2P assertions, 21 runtime assertions, and off-duty tests.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_p2p.c",
       "scope": "Host GCC tests only; newly rejects wrong authenticated local receiver and cross-target consent. No proven engine event dispatch, actual multiplayer transport, iOS build/signing, or iPhone test."
+    },
+    {
+      "claim": "RP-002 source-side contract tests and offline-safe opt-out regression pass with four real C host binaries and 19 Python tests; runtime suite increased to 30 assertions",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43345467699; police-rp/v1.4/P2P/test_abi_contract.c; police-rp/v1.4/P2P/test_runtime.c; ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+      "scope": "Host-only tests; changes on PR #4 branch, no iPhone SDK build, RAGE game callback, authenticated network carrier, signing or on-device test"
     }
   ],
   "unknowns": [
@@ -112,7 +117,7 @@
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
         "RP-001"
@@ -121,6 +126,12 @@
         "Versioned ABI contracts",
         "Evidence-backed symbol and hook mapping",
         "List of unsupported PC APIs"
+      ],
+      "note": "Source-only ABI drift checks now compile/run under GitHub CI; local opt-out clears even when network context or sending fails, with C regression tests. Genuine GTA5 v12 native game-frame and authenticated transport integration remain blocked on RP-001 evidence.",
+      "evidence": [
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43345467699",
+        "police-rp/v1.4/P2P/test_abi_contract.c",
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md"
       ]
     },
     {
@@ -188,7 +199,7 @@
       ]
     }
   ],
-  "next_action": "Review and merge PR #4 after CI, preserving the verified v12 baseline; continue RP-002 exact-version native ABI/engine callback mapping and authenticated GTA Online carrier proof before packaging any IPA. Review open PR #7/#8 without overwriting concurrent state.json changes.",
-  "last_completed_task": "RP-003 subtask: native C host regression execution, consent/recipient validation, and API contract matrix; device runtime still open",
+  "next_action": "Review PR #4 with host CI run 43345467699, preserve baseline; then obtain v12 device logs identifying trusted game-frame tick callback and authenticated Online sender/receiver transport. Only after verified hooks proceed to iPhone build/sign and two-device multiplayer RP test. Do not conflate host tests with an IPA release.",
+  "last_completed_task": "RP-002 source-level subtask: local opt-out fail-open fix, C ABI contract unit test, host CI 4/4; full engine integration remains unverified",
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
