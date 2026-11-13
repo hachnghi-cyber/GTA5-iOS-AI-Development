@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "RP-006 release readiness evaluator and continuous-watch report integration implemented; ten synthetic host tests passed locally",
+      "evidence": "ai-lab/release_readiness.py; ai-lab/tests/test_release_readiness.py; .github/workflows/gta-rp-continuous-watch.yml; feature/rp006-release-readiness-automation",
+      "scope": "metadata-only, no IPA built/signed/published, no real-device test; PR CI not yet confirmed"
     }
   ],
   "unknowns": [
@@ -154,7 +159,7 @@
     {
       "id": "RP-006",
       "priority": 6,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Build signed-on-device integration test plan and release gates",
       "blocked_on": [
         "IPA and source/build environment"
@@ -164,10 +169,16 @@
         "iOS device logs attached",
         "No new crash and regressions reported",
         "Signing/rollback reviewed"
+      ],
+      "note": "Source-only release readiness gate implemented with strict fail-closed CLI and CI report; signed IPA/device integration remains blocked.",
+      "evidence": [
+        "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+        "ai-lab/release_readiness.py",
+        "ai-lab/tests/test_release_readiness.py"
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Review CI and draft PR for RP-006 release-readiness workflow. Then verify authenticated game-frame/network hooks and produce a locally signed iPhone test candidate only with authorized IPA, compatible build artifact, signing identity and device validation; no automatic IPA publication.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
