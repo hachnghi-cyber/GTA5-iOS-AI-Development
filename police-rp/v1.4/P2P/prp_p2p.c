@@ -55,6 +55,9 @@ int prp_host_find_nearest_cuff_target(const PRP_Host *h,uint64_t officer_id,
     int officer_index=idx(h,officer_id);
     if(officer_index<0)return 0;
     const PRP_Peer *officer=&h->peers[officer_index];
+    /* Eligibility is rechecked on the host even if the native police job
+       remains active while the officer is personally restrained. */
+    if(h->states[officer_index].status!=PR_FREE)return 0;
     if(!officer->connected||!officer->opt_in||!officer->job_verified||
        !officer->on_shift||officer->native_job<0||officer->native_job>2||
        !location_fresh(officer,now))return 0;
@@ -183,6 +186,11 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
     if(!officer->job_verified||!officer->on_shift||
        officer->native_job<0||officer->native_job>2)
         return finish(result,PRP_ERR_POLICE);
+    /* A cuffed/escorted/jailed officer has no police-action authority.
+       Consent is processed above so explicit opt-out still releases this
+       player's own restrictions. Never trust only the native job flag. */
+    if(h->states[i].status!=PR_FREE)
+        return finish(result,PRP_ERR_STATE);
     int t=idx(h,m->target_id);
     if(t<0||t==i||!h->peers[t].connected)return finish(result,PRP_ERR_PEER);
     PRP_Peer *target=&h->peers[t];
