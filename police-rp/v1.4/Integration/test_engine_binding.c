@@ -111,6 +111,33 @@ int main(void){
     assert(prp_bridge_frame(&b) && b.runtime.host.peer_count==2);
     assert(!b.runtime.local_opt_in && !b.want_opt_in);
     prp_bridge_stop(&b);
+    /* RP-003: host and local must both exist among connected identities.
+     * Invalidating a live guest session drops consent and queued packets. */
+    Mock missing={0};missing.snapshot=snap(2,1,1001);
+    PRP_GameBridge isolated;PRP_EngineCallbacks mc=callbacks(&missing);
+    prp_bridge_init(&isolated,&mc);
+    missing.snapshot.trusted_peers[0].connected=0; /* missing host */
+    assert(!prp_bridge_frame(&isolated) && !isolated.active);
+    missing.snapshot=snap(2,1,1001);
+    missing.snapshot.trusted_peers[1].connected=0; /* missing local */
+    assert(!prp_bridge_frame(&isolated) && !isolated.active);
+    missing.snapshot=snap(2,1,1001);
+    missing.snapshot.peer_count=1; /* local omitted by truncated list */
+    assert(!prp_bridge_frame(&isolated) && !isolated.active);
+    missing.snapshot=snap(2,1,1001);
+    assert(prp_bridge_frame(&isolated) && isolated.active);
+    prp_bridge_set_consent(&isolated,1);
+    assert(prp_bridge_frame(&isolated) && isolated.runtime.local_opt_in);
+    assert(prp_bridge_enqueue(&isolated,1001,1,1,pending,sizeof(pending)));
+    assert(isolated.inbox.count==1);
+    missing.snapshot.trusted_peers[0].connected=0;
+    assert(!prp_bridge_frame(&isolated) && !isolated.active);
+    assert(isolated.inbox.count==0 && !isolated.want_opt_in &&
+           !isolated.runtime.local_opt_in);
+    missing.snapshot=snap(2,1,1001);
+    assert(prp_bridge_frame(&isolated) && isolated.active);
+    assert(!isolated.runtime.local_opt_in);
+    prp_bridge_stop(&isolated);
     printf("Police RP v0.7 engine binding simulation passed\n");
     return 0;
 }
