@@ -67,5 +67,20 @@ class HostPoliceRPTestRunnerTests(unittest.TestCase):
             self.assertEqual(report["total_count"], len(mod.CASES))
 
 
+    def test_combined_address_and_undefined_sanitizers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_source_tree(root)
+            success = SimpleNamespace(returncode=0, stdout="host OK", stderr="")
+            with patch.object(mod.subprocess, "run", return_value=success) as run:
+                report = mod.run_suite(root=root, compiler="clang",
+                                       sanitize_address=True, sanitize_undefined=True)
+            self.assertEqual(report["sanitizer"], "address,undefined")
+            first_command = run.call_args_list[0].args[0]
+            self.assertIn("-fsanitize=address,undefined", first_command)
+            self.assertIn("-fno-sanitize-recover=all", first_command)
+            self.assertFalse(report["iphone_tested"])
+
+
 if __name__ == "__main__":
     unittest.main()
