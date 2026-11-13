@@ -147,6 +147,59 @@ int main(void){
     assert(prp_bridge_frame(&isolated) && isolated.active);
     assert(!isolated.runtime.local_opt_in);
     prp_bridge_stop(&isolated);
+
+    /* RP-003: at 32/32 capacity, a departure and a new verified identity
+     * in the SAME frame must not drop the newcomer or inherit old consent.
+     * Unchanged players retain their own explicitly granted consent. */
+    Mock capacity={0};capacity.snapshot=snap(1,1,2027);
+    capacity.snapshot.peer_count=PRP_MAX_PEERS;
+    for(unsigned i=0;i<PRP_MAX_PEERS;i++) {
+        PRP_Peer *peer=&capacity.snapshot.trusted_peers[i];
+        *peer=(PRP_Peer){0};
+        peer->player_id=(uint64_t)i+1;
+        peer->connected=1;
+        peer->job_verified=1;
+        peer->native_job=(i==0)?0:-1;
+        peer->on_shift=(uint8_t)(i==0);
+        peer->position_verified=1;
+        peer->last_position_ms=1000;
+        peer->x=(float)i;
+    }
+    PRP_GameBridge churn;PRP_EngineCallbacks cc=callbacks(&capacity);
+    prp_bridge_init(&churn,&cc);
+    assert(prp_bridge_frame(&churn));
+    assert(churn.runtime.host.peer_count==PRP_MAX_PEERS);
+    prp_bridge_set_consent(&churn,1);
+    assert(prp_bridge_frame(&churn) && churn.runtime.local_opt_in);
+    PRP_Msg opt={0};
+    opt.op=PRP_OP_CONSENT;opt.session_id=2027;opt.target_id=2;
+    opt.sender_id=2;opt.seq=1;opt.issued_ms=1000;opt.consent=1;
+    uint8_t opt_wire[PRP_WIRE_SIZE];
+    assert(prp_encode(opt_wire,&opt));
+    assert(prp_bridge_receive(&churn,2,1,opt_wire,sizeof(opt_wire))==PRP_ACCEPTED);
+    opt.sender_id=3;opt.target_id=3;
+    assert(prp_encode(opt_wire,&opt));
+    assert(prp_bridge_receive(&churn,3,1,opt_wire,sizeof(opt_wire))==PRP_ACCEPTED);
+    assert(churn.runtime.host.peers[1].opt_in);
+    assert(churn.runtime.host.peers[2].opt_in);
+    assert(prp_bridge_arrest(&churn,PRP_OP_CUFF,2,0)==PRP_ACCEPTED);
+    assert(churn.runtime.host.states[1].status==PR_CUFFED);
+
+    /* Old ID 2 leaves, ID 33 enters in the same authoritative snapshot. */
+    capacity.snapshot.trusted_peers[1].player_id=33;
+    assert(prp_bridge_frame(&churn) && churn.active);
+    assert(churn.runtime.host.peer_count==PRP_MAX_PEERS);
+    assert(churn.runtime.host.peers[1].player_id==33);
+    assert(!churn.runtime.host.peers[1].opt_in);
+    assert(churn.runtime.host.last_client_seq[1]==0);
+    assert(churn.runtime.host.states[1].status==PR_FREE);
+    assert(churn.runtime.host.peers[2].player_id==3);
+    assert(churn.runtime.host.peers[2].opt_in);
+    opt.sender_id=33;opt.target_id=33;
+    assert(prp_encode(opt_wire,&opt));
+    assert(prp_bridge_receive(&churn,33,1,opt_wire,sizeof(opt_wire))==PRP_ACCEPTED);
+    assert(churn.runtime.host.peers[1].opt_in);
+    prp_bridge_stop(&churn);
     printf("Police RP v0.7 engine binding simulation passed\n");
     return 0;
 }
