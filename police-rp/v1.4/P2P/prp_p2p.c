@@ -53,7 +53,8 @@ static void set_free(PRP_Host *h,int t){
     }
 }
 void prp_host_init(PRP_Host *h,uint64_t session,uint64_t host){
-    if(!h)return;memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
+    if(!h)return;
+    memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
 }
 int prp_host_update_peer(PRP_Host *h,const PRP_Peer *trusted){
     if(!h||!trusted||!trusted->player_id)return 0;
@@ -199,7 +200,8 @@ int prp_host_state_for(PRP_Host *h,uint64_t target_id,
     return 1;
 }
 void prp_client_init(PRP_Client *c,uint64_t session,uint64_t local,uint64_t host){
-    if(!c)return;memset(c,0,sizeof(*c));
+    if(!c)return;
+    memset(c,0,sizeof(*c));
     c->session_id=session;c->local_id=local;c->expected_host_id=host;
     pr_adapter_init(&c->adapter);
 }
