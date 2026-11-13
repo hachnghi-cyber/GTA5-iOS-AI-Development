@@ -32,6 +32,9 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          # Provenance audit compares pinned base commit to CI HEAD; shallow
+          # checkouts cannot resolve base SHA and must not yield false GREEN.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
