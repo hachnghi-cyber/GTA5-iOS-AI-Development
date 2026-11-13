@@ -5,10 +5,12 @@ on:
       - feature/menyoo-v13-ios-keyboard-bridge
     paths:
       - 'menyoo-keyboard-v13/**'
+      - 'menyoo-keyboard-v12/**'
       - '.github/workflows/menyoo-keyboard-v13.yml'
   pull_request:
     paths:
       - 'menyoo-keyboard-v13/**'
+      - 'menyoo-keyboard-v12/**'
       - '.github/workflows/menyoo-keyboard-v13.yml'
   workflow_dispatch:
     inputs:
@@ -50,7 +52,9 @@ jobs:
           codesign --force --sign - --timestamp=none dist/MenyooKeyboardBridge.dylib
           codesign --verify --verbose=2 dist/MenyooKeyboardBridge.dylib
       - name: Python syntax test
-        run: python3 -m py_compile menyoo-keyboard-v13/tools/patch_ipa.py
+        run: |
+          python3 -m py_compile menyoo-keyboard-v13/tools/patch_ipa.py
+          python3 -m py_compile menyoo-keyboard-v12/tools/patch_ipa.py
       - name: Upload source-only bridge dylib
         uses: actions/upload-artifact@v4
         with:
