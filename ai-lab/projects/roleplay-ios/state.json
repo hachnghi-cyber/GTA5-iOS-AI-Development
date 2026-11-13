@@ -149,6 +149,11 @@
       "claim": "P0 integration provenance now checks the entire immutable-base Git diff for all 49 changed paths (38 inherited sources, nine pinned integration-only file blobs, semantically reconciled state.json and self-describing manifest), rejecting unlisted files, deletions, altered integration hashes and missing pinned Git history",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43401470546; ai-lab/p0_integration_audit.py; ai-lab/tests/test_p0_integration_audit.py; ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json; ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
       "scope": "110/110 Python tests and seven C programs x3 host configurations passed on commit 3ea9ce213a08a5bd9599a2e82fbac289d1d8746f. Git provenance is repository/source-only; no iPhone gameplay, trusted multiplayer identity or IPA proof."
+    },
+    {
+      "claim": "Both PR #10 GitHub Actions Python test workflows now fetch the pinned Git base and enforce full 49-path provenance; a shallow-checkout failure in Continuous Source Watch was reproduced from CI logs and resolved without relaxing the source audit",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164; .github/workflows/gta-rp-continuous-watch.yml; .github/workflows/gta-ai-lab-ci.yml; ai-lab/tests/test_p0_integration_audit.py",
+      "scope": "111/111 Python tests with Git base diff coverage, seven C host executables in each of normal/UBSan/ASan+UBSan on CI. Two signed-off workflow overrides in P0_SOURCE_PROVENANCE.json. No real iPhone runtime or authenticated Online test."
     }
   ],
   "unknowns": [
@@ -351,19 +356,17 @@
       "note": "PR #8 source-only release readiness evaluator and CI reporting have been integrated into the P0 preview. This records engineering work underway; P9 actual signed IPA release remains not-started and blocked by P1-P8 and device/manual approval."
     }
   ],
-  "next_action": "P0: verify newest PR #10 SHA with 49/49 Git source paths audited, 110 Python tests and iPhoneOS ARM64 bridge+core build. Request independent authorized human review on latest head, check 9 integrated-only files plus self-manifest/state.json and PR #7/#4/#9/#8 overlap. Do not merge, promote P0, install/gameplay-test claims or start P1 until reviewed, merged and post-merge CI. Later P1 needs real v12 device frame callback, authenticated sender and peer-incarnation metadata.",
+  "next_action": "P0: all 49 PR #10 changed paths tracked/validated; full-history AI Lab CI and Continuous Source Watch passed 111 Python tests at SHA 87a6c84..., host C and iPhoneOS source bridge builds green. Obtain independent authorized human review of PR #10 (focus workflow overrides, self-manifest, reconciled state.json, bridge/peer identity risk); no self-approval or auto-merge. Only after human approval and post-merge CI can P0 verified; P1 still requires authentic GTA v12 engine/session/connection-epoch device logs.",
   "last_completed_task": {
-    "id": "P0-FULL-49-PATH-GIT-DIFF-PROVENANCE",
+    "id": "P0-49-PATH-PROVENANCE-AND-DUAL-CI-CHECKOUT",
     "branch": "feature/rp-p0-integration-preview-20261113",
-    "source_commits": [
-      "4b8a456cd2a2c5e5042b0b43b01209bead4bb823",
-      "b287101a6b7c25c93cd8575dc9bf18bdab55e399",
-      "b0864a5f287ce8123873989664c28ddc44598d9a",
-      "2b0a9537e9c635e4a716b8df31071cc88a8784ee"
+    "source_commit": "87a6c84c4e583241ac8b0f57194ee2db7d8a9dd7",
+    "evidence": [
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164"
     ],
-    "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43401470546",
-    "test_summary": "110/110 Python tests; 7/7 C programs in each normal, UBSan and ASan+UBSan mode; new all-path Git diff coverage 49/49; existing iPhoneOS core+bridge source dylibs have successful CI",
-    "status": "source-audit-passes-independent-pr-review-pending",
+    "test_summary": "111/111 Python tests; P0 source-consistent exact 49-path Git diff (38 copied, nine new), 7/7 C programs per normal/UBSan/ASan+UBSan, Source Watch and AI Lab CI green at same SHA. Core and integrated iPhoneOS ARM64 build proof previously green.",
+    "status": "source-verified-p0-independent-review-not-yet-approved",
     "device_tested": false
   },
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
@@ -412,7 +415,11 @@
       "self_manifest_paths": 1,
       "report": "ai-lab/reports/RP_P0_AUDIT.json",
       "validated_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43401470546",
-      "human_review_complete": false
+      "human_review_complete": false,
+      "dual_ci_full_history": true,
+      "latest_validated_sha": "87a6c84c4e583241ac8b0f57194ee2db7d8a9dd7",
+      "ai_lab_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817",
+      "watch_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164"
     }
   },
   "p0_integration_preview": {
