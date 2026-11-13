@@ -131,7 +131,11 @@ def main():
         patched, detail = patch_menyoo(src.read(MENYOO))
         for info in src.infolist():
             dest.writestr(info, patched if info.filename == MENYOO else src.read(info.filename))
-        dest.writestr(BRIDGE, dylib, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+        bridge_info = zipfile.ZipInfo(BRIDGE)
+        bridge_info.create_system = 3
+        bridge_info.external_attr = (0o100755 << 16)
+        bridge_info.compress_type = zipfile.ZIP_DEFLATED
+        dest.writestr(bridge_info, dylib, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
     with zipfile.ZipFile(args.out) as z:
         if z.testzip() is not None or z.read(MENYOO) != patched:
             raise AssertionError("output IPA validation failed")
