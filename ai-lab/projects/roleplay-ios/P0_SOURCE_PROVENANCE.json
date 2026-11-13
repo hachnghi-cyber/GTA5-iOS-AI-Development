@@ -340,6 +340,13 @@
       "reviewed_integration_git_blob_sha1": "c91d4ad1c58f0d1bd8f93fdb23cb4353544a3205",
       "reason": "P0 CI review/source provenance plus full Git checkout for all 49 changed-path coverage (38 copied, 9 pinned integration-only, reviewed state, recursive manifest); no merge/release rights.",
       "commit": "b287101a6b7c25c93cd8575dc9bf18bdab55e399"
+    },
+    {
+      "path": ".github/workflows/gta-rp-continuous-watch.yml",
+      "original_git_blob_sha1": "a9b0d95294072c2321e2d8ed74050c1ac7fd2399",
+      "reviewed_integration_git_blob_sha1": "25490c1ed8b18a5a541b7eed2c4bbf7b0eb00216",
+      "reason": "P0 provenance tests run in Continuous Source Watch as well as main AI Lab CI, so the scheduled/test workflow must fetch full Git history for the pinned base SHA. No new write/merge privileges.",
+      "commit": "53709837aab4852df0a2dc53bb93b7ec96ce9a1b"
     }
   ],
   "required_task_progress": [
