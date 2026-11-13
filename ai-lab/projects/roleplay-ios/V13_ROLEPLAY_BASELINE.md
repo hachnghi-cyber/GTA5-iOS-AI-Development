@@ -87,3 +87,53 @@ review, hardware evidence and dependent PR status are resolved.
 Evidence archive and machine-readable static inventory were generated
 locally, but only nonproprietary independently authored source and
 metadata are committed here.
+
+## Additional verified source-only findings (13 November 2026)
+
+### Ad-hoc signing, not an installable RP release
+
+The CodeDirectory superblob for all **14 of 14** Mach-O images has
+`flags=0x2` (`CS_ADHOC`) and an **empty CMS signature blob** (size 8).
+The main `GTA5` binary and `MenyooKeyboardBridge.dylib` follow this
+same pattern. These bytes were inspected directly from the IPA's
+`LC_CODE_SIGNATURE` offsets; they have **not** been cryptographically
+validated. The package does not contain a verified normal
+stock-iOS deployment signature. A future modified IPA needs a permitted
+signing/provisioning route and on-device validation, not merely
+appending a dylib to ZIP.
+
+### Experiment: link v13 gate with pinned unmerged Police RP sources
+
+Workflow: `.github/workflows/gta-rp-v13-source-bridge.yml`.
+It checks out this branch plus immutable **source-only PR #10** commit
+`cb5bbfe63ebf084024a4e66e0ac7b404d15bd83d` into separate
+directories; it **does not merge the PR** or ship a game binary.
+The host CI compiles v13 identity gate together with the actual C
+P2P/NativeBridge/Integration files and runs the combined three-player
+synthetic consent/target/cuff/opt-out regression with Clang
+ASan+UBSan. The Apple SDK job links the same C source into
+`libPoliceRPV13SourceBridge.dylib` (thin iPhoneOS ARM64), verifying
+exports `_rp_v13_identity_check`, `_prp_bridge_frame` and
+`_prp_host_find_nearest_cuff_target`.
+
+**Verified successful run:**
+<https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43435187807>.
+The output includes Mach-O metadata, export list and SHA-256 through
+a short-retention GitHub Actions artifact. This proves **link-level
+source compatibility only**; game snapshots and transport are faked
+in the host test. The library is UNSIGNED, and no v13 RAGE game-frame
+function, authoritative work ID, real authenticated network carrier,
+player-connection epoch or live Police RP interaction was verified.
+
+### Reproducible standalone offline analysis
+
+A separately generated user-facing source-only ZIP contains
+`inspect_ipa_v13.py`, JSON inventory (53 files, 14 Mach-O),
+the symbol candidate list, 6 Python inventory tests, the C
+gate and a Vietnamese handoff. **No proprietary executable,
+IPA, assets, private keys or provisioning file is included.**
+
+P0 for the v13 target is NOT completed by these checks. PR #12 remains
+a review-only research proposal; PR #10 for the earlier v12 build
+remains unmerged. Revalidate engine/transport bindings against **v13**,
+never assume callback offsets or RPC/peer identity are equivalent.
