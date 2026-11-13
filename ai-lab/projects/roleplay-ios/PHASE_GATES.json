@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "kind": "source-only-sequential-work-plan",
+  "strict_order": true,
+  "project": "gta-v-ios-roleplay",
+  "target_baseline": "v12 fingerprint documented in state.json",
+  "plan_document": "ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md",
+  "approval_policy": "source-only CI never authorizes an IPA or stage exit; human review and exact device evidence required",
+  "stages": [
+    {
+      "id": "P0",
+      "order": 0,
+      "depends_on": [],
+      "name": "Chuẩn hóa repo / baseline / PR",
+      "status": "in-progress",
+      "related_tasks": [
+        "RP-001",
+        "RP-003"
+      ],
+      "exit_criterion": "Merge/review #7 then #4 then #9 then #8 with all integration CI green; preserve v12 fingerprint",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P1",
+      "order": 1,
+      "depends_on": [
+        "P0"
+      ],
+      "name": "Hook game-frame, ABI và trusted Online identity",
+      "status": "blocked",
+      "related_tasks": [
+        "RP-002"
+      ],
+      "exit_criterion": "Actual device logs confirm exact-v12 frame callback, authenticated local/host/session/peer identities, fail-open",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P2",
+      "order": 2,
+      "depends_on": [
+        "P1"
+      ],
+      "name": "Authenticated transport / 32-player session",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-004"
+      ],
+      "exit_criterion": "Two real endpoints exchange opt-in/heartbeat, reject spoof/replay/stale host, session lifecycle tested",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P3",
+      "order": 3,
+      "depends_on": [
+        "P2"
+      ],
+      "name": "Police vertical slice on two iPhones",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-005"
+      ],
+      "exit_criterion": "Two devices confirm police duty, target human player, cuff/uncuff and reset with real game log",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P4",
+      "order": 4,
+      "depends_on": [
+        "P3"
+      ],
+      "name": "Police escort, jail and release",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-005"
+      ],
+      "exit_criterion": "Two-device state machine including zone, timer, migration, replay and local controls verified",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P5",
+      "order": 5,
+      "depends_on": [
+        "P4"
+      ],
+      "name": "RP touch UI, HUD, Vietnamese",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-005"
+      ],
+      "exit_criterion": "iPhone/iPad UI and input test with no regressions to Pause, Menyoo or Story Mode",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P6",
+      "order": 6,
+      "depends_on": [
+        "P5"
+      ],
+      "name": "EMS and taxi careers",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-005"
+      ],
+      "exit_criterion": "Player-to-player revive/fare workflows, host authority, replay tests and two-device evidence",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P7",
+      "order": 7,
+      "depends_on": [
+        "P6"
+      ],
+      "name": "Economy, inventory and persistence",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-005"
+      ],
+      "exit_criterion": "Idempotent ledger, durable storage, migration/rollback and offline/replay tests",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P8",
+      "order": 8,
+      "depends_on": [
+        "P7"
+      ],
+      "name": "Security, memory, performance, regressions",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-006"
+      ],
+      "exit_criterion": "Device test matrix, stress 2..32, crash/memory/FPS logs, no unresolved release blockers",
+      "gate_evidence": [],
+      "reviewed_by": null
+    },
+    {
+      "id": "P9",
+      "order": 9,
+      "depends_on": [
+        "P8"
+      ],
+      "name": "Signed IPA candidate and manual release",
+      "status": "not-started",
+      "related_tasks": [
+        "RP-006"
+      ],
+      "exit_criterion": "Authorized baseline, exact build/sign evidence, device smoke tests, rollback, human approval",
+      "gate_evidence": [],
+      "reviewed_by": null
+    }
+  ]
+}

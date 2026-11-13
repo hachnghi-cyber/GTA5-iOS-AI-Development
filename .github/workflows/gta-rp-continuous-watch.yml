@@ -25,6 +25,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          # P0 provenance regression tests require pinned main base commit.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -38,6 +40,7 @@ jobs:
           python ai-lab/continuity.py validate
           python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
           python ai-lab/continuous_watch.py --output ai-lab/reports/RP_CONTINUOUS_STATUS.json
+          python ai-lab/release_readiness.py --output ai-lab/reports/RP_RELEASE_READINESS.json
       - name: Upload watchdog report
         uses: actions/upload-artifact@v4
         with:
@@ -45,5 +48,6 @@ jobs:
           path: |
             ai-lab/reports/RP_HANDOFF.md
             ai-lab/reports/RP_CONTINUOUS_STATUS.json
+            ai-lab/reports/RP_RELEASE_READINESS.json
           if-no-files-found: error
           retention-days: 3

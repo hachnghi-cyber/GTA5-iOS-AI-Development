@@ -1,0 +1,475 @@
+{
+  "schema_version": 1,
+  "kind": "P0-source-provenance-review-only",
+  "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
+  "base_commit": "d83bcd049649856411595b8cbf7d5c7c4288311e",
+  "preview_branch": "feature/rp-p0-integration-preview-20261113",
+  "source_heads": [
+    {
+      "number": 7,
+      "commit": "5ca26698fad9425cf5c059674f3c984a5bd3b00f"
+    },
+    {
+      "number": 4,
+      "commit": "784c9e257e84707e3896982c280002697f5344ea"
+    },
+    {
+      "number": 9,
+      "commit": "e32415c3184cdaca1338613a425014dd57552c27"
+    },
+    {
+      "number": 8,
+      "commit": "61d42522b7efa9df196a08f31ed8acc9697c150f"
+    }
+  ],
+  "expected_copied_file_count": 38,
+  "excluded_reconciled_paths": [
+    "ai-lab/projects/roleplay-ios/state.json"
+  ],
+  "source_files": [
+    {
+      "path": ".github/workflows/gta-ai-lab-ci.yml",
+      "pr": 4,
+      "expected_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b"
+    },
+    {
+      "path": ".github/workflows/gta-rp-continuous-watch.yml",
+      "pr": 8,
+      "expected_git_blob_sha1": "a9b0d95294072c2321e2d8ed74050c1ac7fd2399"
+    },
+    {
+      "path": ".github/workflows/gta-rp-ios-arm64-core.yml",
+      "pr": 4,
+      "expected_git_blob_sha1": "a169c02d12550d5389d7c355358bd8b44c2f2336"
+    },
+    {
+      "path": "ai-lab/host_rp_tests.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "b5d9068d09e5a984da68595107a65beb811e5a39"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "2de899ef3d00ad2b207823b3f67e33d917531e69"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/CONSENT_OUTAGE_RETRY.md",
+      "pr": 9,
+      "expected_git_blob_sha1": "db8e9945f28c764791c3699dd4e6103d6115f7fa"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/CONTINUE_HERE.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "b880dfaa806df8be2d2a9481be5c258420c60a71"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "f1a9596a43b765a31989c4cff2ee12c8cdf49a37"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md",
+      "pr": 9,
+      "expected_git_blob_sha1": "18cdccd1115ce949ad71ed1044da1c59ddcee08e"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PHASE_GATES.json",
+      "pr": 4,
+      "expected_git_blob_sha1": "53994162a72cdca46aa0dbc1e148a5920b730e54"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "50c223e8fd5cf8017af2758fd1195ca573b4ca94"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+      "pr": 8,
+      "expected_git_blob_sha1": "f14b549ac499b58fca7a97725d75062ebee5b18b"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/ROADMAP.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "6e66f184d8cddd03141092ce3607982c4f229b8c"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "789f00377dfae8c2edd9f08246845831649bd597"
+    },
+    {
+      "path": "ai-lab/release_readiness.py",
+      "pr": 8,
+      "expected_git_blob_sha1": "f3e0b87c11aa4d36fac533da4672491281e3b9f2"
+    },
+    {
+      "path": "ai-lab/rp_identity_gate.py",
+      "pr": 7,
+      "expected_git_blob_sha1": "3f357446129fd2c5c25e5f799b2b5e50deec310c"
+    },
+    {
+      "path": "ai-lab/sequential_gate.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "206d9ecc72706a9ca3942d0cf1055fa978256c32"
+    },
+    {
+      "path": "ai-lab/source_inventory.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "dafc9db3e3e7474e9ecdd91d5662c6c4f4d08f76"
+    },
+    {
+      "path": "ai-lab/tests/test_continuity.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "de5837222e8d0599d77a18370fd51c167d0e1f0e"
+    },
+    {
+      "path": "ai-lab/tests/test_engine_bridge_host.py",
+      "pr": 9,
+      "expected_git_blob_sha1": "37bbd76f897e0927d82a8b1c882c87645b0e93c6"
+    },
+    {
+      "path": "ai-lab/tests/test_host_rp_tests.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "026e85c6f94325a2e67c4a89779ba93f52f41ffd"
+    },
+    {
+      "path": "ai-lab/tests/test_release_readiness.py",
+      "pr": 8,
+      "expected_git_blob_sha1": "e6854e60dd7c706ef126ca17bed1f3628430b674"
+    },
+    {
+      "path": "ai-lab/tests/test_rp_identity_gate.py",
+      "pr": 7,
+      "expected_git_blob_sha1": "3e9de004d7dd00b061ad47ff98988e7663409c94"
+    },
+    {
+      "path": "ai-lab/tests/test_sequential_gate.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "2d209cc15491ea80a75947024069b160e26ef605"
+    },
+    {
+      "path": "ai-lab/tests/test_source_inventory.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "2333a617246a529738ff1f17b9667585d55c32f5"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/prp_engine_binding.c",
+      "pr": 9,
+      "expected_git_blob_sha1": "033ed30ab1a8f638c78ad5733529a1178fb13e15"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/prp_engine_binding.h",
+      "pr": 9,
+      "expected_git_blob_sha1": "3a2fd8ec6c042bd8e3e201941515ad547040776b"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/test_engine_binding.c",
+      "pr": 9,
+      "expected_git_blob_sha1": "5a1dd4455a2eaa58c8dc538f9ac09cb211929461"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "3631a3ee355a2006dc7c4269cca5e8e7cc4a8fc3"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.h",
+      "pr": 4,
+      "expected_git_blob_sha1": "863c36624c24b1f157898242d24183628cdf0572"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_runtime.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "85551fd46c53f034a5a507413eddffb82563120c"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_runtime.h",
+      "pr": 4,
+      "expected_git_blob_sha1": "23174732d4ad2f42b3fbb3d80b2e44e49854746a"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_abi_contract.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "1c3093f16ceca214a807ab21b01fc99b77dab613"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_p2p.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "906590289fed8ac640b999babc4ed7a3660d6586"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_peer_lifecycle.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "f45b310c8e8330810aa115924cbbe02347c2d72f"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_runtime.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "8632f3b823c9c6d3be92c2628cd6c81e687d8e63"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_target_selection.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "be2ad4a936b92ee95767122d7013c9e979290ae0"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_wire_codec.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "6e831efcd4a37f8cb0fce3bb57fb7b3a5ee02a7b"
+    }
+  ],
+  "baseline_metadata": {
+    "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+    "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+    "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171"
+  },
+  "automerge_allowed": false,
+  "auto_release_allowed": false,
+  "required_verified_facts": [
+    {
+      "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43271858821",
+      "scope": "8 unit tests for lab tools; no game/device test"
+    },
+    {
+      "claim": "An independent Police RP C core dylib was compiled using Apple's iPhoneOS SDK into a thin arm64 Mach-O linked for iOS 16.3; artifact hash checked against downloaded Actions ZIP",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43347091287; ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md; dylib SHA256 0c47c248a31996b60d61fcf14be04bdd0711cd4b263c0c5ab2fa4650efd2acf2",
+      "scope": "source-only unsigned 50,840-byte dylib; not integrated with GTA5 or authentic multiplayer, not an IPA or iPhone device test"
+    },
+    {
+      "claim": "GitHub Actions for RP source inventory completed successfully: 16 unit tests passed; source inventory found 112 files, including 25 source files and 16 documentation files.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43274885127",
+      "scope": "CI file inventory and host tests only; no IPA or on-device game validation"
+    },
+    {
+      "claim": "Host-side nearest consenting human player selection added to RP native source, with 49 new C assertions and 7/7 C regressions passing across GCC, Clang UBSan, and Clang ASan+UBSan",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361576701; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_target_selection.c; ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+      "scope": "Source-only target suggestion based on engine-attested peer snapshots; host must revalidate. Does not implement touch UI, RAGE transport or actual on-device arrest."
+    },
+    {
+      "claim": "Latest iPhoneOS ARM64 source-only core build passed exported-symbol validation for _prp_host_find_nearest_cuff_target",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244; .github/workflows/gta-rp-ios-arm64-core.yml; artifact GTA-RP-iPhoneOS-ARM64-CORE-UNSIGNED-NOT-GAMEPLAY (ID 14008123793)",
+      "scope": "macOS iPhoneOS build and exported symbol check only; library unsigned, not injected into GTA V IPA, no game device test"
+    },
+    {
+      "claim": "On draft PR #9, the v1.4 source bridge rejects connected peers with duplicated or missing player identity; a Linux-host compiled C simulation passes via ai-lab 24-test CI run",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361854537",
+      "scope": "Branch-only synthetic source contract and host CI; no GTA5 RAGE callback, authenticated Online carrier, iOS build, or iPhone device validation"
+    },
+    {
+      "claim": "Police RP host regression suite expanded to 6 real C executables with GCC, Clang UBSan and Clang ASan+UBSan all passing; 32-player lifecycle, sequence wrap, 10,000 valid wire roundtrips and 25,000 malformed packets covered",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43346516682; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/test_peer_lifecycle.c; police-rp/v1.4/P2P/test_wire_codec.c",
+      "scope": "Host CI only, 21 Python unit tests; sanitizers found no issues in exercised paths; no iOS or game-engine device validation"
+    },
+    {
+      "claim": "Police RP v1.4 actual C protocol/bridge sources compiled and all three host regression executables passed GitHub Actions, including 25,000 deterministic malformed packet inputs, 64 P2P assertions, 21 runtime assertions, and off-duty tests.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344701780; ai-lab/host_rp_tests.py; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_p2p.c",
+      "scope": "Host GCC tests only; newly rejects wrong authenticated local receiver and cross-target consent. No proven engine event dispatch, actual multiplayer transport, iOS build/signing, or iPhone test."
+    },
+    {
+      "claim": "Police RP v1.4 README explicitly states SOURCE + PROBE, not a playable IPA; v1.5 README states only duty state probing (no gameplay network hook).",
+      "evidence": "police-rp/v1.4/README_VI.md and police-rp/v1.5/README_VI.md",
+      "scope": "Repository documentation; not verified device behavior"
+    },
+    {
+      "claim": "PR #9 bridge rejects verified Online snapshots missing connected local-player or host identity and fail-opens an already cuffed local player; 25 host tests including C simulator and Clang ASan/UBSan passed",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43363438090; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c",
+      "scope": "Source-only Linux C simulation; genuine GTA RAGE runtime and iPhone hardware/Online transport NOT tested"
+    },
+    {
+      "claim": "PR #9 repaired 32/32 RP host peer churn: a departing ID is pruned before a replacement arrives in the same verified snapshot, preserving surviving peers' consent without inheriting retired peer restraints/sequence",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43366201979; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c; ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md",
+      "scope": "25/25 host Python tests passed including C bridge simulator and Clang ASan+UBSan. No iPhone/RAGE game-frame or authenticated carrier integration; no IPA build, signing or device test"
+    },
+    {
+      "claim": "RP bridge now fail-opens local opt-out when authenticated transport send fails and retries consent revocation on valid frames before re-enabling RP; 25 Python host tests including C/ASan+UBSan simulation passed",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43367353028; police-rp/v1.4/Integration/prp_engine_binding.c; police-rp/v1.4/Integration/test_engine_binding.c; ai-lab/projects/roleplay-ios/CONSENT_OUTAGE_RETRY.md",
+      "scope": "Source-only synthetic host test. Send callback success is NOT a host ACK; real GTA v12 engine thread, network carrier, two iPhones, IPA signing and gameplay remain unverified"
+    },
+    {
+      "claim": "RP-001 has a source-only, fail-closed identity metadata gate with six host unit test cases; not evidence of runtime compatibility",
+      "evidence": "PR #7; commits 2c4f49a5adf1bba84c583806b08aebfa65399d25 and c48fe90b7a31d035c8bd4c95a06a3195c754beb8; ai-lab/rp_identity_gate.py; ai-lab/tests/test_rp_identity_gate.py",
+      "scope": "9 unit test cases in source, latest CI pending; earlier 6-test revision passed CI. No live IPA rehash or iPhone testing."
+    },
+    {
+      "claim": "RP-002 source-side contract tests and offline-safe opt-out regression pass with four real C host binaries and 19 Python tests; runtime suite increased to 30 assertions",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43345467699; police-rp/v1.4/P2P/test_abi_contract.c; police-rp/v1.4/P2P/test_runtime.c; ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+      "scope": "Host-only tests; changes on PR #4 branch, no iPhone SDK build, RAGE game callback, authenticated network carrier, signing or on-device test"
+    },
+    {
+      "claim": "RP-006 release readiness evaluator and continuous-watch report passed GitHub CI with 33 host tests (10 release-gate tests)",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43342812563; ai-lab/release_readiness.py; ai-lab/tests/test_release_readiness.py",
+      "scope": "CI returned status blocked, auto_publish_allowed=false and signed_ipa_created=false; artifact rp-continuous-watch produced; no IPA build, signing or device test"
+    },
+    {
+      "claim": "Sequential P0-P9 Roleplay execution plan and read-only gate validator added to PR #4; 31 Python unit tests and P0 status check passed GitHub CI",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43369326903; ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md; ai-lab/projects/roleplay-ios/PHASE_GATES.json; ai-lab/sequential_gate.py",
+      "scope": "Plan/CI validation only. Status P0 in-progress, verified_prefix_count=0, auto_release_allowed=false. No GTA game-frame or iPhone gameplay evidence."
+    },
+    {
+      "claim": "The AI Lab Pull Request #1 is a draft and is not merged into main",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/1",
+      "scope": "observed at project bootstrap"
+    },
+    {
+      "claim": "The repo contains police-rp/v1.4 and police-rp/v1.5 paths and PoliceRP source archives",
+      "evidence": "repository contents inspected",
+      "scope": "content inventory; runtime compatibility unverified"
+    },
+    {
+      "claim": "The repository's root PROJECT_MEMORY.md still describes version v10 and has no recorded progress",
+      "evidence": "PROJECT_MEMORY.md on main",
+      "scope": "repo documentation, not proof of runtime version"
+    },
+    {
+      "claim": "The RP-003 draft PR #9 host CI on 03059e8 passed 25/25 Python tests, including the C bridge's active-session invalid-snapshot reset and Clang AddressSanitizer/UndefinedBehaviorSanitizer checks",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43362461881",
+      "scope": "Linux-only synthetic bridge paths; neither iOS native integration nor iPhone gameplay verified"
+    },
+    {
+      "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
+      "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    }
+  ],
+  "expected_unique_fact_count": 21,
+  "review_overrides": [
+    {
+      "path": ".github/workflows/gta-ai-lab-ci.yml",
+      "original_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b",
+      "reviewed_integration_git_blob_sha1": "c91d4ad1c58f0d1bd8f93fdb23cb4353544a3205",
+      "reason": "P0 CI review/source provenance plus full Git checkout for all 49 changed-path coverage (38 copied, 9 pinned integration-only, reviewed state, recursive manifest); no merge/release rights.",
+      "commit": "b287101a6b7c25c93cd8575dc9bf18bdab55e399"
+    },
+    {
+      "path": ".github/workflows/gta-rp-continuous-watch.yml",
+      "original_git_blob_sha1": "a9b0d95294072c2321e2d8ed74050c1ac7fd2399",
+      "reviewed_integration_git_blob_sha1": "25490c1ed8b18a5a541b7eed2c4bbf7b0eb00216",
+      "reason": "P0 provenance tests run in Continuous Source Watch as well as main AI Lab CI, so the scheduled/test workflow must fetch full Git history for the pinned base SHA. No new write/merge privileges.",
+      "commit": "53709837aab4852df0a2dc53bb93b7ec96ce9a1b"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.c",
+      "original_git_blob_sha1": "3631a3ee355a2006dc7c4269cca5e8e7cc4a8fc3",
+      "reviewed_integration_git_blob_sha1": "d9e2e2059ed4f6e9a9e5a97621b5eb0b0e87f96f",
+      "reason": "Review-required P0 C core fix: completed PR_JAILED sentences survive arresting officer disconnection/off-duty/opt-out; their officer_id is detached, so a later recycled numeric peer ID cannot inherit manual-release authority. Transient cuffs/escort still fail open. This changes behavior and is NOT verified on an iPhone. Additional P0 host authority guard: already CUFFED/ESCORTED/JAILED officers cannot initiate police actions nor be suggested targets even when duty still verified. Changes source semantics, human review required.",
+      "commit": "c683676c37e0f1a78cd5bc45baa23488348aab69"
+    }
+  ],
+  "required_task_progress": [
+    {
+      "id": "RP-001",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #7 metadata identity gate"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+      ]
+    },
+    {
+      "id": "RP-002",
+      "status": "in-progress",
+      "note_contains": [
+        "Source-only ABI drift checks"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+        "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md"
+      ]
+    },
+    {
+      "id": "RP-003",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #9 bridge snapshot identity guard"
+      ],
+      "required_evidence": [
+        "ai-lab/host_rp_tests.py",
+        "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md"
+      ],
+      "required_metadata_keys": [
+        "bridge_snapshot_guard",
+        "consent_outage_retry"
+      ]
+    },
+    {
+      "id": "RP-006",
+      "status": "in-progress",
+      "note_contains": [
+        "PR #8 source-only release readiness evaluator",
+        "P9 actual signed IPA release remains not-started"
+      ],
+      "required_evidence": [
+        "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+        "ai-lab/release_readiness.py",
+        "ai-lab/tests/test_release_readiness.py"
+      ]
+    }
+  ],
+  "expected_total_changed_paths": 50,
+  "self_manifest_path": "ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json",
+  "integration_only_files": [
+    {
+      "path": ".github/workflows/gta-rp-ios-arm64-bridge.yml",
+      "expected_git_blob_sha1": "00fd23242e63a4bc11f88beaaebce26fab4a1439",
+      "status": "added",
+      "reason": "Reviewed standalone Apple iPhoneOS ARM64 bridge workflow; restored exact previously successful blob when GitHub Actions runner startup failed for both Ubuntu and macOS (runner_id=0, steps=[]). No source/game assets or merge/release permissions."
+    },
+    {
+      "path": "ai-lab/p0_integration_audit.py",
+      "expected_git_blob_sha1": "1315d9fad8a013b39fbc81c281fe94af5806118c",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/p0_review_readiness.py",
+      "expected_git_blob_sha1": "44cd46050b8361f699346069df159df15293559b",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATED_BRIDGE_PROOF.md",
+      "expected_git_blob_sha1": "96b15293064f9f16592fab8e2b4d8877cd880164",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
+      "expected_git_blob_sha1": "5c018fd130106c4b55605cc2bbb8daec6c24ea09",
+      "status": "added",
+      "reason": "P0 integration review handoff including verified complete 49-path base..HEAD Git diff audit and explicit human review boundaries."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_combined_target_bridge.py",
+      "expected_git_blob_sha1": "75325926d749718380491a02f5143608dca411db",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_integration_audit.py",
+      "expected_git_blob_sha1": "4e2b367471be39068da2b717b6dfa741603a148b",
+      "status": "added",
+      "reason": "P0 source/full-diff audit regression tests, including both CI workflows full-history invariant."
+    },
+    {
+      "path": "ai-lab/tests/test_p0_review_readiness.py",
+      "expected_git_blob_sha1": "f83de3f41afaa798ff5ed5bece75204048cbdad6",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "police-rp/v1.4/Integration/test_p0_combined_selection.c",
+      "expected_git_blob_sha1": "fa321d6ff2705c87e297f83ad9dbdab53899b88e",
+      "status": "added",
+      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review."
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_duty_exit.c",
+      "expected_git_blob_sha1": "c330dfafa20e4f5e1424c04dc35e3b93221e0bf9",
+      "status": "modified",
+      "reason": "New modified-from-base P0 host C regression preserving jail after secondary-officer disconnect/off-duty/opt-out, rejecting recycled-ID manual release; transient restraints still release and jailed target leave clears own state. Regression test includes three restrained-officer states and verifies only explicit personal opt-out restores authority while native duty verified."
+    }
+  ],
+  "path_coverage": "Git diff immutable base_commit..CI HEAD must equal 38 source paths (including any reviewed dual-hash overrides), 10 integration-owned exact Git blobs (9 added and 1 modified), reconciled state.json, and self-manifest: 50 distinct paths. No omitted or deleted paths."
+}

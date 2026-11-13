@@ -78,8 +78,12 @@ int main(void){
        .verified_session_id=101,.local_player_id=2,.online=1,
        .session_verified=1,.local_opt_in=1,.native_job=4};
     PRP_TransportContext hctx=ctx(1,1001);
+    hctx.local_player_id=2; /* delivery target is THIS client, not the host */
     PR_Callbacks cb={.abi_version=PR_ABI_VERSION,.set_local_cuffed=set_cuffed,
                     .set_local_controls_restricted=set_restrict};
+    PRP_TransportContext wrong_receiver=hctx;
+    wrong_receiver.local_player_id=3;
+    CHECK(!prp_client_receive_state(&client,&wrong_receiver,&state,&v));
     CHECK(prp_client_receive_state(&client,&hctx,&state,&v));
     pr_adapter_tick(&client.adapter,&v,&cb);CHECK(cuff==1&&restriction==1);
     CHECK(!prp_client_receive_state(&client,&hctx,&state,&v)); /* replay */
@@ -128,6 +132,14 @@ int main(void){
     cop.x=0;cop.last_position_ms=10;c=ctx(1,5000);
     CHECK(prp_host_update_peer(&host,&cop));cuffmsg.seq=4;
     CHECK(prp_host_receive(&host,&c,&cuffmsg,&r)==PRP_ERR_DISTANCE);
+
+    /* Cross-target consent must never opt in someone else. */
+    PRP_Host isolated;prp_host_init(&isolated,101,1);
+    CHECK(prp_host_update_peer(&isolated,&cit));
+    PRP_Msg forged_consent=msg(PRP_OP_CONSENT,2,3,1);
+    PRP_TransportContext isolated_ctx=ctx(2,1000);
+    CHECK(prp_host_receive(&isolated,&isolated_ctx,&forged_consent,NULL)==PRP_ERR_PACKET);
+    CHECK(!isolated.peers[0].opt_in);
 
     /* Deterministic malformed packet fuzz: decoder must not crash/overread. */
     uint32_t seed=0x12345678;

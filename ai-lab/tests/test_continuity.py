@@ -20,7 +20,7 @@ class ContinuityTests(unittest.TestCase):
     def test_completed_tasks_must_have_evidence(self):
         state = copy.deepcopy(continuity.read_state())
         state["backlog"][0]["status"] = "complete"
-        state["backlog"][0].pop("evidence", None)  # enforce missing-evidence scenario
+        state["backlog"][0].pop("evidence", None)  # create the missing-evidence case explicitly
         with self.assertRaisesRegex(ValueError, "evidence"):
             continuity.validate(state)
     def test_no_fake_device_test(self):

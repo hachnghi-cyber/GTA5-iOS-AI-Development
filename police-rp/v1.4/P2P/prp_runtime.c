@@ -29,16 +29,21 @@ static int process_local(PRP_Runtime *r,const PRP_Msg *m,
 int prp_runtime_consent(PRP_Runtime *r,uint8_t enable,
                         const PRP_TransportContext *ctx,
                         const PRP_SendCallbacks *send){
-    if(!context_ok(r,ctx)||enable>1)return 0;
+    if(!r||enable>1)return 0;
+    /* Safety invariant: local opt-out must never depend on packet delivery,
+       a valid networking context, or a responsive host. The next game-thread
+       tick releases local restrictions even if the transport is unavailable. */
+    if(!enable)r->local_opt_in=0;
+    if(!context_ok(r,ctx))return 0;
     PRP_Msg m={.op=PRP_OP_CONSENT,.session_id=r->session_id,
          .sender_id=r->local_id,.target_id=r->local_id,
          .seq=++r->next_seq,.issued_ms=ctx->monotonic_ms,.consent=enable};
     if(r->is_host){
         if(!process_local(r,&m,ctx))return 0;
     }else if(!send_msg(send,r->host_id,&m))return 0;
-    r->local_opt_in=enable;
-    /* Local controls must be released immediately on opt-out even when no
-       valid host packet comes back. Actual game callbacks release on tick. */
+    if(enable)r->local_opt_in=1;
+    /* Opt-out changes the local preference above. Local controls are
+       released on the next game-thread tick, never from a socket callback. */
     return 1;
 }
 PRP_Outcome prp_runtime_action(PRP_Runtime *r,uint8_t op,uint64_t target,

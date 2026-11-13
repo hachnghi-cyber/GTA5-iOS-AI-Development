@@ -45,6 +45,47 @@ static int close_enough(const PRP_Peer *a,const PRP_Peer *b,float r){
     double x=(double)a->x-b->x,y=(double)a->y-b->y,z=(double)a->z-b->z;
     return x*x+y*y+z*z<=(double)r*r;
 }
+/* Read-only target proposal for a host-controlled player interaction menu.
+   The host MUST still authorize a subsequent PRP_OP_CUFF using fresh state. */
+int prp_host_find_nearest_cuff_target(const PRP_Host *h,uint64_t officer_id,
+                                      uint64_t now,uint64_t *target_id){
+    if(!target_id)return 0;
+    *target_id=0;
+    if(!h||!h->session_id||!h->host_id)return 0;
+    int officer_index=idx(h,officer_id);
+    if(officer_index<0)return 0;
+    const PRP_Peer *officer=&h->peers[officer_index];
+    /* Eligibility is rechecked on the host even if the native police job
+       remains active while the officer is personally restrained. */
+    if(h->states[officer_index].status!=PR_FREE)return 0;
+    if(!officer->connected||!officer->opt_in||!officer->job_verified||
+       !officer->on_shift||officer->native_job<0||officer->native_job>2||
+       !location_fresh(officer,now))return 0;
+
+    const double radius_sq=(double)PRP_CUFF_RADIUS_M*PRP_CUFF_RADIUS_M;
+    double nearest_sq=radius_sq;
+    uint64_t nearest_id=0;
+    for(unsigned i=0;i<PRP_MAX_PEERS;i++){
+        const PRP_Peer *candidate=&h->peers[i];
+        if(candidate->player_id==0||candidate->player_id==officer_id||
+           !candidate->connected||!candidate->opt_in||
+           h->states[i].status!=PR_FREE||
+           !location_fresh(candidate,now))continue;
+        double dx=(double)candidate->x-officer->x;
+        double dy=(double)candidate->y-officer->y;
+        double dz=(double)candidate->z-officer->z;
+        double distance_sq=dx*dx+dy*dy+dz*dz;
+        if(distance_sq<=radius_sq &&
+           (!nearest_id||distance_sq<nearest_sq||
+            (distance_sq==nearest_sq&&candidate->player_id<nearest_id))){
+            nearest_sq=distance_sq;
+            nearest_id=candidate->player_id;
+        }
+    }
+    *target_id=nearest_id;
+    return nearest_id!=0;
+}
+
 static void set_free(PRP_Host *h,int t){
     if(t<0)return;
     PRP_TargetState *s=&h->states[t];
@@ -52,8 +93,29 @@ static void set_free(PRP_Host *h,int t){
         s->status=PR_FREE;s->officer_id=0;s->release_at_ms=0;s->generation++;
     }
 }
+/* Officer authority ends on duty loss, opt-out or disconnection.
+   Cuff/escort are temporary and must fail open. A completed jail sentence
+   belongs to the session, not to the departed officer: preserve its timer
+   but orphan the officer reference so a RECYCLED numeric player ID cannot
+   inherit the ability to release that prisoner. With officer_id=0, the
+   original host state machine permits timer expiry, not manual RELEASE;
+   an authenticated identity-generation contract is required for transfer. */
+static void revoke_officer_authority(PRP_Host *h,uint64_t player_id){
+    if(!h||!player_id)return;
+    for(int k=0;k<(int)PRP_MAX_PEERS;k++){
+        PRP_TargetState *s=&h->states[k];
+        if(s->officer_id!=player_id)continue;
+        if(s->status==PR_CUFFED||s->status==PR_ESCORTED){
+            set_free(h,k);
+        }else if(s->status==PR_JAILED){
+            s->officer_id=0;
+            s->generation++;
+        }
+    }
+}
 void prp_host_init(PRP_Host *h,uint64_t session,uint64_t host){
-    if(!h)return;memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
+    if(!h)return;
+    memset(h,0,sizeof(*h));h->session_id=session;h->host_id=host;
 }
 int prp_host_update_peer(PRP_Host *h,const PRP_Peer *trusted){
     if(!h||!trusted||!trusted->player_id)return 0;
@@ -74,20 +136,13 @@ int prp_host_update_peer(PRP_Host *h,const PRP_Peer *trusted){
        Never trust a peer-supplied job flag: trusted is engine-sourced only. */
     if (!trusted->job_verified || !trusted->on_shift ||
         trusted->native_job < 0 || trusted->native_job > 2) {
-        for (int k=0;k<(int)PRP_MAX_PEERS;k++) {
-            PRP_TargetState *state=&h->states[k];
-            if (state->officer_id==trusted->player_id &&
-                (state->status==PR_CUFFED || state->status==PR_ESCORTED))
-                set_free(h,k);
-        }
+        revoke_officer_authority(h,trusted->player_id);
     }
     return 1;
 }
 int prp_host_remove_peer(PRP_Host *h,uint64_t id){
     int i=idx(h,id);if(i<0)return 0;
-    for(int k=0;k<(int)PRP_MAX_PEERS;k++){
-        if(h->states[k].officer_id==id)set_free(h,k);
-    }
+    revoke_officer_authority(h,id);
     memset(&h->peers[i],0,sizeof(h->peers[i]));
     memset(&h->states[i],0,sizeof(h->states[i]));
     h->last_client_seq[i]=0;
@@ -115,11 +170,13 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
     /* Validly received events consume sequence even if denied. */
     h->last_client_seq[i]=m->seq;
     if(m->op==PRP_OP_CONSENT){
+        /* Consent may only concern the authenticated sender, not a target. */
+        if(m->target_id!=m->sender_id)
+            return finish(result,PRP_ERR_PACKET);
         h->peers[i].opt_in=(m->consent==1);
         if(!m->consent){
             set_free(h,i);
-            for(int k=0;k<(int)PRP_MAX_PEERS;k++)
-                if(h->states[k].officer_id==m->sender_id)set_free(h,k);
+            revoke_officer_authority(h,m->sender_id);
         }
         if(result){result->target_id=m->sender_id;result->target_state=h->states[i];}
         return finish(result,PRP_ACCEPTED);
@@ -129,6 +186,11 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
     if(!officer->job_verified||!officer->on_shift||
        officer->native_job<0||officer->native_job>2)
         return finish(result,PRP_ERR_POLICE);
+    /* A cuffed/escorted/jailed officer has no police-action authority.
+       Consent is processed above so explicit opt-out still releases this
+       player's own restrictions. Never trust only the native job flag. */
+    if(h->states[i].status!=PR_FREE)
+        return finish(result,PRP_ERR_STATE);
     int t=idx(h,m->target_id);
     if(t<0||t==i||!h->peers[t].connected)return finish(result,PRP_ERR_PEER);
     PRP_Peer *target=&h->peers[t];
@@ -199,7 +261,8 @@ int prp_host_state_for(PRP_Host *h,uint64_t target_id,
     return 1;
 }
 void prp_client_init(PRP_Client *c,uint64_t session,uint64_t local,uint64_t host){
-    if(!c)return;memset(c,0,sizeof(*c));
+    if(!c)return;
+    memset(c,0,sizeof(*c));
     c->session_id=session;c->local_id=local;c->expected_host_id=host;
     pr_adapter_init(&c->adapter);
 }
@@ -210,7 +273,8 @@ int prp_client_receive_state(PRP_Client *c,const PRP_TransportContext *ctx,
        !ctx->trusted_sender_id||ctx->trusted_sender_id!=c->expected_host_id||
        ctx->host_player_id!=c->expected_host_id||m->sender_id!=c->expected_host_id||
        m->session_id!=c->session_id||ctx->session_id!=c->session_id||
-       m->target_id!=c->local_id||v->verified_session_id!=c->session_id||
+       m->target_id!=c->local_id||ctx->local_player_id!=c->local_id||
+       v->verified_session_id!=c->session_id||
        v->local_player_id!=c->local_id||!m->consent||!valid_status(m->status)||
        !m->seq||(c->last_seq&&!newer(m->seq,c->last_seq)))return 0;
     PR_AuthenticatedStatus s={.abi_version=PR_ADAPTER_ABI,

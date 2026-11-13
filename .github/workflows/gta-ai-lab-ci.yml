@@ -3,10 +3,12 @@ on:
   push:
     paths:
       - 'ai-lab/**'
+      - 'police-rp/**'
       - '.github/workflows/gta-ai-lab-ci.yml'
   pull_request:
     paths:
       - 'ai-lab/**'
+      - 'police-rp/**'
       - '.github/workflows/gta-ai-lab-ci.yml'
   schedule:
     - cron: '25 3 * * *'
@@ -18,6 +20,7 @@ on:
         default: 'SIGSEGV crash after Menyoo vehicle spawn'
 permissions:
   contents: read
+  pull-requests: read
 concurrency:
   group: gta-ai-lab-${{ github.ref }}
   cancel-in-progress: true
@@ -29,6 +32,9 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          # Provenance audit compares pinned base commit to CI HEAD; shallow
+          # checkouts cannot resolve base SHA and must not yield false GREEN.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -40,6 +46,29 @@ jobs:
         run: |
           python ai-lab/continuity.py validate
           python ai-lab/continuity.py handoff --output ai-lab/reports/RP_HANDOFF.md
+      - name: Enforce P0-P9 sequential phase gate (read-only)
+        run: python ai-lab/sequential_gate.py --output ai-lab/reports/RP_PHASE_STATUS.json
+      - name: Audit pinned P0 source provenance (preview only)
+        if: github.head_ref == 'feature/rp-p0-integration-preview-20261113' || github.ref_name == 'feature/rp-p0-integration-preview-20261113'
+        run: python ai-lab/p0_integration_audit.py --output ai-lab/reports/RP_P0_AUDIT.json
+      - name: Report live PR #10 human review gate (preview only, no merge)
+        if: github.head_ref == 'feature/rp-p0-integration-preview-20261113' || github.ref_name == 'feature/rp-p0-integration-preview-20261113'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python ai-lab/p0_review_readiness.py --output ai-lab/reports/RP_P0_REVIEW_STATUS.json
+      - name: Inventory Roleplay sources (no IPA required)
+        run: python ai-lab/source_inventory.py --output ai-lab/reports/RP_SOURCE_INVENTORY.json
+      - name: Compile and execute Police RP C host regressions (not iPhone)
+        run: python ai-lab/host_rp_tests.py --output ai-lab/reports/RP_HOST_C_TESTS.json
+      - name: Clang UndefinedBehaviorSanitizer Police RP host regressions
+        run: |
+          command -v clang
+          python ai-lab/host_rp_tests.py --compiler clang --sanitize-undefined --output ai-lab/reports/RP_HOST_C_UBSAN.json
+      - name: Clang AddressSanitizer and UBSan Police RP host regressions
+        run: |
+          command -v clang
+          python ai-lab/host_rp_tests.py --compiler clang --sanitize-address --sanitize-undefined --output ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
       - name: Route specialists
         env:
           TASK: ${{ inputs.task || 'SIGSEGV crash after Menyoo vehicle spawn' }}
@@ -53,4 +82,11 @@ jobs:
           path: |
             ai-lab/reports/plan.json
             ai-lab/reports/RP_HANDOFF.md
+            ai-lab/reports/RP_SOURCE_INVENTORY.json
+            ai-lab/reports/RP_PHASE_STATUS.json
+            ai-lab/reports/RP_P0_AUDIT.json
+            ai-lab/reports/RP_P0_REVIEW_STATUS.json
+            ai-lab/reports/RP_HOST_C_TESTS.json
+            ai-lab/reports/RP_HOST_C_UBSAN.json
+            ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
           retention-days: 7
