@@ -436,7 +436,7 @@
     },
     {
       "path": "ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
-      "expected_git_blob_sha1": "52f1b55c109e19c08dec5c1a886586a786d7539a",
+      "expected_git_blob_sha1": "5c018fd130106c4b55605cc2bbb8daec6c24ea09",
       "status": "added",
       "reason": "P0 integration review handoff including verified complete 49-path base..HEAD Git diff audit and explicit human review boundaries."
     },

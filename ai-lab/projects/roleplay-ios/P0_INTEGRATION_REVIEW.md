@@ -259,3 +259,61 @@ RAGE v12, chống replay consent toàn diện khi ID được dùng lại, gamep
 trên 2 iPhone, signed IPA. Review thủ công phải quyết định rõ về
 thay đổi behavior (jail còn đến khi timeout, không chuyển giao manual
 release khi officer rời ca) trước khi merge. P0 vẫn `in-progress`.
+
+
+## P0 — Cổng host từ chối cảnh sát đang bị giam/còng (13/11/2026)
+
+**Lỗi phát hiện khi review nguồn:** `prp_host_receive()` xác thực native
+police job, shift, consent nhưng bỏ qua tình trạng của **chính người ra
+lệnh** trong `h->states[sender_slot]`. Cảnh sát bị `PR_CUFFED`,
+`PR_ESCORTED` hoặc `PR_JAILED` vẫn có thể tạo lệnh còng người khác
+nếu engine còn báo on-shift. `prp_host_find_nearest_cuff_target()` cũng
+vẫn đề xuất mục tiêu cho người đang bị khống chế.
+
+**Bản vá nguồn** tại `police-rp/v1.4/P2P/prp_p2p.c` (commit
+`c683676c37e0f1a78cd5bc45baa23488348aab69`): chỉ đề xuất
+mục tiêu khi trạng thái cảnh sát là `PR_FREE`; host từ chối mọi lệnh
+cảnh sát bằng `PRP_ERR_STATE` khi người gửi đang bị còng, áp giải hoặc
+giam giữ. Lệnh `PRP_OP_CONSENT` vẫn được xử lý trước chính sách này
+để người chơi được tự opt-out/fail-open. Code không cần offset/hook RAGE
+hoặc quyền giả lập từ nick người chơi.
+
+**Regression C bổ sung** trong `test_duty_exit.c`: cảnh sát phụ ID30 còng
+cảnh sát chủ phòng ID10; người bị còng không được đề xuất mục tiêu hay
+còng dân ID20. Thử tiếp trạng thái ESCORTED rồi JAILED, tất cả phải
+bị từ chối; opt-out của người bị giam vẫn được chấp nhận. Sau khi
+được giải phóng, consent trở lại và native police duty vẫn verified,
+người chơi có thể tiếp tục bắt dân trong phạm vi. Test không giả lập
+2 iPhone hay RAGE authenticated network.
+
+### Kiểm thử: phân biệt đã chạy với chưa chạy
+
+- **Đã xác nhận build iPhoneOS ARM64** cho nguồn bản vá ở
+  [Core #43437315349](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43437315349)
+  và [Bridge #43437315332](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43437315332).
+  Chỉ xác nhận mã C đã liên kết thành dylib unsigned, không chạy test.
+- **Regression mới chưa thực thi được**: GitHub Actions CI
+  [#43437355926](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43437355926)
+  và Source Watch #43437355937 báo failure **trước khi cấp runner**.
+  GitHub REST trả về `runner_id=0`, `runner_name=""`, `steps=[]`,
+  không có job log. Một lượt rerun job riêng (attempt 2) cũng fail
+  trước khi thực thi. Tới commit `4a15b065`, **cả macOS build và Ubuntu
+  validation** báo lỗi startup cùng dấu hiệu. Không được coi là lỗi
+  assertion, compiler hay source audit; cũng **không được coi là test pass**.
+- **CI đã xanh cuối cùng cho nguồn cũ** là
+  [#43408725121](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408725121)
+  (112 Python tests, 7 C tests mỗi cấu hình), nhưng commit cũ
+  `cb5bbfe6` **chưa có** policy restrained-officer này. Không tái sử
+  dụng kết quả cũ để chứng minh bản vá mới.
+- Đã thử fallback kiểm thử trên runner macOS nhưng runner cũng không
+  được khởi tạo. Do chưa có bằng chứng execution, workflow Mac
+  `gta-rp-ios-arm64-bridge.yml` đã được **khôi phục đúng Git blob
+  `00fd23242e63a4bc11f88beaaebce26fab4a1439`**, là bản từng
+  build ARM64 thành công, để không giữ một thay đổi CI không kiểm chứng.
+
+**Cổng tiếp theo:** cần khôi phục khả năng cấp runner (kiểm tra GitHub
+Actions status, repository Actions settings, spending/billing nếu có)
+rồi chạy lại 112+ Python tests, 7 C x3, audit đủ 50 changed paths và
+ARM64 builds **trên đúng head PR**; sau đó mới xét review độc lập và
+merge. Không đánh dấu P0 verified hoặc tạo IPA. Sự cố cấp runner cần
+người có quyền GitHub account/repository kiểm tra nếu vẫn lặp lại.
