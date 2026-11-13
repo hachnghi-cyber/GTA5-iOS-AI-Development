@@ -1,0 +1,89 @@
+name: GTA RP - iPhoneOS ARM64 Integrated Bridge Build (NO IPA)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'police-rp/v1.4/P2P/**'
+      - 'police-rp/v1.4/NativeBridge/**'
+      - 'police-rp/v1.4/Integration/**'
+      - '.github/workflows/gta-rp-ios-arm64-bridge.yml'
+  pull_request:
+    paths:
+      - 'police-rp/v1.4/P2P/**'
+      - 'police-rp/v1.4/NativeBridge/**'
+      - 'police-rp/v1.4/Integration/**'
+      - '.github/workflows/gta-rp-ios-arm64-bridge.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Inspect toolchain and exact source-only inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          xcodebuild -version | tee out/XCODE.txt
+          xcrun --sdk iphoneos --show-sdk-version | tee out/IPHONEOS_SDK.txt
+          for source in \
+            police-rp/v1.4/P2P/prp_p2p.c \
+            police-rp/v1.4/P2P/prp_runtime.c \
+            police-rp/v1.4/NativeBridge/police_rp_adapter.c \
+            police-rp/v1.4/NativeBridge/police_rp_only.c \
+            police-rp/v1.4/Integration/prp_mailbox.c \
+            police-rp/v1.4/Integration/prp_engine_binding.c; do
+            test -f "$source"
+            shasum -a 256 "$source"
+          done | tee out/SOURCE_SHA256.txt
+      - name: Link PR4 + PR9 bridge with Apple iPhoneOS SDK (UNSIGNED SOURCE ONLY)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
+            -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror \
+            -fstack-protector-strong -dynamiclib \
+            police-rp/v1.4/NativeBridge/police_rp_only.c \
+            police-rp/v1.4/NativeBridge/police_rp_adapter.c \
+            police-rp/v1.4/P2P/prp_p2p.c \
+            police-rp/v1.4/P2P/prp_runtime.c \
+            police-rp/v1.4/Integration/prp_mailbox.c \
+            police-rp/v1.4/Integration/prp_engine_binding.c \
+            -Wl,-install_name,@rpath/libPoliceRPBridge.dylib \
+            -o out/libPoliceRPBridge.dylib
+          file out/libPoliceRPBridge.dylib | tee out/FILE.txt
+          xcrun lipo -info out/libPoliceRPBridge.dylib | tee out/ARCH.txt
+          xcrun otool -hv out/libPoliceRPBridge.dylib | tee out/MACHO_HEADER.txt
+          xcrun otool -L out/libPoliceRPBridge.dylib | tee out/DEPENDENCIES.txt
+          xcrun vtool -show-build out/libPoliceRPBridge.dylib | tee out/BUILD_VERSION.txt
+          xcrun nm -gU out/libPoliceRPBridge.dylib | tee out/EXPORTS.txt
+          grep -Fq '_prp_bridge_frame' out/EXPORTS.txt
+          grep -Fq '_prp_bridge_receive' out/EXPORTS.txt
+          grep -Fq '_prp_bridge_enqueue' out/EXPORTS.txt
+          grep -Fq '_prp_bridge_arrest' out/EXPORTS.txt
+          grep -Fq '_prp_bridge_stop' out/EXPORTS.txt
+          grep -Fq '_prp_host_find_nearest_cuff_target' out/EXPORTS.txt
+          grep -Fq '_prp_inbox_push' out/EXPORTS.txt
+          grep -Fq '_prp_runtime_tick' out/EXPORTS.txt
+          grep -Fq 'arm64' out/ARCH.txt
+          grep -Fq 'DYLIB' out/MACHO_HEADER.txt
+          shasum -a 256 out/libPoliceRPBridge.dylib | tee out/SHA256.txt
+          printf '%s\n' \
+            'PR #4 + PR #9 combined C sources linked as thin iPhoneOS arm64 Mach-O dylib.' \
+            'SOURCE ONLY, UNSIGNED, NO PROPRIETARY IPA OR GTA GAME ASSETS INCLUDED.' \
+            'No RAGE v12 frame hook, authenticated carrier, Apple codesign, iPhone deployment or gameplay test.' \
+            'Do NOT inject/publish this as a playable game; device integration requires separate proof.' \
+            > out/README.txt
+      - name: Upload source-only integrated bridge and Mach-O proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA-RP-iPhoneOS-ARM64-BRIDGE-UNSIGNED-NOT-IPA
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
