@@ -111,6 +111,13 @@ int main(void) {
     assert(h.states[2].status==PR_JAILED);
     prp_host_expire(&h,61000);
     assert(h.states[2].status==PR_FREE);
+    /* Advance the authoritative host clock and refresh verified positions
+     * before starting another arrest. Never reuse a stale game timestamp. */
+    officer2.last_position_ms=61000;
+    subject.last_position_ms=61000;
+    assert(prp_host_update_peer(&h,&officer2));
+    assert(prp_host_update_peer(&h,&subject));
+    c.monotonic_ms=61000;
 
     /* Transient cuff/escort must instead release immediately when an
      * officer disconnects. The same rule holds for explicit opt-out. */
@@ -143,8 +150,8 @@ int main(void) {
     assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
     assert(h.states[2].status==PR_JAILED);
     assert(h.states[2].officer_id==0);
-    assert(h.states[2].release_at_ms==61000);
-    prp_host_expire(&h,61000);
+    assert(h.states[2].release_at_ms==121000);
+    prp_host_expire(&h,121000);
     assert(h.states[2].status==PR_FREE);
 
     /* The prisoner leaving the session still clears their own jail state. */
