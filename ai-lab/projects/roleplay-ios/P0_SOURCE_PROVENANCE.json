@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "kind": "P0-source-provenance-review-only",
+  "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
+  "base_commit": "d83bcd049649856411595b8cbf7d5c7c4288311e",
+  "preview_branch": "feature/rp-p0-integration-preview-20261113",
+  "source_heads": [
+    {
+      "number": 7,
+      "commit": "5ca26698fad9425cf5c059674f3c984a5bd3b00f"
+    },
+    {
+      "number": 4,
+      "commit": "784c9e257e84707e3896982c280002697f5344ea"
+    },
+    {
+      "number": 9,
+      "commit": "e32415c3184cdaca1338613a425014dd57552c27"
+    },
+    {
+      "number": 8,
+      "commit": "61d42522b7efa9df196a08f31ed8acc9697c150f"
+    }
+  ],
+  "expected_copied_file_count": 38,
+  "excluded_reconciled_paths": [
+    "ai-lab/projects/roleplay-ios/state.json"
+  ],
+  "source_files": [
+    {
+      "path": ".github/workflows/gta-ai-lab-ci.yml",
+      "pr": 4,
+      "expected_git_blob_sha1": "8dd897424f4259f3a99568474bc1561659ea157b"
+    },
+    {
+      "path": ".github/workflows/gta-rp-continuous-watch.yml",
+      "pr": 8,
+      "expected_git_blob_sha1": "a9b0d95294072c2321e2d8ed74050c1ac7fd2399"
+    },
+    {
+      "path": ".github/workflows/gta-rp-ios-arm64-core.yml",
+      "pr": 4,
+      "expected_git_blob_sha1": "a169c02d12550d5389d7c355358bd8b44c2f2336"
+    },
+    {
+      "path": "ai-lab/host_rp_tests.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "b5d9068d09e5a984da68595107a65beb811e5a39"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/API_COMPAT_MATRIX.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "2de899ef3d00ad2b207823b3f67e33d917531e69"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/CONSENT_OUTAGE_RETRY.md",
+      "pr": 9,
+      "expected_git_blob_sha1": "db8e9945f28c764791c3699dd4e6103d6115f7fa"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/CONTINUE_HERE.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "b880dfaa806df8be2d2a9481be5c258420c60a71"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/IOS_ARM64_BUILD_PROOF.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "f1a9596a43b765a31989c4cff2ee12c8cdf49a37"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PEER_CHURN_HOST.md",
+      "pr": 9,
+      "expected_git_blob_sha1": "18cdccd1115ce949ad71ed1044da1c59ddcee08e"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PHASE_GATES.json",
+      "pr": 4,
+      "expected_git_blob_sha1": "53994162a72cdca46aa0dbc1e148a5920b730e54"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/PLAYER_TARGETING_HOST.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "50c223e8fd5cf8017af2758fd1195ca573b4ca94"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/RELEASE_AUTOMATION.md",
+      "pr": 8,
+      "expected_git_blob_sha1": "f14b549ac499b58fca7a97725d75062ebee5b18b"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/ROADMAP.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "6e66f184d8cddd03141092ce3607982c4f229b8c"
+    },
+    {
+      "path": "ai-lab/projects/roleplay-ios/SEQUENTIAL_EXECUTION_PLAN.md",
+      "pr": 4,
+      "expected_git_blob_sha1": "789f00377dfae8c2edd9f08246845831649bd597"
+    },
+    {
+      "path": "ai-lab/release_readiness.py",
+      "pr": 8,
+      "expected_git_blob_sha1": "f3e0b87c11aa4d36fac533da4672491281e3b9f2"
+    },
+    {
+      "path": "ai-lab/rp_identity_gate.py",
+      "pr": 7,
+      "expected_git_blob_sha1": "3f357446129fd2c5c25e5f799b2b5e50deec310c"
+    },
+    {
+      "path": "ai-lab/sequential_gate.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "206d9ecc72706a9ca3942d0cf1055fa978256c32"
+    },
+    {
+      "path": "ai-lab/source_inventory.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "dafc9db3e3e7474e9ecdd91d5662c6c4f4d08f76"
+    },
+    {
+      "path": "ai-lab/tests/test_continuity.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "de5837222e8d0599d77a18370fd51c167d0e1f0e"
+    },
+    {
+      "path": "ai-lab/tests/test_engine_bridge_host.py",
+      "pr": 9,
+      "expected_git_blob_sha1": "37bbd76f897e0927d82a8b1c882c87645b0e93c6"
+    },
+    {
+      "path": "ai-lab/tests/test_host_rp_tests.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "026e85c6f94325a2e67c4a89779ba93f52f41ffd"
+    },
+    {
+      "path": "ai-lab/tests/test_release_readiness.py",
+      "pr": 8,
+      "expected_git_blob_sha1": "e6854e60dd7c706ef126ca17bed1f3628430b674"
+    },
+    {
+      "path": "ai-lab/tests/test_rp_identity_gate.py",
+      "pr": 7,
+      "expected_git_blob_sha1": "3e9de004d7dd00b061ad47ff98988e7663409c94"
+    },
+    {
+      "path": "ai-lab/tests/test_sequential_gate.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "2d209cc15491ea80a75947024069b160e26ef605"
+    },
+    {
+      "path": "ai-lab/tests/test_source_inventory.py",
+      "pr": 4,
+      "expected_git_blob_sha1": "2333a617246a529738ff1f17b9667585d55c32f5"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/prp_engine_binding.c",
+      "pr": 9,
+      "expected_git_blob_sha1": "033ed30ab1a8f638c78ad5733529a1178fb13e15"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/prp_engine_binding.h",
+      "pr": 9,
+      "expected_git_blob_sha1": "3a2fd8ec6c042bd8e3e201941515ad547040776b"
+    },
+    {
+      "path": "police-rp/v1.4/Integration/test_engine_binding.c",
+      "pr": 9,
+      "expected_git_blob_sha1": "5a1dd4455a2eaa58c8dc538f9ac09cb211929461"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "3631a3ee355a2006dc7c4269cca5e8e7cc4a8fc3"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_p2p.h",
+      "pr": 4,
+      "expected_git_blob_sha1": "863c36624c24b1f157898242d24183628cdf0572"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_runtime.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "85551fd46c53f034a5a507413eddffb82563120c"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/prp_runtime.h",
+      "pr": 4,
+      "expected_git_blob_sha1": "23174732d4ad2f42b3fbb3d80b2e44e49854746a"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_abi_contract.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "1c3093f16ceca214a807ab21b01fc99b77dab613"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_p2p.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "906590289fed8ac640b999babc4ed7a3660d6586"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_peer_lifecycle.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "f45b310c8e8330810aa115924cbbe02347c2d72f"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_runtime.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "8632f3b823c9c6d3be92c2628cd6c81e687d8e63"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_target_selection.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "be2ad4a936b92ee95767122d7013c9e979290ae0"
+    },
+    {
+      "path": "police-rp/v1.4/P2P/test_wire_codec.c",
+      "pr": 4,
+      "expected_git_blob_sha1": "6e831efcd4a37f8cb0fce3bb57fb7b3a5ee02a7b"
+    }
+  ],
+  "baseline_metadata": {
+    "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+    "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+    "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171"
+  },
+  "automerge_allowed": false,
+  "auto_release_allowed": false
+}
