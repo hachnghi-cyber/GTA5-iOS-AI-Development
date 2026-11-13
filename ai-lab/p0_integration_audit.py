@@ -60,6 +60,30 @@ def audit(root, manifest, state, phases):
         all(isinstance(x, dict) and isinstance(x.get("commit"), str)
             and HEX40.fullmatch(x["commit"]) for x in source_heads),
         "Immutable source head commit IDs declared for four upstream PRs")
+    # The only allowed deviation from an upstream PR copy must be explicitly
+    # pinned to both source and reviewed integration blob SHA1, with a reason.
+    # A future unreviewed code change must invalidate this frozen P0 audit.
+    overrides = manifest.get("review_overrides", [])
+    if not isinstance(overrides, list):
+        raise ValueError("review_overrides must be a list")
+    reviewed = {}
+    for entry in overrides:
+        if not isinstance(entry, dict) or not _relative_path(entry.get("path")):
+            add("invalid_override", False, "Malformed override path")
+            continue
+        path = entry["path"]
+        if path in reviewed:
+            add("duplicate_override", False, f"Repeated override: {path}")
+            continue
+        if (not isinstance(entry.get("reason"), str) or
+                not entry["reason"].strip() or
+                not isinstance(entry.get("original_git_blob_sha1"), str) or
+                not HEX40.fullmatch(entry["original_git_blob_sha1"]) or
+                not isinstance(entry.get("reviewed_integration_git_blob_sha1"), str) or
+                not HEX40.fullmatch(entry["reviewed_integration_git_blob_sha1"])):
+            add("invalid_override", False, f"Override lacks pinned hashes/reason: {path}")
+            continue
+        reviewed[path] = entry
     seen = set()
     counts = {}
     for item in files:
@@ -80,8 +104,19 @@ def audit(root, manifest, state, phases):
             add("missing_source", False, f"Missing/symlink: {path}")
             continue
         actual = git_blob_hash(expected_source.read_bytes())
-        add("git_blob:" + path, actual == sha,
-            f"Source: {path}; pinned PR #{pr}; git blob SHA1 {actual}")
+        override = reviewed.get(path)
+        direct_match = actual == sha
+        reviewed_match = (override is not None and
+                          override["original_git_blob_sha1"] == sha and
+                          override["reviewed_integration_git_blob_sha1"] == actual)
+        add("git_blob:" + path, direct_match or reviewed_match,
+            f"Source: {path}; PR #{pr} SHA1 {sha}; actual {actual}; " +
+            ("reviewed override" if reviewed_match and not direct_match else "upstream copy"))
+    add("override_coverage", set(reviewed).issubset(seen) and
+        all(item.get("path") not in
+            ("ai-lab/projects/roleplay-ios/state.json",) for item in overrides
+            if isinstance(item, dict)),
+        "Review overrides must belong to copied source paths, never merged state")
     add("source_coverage", len(seen) == len(files), "Each source file checked once")
     add("per_pr_presence", all(counts.get(n, 0) > 0 for n in (4, 7, 8, 9)),
         "Each PR contributes at least one matched source file")
