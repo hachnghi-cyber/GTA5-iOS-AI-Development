@@ -20,6 +20,7 @@ on:
         default: 'SIGSEGV crash after Menyoo vehicle spawn'
 permissions:
   contents: read
+  pull-requests: read
 concurrency:
   group: gta-ai-lab-${{ github.ref }}
   cancel-in-progress: true
@@ -47,6 +48,11 @@ jobs:
       - name: Audit pinned P0 source provenance (preview only)
         if: github.head_ref == 'feature/rp-p0-integration-preview-20261113' || github.ref_name == 'feature/rp-p0-integration-preview-20261113'
         run: python ai-lab/p0_integration_audit.py --output ai-lab/reports/RP_P0_AUDIT.json
+      - name: Report live PR #10 human review gate (preview only, no merge)
+        if: github.head_ref == 'feature/rp-p0-integration-preview-20261113' || github.ref_name == 'feature/rp-p0-integration-preview-20261113'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python ai-lab/p0_review_readiness.py --output ai-lab/reports/RP_P0_REVIEW_STATUS.json
       - name: Inventory Roleplay sources (no IPA required)
         run: python ai-lab/source_inventory.py --output ai-lab/reports/RP_SOURCE_INVENTORY.json
       - name: Compile and execute Police RP C host regressions (not iPhone)
@@ -75,6 +81,7 @@ jobs:
             ai-lab/reports/RP_SOURCE_INVENTORY.json
             ai-lab/reports/RP_PHASE_STATUS.json
             ai-lab/reports/RP_P0_AUDIT.json
+            ai-lab/reports/RP_P0_REVIEW_STATUS.json
             ai-lab/reports/RP_HOST_C_TESTS.json
             ai-lab/reports/RP_HOST_C_UBSAN.json
             ai-lab/reports/RP_HOST_C_ASAN_UBSAN.json
