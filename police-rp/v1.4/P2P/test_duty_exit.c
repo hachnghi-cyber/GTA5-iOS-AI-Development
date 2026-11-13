@@ -163,6 +163,56 @@ int main(void) {
     assert(prp_host_remove_peer(&h,20));
     assert(h.peer_count==0 && h.states[0].status==PR_FREE);
 
+    /* The native GTA work flag stays valid even while the officer is
+     * personally restrained. Host must NEVER authorize police actions by
+     * a cuffed, escorted or jailed officer. Consent remains allowed so the
+     * officer can explicitly opt out to release their own local controls. */
+    PRP_Peer captain=peer(10,0,1,0), backup=peer(30,0,1,2);
+    PRP_Peer civilian=peer(20,-1,0,1);
+    prp_host_init(&h,1234,10);
+    assert(prp_host_update_peer(&h,&captain));
+    assert(prp_host_update_peer(&h,&backup));
+    assert(prp_host_update_peer(&h,&civilian));
+    c=ctx(10);op=msg(PRP_OP_CONSENT,10,10,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    c=ctx(30);op=msg(PRP_OP_CONSENT,30,30,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    c=ctx(20);op=msg(PRP_OP_CONSENT,20,20,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    c=ctx(30);op=msg(PRP_OP_CUFF,30,10,2);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[0].status==PR_CUFFED);
+    uint64_t nearest=99;
+    assert(!prp_host_find_nearest_cuff_target(&h,10,1000,&nearest));
+    assert(nearest==0);
+    c=ctx(10);op=msg(PRP_OP_CUFF,10,20,2);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ERR_STATE);
+    assert(h.states[2].status==PR_FREE);
+    c=ctx(30);op=msg(PRP_OP_ESCORT,30,10,3);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[0].status==PR_ESCORTED);
+    c=ctx(10);op=msg(PRP_OP_CUFF,10,20,3);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ERR_STATE);
+    c=ctx(30);op=msg(PRP_OP_JAIL,30,10,4);op.jail_ms=60000;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[0].status==PR_JAILED);
+    c=ctx(10);op=msg(PRP_OP_CUFF,10,20,4);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ERR_STATE);
+    assert(!prp_host_find_nearest_cuff_target(&h,10,1000,&nearest));
+    /* A consent revoke is user-controlled and must continue to work while
+     * jailed. Re-enrolling after explicit opt-out restores authority only
+     * because the host state is now free AND the native duty is verified. */
+    op=msg(PRP_OP_CONSENT,10,10,5);op.consent=0;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[0].status==PR_FREE);
+    op=msg(PRP_OP_CONSENT,10,10,6);op.consent=1;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(prp_host_find_nearest_cuff_target(&h,10,1000,&nearest));
+    assert(nearest==20);
+    op=msg(PRP_OP_CUFF,10,20,7);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[2].status==PR_CUFFED);
+
     puts("PoliceRP v0.9 officer off-duty / consent / jail regressions passed");
     return 0;
 }
