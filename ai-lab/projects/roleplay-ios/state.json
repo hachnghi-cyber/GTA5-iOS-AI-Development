@@ -154,6 +154,11 @@
       "claim": "Both PR #10 GitHub Actions Python test workflows now fetch the pinned Git base and enforce full 49-path provenance; a shallow-checkout failure in Continuous Source Watch was reproduced from CI logs and resolved without relaxing the source audit",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164; .github/workflows/gta-rp-continuous-watch.yml; .github/workflows/gta-ai-lab-ci.yml; ai-lab/tests/test_p0_integration_audit.py",
       "scope": "111/111 Python tests with Git base diff coverage, seven C host executables in each of normal/UBSan/ASan+UBSan on CI. Two signed-off workflow overrides in P0_SOURCE_PROVENANCE.json. No real iPhone runtime or authenticated Online test."
+    },
+    {
+      "claim": "P0 review-fixed Police RP C core releases transient cuff/escort on officer off-duty, opt-out or disconnect, but preserves session-owned jail deadline while revoking officer_id on departed-officer sentences; a recycled numeric officer ID cannot manually release an orphaned jail under existing ownership checks",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520718; police-rp/v1.4/P2P/prp_p2p.c; police-rp/v1.4/P2P/test_duty_exit.c; ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md",
+      "scope": "112 Python tests; 7 C host programs in normal/UBSan/ASan+UBSan; P0 exact 50-path audit and unsigned iPhoneOS ARM64 core+bridge builds pass on commit 42294aa4d5c77ce8b38ab995b7104b1dd209f603. Not tested in GTA Online or two iPhones. New manual-release authority after officer leaves not yet designed."
     }
   ],
   "unknowns": [
@@ -163,7 +168,8 @@
     "Which network packet transport and session lifecycle the current game build supports",
     "PR #10 is the source-only integration of PR #7/#4/#9/#8; no RP build has been verified running on two real iPhones",
     "iPhoneOS SDK 18.5 linking of separate source core and integrated source bridge has succeeded in Actions; iOS code signing, IPA injection and hardware crash/performance remain unverified",
-    "Trusted peer connection-generation/epoch to distinguish recycled numeric GTA player IDs on reconnect is unavailable in PRP_GameSnapshot; source-only consent safety cannot authenticate member incarnation without engine transport metadata"
+    "Trusted peer connection-generation/epoch to distinguish recycled numeric GTA player IDs on reconnect is unavailable in PRP_GameSnapshot; source-only consent safety cannot authenticate member incarnation without engine transport metadata",
+    "After the arresting officer disconnects/opts out/leaves duty, completed jail is session-owned until expiry; manual release by another officer is deliberately denied until verified custody-transfer authorization and connection-generation design are established"
   ],
   "baseline": {
     "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
@@ -250,7 +256,7 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244. PR #9 bridge snapshot identity guard, 32-player peer replacement and consent-outage retry are present in this preview; remain host-only simulations. Combined source-level P0 verification: PR #4 host target selector and PR #9 engine bridge passed a full synthetic consent -> choose -> host distance revalidate -> cuff STATE -> guest opt-out path in CI 43399382390; combined iPhoneOS ARM64 bridge dylib built successfully with SDK 18.5 in run 43399591380. No RAGE v12 runtime validation.",
+      "note": "Source inventory and exact C contracts documented in PR #4. GCC CI passed 3 C executables, 64 P2P assertions, 21 runtime assertions and 25,000 malformed payloads (run 43344701780). Added wrong-local-recipient and cross-target-consent regressions; actual engine hooks remain unverified. Host stress: 6/6 C suites under GCC/Clang UBSan/ASan+UBSan, 10k wire roundtrips, 32-player lifecycle; no GTA online hook/device proof. Host-side nearest-player selector uses verified position/consent/duty snapshots; 49 assertions pass in run 43361576701. Recompiled unsigned ARM64 core in run 43361576710; no game integration. New target-selector export verified in iPhoneOS ARM64 CI run 43361790244. PR #9 bridge snapshot identity guard, 32-player peer replacement and consent-outage retry are present in this preview; remain host-only simulations. Combined source-level P0 verification: PR #4 host target selector and PR #9 engine bridge passed a full synthetic consent -> choose -> host distance revalidate -> cuff STATE -> guest opt-out path in CI 43399382390; combined iPhoneOS ARM64 bridge dylib built successfully with SDK 18.5 in run 43399591380. No RAGE v12 runtime validation. P0 C code review fixed officer departure/opt-out erroneously clearing completed jail sentences: new revoke_officer_authority preserves release_at_ms, revokes former officer manual release rights, frees cuffs/escort, and has host regression tests. No real iPhone gameplay proof; manual transfer of orphaned jail custody requires authenticated connection epoch/security design.",
       "evidence": [
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43344113548",
         "ai-lab/host_rp_tests.py",
@@ -263,7 +269,10 @@
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43361790244",
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43399382390",
         "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43399591380",
-        "ai-lab/projects/roleplay-ios/P0_INTEGRATED_BRIDGE_PROOF.md"
+        "ai-lab/projects/roleplay-ios/P0_INTEGRATED_BRIDGE_PROOF.md",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790",
+        "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520718",
+        "police-rp/v1.4/P2P/test_duty_exit.c"
       ],
       "bridge_snapshot_guard": {
         "branch": "feature/rp003-bridge-snapshot-identity-20261113",
@@ -356,17 +365,18 @@
       "note": "PR #8 source-only release readiness evaluator and CI reporting have been integrated into the P0 preview. This records engineering work underway; P9 actual signed IPA release remains not-started and blocked by P1-P8 and device/manual approval."
     }
   ],
-  "next_action": "P0: all 49 PR #10 changed paths tracked/validated; full-history AI Lab CI and Continuous Source Watch passed 111 Python tests at SHA 87a6c84..., host C and iPhoneOS source bridge builds green. Obtain independent authorized human review of PR #10 (focus workflow overrides, self-manifest, reconciled state.json, bridge/peer identity risk); no self-approval or auto-merge. Only after human approval and post-merge CI can P0 verified; P1 still requires authentic GTA v12 engine/session/connection-epoch device logs.",
+  "next_action": "P0: review PR #10 C code behavior fix: session-owned jail survives officer disconnect/off-duty/opt-out; former numeric officer ID cannot regain manual release authority, but orphaned sentences are timer-only until trusted custody-transfer design. 112 Python/7 C x3, 50-path audited, unsigned iPhoneOS ARM64 core+bridge builds green. Obtain independent approved human review on EXACT PR #10 head; no self-approve/auto-merge. After merge and post-merge CI can P0 be verified. P1 requires real v12 engine callback and peer authenticated connection-generation logs.",
   "last_completed_task": {
-    "id": "P0-49-PATH-PROVENANCE-AND-DUAL-CI-CHECKOUT",
+    "id": "P0-JAIL-OFFICER-DISCONNECT-AND-IDENTITY-REUSE-GUARD",
     "branch": "feature/rp-p0-integration-preview-20261113",
-    "source_commit": "87a6c84c4e583241ac8b0f57194ee2db7d8a9dd7",
+    "source_commit": "42294aa4d5c77ce8b38ab995b7104b1dd209f603",
     "evidence": [
-      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817",
-      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164"
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520718",
+      "ai-lab/projects/roleplay-ios/P0_INTEGRATION_REVIEW.md"
     ],
-    "test_summary": "111/111 Python tests; P0 source-consistent exact 49-path Git diff (38 copied, nine new), 7/7 C programs per normal/UBSan/ASan+UBSan, Source Watch and AI Lab CI green at same SHA. Core and integrated iPhoneOS ARM64 build proof previously green.",
-    "status": "source-verified-p0-independent-review-not-yet-approved",
+    "test_summary": "112/112 Python, seven C host programs under normal/UBSan/ASan+UBSan, P0 50-path hash/git diff audit, both iPhoneOS ARM64 core+bridge source builds passed. Not signed or tested on a real iPhone.",
+    "status": "p0-source-verified-approval-pending",
     "device_tested": false
   },
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
@@ -402,24 +412,32 @@
       "blocking_checks": [
         "independent_head_approval"
       ],
-      "latest_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43396348981",
+      "latest_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790",
       "review_semantics": "Only decisive review states supersede; trusted associated human approvals only"
     },
     "combined_bridge_proof": "ai-lab/projects/roleplay-ios/P0_INTEGRATED_BRIDGE_PROOF.md",
     "latest_arm64_bridge_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43399591380",
     "p0_full_diff_audit": {
-      "expected_paths": 49,
+      "expected_paths": 50,
       "source_copies": 38,
-      "integration_only": 9,
+      "integration_only": 10,
       "reconciled_state_paths": 1,
       "self_manifest_paths": 1,
       "report": "ai-lab/reports/RP_P0_AUDIT.json",
-      "validated_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43401470546",
+      "validated_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790",
       "human_review_complete": false,
       "dual_ci_full_history": true,
-      "latest_validated_sha": "87a6c84c4e583241ac8b0f57194ee2db7d8a9dd7",
-      "ai_lab_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402175817",
-      "watch_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43402186164"
+      "latest_validated_sha": "42294aa4d5c77ce8b38ab995b7104b1dd209f603",
+      "ai_lab_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790",
+      "watch_ci": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520785"
+    },
+    "c_core_custody_fix": {
+      "path": "police-rp/v1.4/P2P/prp_p2p.c",
+      "regression": "police-rp/v1.4/P2P/test_duty_exit.c",
+      "policy": "Keep completed jail sentence on officer departure; detach officer_id and deny manual release by recycled ID; cuff/escort fail-open; timer-only release after orphaning",
+      "source_tested": true,
+      "iphone_device_tested": false,
+      "github_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43408520790"
     }
   },
   "p0_integration_preview": {
@@ -433,7 +451,7 @@
     "resolution": [
       "P0 plan/state from PR #4 retained, with union of unique verified facts",
       "PR #9 bridge_snapshot_guard and consent_outage_retry metadata retained",
-      "PR #8 release readiness source included, RP006 remains not-started pending real IPA validation",
+      "PR #8 release readiness source included; RP-006 source-level engineering in-progress, while P9 actual signed IPA release remains not-started pending P1-P8 device validation",
       "PR #4 test_continuity.py supersedes main version"
     ],
     "device_tested": false,
