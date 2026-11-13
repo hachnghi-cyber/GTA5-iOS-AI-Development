@@ -120,7 +120,19 @@
         "Gap report"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/3",
-      "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet."
+      "note": "Source inventory feature PR #4 has 16 passing GitHub CI tests; not merged yet.",
+      "bridge_snapshot_guard": {
+        "branch": "feature/rp003-bridge-snapshot-identity-20261113",
+        "source_commit": "edf05f1e00e6902d83be2237ded37c2768381b22",
+        "source_paths": [
+          "police-rp/v1.4/Integration/prp_engine_binding.c",
+          "police-rp/v1.4/Integration/test_engine_binding.c",
+          "ai-lab/tests/test_engine_bridge_host.py"
+        ],
+        "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/commit/edf05f1e00e6902d83be2237ded37c2768381b22",
+        "scope": "Reject duplicate or zero player_id for connected trusted peers; locally synthetic host C bridge validation only",
+        "verification": "pending GitHub Actions; no game transport, GTA hook, IPA or iPhone test"
+      }
     },
     {
       "id": "RP-004",
@@ -167,7 +179,7 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Review host-C CI for RP-003 snapshot identity guard, then review the already-open RP-003 source-inventory PR #4; require authenticated GTA game-frame/transport evidence and device logs before real multiplayer integration. Do not merge draft PRs automatically.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
