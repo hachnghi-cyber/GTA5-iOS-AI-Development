@@ -38,6 +38,9 @@ typedef struct {
     uint8_t active;
     uint8_t want_opt_in;
     uint8_t have_snapshot;
+    /* Only touched on the verified game thread. A failed consent revocation
+     * must be retried without retaining local restraints or re-enabling RP. */
+    uint8_t pending_opt_out;
 } PRP_GameBridge;
 
 void prp_bridge_init(PRP_GameBridge *b, const PRP_EngineCallbacks *cb);
