@@ -21,3 +21,21 @@ Combined 38 non-state file blobs using the PR order #7 → #4 → #9 → #8. The
 - Real GTA v12 authenticated game-frame and network carrier, two-device gameplay and IPA signing are not verified. No IPA or assets have been uploaded.
 
 Rollback: delete this standalone preview branch/PR after review. Original branches and main remain untouched.
+
+## Đối chiếu nguồn tự động trên preview (P0 sub-gate)
+
+- Manifest: `P0_SOURCE_PROVENANCE.json`, pin 4 commit source của PR #7/#4/#9/#8 và 38 git blob SHA-1 (định dạng Git; **không** phải SHA-256 của IPA).
+- Kết quả audit: **37/38** path giữ nguyên git blob của PR gốc; **1 path** `.github/workflows/gta-ai-lab-ci.yml` được thay đổi *có khai báo* chỉ để thêm bước kiểm tra P0 và artifact. Cả hash trước/sau và lý do được pin trong `review_overrides`. Không được chấp nhận những sửa đổi không khai báo.
+- `state.json`: giữ đầy đủ **21/21** mục verified_fact độc nhất với `claim`, `evidence` và `scope` y nguyên từ bốn PR; baseline IPA/executable SHA-256 và Mach-O UUID giữ nguyên; `device_tested=false`, `actual_build_artifact=null`.
+- GitHub Actions run <https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43371346949>: **75/75 Python tests** và P0 source audit thành công (`p0-source-consistent`, `blocking_checks=[]`), ngoài ra 7/7 chương trình test C chạy thành công trong từng cấu hình normal, UBSan và ASan+UBSan. Build iPhoneOS ARM64 trong workflow riêng vẫn là **dylib độc lập, không phải IPA**.
+- Bản xác minh này chỉ chứng minh nội dung mã nguồn, test host và tính nhất quán metadata. **Không xác minh tính tương thích gameplay GTA Online.**
+
+### Checklist review thủ công trước khi chuyển P0→P1
+
+- [ ] Chủ dự án xem diff của PR #10 và bốn nhánh nguồn, kiểm tra quyền/phạm vi phân phối mã.
+- [ ] Quyết định thứ tự duyệt PR #7→#4→#9→#8; không merge chồng từng PR thiếu kiểm tra vì `state.json` xung đột trên bốn PR.
+- [ ] Chọn chiến lược merge: hoặc review riêng rồi hợp nhất với xử lý conflict, hoặc review nhánh preview như một changeset tổng hợp; tuyệt đối tránh duplicate commits/double-merge.
+- [ ] Kiểm tra test CI trên merge tip cuối và rà warning, ABI, dependency/rollback.
+- [ ] Chỉ sau khi phê duyệt và có kết quả kiểm tra `main`, cập nhật `PHASE_GATES.json` P0=verified kèm bằng chứng và reviewer.
+
+**Chưa hoàn thành P0:** PR #10 vẫn là bản nháp, người review chưa phê duyệt, P0 vẫn `in-progress`. Bước sau khi P0 được duyệt: P1 xác minh game-frame callback và danh tính Online bằng log iPhone v12 thật. Không tự merge, tự ký hoặc xuất bản IPA.
