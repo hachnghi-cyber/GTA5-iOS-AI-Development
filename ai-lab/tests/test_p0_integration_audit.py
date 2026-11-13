@@ -172,6 +172,18 @@ class P0IntegrationAuditTests(unittest.TestCase):
             self.assertIn("git_diff_coverage",
                           self.run_audit()["blocking_checks"])
 
+    def test_both_ci_workflows_fetch_full_history_for_p0_git_diff(self):
+        workflows = (
+            ".github/workflows/gta-ai-lab-ci.yml",
+            ".github/workflows/gta-rp-continuous-watch.yml",
+        )
+        overrides = {x["path"] for x in self.manifest["review_overrides"]}
+        for workflow in workflows:
+            self.assertIn(workflow, overrides)
+            src = (ROOT / workflow).read_text(encoding="utf-8")
+            self.assertIn("fetch-depth: 0", src,
+                          "P0 Git base diff cannot run on shallow checkout")
+
     def test_reject_gate_promoted_without_review(self):
         self.phases["stages"][0]["status"] = "verified"
         self.assertIn("phase_p0", self.run_audit()["blocking_checks"])
