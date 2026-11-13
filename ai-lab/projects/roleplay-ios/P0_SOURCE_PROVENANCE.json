@@ -412,9 +412,9 @@
   "integration_only_files": [
     {
       "path": ".github/workflows/gta-rp-ios-arm64-bridge.yml",
-      "expected_git_blob_sha1": "d7f8ee7e4117af3f882565943cfc2fc9f917223a",
+      "expected_git_blob_sha1": "00fd23242e63a4bc11f88beaaebce26fab4a1439",
       "status": "added",
-      "reason": "Review-only source, tests, report or workflow authored specifically on the P0 integration preview; exact contents frozen for review. macOS-runner source test fallback: full-history 50-path provenance, all Python tests, seven C host suites under Clang normal/UBSan/ASan+UBSan, used only on P0 review branch when Ubuntu jobs fail before runner allocation."
+      "reason": "Reviewed standalone Apple iPhoneOS ARM64 bridge workflow; restored exact previously successful blob when GitHub Actions runner startup failed for both Ubuntu and macOS (runner_id=0, steps=[]). No source/game assets or merge/release permissions."
     },
     {
       "path": "ai-lab/p0_integration_audit.py",
