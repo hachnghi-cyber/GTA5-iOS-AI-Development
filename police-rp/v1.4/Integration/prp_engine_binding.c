@@ -93,22 +93,30 @@ int prp_bridge_frame(PRP_GameBridge *b) {
     }
     b->last=snap;b->have_snapshot=1;
     if(b->runtime.is_host) {
-        for(unsigned i=0;i<snap.peer_count;i++) {
-            const PRP_Peer *p=&snap.trusted_peers[i];
-            if(!p->player_id || !p->connected)continue;
-            /* Host must supply attested peer info; peer snapshot's opt_in is
-             * ignored in prp_host_update_peer (only consent packet can change it). */
-            (void)prp_host_update_peer(&b->runtime.host,p);
-        }
-        /* Drop peers missing from latest authoritative snapshot. */
+        /* Prune departed players BEFORE joining/updating current peers.
+         * At 32/32 capacity a leave + join in one verified frame otherwise
+         * rejects the newcomer until the following frame. Removal also
+         * clears consent, replay counters and restraints of departed IDs. */
         for(unsigned i=0;i<PRP_MAX_PEERS;i++) {
             uint64_t id=b->runtime.host.peers[i].player_id;
             if(!id)continue;
             int present=0;
             for(unsigned k=0;k<snap.peer_count;k++)
-                if(snap.trusted_peers[k].player_id==id && snap.trusted_peers[k].connected)
+                if(snap.trusted_peers[k].connected &&
+                   snap.trusted_peers[k].player_id==id)
                     {present=1;break;}
             if(!present)(void)prp_host_remove_peer(&b->runtime.host,id);
+        }
+        for(unsigned i=0;i<snap.peer_count;i++) {
+            const PRP_Peer *p=&snap.trusted_peers[i];
+            if(!p->connected)continue;
+            /* Snapshot identity was validated above; the host must never
+             * silently accept partial membership when building RP state.
+             * Engine-supplied opt_in is ignored by prp_host_update_peer. */
+            if(!prp_host_update_peer(&b->runtime.host,p)) {
+                prp_bridge_stop(b);
+                return 0;
+            }
         }
     }
     PRP_TransportContext ctx=context(b,snap.local.local_player_id);
