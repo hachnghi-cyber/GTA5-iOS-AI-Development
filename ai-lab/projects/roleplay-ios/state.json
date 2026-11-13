@@ -4,11 +4,11 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "v13-dladdr-anchor-source-proof",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
-  "integration_branch": "feature/gta-ai-lab-100-agents",
-  "last_known_github_pr": 1,
+  "integration_branch": "feature/rp-v13-session-lifecycle-guard-20261113",
+  "last_known_github_pr": 14,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -34,6 +34,66 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "v13 session lifecycle metadata gate and 48 C assertions passed GCC and Clang ASan+UBSan host execution; source blobs SHA-1 exactly match the locally compiled files",
+      "evidence": "police-rp/v13/rp_v13_session_gate.c; police-rp/v13/test_rp_v13_session_gate.c; ai-lab/projects/roleplay-ios/V13_SESSION_GATE_CONTRACT.md; local GCC/Clang commands recorded on 2026-11-13",
+      "scope": "Source-only test with fabricated trusted-evidence fixtures. No real loader attestation, game-frame hook, session network transport, iPhone hardware or IPA build."
+    },
+    {
+      "claim": "A separate stacked draft PR #14 was created from the v13 identity baseline PR #12 without changing main or the v12 P0 integration PR #10.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14; source commit 2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
+      "scope": "GitHub branch/PR metadata only. PR unmerged and source-only; CI/device tests remain separately gated."
+    },
+    {
+      "claim": "PR #14 CI checks at source head 75c64edc completed with FAILURE; job steps were absent and job log download returned HTTP 404 BlobNotFound, therefore no CI pass can be claimed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
+      "scope": "GitHub Actions metadata and unsuccessful log retrieval on 2026-11-13; failure cause not determined."
+    },
+    {
+      "claim": "A source-only RP v13 explicit stop-callback helper passed 74 C assertions using GCC 14.2 and Clang 17 ASan+UBSan; uploaded Git blob SHA-1 matches the three exact locally compiled C files.",
+      "evidence": "police-rp/v13/test_rp_v13_session_gate.c; ai-lab/projects/roleplay-ios/V13_STOP_CALLBACK_TEST_REPORT.md; SHA256 hashes in v13_research.code_sha256",
+      "scope": "Linux host test only, C fake stop callback. No verified GTA5 engine callback, authenticated transport, Apple SDK compilation, device session or IPA."
+    },
+    {
+      "claim": "CI jobs for v13 identity run 43446132796 failed before runner assignment (runner_id=0, steps=[]; host and iPhoneOS both), so source test execution did not occur in that run.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43446132796; corresponding GitHub Actions jobs REST metadata",
+      "scope": "GitHub Actions job observation only; neither account billing nor workflow bug proven."
+    },
+    {
+      "claim": "PR #14 latest source commit 3cc4eee6 Actions run 43448382988 failed before runner assignment on both Linux and macOS, with steps=[] and runner_id=0; no CI test or Apple build executed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988",
+      "scope": "GitHub Actions jobs metadata from run 43448382988; not proof of billing limitation or app code failure."
+    },
+    {
+      "claim": "RP v13 C11 source-only frame dispatcher with callback failure, host migration, unauthenticated carrier and game-thread loss scenarios passed 59/59 assertions on GCC 14.2 and Clang 17 ASan+UBSan in the working Linux container.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_FRAME_DISPATCHER_REPORT.md; police-rp/v13/test_rp_v13_frame_dispatcher.c; local test log RP_V13_FRAME_DISPATCHER_HOST_TEST.log dated 2026-11-13T15:16:07Z",
+      "scope": "Synthetic callback and session evidence; source-only, no actual GTA v13 runtime/game transport/iPhone device test or Apple SDK build."
+    },
+    {
+      "claim": "At v13 dispatcher source commit 2dea964e, the GitHub workflow run 43451257554 failed before runner assignment for both Linux and iPhoneOS (runner_id=0, steps=[]); no CI build/test executed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43451257554",
+      "scope": "Live Github Actions job metadata; does not identify billing/policy/root cause and is not source compile evidence."
+    },
+    {
+      "claim": "A bounded ARM64 Mach-O LC_UUID parser and synthetic dyld loader API branch compiled and passed GCC 14.2 plus Clang 17 ASan/UBSan tests: 46 portable assertions, 14 dyld-shim assertions, 12,000 deterministic mutated headers on host.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_DYLD_IDENTITY_REPORT.md; police-rp/v13/test_rp_v13_dyld_identity.c; police-rp/v13/tests/test_rp_v13_dyld_shim.c",
+      "scope": "Genuine host executions, artificial Mach-O fixtures and fake dyld; no Apple SDK, dyld runtime attestation, GTA session hook, IPA or device gameplay."
+    },
+    {
+      "claim": "GitHub Actions identity run 43455287379 at source commit e09c2d7b did not allocate host or iPhoneOS runners (both runner_id=0, steps=[]), so neither GitHub CI nor Apple SDK build ran.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
+      "scope": "Observed GitHub job metadata; not evidence of compilation failures or billing root cause."
+    },
+    {
+      "claim": "Source-only v13 dladdr anchored image-provider tests completed on Linux: 5 GCC non-Apple checks, 32 GCC fake-Apple, 32 Clang ASan/UBSan fake-Apple assertions; existing dyld tests also passed 46 and 14 assertions with 12,000 bounded header mutations.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_DLADDR_ANCHORED_LOOKUP.md; local RP_V13_DLADDR_HOST_VALIDATION_20261113.log; Git blob SHA-1 and SHA-256 records",
+      "scope": "Actual local GCC/Clang host tests, not Apple SDK/dyld runtime, real code-address provenance, native game-frame, Online carrier, or iPhone gameplay."
+    },
+    {
+      "claim": "At GitHub PR #14 source commit c8d465fc, Actions run 43457469996 failed before either host or iPhoneOS runner was assigned (runner_id=0, steps=[]); no code compilation in that run.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
+      "scope": "GitHub Actions metadata; not proof of billing cause or source compilation failure."
     }
   ],
   "unknowns": [
@@ -97,16 +157,17 @@
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
-        "RP-001"
+        "Actual v13 engine attestation and authenticated Online callback/peer generation remain unverified."
       ],
       "acceptance": [
         "Versioned ABI contracts",
         "Evidence-backed symbol and hook mapping",
         "List of unsupported PC APIs"
-      ]
+      ],
+      "note": "v13 metadata-only session gate tested locally; authenticated RAGE callback/carrier is not implemented."
     },
     {
       "id": "RP-003",
@@ -167,7 +228,135 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Inspect GitHub Actions failed-run annotations and repository Actions billing/runner access for run 43457469996, then rerun host/sanitizer and unsigned iPhoneOS ARM64 code compilation. Separately obtain trusted live code anchors from exact v13 GTA5 and libgtacompat, with pinned lifetime; validate dladdr Mach-O identities on an actual iPhone. Only then connect RAGE game-frame, Online authenticated sender/session/peer generation and PRP bridge, followed by two-device gameplay regression. Keep PR #14 Draft; no merge/IPA release.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "v13_research": {
+    "upstream_pr": 12,
+    "parent_sha": "5e3cafeaba0ab5d6b2b510018c89f1be189b862e",
+    "exact_ipa_baseline": "ai-lab/projects/roleplay-ios/baselines/v13-20261113-gtav4.json",
+    "v13_gta5_uuid": "DBF9CECA-C973-3AFD-BFA0-435F453DDFCF",
+    "v13_gtacompat_uuid": "8FBCB3AA-625B-316C-A5D2-64DA46C6CEFC",
+    "gates": "binary UUID + trusted Online session metadata; fail closed and require acknowledged game-thread release on identity change",
+    "host_assertions_gcc": 74,
+    "host_assertions_clang_asan_ubsan": 74,
+    "local_test_date": "2026-11-13",
+    "test_status": "host-only-pass; Apple SDK CI/device validation pending",
+    "iphone_device_tested": false,
+    "game_callback_verified": false,
+    "authenticated_transport_verified": false,
+    "rpf_or_ipa_modified": false,
+    "code_sha256": {
+      "police-rp/v13/rp_v13_session_gate.h": "88585fed44895f98426b7c137fb778c8de8309c7f39c9c417ded3a5878b8a720",
+      "police-rp/v13/rp_v13_session_gate.c": "eadd5dc89cf1042561030df92ea637331ecc67148292c49bd5793e11453d81e2",
+      "police-rp/v13/test_rp_v13_session_gate.c": "036219397e64632b029e1d89a448ba6da93d5784ef0f7e6e3c6df88c541ae35d"
+    },
+    "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
+    "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
+    "pr_base": "feature/rp-v13-identity-baseline-20261113",
+    "ci_status": "FAILED BEFORE RUNNER ALLOCATION at c8d465fc: host and iphoneos have runner_id=0 and steps=[]; compiler/SDK never ran; root cause unknown",
+    "ci_failure_evidence": [
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869615",
+      "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869621"
+    ],
+    "local_compilers": {
+      "gcc": "Debian GCC 14.2.0",
+      "clang": "Clang 17.0.0"
+    },
+    "release_stop_callback_contract": "rp_v13_session_gate_release_with_stop: only stop callback returning exactly 1 clears release_pending; failed/null stop blocks rearm",
+    "ci_runner_observation": {
+      "run_id": 43448382988,
+      "head_sha": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
+      "job_steps": "empty",
+      "host_runner_id": 0,
+      "iphoneos_runner_id": 0,
+      "job_duration_approx_seconds": 2,
+      "interpretation": "failed before workflow code started; cause unknown, check billing/runner policies in GitHub",
+      "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
+    },
+    "release_stop_commit": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
+    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
+    "frame_dispatcher": {
+      "status": "implemented-and-host-tested-only",
+      "source_commit": "2dea964e88fc2f589355760269a6ca7da17f23f3",
+      "local_tests": {
+        "run_date_utc": "2026-11-13T15:16:07Z",
+        "gcc_14_2_assertions_passed": 59,
+        "clang_17_asan_ubsan_assertions_passed": 59,
+        "report": "ai-lab/projects/roleplay-ios/V13_FRAME_DISPATCHER_REPORT.md"
+      },
+      "new_source_sha256": {
+        "police-rp/v13/rp_v13_frame_dispatcher.c": "68da806bb72e4d370582a78d965a17c8b1d31ac32cadf6ae4b048ec3c66047d8",
+        "police-rp/v13/rp_v13_frame_dispatcher.h": "1fa3ecc3af917cb83dfd27fc577b982b93dfe037b0b1f7fce0271c0c4600cdc2",
+        "police-rp/v13/test_rp_v13_frame_dispatcher.c": "47ea9c0a39fef7becf141a079c27b94ba0960263bb20ab29cd8954cdd8676eca"
+      },
+      "verified_engine_callback": false,
+      "verified_iOS_build": false,
+      "verified_device_gameplay": false,
+      "rollback": "Revert isolated dispatcher commit; main/IPA/PR12 unaffected",
+      "ci_source_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43451257554",
+      "ci_source_result": "FAILED BEFORE RUNNER ASSIGNMENT; both jobs 0 steps, runner_id=0; not a source test"
+    },
+    "dyld_identity": {
+      "status": "host-validated-source-only",
+      "checked_at_utc": "2026-11-13T15:37:21Z",
+      "entrypoint": "rp_v13_dyld_collect_identity",
+      "portable_tests": "46 assertions passed with GCC 14.2 and Clang 17 ASan+UBSan; 12000 deterministic Mach-O header mutations",
+      "fake_apple_dyld_tests": "14 assertions passed with GCC and Clang ASan+UBSan using stub mach-o headers; NOT Apple SDK or real dyld test",
+      "changes": "bounded MH_MAGIC_64 ARM64 LC_UUID parser; reject missing/truncated/duplicate UUID and wrong file type/path; same GTAV.app prefix for GTA5 and libgtacompat; portable fixture cannot assert dyld loader flags; Apple path returns flags only after exact v13 UUID match",
+      "hashes_sha256": {
+        "police-rp/v13/rp_v13_dyld_identity.h": "474c705606984160843d4de66a68f80fe8c9308b85788cdee16a2a98a8a07040",
+        "police-rp/v13/rp_v13_dyld_identity.c": "fbd86f2ba1a21ee7eb3fcdf9e32cdebd5a58bbd92e9dafe281a55068052c2632",
+        "police-rp/v13/test_rp_v13_dyld_identity.c": "fc8d08f3885d62260803e8ef6a9d0c8cf77868659b6158fe41476fe4c69dac52",
+        "police-rp/v13/tests/fixtures/mach-o/loader.h": "c2d29f27605b17c15d3eb95b52cce79efe202611121e43f7b1911155a6fd4f52",
+        "police-rp/v13/tests/fixtures/mach-o/dyld.h": "ac18e55c6ec1f88d9ccd52b9437d0f0abab892362703cfd539530e8c20764759",
+        "police-rp/v13/tests/test_rp_v13_dyld_shim.c": "864744983badf0f93886644d5d4e63b993e0b8bd6d5c39ab9c77f62b3de59676"
+      },
+      "apple_sdk_compiled": false,
+      "run_on_iphone": false,
+      "verified_live_dyld_identity": false,
+      "network_engine_binding": false,
+      "notes": "dyld image enumeration is not thread-safe if images concurrently load/unload; loaded LC_UUID alone does not prove code signing/integrity; exact app basename and UUIDs are version-specific, require iPhone device diagnostics and Apple SDK CI",
+      "source_commit": "e09c2d7b5d30a7d7adfeaa767f6a4ae2b38b7c55",
+      "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43455287379",
+      "ci_status": "FAILED BEFORE RUNNER ALLOCATION: host and iphoneos runner_id=0, steps=[] (no CI code executed), cause not proven"
+    },
+    "dladdr_identity": {
+      "status": "host-tested-Apple-API-shim-only",
+      "upstream_source_commit": "e09c2d7b5d30a7d7adfeaa767f6a4ae2b38b7c55",
+      "api": "rp_v13_dladdr_collect_identity(const void *gta5_code_anchor, const void *compat_code_anchor, RP_V13_IdentityEvidence *out)",
+      "base_image_list_race": "_dyld_image_count index iteration not thread-safe per Apple dyld docs",
+      "regression_root_cause": "order-insensitive image selector initially allowed reversed anchor roles; caught in first GCC mock test and fixed with ordered path role checks",
+      "tests": {
+        "gcc_non_apple": 5,
+        "gcc_fake_apple": 32,
+        "clang_asan_ubsan_fake_apple": 32,
+        "existing_parser_gcc": 46,
+        "existing_dyld_shim_clang_asan_ubsan": 14,
+        "malformed_header_mutations": 12000,
+        "device": false,
+        "apple_sdk_build": false
+      },
+      "evidence_report": "ai-lab/projects/roleplay-ios/V13_DLADDR_ANCHORED_LOOKUP.md",
+      "sha256": {
+        "police-rp/v13/rp_v13_dladdr_identity.h": "cf82b163983401584a89672c9b0c411bc4d8788b51e3420f0941ed7429145318",
+        "police-rp/v13/rp_v13_dladdr_identity.c": "765dd078d023ce9e00994cdbd62af7771ce2e8151439e1ba83b1e29c7d407b4c",
+        "police-rp/v13/test_rp_v13_dladdr_portable.c": "e603689e94449eb270c365914befee60f8d226a3d226ac3afddbcd869cad013e",
+        "police-rp/v13/tests/fixtures/dlfcn.h": "4fa15754d2d2f95ed5c586f2dfff1094cad8f64634b9ef673a30785ece061dfa",
+        "police-rp/v13/tests/test_rp_v13_dladdr_identity.c": "f33199807c4358c94d6191ae758112fce86256a7f3c265b287d04bfe7fc60d20"
+      },
+      "limitations": [
+        "No trusted GTA main/compat code-anchor provider verified",
+        "Requires pinned loaded module lifetime",
+        "dladdr metadata/UUID are not Apple code-signature verification",
+        "iPhoneOS SDK compilation and 2-iPhone gameplay not tested"
+      ],
+      "implementation_commit": "c8d465fc734797971e02d67381d80e2fa33384a7",
+      "ci_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43457469996",
+      "ci_status": "FAILED BEFORE RUNNER ALLOCATION at c8d465fc: host and iphoneos have runner_id=0 and steps=[]; compiler/SDK never ran; root cause unknown",
+      "local_test_log": "RP_V13_DLADDR_HOST_VALIDATION_20261113.log (handoff local, not CI)"
+    }
+  }
 }
