@@ -32,3 +32,7 @@ NOT VERIFIED: IPA build/injection, iPhone/iPad test, dynamic dyld image identity
 1. Collect exact v13 device logs for a trusted frame callback, authoritative host/local IDs, carrier dispatch and host migration. Only then implement the adapter that binds this gate to PRP_TransportPort. Never reuse v12 code offsets.
 2. Regression-test disconnect, host migration, 32-peer churn, consent revoke and late packets using two iPhones.
 3. Rollback the stacked PR or revert its commit. The parent PR #12, main and the GTA IPA remain unchanged.
+
+## Live PR #14 workflow observation (2026-11-13)
+
+GitHub Actions checks on PR head 75c64edc162c0fdd3d765b66c69dd833f67c1436 completed with conclusion FAILURE: identity gate run https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625, AI Lab CI https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867, pinned bridge https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869615 and source watcher https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869621. Both jobs (host and iphoneos) of identity run report failure without available step records. Attempts to download the host and iPhoneOS job logs returned GitHub BlobNotFound/404. Therefore the CI root cause is UNKNOWN, CI is NOT green, and no Apple ARM64 build was proved for this PR. These checks require infrastructure/runner log investigation before any merge. Local GCC/Clang results remain a separate, host-only claim.
