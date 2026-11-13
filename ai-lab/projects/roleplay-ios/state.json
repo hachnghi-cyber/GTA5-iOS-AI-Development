@@ -59,6 +59,11 @@
       "claim": "CI jobs for v13 identity run 43446132796 failed before runner assignment (runner_id=0, steps=[]; host and iPhoneOS both), so source test execution did not occur in that run.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43446132796; corresponding GitHub Actions jobs REST metadata",
       "scope": "GitHub Actions job observation only; neither account billing nor workflow bug proven."
+    },
+    {
+      "claim": "PR #14 latest source commit 3cc4eee6 Actions run 43448382988 failed before runner assignment on both Linux and macOS, with steps=[] and runner_id=0; no CI test or Apple build executed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988",
+      "scope": "GitHub Actions jobs metadata from run 43448382988; not proof of billing limitation or app code failure."
     }
   ],
   "unknowns": [
@@ -193,7 +198,7 @@
       ]
     }
   ],
-  "next_action": "Inspect repository owner's GitHub Actions run 43446132796 annotations and Settings > Billing and licensing > Usage/Budgets plus Settings > Actions > Runners/General. Jobs failed before assignment (runner_id=0), so do not claim CI build. Once runners work, rerun PR #14 and check 74 assertion host/ASan + iPhoneOS ARM64 unsigned dylib. Then get v13 device proof for trusted game-frame, authenticated online carrier, peer generation and actual prp_port_stop; no IPA publishing/merge before real evidence.",
+  "next_action": "GitHub runner prerequisite: inspect PR #14 workflow run 43448382988 annotations, GitHub Settings > Billing and licensing > Usage/Budgets and Settings > Actions > General/Runners; if the account is blocked, resolve through GitHub billing/support without publishing financial details. Only after runner assignment, rerun v13 PR #14 CI for 74 assertion host/sanitizer + iPhoneOS ARM64 unsigned source library. Next engine task remains obtaining exact v13 trusted game-frame, peer generation and authenticated carrier evidence and connecting stop_local to real prp_port_stop on GTA thread. No merge/IPA release before tests.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -219,7 +224,7 @@
     "implementation_commit": "2764e8ca8eb64c7763f7d412fb11ceeb6259feac",
     "draft_pr_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/14",
     "pr_base": "feature/rp-v13-identity-baseline-20261113",
-    "ci_status": "PRE-RUN FAILURE on head 1b82f116 (run 43446132796): both ubuntu-latest and macos-15 jobs runner_id=0, steps=[]; exact cause unconfirmed; new 74-assertion patch tested locally but not yet CI-tested",
+    "ci_status": "PRE-RUN FAILURE on latest RP v13 identity workflow, head 3cc4eee6143cbc82500d08d8575e429e4ad0a87a: ubuntu-latest and macos-15 both runner_id=0, steps=[]; build and CI test never started. Billing/policy/root cause unknown.",
     "ci_failure_evidence": [
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869625",
       "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43445869867",
@@ -232,14 +237,16 @@
     },
     "release_stop_callback_contract": "rp_v13_session_gate_release_with_stop: only stop callback returning exactly 1 clears release_pending; failed/null stop blocks rearm",
     "ci_runner_observation": {
-      "run_id": 43446132796,
-      "head_sha": "1b82f11665dbd4441e58cdfc4de82cab55463794",
+      "run_id": 43448382988,
+      "head_sha": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
       "job_steps": "empty",
       "host_runner_id": 0,
       "iphoneos_runner_id": 0,
       "job_duration_approx_seconds": 2,
-      "interpretation": "failed before any workflow step; cause unknown, account billing/runner policy to verify manually",
-      "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43446132796"
-    }
+      "interpretation": "failed before workflow code started; cause unknown, check billing/runner policies in GitHub",
+      "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
+    },
+    "release_stop_commit": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
+    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
   }
 }
