@@ -25,6 +25,7 @@ CASES = (
     ("p2p_packet_host_authority", P2P / "test_p2p.c"),
     ("runtime_session_and_consent", P2P / "test_runtime.c"),
     ("off_duty_releases_restraints", P2P / "test_duty_exit.c"),
+    ("versioned_native_api_contract", P2P / "test_abi_contract.c"),
 )
 FLAGS = ("-std=c11", "-O2", "-Wall", "-Wextra", "-Werror")
 
