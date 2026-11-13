@@ -51,5 +51,21 @@ class HostPoliceRPTestRunnerTests(unittest.TestCase):
             self.assertEqual(len(report["source_fingerprints"]), len(mod.SOURCES) + len(mod.CASES))
 
 
+    def test_ubsan_flags_passed_to_compiler_without_device_claim(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_source_tree(root)
+            success = SimpleNamespace(returncode=0, stdout="host OK", stderr="")
+            with patch.object(mod.subprocess, "run", return_value=success) as run:
+                report = mod.run_suite(root=root, compiler="clang", sanitize_undefined=True)
+            self.assertEqual(report["status"], "host-tests-passed")
+            self.assertEqual(report["sanitizer"], "undefined")
+            first_command = run.call_args_list[0].args[0]
+            self.assertIn("-fsanitize=undefined", first_command)
+            self.assertIn("-fno-sanitize-recover=all", first_command)
+            self.assertFalse(report["iphone_tested"])
+            self.assertEqual(report["total_count"], len(mod.CASES))
+
+
 if __name__ == "__main__":
     unittest.main()
