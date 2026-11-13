@@ -48,7 +48,7 @@ class HostPoliceRPTestRunnerTests(unittest.TestCase):
             self.assertEqual(report["passed_count"], len(mod.CASES))
             self.assertFalse(report["gameplay_verified"])
             self.assertFalse(report["iphone_tested"])
-            self.assertEqual(len(report["source_fingerprints"]), 7)
+            self.assertEqual(len(report["source_fingerprints"]), len(mod.SOURCES) + len(mod.CASES))
 
 
 if __name__ == "__main__":
