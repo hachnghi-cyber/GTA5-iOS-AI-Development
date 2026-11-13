@@ -137,3 +137,52 @@ P0 for the v13 target is NOT completed by these checks. PR #12 remains
 a review-only research proposal; PR #10 for the earlier v12 build
 remains unmerged. Revalidate engine/transport bindings against **v13**,
 never assume callback offsets or RPC/peer identity are equivalent.
+
+## Exact comparison to earlier v13 and independent R4 source
+
+The user supplied a newer ZIP variant, `GTAV-v13(4).ipa`. It was
+SHA-256 compared **member-by-member** to the previously used
+`GTAV-v13-VI-Telegram-UNSIGNED(1).ipa` (sha256
+`57ad5135178ceac4ca20247c7e0985956c71ccaee24a6c9faf7a70490bd5addb`).
+
+- **51** non-directory members are byte-identical (SHA-256), including
+  `GTA5`, `libgtacompat.dylib`, ScriptHookV and the RAGE executable.
+- **1** member changed: `Frameworks/Menyoo.shv.dylib`.
+- **1** member was added: `Frameworks/MenyooKeyboardBridge.dylib`.
+- Nothing was removed.
+
+The existing **Roleplay v13 R3** research code was therefore copied into
+a **separate local R4 source archive**, preserving all **18 C/header
+sources and existing tests byte-for-byte** while repinning the IPA hash,
+re-extracting the new package's binary inventory, and adding
+`tools/compare_variant.py` and new logs.
+
+The archived R3 static ARM64 receive-path was independently regenerated
+against the NEW extracted GTA5 executable and is identical: **21
+selected functions, 773 direct B/BL branches, 2 ADRP+ADD address
+references**, JSON SHA256
+`ab51c6bc952c11b0f811caaac48b74048ccb57cc2d4dfbe0120a035134d03ce9`.
+
+Local R4 verification: `make check build/librp.so`, five ASan+UBSan
+host suites (LeakSanitizer disabled), UDP loss simulation, 100000 SPSC
+messages across pthreads, 269 core assertions, 280 reliability
+assertions and 58 host bridge assertions all pass; 6 Python inventory
+tests also pass. These host results do **not** verify the iPhone RAGE
+runtime.
+
+**IMPORTANT architecture distinction:** R3/R4 v13 source uses a
+`RP13` 40-byte request protocol plus `RA13` 64-byte acknowledgement
+and epoch-fenced SPSC queue. The unmerged v12 PR #10 uses a different
+`PRP6` 56-byte format. The proof-of-compilation workflow in this
+repository that links v12 PR #10 core with the v13 UUID gate is
+**ABI/link research only**. It does not replace the more complete
+standalone R3/R4 source or establish wire compatibility. Never cast,
+forward or mix those packets. Do not overwrite the user's more
+advanced R3/R4 work with the v12 protocol.
+
+R4 archive has been saved separately for the user's future automated
+development. Its native iPhoneOS build is still **NOT RUN** even though
+the experimental pinned v12 source + v13 UUID gate has linked in Apple
+CI. The carrier, event object layout, authenticated sender epoch,
+game-thread callback, in-game local-ped behavior and two-iPhone gameplay
+remain unresolved.
