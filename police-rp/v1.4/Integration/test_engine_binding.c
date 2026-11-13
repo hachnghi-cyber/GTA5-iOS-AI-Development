@@ -82,6 +82,20 @@ int main(void){
     assert(!gm.cuffed && !gm.ctrl);
     prp_bridge_set_consent(&g,0);
     assert(prp_bridge_frame(&g));
+    /* Reject ambiguous attested peer identity before mutating host state.
+     * Recovery with a later valid snapshot must still be possible. */
+    Mock bad={0};bad.snapshot=snap(1,1,999);
+    PRP_GameBridge b;PRP_EngineCallbacks bc=callbacks(&bad);
+    prp_bridge_init(&b,&bc);
+    bad.snapshot.trusted_peers[1].player_id=1; /* duplicate connected ID */
+    assert(!prp_bridge_frame(&b) && !b.active);
+    assert(b.runtime.host.peer_count==0);
+    bad.snapshot=snap(1,1,999);
+    bad.snapshot.trusted_peers[1].player_id=0; /* connected, no identity */
+    assert(!prp_bridge_frame(&b) && !b.active);
+    bad.snapshot=snap(1,1,999);
+    assert(prp_bridge_frame(&b) && b.runtime.host.peer_count==2);
+    prp_bridge_stop(&b);
     printf("Police RP v0.7 engine binding simulation passed\n");
     return 0;
 }
