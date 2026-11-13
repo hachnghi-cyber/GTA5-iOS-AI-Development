@@ -1,0 +1,51 @@
+name: V12 Plus — experimental locations + waypoint ARM64
+on:
+  push:
+    branches:
+      - feature/v12plus-v13-places-waypoint
+    paths:
+      - 'v12plus-v13-features/**'
+      - '.github/workflows/build-v12plus-places.yml'
+  pull_request:
+    paths:
+      - 'v12plus-v13-features/**'
+      - '.github/workflows/build-v12plus-places.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host C++ tests
+        run: |
+          set -euo pipefail
+          clang++ -std=c++17 -Wall -Wextra -Werror \
+            v12plus-v13-features/tests/test_point.cpp -o "$RUNNER_TEMP/v12plus-point-tests"
+          "$RUNNER_TEMP/v12plus-point-tests"
+      - name: Compile unsigned iOS ARM64 native plugin
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p dist
+          xcrun --sdk iphoneos clang++ \
+            -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -std=c++17 -fobjc-arc -fblocks -Wall -Wextra -Werror \
+            -O2 -fvisibility=hidden -dynamiclib \
+            v12plus-v13-features/native/V12Places.mm \
+            -framework UIKit -framework Foundation \
+            -install_name '@rpath/V12Places.shv.dylib' \
+            -o dist/V12Places.shv.dylib
+          file dist/V12Places.shv.dylib
+          xcrun llvm-objdump --macho --dylibs-used dist/V12Places.shv.dylib
+          codesign --force --sign - --timestamp=none dist/V12Places.shv.dylib
+          codesign --verify --verbose=2 dist/V12Places.shv.dylib
+      - name: Upload ARM64 experimental dylib (not tested on device)
+        uses: actions/upload-artifact@v4
+        with:
+          name: V12-PLUS-Places-Waypoint-ARM64-UNTESTED
+          path: dist/V12Places.shv.dylib
+          retention-days: 7
+          if-no-files-found: error
