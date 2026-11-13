@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "RP-001 has a source-only, fail-closed identity metadata gate with six host unit test cases; not evidence of runtime compatibility",
+      "evidence": "ai-lab/rp_identity_gate.py; ai-lab/tests/test_rp_identity_gate.py; branch feature/rp001-baseline-identity-gate",
+      "scope": "code added, CI pending; does not rehash the original IPA or test a device"
     }
   ],
   "unknowns": [
@@ -88,7 +93,7 @@
         "No extracted copyrighted assets published"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2",
-      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required.",
+      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required. New metadata identity gate on feature/rp001-baseline-identity-gate checks state/evidence consistency; this is not a fresh IPA fingerprint or gameplay test.",
       "evidence": [
         "ai-lab/projects/roleplay-ios/baselines/v12-verified.json",
         "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md"
@@ -167,7 +172,7 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Run GitHub CI on feature/rp001-baseline-identity-gate and review metadata gate; continue RP-003 API compatibility inventory on existing PR #4. For actual multiplayer integration obtain authenticated game-frame callback and transport evidence from device/source.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
