@@ -1,0 +1,64 @@
+name: GTA RP - iPhoneOS ARM64 Core Build (NO IPA)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'police-rp/v1.4/P2P/**'
+      - 'police-rp/v1.4/NativeBridge/**'
+      - '.github/workflows/gta-rp-ios-arm64-core.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Verify iPhoneOS SDK and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          test -f police-rp/v1.4/P2P/prp_p2p.c
+          test -f police-rp/v1.4/P2P/prp_runtime.c
+          test -f police-rp/v1.4/NativeBridge/police_rp_adapter.c
+          test -f police-rp/v1.4/NativeBridge/police_rp_only.c
+      - name: Compile source-only ARM64 iPhoneOS dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
+            -miphoneos-version-min=16.3 \
+            -std=c11 -O2 -Wall -Wextra -Werror \
+            -fstack-protector-strong -dynamiclib \
+            police-rp/v1.4/P2P/prp_p2p.c \
+            police-rp/v1.4/P2P/prp_runtime.c \
+            police-rp/v1.4/NativeBridge/police_rp_adapter.c \
+            police-rp/v1.4/NativeBridge/police_rp_only.c \
+            -Wl,-install_name,@rpath/libPoliceRPCore.dylib \
+            -o out/libPoliceRPCore.dylib
+          xcrun lipo -info out/libPoliceRPCore.dylib > out/architecture.txt
+          xcrun otool -L out/libPoliceRPCore.dylib > out/dependencies.txt
+          xcrun vtool -show-build out/libPoliceRPCore.dylib > out/build_version.txt
+          xcrun nm -gU out/libPoliceRPCore.dylib > out/exports.txt
+          grep -Fq _prp_runtime_tick out/exports.txt
+          grep -Fq _prp_runtime_receive out/exports.txt
+          shasum -a 256 out/libPoliceRPCore.dylib > out/SHA256.txt
+          printf '%s\n' \
+            'Source-only iPhoneOS ARM64 Police RP C core, UNSIGNED.' \
+            'Not injected into GTA5. No authenticated network carrier or game-frame callback.' \
+            'Not an IPA, not installable gameplay, not tested on any iPhone.' \
+            'Never place proprietary IPA or Apple signing credentials in Actions.' \
+            > out/README.txt
+      - name: Upload unsigned library and proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA-RP-iPhoneOS-ARM64-CORE-UNSIGNED-NOT-GAMEPLAY
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
