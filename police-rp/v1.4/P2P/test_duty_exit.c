@@ -69,8 +69,93 @@ int main(void) {
     officer.on_shift=0;
     assert(prp_host_update_peer(&h,&officer));
     assert(h.states[1].status==PR_JAILED);
+    assert(h.states[1].officer_id==0); /* stale job cannot retain release authority */
     prp_host_expire(&h,61000);
     assert(h.states[1].status==PR_FREE);
+    /* A SECONDARY officer (ID 30) disconnects while session HOST (ID 10)
+     * remains alive. Jail must NOT be canceled merely because the arresting
+     * officer leaves. This differs from the target leaving the session. */
+    PRP_Peer host_user=peer(10,-1,0,40), officer2=peer(30,0,1,0);
+    prp_host_init(&h,1234,10);
+    assert(prp_host_update_peer(&h,&host_user));
+    assert(prp_host_update_peer(&h,&officer2));
+    assert(prp_host_update_peer(&h,&subject));
+    c=ctx(30);
+    op=msg(PRP_OP_CONSENT,30,30,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    c=ctx(20);op=msg(PRP_OP_CONSENT,20,20,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    c=ctx(30);op=msg(PRP_OP_CUFF,30,20,2);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_ESCORT,30,20,3);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_JAIL,30,20,4);op.jail_ms=60000;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[2].status==PR_JAILED && h.states[2].officer_id==30);
+    uint64_t jail_deadline=h.states[2].release_at_ms;
+    assert(jail_deadline==61000);
+    assert(prp_host_remove_peer(&h,30));
+    assert(h.states[2].status==PR_JAILED);
+    assert(h.states[2].officer_id==0);
+    assert(h.states[2].release_at_ms==jail_deadline);
+    assert(prp_host_state_for(&h,20,2000,&op));
+    assert(op.status==PR_JAILED && op.jail_ms==59000);
+
+    /* A later member reuses numeric ID 30. The old officer's release
+     * authority must NOT transfer to the newly connected player. */
+    assert(prp_host_update_peer(&h,&officer2));
+    c=ctx(30);op=msg(PRP_OP_CONSENT,30,30,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_RELEASE,30,20,2);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ERR_STATE);
+    assert(h.states[2].status==PR_JAILED);
+    prp_host_expire(&h,61000);
+    assert(h.states[2].status==PR_FREE);
+
+    /* Transient cuff/escort must instead release immediately when an
+     * officer disconnects. The same rule holds for explicit opt-out. */
+    op=msg(PRP_OP_CUFF,30,20,3);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(prp_host_remove_peer(&h,30));
+    assert(h.states[2].status==PR_FREE);
+    assert(prp_host_update_peer(&h,&officer2));
+    op=msg(PRP_OP_CONSENT,30,30,1);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_CUFF,30,20,2);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_ESCORT,30,20,3);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_CONSENT,30,30,4);op.consent=0;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[2].status==PR_FREE);
+
+    /* Re-enrolled officer finishes another jail sentence then opts out.
+     * Session owns the jail countdown; the officer loses release rights. */
+    op=msg(PRP_OP_CONSENT,30,30,5);op.consent=1;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_CUFF,30,20,6);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_ESCORT,30,20,7);
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_JAIL,30,20,8);op.jail_ms=60000;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    op=msg(PRP_OP_CONSENT,30,30,9);op.consent=0;
+    assert(prp_host_receive(&h,&c,&op,NULL)==PRP_ACCEPTED);
+    assert(h.states[2].status==PR_JAILED);
+    assert(h.states[2].officer_id==0);
+    assert(h.states[2].release_at_ms==61000);
+    prp_host_expire(&h,61000);
+    assert(h.states[2].status==PR_FREE);
+
+    /* The prisoner leaving the session still clears their own jail state. */
+    prp_host_init(&h,1234,10);
+    assert(prp_host_update_peer(&h,&subject));
+    h.states[0].status=PR_JAILED;
+    h.states[0].officer_id=30;
+    h.states[0].release_at_ms=61000;
+    assert(prp_host_remove_peer(&h,20));
+    assert(h.peer_count==0 && h.states[0].status==PR_FREE);
+
     puts("PoliceRP v0.9 officer off-duty / consent / jail regressions passed");
     return 0;
 }
