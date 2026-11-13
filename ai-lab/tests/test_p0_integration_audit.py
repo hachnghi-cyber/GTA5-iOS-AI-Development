@@ -130,15 +130,25 @@ class P0IntegrationAuditTests(unittest.TestCase):
         self.manifest.pop("required_task_progress")
         self.assertIn("task_inventory", self.run_audit()["blocking_checks"])
 
-    def test_manifest_covers_all_49_pr_change_paths(self):
-        self.assertEqual(self.manifest["expected_total_changed_paths"], 49)
-        self.assertEqual(len(self.manifest["integration_only_files"]), 9)
+    def test_manifest_covers_all_50_pr_change_paths(self):
+        self.assertEqual(self.manifest["expected_total_changed_paths"], 50)
+        self.assertEqual(len(self.manifest["integration_only_files"]), 10)
         self.assertEqual(len(self.manifest["source_files"]), 38)
         all_paths = {x["path"] for x in self.manifest["source_files"]}
         all_paths.update(x["path"] for x in self.manifest["integration_only_files"])
         all_paths.add(self.manifest["self_manifest_path"])
         all_paths.update(self.manifest["excluded_reconciled_paths"])
-        self.assertEqual(len(all_paths), 49)
+        self.assertEqual(len(all_paths), 50)
+
+    def test_modified_base_test_is_pinned_as_modified_not_added(self):
+        target = "police-rp/v1.4/P2P/test_duty_exit.c"
+        item = next(x for x in self.manifest["integration_only_files"]
+                    if x["path"] == target)
+        self.assertEqual(item["status"], "modified")
+        self.assertTrue(self.run_audit()["source_verified"])
+        item["status"] = "added"
+        self.assertIn("git_diff_coverage",
+                      self.run_audit()["blocking_checks"])
 
     def test_reject_tampered_integration_owned_blob(self):
         self.manifest["integration_only_files"][0]["expected_git_blob_sha1"] = "0"*40
