@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,6 +33,39 @@ def _relative_path(path):
     return (not pure.is_absolute() and "\\" not in path and
             all(part not in ("", ".", "..") for part in path.split("/")) and
             pure.suffix.lower() in SAFE_EXTENSIONS)
+
+
+
+def git_diff_changed_paths(root, base_commit):
+    """Return the complete changed-path/status map for pinned base..CI HEAD.
+
+    Requires the pinned base commit locally (CI uses checkout fetch-depth 0).
+    Do not trust a path allowlist without ALSO checking actual Git changes.
+    """
+    if not isinstance(base_commit, str) or not HEX40.fullmatch(base_commit):
+        raise ValueError("Unpinned or malformed base_commit")
+    command = [
+        "git", "-C", str(Path(root).resolve()), "diff",
+        "--name-status", "-z", "--no-renames", base_commit, "HEAD", "--",
+    ]
+    result = subprocess.run(command, capture_output=True, timeout=20,
+                            check=False)
+    if result.returncode:
+        raise ValueError("Git diff failed: pinned base commit not available")
+    parts = result.stdout.split(b"\x00")
+    if not parts or parts[-1] != b"":
+        raise ValueError("Malformed NUL-terminated git diff response")
+    parts.pop()
+    if len(parts) % 2:
+        raise ValueError("Unexpected Git diff path/status encoding")
+    found = {}
+    for index in range(0, len(parts), 2):
+        status = parts[index].decode("ascii", errors="strict")
+        path = parts[index + 1].decode("utf-8", errors="strict")
+        if path in found or not _relative_path(path):
+            raise ValueError("Duplicate or disallowed Git changed path")
+        found[path] = status
+    return found
 
 
 def audit(root, manifest, state, phases):
@@ -121,6 +155,77 @@ def audit(root, manifest, state, phases):
     add("per_pr_presence", all(counts.get(n, 0) > 0 for n in (4, 7, 8, 9)),
         "Each PR contributes at least one matched source file")
 
+    # Original audit checked only 38 copied upstream files. That missed newly
+    # added PR #10 integration-only code/workflows: an arbitrary added file
+    # could evade hash review while the audit reported "source-consistent".
+    # Now pin every non-self-manifest integration blob and enumerate actual
+    # Git changes from the immutable base commit. state.json remains checked
+    # semantically below; the manifest cannot pin its own hash recursively.
+    extras = manifest.get("integration_only_files")
+    if not isinstance(extras, list):
+        add("integration_inventory", False, "Integration-only file list missing")
+        extras = []
+    extra_paths = set()
+    for item in extras:
+        if not isinstance(item, dict):
+            add("invalid_integration_entry", False, "Invalid integration-only entry")
+            continue
+        path = item.get("path")
+        sha = item.get("expected_git_blob_sha1")
+        status = item.get("status")
+        if (not _relative_path(path) or
+                not isinstance(sha, str) or not HEX40.fullmatch(sha) or
+                status != "added" or
+                not isinstance(item.get("reason"), str) or
+                not item["reason"].strip() or
+                path in extra_paths or path in seen or
+                path in manifest.get("excluded_reconciled_paths", []) or
+                path == manifest.get("self_manifest_path")):
+            add("invalid_integration_entry", False,
+                f"Unpinned/duplicate/disallowed integration-only path {path!r}")
+            continue
+        extra_paths.add(path)
+        target = root.joinpath(*path.split("/"))
+        if target.is_symlink() or not target.is_file():
+            add("missing_integration_file", False, f"Missing/symlink: {path}")
+            continue
+        digest = git_blob_hash(target.read_bytes())
+        add("integration_blob:" + path, digest == sha,
+            f"P0 integration-owned path: {path}; git blob SHA1: {digest}")
+    self_path = manifest.get("self_manifest_path")
+    state_paths = manifest.get("excluded_reconciled_paths")
+    add("self_and_state_paths",
+        self_path == "ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json" and
+        state_paths == ["ai-lab/projects/roleplay-ios/state.json"] and
+        self_path not in seen and self_path not in extra_paths and
+        not root.joinpath(*self_path.split("/")).is_symlink(),
+        "Only the recursive manifest and semantically validated state.json are hash-exempt")
+    expected_paths = seen | extra_paths | {self_path} | set(
+        state_paths if isinstance(state_paths, list) else [])
+    add("integration_inventory", len(extra_paths) == len(extras) and
+        manifest.get("expected_total_changed_paths") == len(expected_paths) and
+        len(expected_paths) == len(seen) + len(extra_paths) + 2,
+        "Every source, integration-only, state, and self-manifest path declared once")
+    try:
+        actual_changes = git_diff_changed_paths(root, manifest.get("base_commit"))
+        exact = set(actual_changes) == expected_paths
+        statuses = all(
+            actual_changes.get(path) == ("A" if path in extra_paths or path == self_path else
+                                        "M" if path in state_paths else
+                                        actual_changes.get(path))
+            for path in expected_paths
+        )
+        # No deleted files or unexpected status such as typechange/rename.
+        no_deletions = all(value in {"A", "M"} for value in actual_changes.values())
+        add("git_diff_coverage", exact and statuses and no_deletions,
+            f"Git diff changed {len(actual_changes)} paths; manifest declares "
+            f"{len(expected_paths)}; unlisted: "
+            f"{sorted(set(actual_changes) - expected_paths)[:6]}; "
+            f"missing: {sorted(expected_paths - set(actual_changes))[:6]}")
+    except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+        add("git_diff_coverage", False,
+            "Cannot validate base..HEAD full diff: " + type(exc).__name__)
+
     baseline = state.get("baseline")
     pinned = manifest.get("baseline_metadata")
     if not isinstance(baseline, dict) or not isinstance(pinned, dict):
@@ -207,6 +312,8 @@ def audit(root, manifest, state, phases):
         "schema_version": 1, "status": "p0-source-consistent" if passed else "blocked",
         "source_verified": passed,
         "source_count": len(files),
+        "expected_total_changed_paths": manifest.get("expected_total_changed_paths"),
+        "integration_only_count": len(extra_paths),
         "required_fact_count": len(claims) if isinstance(claims, list) else None,
         "checks": checks,
         "blocking_checks": [c["id"] for c in checks if not c["passed"]],
