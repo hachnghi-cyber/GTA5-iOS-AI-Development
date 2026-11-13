@@ -75,7 +75,8 @@ UIViewController *topController() {
     if (!key) key = ws.windows.firstObject;
     if (key) break;
   }
-  if (!key) key = app.keyWindow;
+  // No UIApplication.keyWindow fallback (deprecated since iOS 13).
+  // Return nil if there is no foreground UIWindowScene; caller cancels safely.
   UIViewController *vc = key.rootViewController;
   while (vc.presentedViewController) vc = vc.presentedViewController;
   return vc;
