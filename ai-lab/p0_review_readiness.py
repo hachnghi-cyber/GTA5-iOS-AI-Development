@@ -16,7 +16,7 @@ AUDIT = ROOT / "ai-lab/reports/RP_P0_AUDIT.json"
 MANIFEST = ROOT / "ai-lab/projects/roleplay-ios/P0_SOURCE_PROVENANCE.json"
 
 
-def evaluate(pr, reviews, manifest, audit):
+def evaluate(pr, reviews, manifest, audit, expected_head_sha):
     """Check exact integration head and independent reviewer status, fail-closed."""
     if not all(isinstance(x, dict) for x in (pr, manifest, audit)):
         raise ValueError("PR, manifest, and audit must be JSON objects")
@@ -55,6 +55,16 @@ def evaluate(pr, reviews, manifest, audit):
     require("head_sha_valid", isinstance(head.get("sha"), str) and
             len(head["sha"]) == 40 and all(c in "0123456789abcdef" for c in head["sha"]),
             "Exact SHA of current PR head must be known")
+    # Bind live review evidence to the exact commit checked by this GitHub
+    # Actions event. On pull_request events the default GITHUB_SHA is a
+    # synthetic merge commit, so the workflow passes event.pull_request.head.sha.
+    # A new push during a running workflow must fail closed rather than using
+    # an earlier source audit to approve a newer PR head.
+    require("head_matches_ci_event",
+            isinstance(expected_head_sha, str) and len(expected_head_sha) == 40 and
+            all(c in "0123456789abcdef" for c in expected_head_sha) and
+            head.get("sha") == expected_head_sha,
+            "Live PR head must equal the SHA supplied by the current CI event")
     latest_by_user = {}
     for rev in reviews:
         if not isinstance(rev, dict):
@@ -85,6 +95,7 @@ def evaluate(pr, reviews, manifest, audit):
         "source_review_ready": passed,
         "pr_number": pr.get("number"),
         "head_sha": head_sha,
+        "ci_event_head_sha": expected_head_sha,
         "approved_reviewer_count": len(approvals),
         "blocking_checks": [c["id"] for c in checks if not c["passed"]],
         "checks": checks,
@@ -125,6 +136,7 @@ def main(argv=None):
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     audit = json.loads(args.audit.read_text(encoding="utf-8"))
     token = os.environ.get("GITHUB_TOKEN", "")
+    expected_head_sha = os.environ.get("PR_HEAD_SHA", "")
     repo = args.repo
     if repo != "hachnghi-cyber/GTA5-iOS-AI-Development" or args.pr != 10:
         raise ValueError("Only authorized project P0 review PR #10 supported")
@@ -151,7 +163,7 @@ def main(argv=None):
                     break
             else:
                 raise ValueError("Review pagination exceeded safe bound")
-            report = evaluate(pr, reviews, manifest, audit)
+            report = evaluate(pr, reviews, manifest, audit, expected_head_sha)
         except (urllib.error.URLError, ValueError, KeyError, TimeoutError) as exc:
             report = {
                 "status": "blocked-review", "blocking_checks": ["github_review_query_failed"],
