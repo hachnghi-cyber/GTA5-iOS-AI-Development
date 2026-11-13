@@ -64,6 +64,11 @@
       "claim": "PR #14 latest source commit 3cc4eee6 Actions run 43448382988 failed before runner assignment on both Linux and macOS, with steps=[] and runner_id=0; no CI test or Apple build executed.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988",
       "scope": "GitHub Actions jobs metadata from run 43448382988; not proof of billing limitation or app code failure."
+    },
+    {
+      "claim": "RP v13 C11 source-only frame dispatcher with callback failure, host migration, unauthenticated carrier and game-thread loss scenarios passed 59/59 assertions on GCC 14.2 and Clang 17 ASan+UBSan in the working Linux container.",
+      "evidence": "ai-lab/projects/roleplay-ios/V13_FRAME_DISPATCHER_REPORT.md; police-rp/v13/test_rp_v13_frame_dispatcher.c; local test log RP_V13_FRAME_DISPATCHER_HOST_TEST.log dated 2026-11-13T15:16:07Z",
+      "scope": "Synthetic callback and session evidence; source-only, no actual GTA v13 runtime/game transport/iPhone device test or Apple SDK build."
     }
   ],
   "unknowns": [
@@ -198,7 +203,7 @@
       ]
     }
   ],
-  "next_action": "GitHub runner prerequisite: inspect PR #14 workflow run 43448382988 annotations, GitHub Settings > Billing and licensing > Usage/Budgets and Settings > Actions > General/Runners; if the account is blocked, resolve through GitHub billing/support without publishing financial details. Only after runner assignment, rerun v13 PR #14 CI for 74 assertion host/sanitizer + iPhoneOS ARM64 unsigned source library. Next engine task remains obtaining exact v13 trusted game-frame, peer generation and authenticated carrier evidence and connecting stop_local to real prp_port_stop on GTA thread. No merge/IPA release before tests.",
+  "next_action": "GitHub Actions jobs on PR #14 fail before runner allocation; verify workflow annotations/Actions billing and runner policies, then rerun tests on the real PR head. After runner access, obtain exact v13 GTA frame and authenticated network source evidence, implement adapter wiring rp_v13_dispatcher_tick with real prp_port_frame and independently verified local release; test two iPhones. PR #14 must remain Draft and unmerged.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "v13_research": {
@@ -247,6 +252,25 @@
       "url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
     },
     "release_stop_commit": "3cc4eee6143cbc82500d08d8575e429e4ad0a87a",
-    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988"
+    "ci_latest_run": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43448382988",
+    "frame_dispatcher": {
+      "status": "implemented-and-host-tested-only",
+      "source_commit": "pending (to be pinned after branch update)",
+      "local_tests": {
+        "run_date_utc": "2026-11-13T15:16:07Z",
+        "gcc_14_2_assertions_passed": 59,
+        "clang_17_asan_ubsan_assertions_passed": 59,
+        "report": "ai-lab/projects/roleplay-ios/V13_FRAME_DISPATCHER_REPORT.md"
+      },
+      "new_source_sha256": {
+        "police-rp/v13/rp_v13_frame_dispatcher.c": "68da806bb72e4d370582a78d965a17c8b1d31ac32cadf6ae4b048ec3c66047d8",
+        "police-rp/v13/rp_v13_frame_dispatcher.h": "1fa3ecc3af917cb83dfd27fc577b982b93dfe037b0b1f7fce0271c0c4600cdc2",
+        "police-rp/v13/test_rp_v13_frame_dispatcher.c": "47ea9c0a39fef7becf141a079c27b94ba0960263bb20ab29cd8954cdd8676eca"
+      },
+      "verified_engine_callback": false,
+      "verified_iOS_build": false,
+      "verified_device_gameplay": false,
+      "rollback": "Revert isolated dispatcher commit; main/IPA/PR12 unaffected"
+    }
   }
 }
