@@ -116,6 +116,9 @@ PRP_Outcome prp_host_receive(PRP_Host *h,const PRP_TransportContext *ctx,
     /* Validly received events consume sequence even if denied. */
     h->last_client_seq[i]=m->seq;
     if(m->op==PRP_OP_CONSENT){
+        /* Consent may only concern the authenticated sender, not a target. */
+        if(m->target_id!=m->sender_id)
+            return finish(result,PRP_ERR_PACKET);
         h->peers[i].opt_in=(m->consent==1);
         if(!m->consent){
             set_free(h,i);
@@ -212,7 +215,8 @@ int prp_client_receive_state(PRP_Client *c,const PRP_TransportContext *ctx,
        !ctx->trusted_sender_id||ctx->trusted_sender_id!=c->expected_host_id||
        ctx->host_player_id!=c->expected_host_id||m->sender_id!=c->expected_host_id||
        m->session_id!=c->session_id||ctx->session_id!=c->session_id||
-       m->target_id!=c->local_id||v->verified_session_id!=c->session_id||
+       m->target_id!=c->local_id||ctx->local_player_id!=c->local_id||
+       v->verified_session_id!=c->session_id||
        v->local_player_id!=c->local_id||!m->consent||!valid_status(m->status)||
        !m->seq||(c->last_seq&&!newer(m->seq,c->last_seq)))return 0;
     PR_AuthenticatedStatus s={.abi_version=PR_ADAPTER_ABI,
