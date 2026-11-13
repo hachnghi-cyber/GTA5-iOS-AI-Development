@@ -351,9 +351,9 @@
     {
       "path": "police-rp/v1.4/P2P/prp_p2p.c",
       "original_git_blob_sha1": "3631a3ee355a2006dc7c4269cca5e8e7cc4a8fc3",
-      "reviewed_integration_git_blob_sha1": "8da3ce37c216c4413a2d62ba5cde27f8fcd04a4f",
-      "reason": "Review-required P0 C core fix: completed PR_JAILED sentences survive arresting officer disconnection/off-duty/opt-out; their officer_id is detached, so a later recycled numeric peer ID cannot inherit manual-release authority. Transient cuffs/escort still fail open. This changes behavior and is NOT verified on an iPhone.",
-      "commit": "62f03c09663ef5d8b83181fde1fbbed4fe971421"
+      "reviewed_integration_git_blob_sha1": "d9e2e2059ed4f6e9a9e5a97621b5eb0b0e87f96f",
+      "reason": "Review-required P0 C core fix: completed PR_JAILED sentences survive arresting officer disconnection/off-duty/opt-out; their officer_id is detached, so a later recycled numeric peer ID cannot inherit manual-release authority. Transient cuffs/escort still fail open. This changes behavior and is NOT verified on an iPhone. Additional P0 host authority guard: already CUFFED/ESCORTED/JAILED officers cannot initiate police actions nor be suggested targets even when duty still verified. Changes source semantics, human review required.",
+      "commit": "c683676c37e0f1a78cd5bc45baa23488348aab69"
     }
   ],
   "required_task_progress": [
@@ -466,9 +466,9 @@
     },
     {
       "path": "police-rp/v1.4/P2P/test_duty_exit.c",
-      "expected_git_blob_sha1": "bd229efa20aa976a46bd8bc582481f1dda326af6",
+      "expected_git_blob_sha1": "c330dfafa20e4f5e1424c04dc35e3b93221e0bf9",
       "status": "modified",
-      "reason": "New modified-from-base P0 host C regression preserving jail after secondary-officer disconnect/off-duty/opt-out, rejecting recycled-ID manual release; transient restraints still release and jailed target leave clears own state."
+      "reason": "New modified-from-base P0 host C regression preserving jail after secondary-officer disconnect/off-duty/opt-out, rejecting recycled-ID manual release; transient restraints still release and jailed target leave clears own state. Regression test includes three restrained-officer states and verifies only explicit personal opt-out restores authority while native duty verified."
     }
   ],
   "path_coverage": "Git diff immutable base_commit..CI HEAD must equal 38 source paths (including any reviewed dual-hash overrides), 10 integration-owned exact Git blobs (9 added and 1 modified), reconciled state.json, and self-manifest: 50 distinct paths. No omitted or deleted paths."
