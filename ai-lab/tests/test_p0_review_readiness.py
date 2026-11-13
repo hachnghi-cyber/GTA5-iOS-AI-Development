@@ -27,7 +27,8 @@ class P0ReviewReadinessTests(unittest.TestCase):
                      "sha": "a"*40},
             "base": {"ref": "main", "sha": self.manifest["base_commit"]},
         }
-        self.reviews = [{"user": {"login": "reviewer"},
+        self.reviews = [{"user": {"login": "reviewer", "type": "User"},
+                         "author_association": "COLLABORATOR",
                          "state": "APPROVED", "commit_id": "a"*40}]
 
     def check(self, ci_head=None):
@@ -65,6 +66,49 @@ class P0ReviewReadinessTests(unittest.TestCase):
         blockers = self.check()["blocking_checks"]
         self.assertIn("independent_head_approval", blockers)
         self.assertIn("no_outstanding_changes_requested", blockers)
+
+    def test_comment_after_approval_does_not_revoke_decision(self):
+        self.reviews.append({
+            "user": {"login": "reviewer", "type": "User"},
+            "state": "COMMENTED", "commit_id": "a"*40,
+        })
+        self.assertTrue(self.check()["source_review_ready"])
+
+    def test_comment_after_request_changes_does_not_clear_objection(self):
+        self.reviews[0]["state"] = "CHANGES_REQUESTED"
+        self.reviews.append({
+            "user": {"login": "reviewer", "type": "User"},
+            "state": "COMMENTED", "commit_id": "a"*40,
+        })
+        blockers = self.check()["blocking_checks"]
+        self.assertIn("independent_head_approval", blockers)
+        self.assertIn("no_outstanding_changes_requested", blockers)
+
+    def test_dismissed_approval_does_not_count(self):
+        self.reviews.append({
+            "user": {"login": "reviewer", "type": "User"},
+            "state": "DISMISSED", "commit_id": "a"*40,
+        })
+        self.assertIn("independent_head_approval", self.check()["blocking_checks"])
+
+    def test_new_approval_resolves_previous_changes_requested(self):
+        self.reviews.insert(0, {
+            "user": {"login": "reviewer", "type": "User"},
+            "state": "CHANGES_REQUESTED", "commit_id": "a"*40,
+        })
+        self.assertTrue(self.check()["source_review_ready"])
+
+    def test_bot_approval_cannot_authorize_review(self):
+        self.reviews[0]["user"]["type"] = "Bot"
+        self.assertIn("independent_head_approval", self.check()["blocking_checks"])
+
+    def test_external_untrusted_approval_cannot_authorize_review(self):
+        self.reviews[0]["author_association"] = "NONE"
+        self.assertIn("independent_head_approval", self.check()["blocking_checks"])
+
+    def test_author_login_comparison_case_insensitive(self):
+        self.reviews[0]["user"]["login"] = "OwNeR"
+        self.assertIn("independent_head_approval", self.check()["blocking_checks"])
 
     def test_base_sha_drift_blocks(self):
         self.pr["base"]["sha"] = "c"*40
