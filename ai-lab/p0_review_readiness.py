@@ -66,22 +66,35 @@ def evaluate(pr, reviews, manifest, audit, expected_head_sha):
             head.get("sha") == expected_head_sha,
             "Live PR head must equal the SHA supplied by the current CI event")
     latest_by_user = {}
+    # COMMENTED/PENDING submissions do not replace a reviewer's most recent
+    # decision. In particular, a comment following approval does not revoke
+    # that approval, and a comment after CHANGES_REQUESTED does not clear it.
+    # GitHub REST review submissions are ordered chronologically; DISMISSED
+    # is a decisive state and may invalidate a previous approval.
+    decisive = {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}
     for rev in reviews:
-        if not isinstance(rev, dict):
+        if not isinstance(rev, dict) or rev.get("state") not in decisive:
             continue
         reviewer = rev.get("user") or {}
         if not isinstance(reviewer, dict):
             continue
         name = reviewer.get("login")
-        if isinstance(name, str) and name:
-            # GitHub REST returns submissions in chronological order.
-            latest_by_user[name] = rev
+        if isinstance(name, str) and name.strip():
+            latest_by_user[name.casefold()] = rev
     author_name = author.get("login")
-    latest = {name: rev for name, rev in latest_by_user.items() if name != author_name}
+    author_key = author_name.casefold() if isinstance(author_name, str) else None
+    latest = {name: rev for name, rev in latest_by_user.items() if name != author_key}
     head_sha = head.get("sha")
+    # GitHub Copilot/bot approvals and drive-by public users do not satisfy
+    # an authorized independent human review. Only GitHub User accounts
+    # associated with the repository as owner/member/collaborator are eligible.
+    # This gate is conservative, not a substitute for GitHub branch rules.
+    trusted_associations = {"OWNER", "MEMBER", "COLLABORATOR"}
     approvals = sorted(name for name, rev in latest.items()
                        if rev.get("state") == "APPROVED" and
-                       rev.get("commit_id") == head_sha)
+                       rev.get("commit_id") == head_sha and
+                       (rev.get("user") or {}).get("type") == "User" and
+                       rev.get("author_association") in trusted_associations)
     objections = sorted(name for name, rev in latest.items()
                         if rev.get("state") == "CHANGES_REQUESTED")
     require("independent_head_approval", bool(approvals),
