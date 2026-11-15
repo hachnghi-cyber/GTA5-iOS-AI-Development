@@ -58,6 +58,16 @@ jobs:
             -I include src/rp_v133_interact_gate.c tests/test_v133_interact_gate.c \
             -o /tmp/v133_interact_gate
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_interact_gate
+      - name: Two-peer synthetic transport (GCC sanitizers)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c tests/test_v133_two_peers.c \
+            -o /tmp/v133_two_peers
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_two_peers
       - name: Clang strict host build
         shell: bash
         run: |
