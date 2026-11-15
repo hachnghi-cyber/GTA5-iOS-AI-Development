@@ -39,6 +39,8 @@ jobs:
       - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/winstom_lmx_objc_map.py ai-lab/tests/test_winstom_rp_audit.py ai-lab/tests/test_winstom_lmx_objc_map.py
       - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_lmx_objc_map.py' -v
       - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v
+      - name: Validate cross-device PRP3 trace checker (synthetic fixtures only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_verify_device_trace.py' -v
 
   v133-interaction-gate:
     name: v13.3 RP interaction C11 source-only tests
