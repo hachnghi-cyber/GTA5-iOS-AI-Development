@@ -44,6 +44,11 @@
       "claim": "Deep Winstom ARM64 static inspection: Objective-C LMXMessageProxy/WRTransport classes, police state literals cuffed/follow, mp_arresting ADRP+ADD code xrefs, server-centered core combat state keys, and all 2031 WSPK files satisfying 80+L+16*ceil(L/262144) overhead invariant.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_DEEP_RE_PHASE2.md; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
       "scope": "Static analysis only; 2,120-entry ZIP testzip() PASS; no iPhone, live protocol or v13 binary-diff validation."
+    },
+    {
+      "claim": "v13.3 clean-room RP greet/documents gate implemented in C11 with per-peer replay ledger, exact baseline UUID/SHA256 parameter checks, session/epoch/thread/consent/proximity/authenticated transport callback requirements; compiled as ARM64 Apple iOS Mach-O object and passed GCC ASan+UBSan and Clang Linux-host synthetic test harness.",
+      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/{include,src,tests,README_VI.md}; local test run 2026-11-16; user-visible source archive SHA256 e676fcb6426987eeaae14358e89acac175f2f6a89a042cc6fd19cbec9cc85853",
+      "scope": "SOURCE ONLY; simulated callbacks do not establish engine-sourced identity or trusted GTA network events; no GTA5 binary patch, iOS SDK link or two-iPhone runtime test."
     }
   ],
   "unknowns": [
@@ -53,7 +58,8 @@
     "Which network packet transport and session lifecycle the current game build supports",
     "Which Roleplay source snapshot is latest and already tested on a real device",
     "Apple SDK build/link/signing availability, and hardware crash/performance results",
-    "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results."
+    "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results.",
+    "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated."
   ],
   "baseline": {
     "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
@@ -178,7 +184,7 @@
       ]
     }
   ],
-  "next_action": "Winstom phase 3: obtain authorized original v13 IPA for exact Mach-O hash/UUID and section diff; trace LMXMessageProxy to WRTransport and validate state events via consented iPhone testing. Preserve all existing RP backlog and do not equate server diagnostics with real Police RP success.",
+  "next_action": "v13.3 Police RP: obtain exact v13.3 game-thread and trusted network dispatch callback evidence from real device; wire read-only greeting proof (A emits, B receives same nonce/sender/session) using source-only v133_interaction gate; do not activate police cuff/escort or claim successful multiplayer until device logs. Winstom Mach-O xrefs are version-specific and not transplantable.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
