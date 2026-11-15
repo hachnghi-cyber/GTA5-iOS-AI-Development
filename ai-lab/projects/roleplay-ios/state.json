@@ -59,6 +59,11 @@
       "claim": "Winstom lmx native CFString xrefs: AVPanel method 0xb2358 references rp/interact, a distinct code function at 0xba738 references cuffed/follow; 0x112214 references interact and target. Added synthetic two-endpoint source-only greet/documents test with replay, distance, session migration and consent checks; GCC ASan+UBSan and Clang host binaries pass locally.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_CFSTRING_ROUTE_PHASE4.md; ai-lab/projects/roleplay-ios/v133_interaction/tests/test_v133_two_peers.c; local test outputs 2026-11-16",
       "scope": "Static code references + synthetic test only; neither proves 0xba738 mutates actual in-game player state nor establishes a true authenticated network carrier."
+    },
+    {
+      "claim": "Phase 5 Winstom lmx native call-path: LMXMessageProxy didReceiveScriptMessage forwards to target, AVPanel compares action 'interact' via isEqual:, and separate state function reads 'cuffed'/'follow' with objectForKeyedSubscript:. A clean-room 40-byte PRP3 v1 codec was added to v13.3 source-only module; GCC and Clang host ASan/UBSan 3-test suites and Apple ARM64 freestanding object compilation pass locally.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE5_DISPATCH_WIRE.md; ai-lab/projects/roleplay-ios/v133_interaction/{include/rp_v133_wire.h,src/rp_v133_wire.c,tests/test_v133_wire.c,tests/test_v133_two_peers.c,tools/run_host_tests.sh}; local archive WINSTOM-v13.3-PHASE5-RP-WIRE-SOURCE.zip SHA256 4c273a2de6df867e5b5d318d416d9548b13f3fd568984475620c8f7f934233ae",
+      "scope": "Read-only Winstom static disassembly, simulated network and source compilation only; NOT real police cuff, engine transport, two iPhone tests, or CI success."
     }
   ],
   "unknowns": [
@@ -69,7 +74,8 @@
     "Which Roleplay source snapshot is latest and already tested on a real device",
     "Apple SDK build/link/signing availability, and hardware crash/performance results",
     "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results.",
-    "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated."
+    "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated.",
+    "Winstom native target bound to LMXMessageProxy at runtime and where native server grant/owner authoritative state is produced; v13.3 authenticated receiver/callback still unverified."
   ],
   "baseline": {
     "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
@@ -194,7 +200,7 @@
       ]
     }
   ],
-  "next_action": "Phase 4 complete static work: v13.3/Winstom binary comparison and narrow CFString action refs verified. Phase 5 priority is actual v13.3 runtime engine-owned authenticated sender/session/game-frame adapters and real two-iPhone 'greet' A→B logs; do not enable cuff/escort or replace game dylibs from Winstom. GitHub Actions runner failure unresolved.",
+  "next_action": "Phase 6: identify a real v13.3 game-thread callback and authenticated transport delivery metadata (trusted sender/session); connect only a read-only PRP3 greet A→B probe after obtaining runtime evidence. Do not use Winstom lmx addresses as v13.3 hooks, nor enable real-player cuff/escort before two-phone confirmation. Investigate why GitHub Actions jobs fail before logs are available.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
