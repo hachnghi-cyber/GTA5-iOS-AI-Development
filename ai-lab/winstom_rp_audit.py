@@ -43,6 +43,9 @@ def _c_string(command, offset):
 
 def macho_metadata(data):
     """Parse a bounded Mach-O header sample; never disassemble or execute it."""
+    # zipfile audit passes mutable bytearray; uuid.UUID and dylib parsing need bytes.
+    # Bounded to the first 1 MiB per candidate in audit_ipa().
+    data = bytes(data)
     if len(data) < 32:
         return None
     magic = bytes(data[:4])  # zf streaming header is a bytearray, not hashable
