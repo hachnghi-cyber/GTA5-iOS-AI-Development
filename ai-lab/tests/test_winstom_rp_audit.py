@@ -50,6 +50,14 @@ class WinstomAuditTests(unittest.TestCase):
         self.assertIn("librp.dylib", m["linked_libraries"])
         self.assertEqual(m["uuid"], "00010203-0405-0607-0809-0A0B0C0D0E0F")
 
+    def test_macho_header_from_zip_stream_is_bytearray(self):
+        raw = macho(bytes(range(16)), 0)
+        for view in (bytearray(raw), memoryview(raw)):
+            with self.subTest(view_type=type(view).__name__):
+                parsed = mod.macho_metadata(view)
+                self.assertEqual(parsed["uuid"], "00010203-0405-0607-0809-0A0B0C0D0E0F")
+                self.assertEqual(parsed["cryptid"], 0)
+
     def test_detects_unsafe_zip_entry_without_extracting(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "one.ipa"
