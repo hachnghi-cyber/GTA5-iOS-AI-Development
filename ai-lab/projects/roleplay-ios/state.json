@@ -49,6 +49,11 @@
       "claim": "v13.3 clean-room RP greet/documents gate implemented in C11 with per-peer replay ledger, exact baseline UUID/SHA256 parameter checks, session/epoch/thread/consent/proximity/authenticated transport callback requirements; compiled as ARM64 Apple iOS Mach-O object and passed GCC ASan+UBSan and Clang Linux-host synthetic test harness.",
       "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/{include,src,tests,README_VI.md}; local test run 2026-11-16; user-visible source archive SHA256 e676fcb6426987eeaae14358e89acac175f2f6a89a042cc6fd19cbec9cc85853",
       "scope": "SOURCE ONLY; simulated callbacks do not establish engine-sourced identity or trusted GTA network events; no GTA5 binary patch, iOS SDK link or two-iPhone runtime test."
+    },
+    {
+      "claim": "Original GTA V iOS v13.3 IPA independently loaded and SHA256/UUID verified; compared all 16 original Mach-O images against Winstom's seven Mach-O images. Winstom GTA5 adds direct lmx and wf dylib imports, libgtacompat adds wf, libgtamsl SHA256 matches exactly; GTA5, libgtacompat and winemetal hashes/UUIDs and layout differ. Winstom lmx ObjC relative method metadata resolves 26 classes and 357 class-linked methods including actual native message handler IMPs.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_BINARY_DIFF_PHASE3.md; v13.3 IPA SHA256 7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126; ai-lab/winstom_lmx_objc_map.py",
+      "scope": "Static SHA256/Mach-O/imports/section diff and metadata disassembly only; does not establish Winstom source provenance, v13.3 engine hooks, trusted networking or playable RP."
     }
   ],
   "unknowns": [
@@ -184,7 +189,7 @@
       ]
     }
   ],
-  "next_action": "v13.3 Police RP: obtain exact v13.3 game-thread and trusted network dispatch callback evidence from real device; wire read-only greeting proof (A emits, B receives same nonce/sender/session) using source-only v133_interaction gate; do not activate police cuff/escort or claim successful multiplayer until device logs. Winstom Mach-O xrefs are version-specific and not transplantable.",
+  "next_action": "v13.3 RP: preserve v13.3 build; inspect Winstom lmx's AVPanel and LMXMessageProxy native message dispatch in disassembly, and obtain authenticated sender/session metadata from a true v13.3 game-native session callback. Do NOT transplant Winstom offsets or enable cuff/escort until a two-phone authenticated greet proof passes. Source-only v133_interaction tests pass locally; GitHub CI currently failure with inaccessible job logs.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
