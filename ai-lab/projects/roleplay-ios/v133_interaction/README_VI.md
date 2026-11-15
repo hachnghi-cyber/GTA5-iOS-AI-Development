@@ -36,3 +36,32 @@ ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/rp_v133_gate
 5. Only after the above, design and validate cuff/escort; never modify remote ped without authority.
 
 **Verified only:** code compiles, deterministic host tests pass, ARM64 object generated. No signed IPA, actual network transport, iPhone runtime, or Police RP gameplay was created or tested.
+
+
+## Phase 5: diagnostic wire v1 (source-only)
+
+The read-only Winstom reverse engineering indicates that the WebKit script
+message proxy forwards WKScriptMessage to its target (LMXMessageProxy
+implementation 0xe888); the AVPanel script handler checks `interact`
+using `isEqual:` (0xb8784). Separately, the native state parser uses
+`objectForKeyedSubscript:` to **read** `cuffed` and `follow` (0xbc2ec,
+0xbc63c, 0xbc6b0). Reading these fields is NOT proof of working police arrests.
+
+Clean-room wire format `RP_V133_WIRE_BYTES = 40`:
+- bytes 0–3 `PRP3`; byte 4 version=1; byte 5 interaction kind (1 greet, 2 documents); bytes 6–7 reserved zero.
+- little-endian 64-bit values at offsets 8 session, 16 receiver, 24 epoch, 32 nonce.
+- **NO sender/player-origin and NO trusted flag in the wire body.** The engine-owned native transport must supply authenticated sender/session metadata independently.
+
+Implementation `include/rp_v133_wire.h`, `src/rp_v133_wire.c`.
+`rp_v133_wire_deliver` decodes exact-length frames then calls the existing
+source-only gate. The two-peer fixture now transports serialized byte buffers.
+It additionally tests malformed reserved bytes, unauthenticated metadata,
+unknown peer and epoch mismatch.
+
+Reproduce with `CC=gcc bash tools/run_host_tests.sh` and
+`CC=clang bash tools/run_host_tests.sh`.
+On 2026-11-16, both suites ran successfully with AddressSanitizer and
+UndefinedBehaviorSanitizer on Linux. Clang freestanding ARM64 Apple object
+compilation passed for the gate and codec; this is **NOT** iPhoneOS SDK
+link/sign, not native GTA transport, and not proof of multiplayer gameplay.
+GitHub Actions remains FAILED with job logs unavailable through the connector.
