@@ -65,3 +65,23 @@ UndefinedBehaviorSanitizer on Linux. Clang freestanding ARM64 Apple object
 compilation passed for the gate and codec; this is **NOT** iPhoneOS SDK
 link/sign, not native GTA transport, and not proof of multiplayer gameplay.
 GitHub Actions remains FAILED with job logs unavailable through the connector.
+
+
+## Phase 6 — cross-device PRP3 device-trace audit
+
+Winstom lmx analysis distinguishes HTTP/account transport (\`WRTransport\`, \`WRAccountSession\`) and independent voice transport (\`WRVoice.openHost:port:ticket:\`, \`encodeAndSend\`, \`receive\`) from Westrayn gameplay state. None of those Objective-C class names proves an authenticated GTA RAGE player sender.
+
+New files:
+- \`tools/verify_device_trace.py\`: parse two JSONL files representing A's \`tx\` and B's \`rx\`. Require the exact original v13.3 build UUID, compare full PRP3 bytes, session/epoch, sender and receiver metadata, strictly increasing nonce per peer, local monotonic clock and distinct device IDs. A/B monotonic timestamps are never compared.
+- \`tests/test_verify_device_trace.py\`: synthetic cases for matching packet, wrong sender, wrong build, missing authentication claim, replay, changed nonce, kind, malformed length, out-of-order per-peer, clock rollback, etc.
+
+Example command (with REAL captured logs after instrumenting a real engine-owned callback):
+\`\`\`bash
+python3 tools/verify_device_trace.py --tx device_A_TX.jsonl --rx device_B_RX.jsonl --out audit.json
+\`\`\`
+
+**Synthetic examples** require \`--allow-synthetic-demo\` when the log includes \`fixture_only=true\`. The offline tool cannot authenticate log origin, cannot validate a real engine hook, and always returns \`safe_to_enable_cuff_or_escort=false\`.
+
+Locally on 2026-11-16, 13 Python unit tests passed for the packaged Phase 6 implementation; three Phase 5 C11 regressions also passed under GCC and Clang ASan/UBSan. GitHub Actions is still marked failure; source-only tests are not an iPhone or network gameplay proof.
+
+See \`WINSTOM_V133_PHASE6_TRACE_VALIDATION.md\`. The R19/H5 captured diagnostics still showed \`sender_auth=0\` and \`gameplay=0\` in sampled event probes; no authenticated game transport is established.
