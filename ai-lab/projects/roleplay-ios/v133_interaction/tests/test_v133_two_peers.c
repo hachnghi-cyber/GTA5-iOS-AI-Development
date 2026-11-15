@@ -1,4 +1,4 @@
-#include "rp_v133_interact_gate.h"
+#include "rp_v133_wire.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +17,8 @@ typedef struct endpoint {
 } endpoint;
 struct network {
     endpoint a, b;
-    rp_v133_action queued;
+    uint8_t packet[RP_V133_WIRE_BYTES];
+    size_t packet_bytes;
     uint64_t trusted_sender_from_transport;
     unsigned pending;
 };
@@ -43,7 +44,9 @@ static bool channel(void *ctx){return ((endpoint*)ctx)->channel_authenticated !=
 static bool emit(void *ctx,const rp_v133_action *action) {
     endpoint *e=(endpoint*)ctx;
     if(e!=&e->net->a || e->net->pending) return false;
-    e->net->queued=*action;
+    if (!rp_v133_wire_encode(action,e->net->packet,sizeof(e->net->packet)))
+        return false;
+    e->net->packet_bytes=sizeof(e->net->packet);
     /* Only fixture-owned identity; real sender MUST come from authenticated engine metadata. */
     e->net->trusted_sender_from_transport=e->snap.local_player_id;
     e->net->pending=1;
@@ -72,7 +75,7 @@ static rp_v133_result receive_b(network *n) {
          .transport_session=n->b.snap.session_id,.transport_epoch=n->b.snap.peer_epoch,
          .authenticated=1};
     n->pending=0;
-    return rp_v133_gate_deliver(&n->b.gate,&meta,&n->queued);
+    return rp_v133_wire_deliver(&n->b.gate,&meta,n->packet,n->packet_bytes);
 }
 int main(void) {
     network n;
@@ -80,11 +83,15 @@ int main(void) {
     init_endpoint(&n.a,&n,101);
     init_endpoint(&n.b,&n,202);
     assert(rp_v133_gate_request(&n.a.gate,202,RP_V133_GREET,1)==RP_V133_ATTEMPTED);
-    assert(n.pending==1);
+    assert(n.pending==1 && n.packet_bytes==RP_V133_WIRE_BYTES);
     assert(receive_b(&n)==RP_V133_RECEIVED);
     assert(n.b.observed==1 && n.b.last_sender==101 && n.b.last_kind==RP_V133_GREET);
     n.pending=1;
     assert(receive_b(&n)==RP_V133_DENIED); /* replay */
+    n.packet[6]=1; /* reserved byte tamper */
+    n.pending=1;
+    assert(receive_b(&n)==RP_V133_DENIED);
+    n.packet[6]=0;
     assert(n.b.observed==1);
     assert(rp_v133_gate_request(&n.a.gate,202,RP_V133_DOCUMENTS,2)==RP_V133_ATTEMPTED);
     assert(receive_b(&n)==RP_V133_RECEIVED);
