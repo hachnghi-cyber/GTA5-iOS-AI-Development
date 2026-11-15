@@ -39,6 +39,11 @@
       "claim": "The user-supplied Winstom 0.7.171 IPA was statically inventoried: bundle com.winstom.rp, iOS minimum 18.0, GTA5 ARM64 UUID 048DCEFF-A696-3E7A-9086-2A9953C909CD, seven Mach-O images cryptid=0, an avenor RP WebKit interaction bridge, and Westrayn native transport/OneSync diagnostic strings.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_STATIC_AUDIT.md; IPA SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
       "scope": "Static user-provided binary inspection only. Not proof of police arrest, working OneSync, runtime network synchronization or v13 binary compatibility."
+    },
+    {
+      "claim": "Deep Winstom ARM64 static inspection: Objective-C LMXMessageProxy/WRTransport classes, police state literals cuffed/follow, mp_arresting ADRP+ADD code xrefs, server-centered core combat state keys, and all 2031 WSPK files satisfying 80+L+16*ceil(L/262144) overhead invariant.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_DEEP_RE_PHASE2.md; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
+      "scope": "Static analysis only; 2,120-entry ZIP testzip() PASS; no iPhone, live protocol or v13 binary-diff validation."
     }
   ],
   "unknowns": [
@@ -173,7 +178,7 @@
       ]
     }
   ],
-  "next_action": "Winstom follow-up: use ai-lab/winstom_rp_audit.py on a verified GTA V iOS v13 baseline and Winstom via explicit user-provided HTTPS download URLs in manual Actions; validate binary deltas, then trace avenor -> lmx RP interaction -> authenticated transport on a test device. Other Roleplay backlog remains unchanged.",
+  "next_action": "Winstom phase 3: obtain authorized original v13 IPA for exact Mach-O hash/UUID and section diff; trace LMXMessageProxy to WRTransport and validate state events via consented iPhone testing. Preserve all existing RP backlog and do not equate server diagnostics with real Police RP success.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
