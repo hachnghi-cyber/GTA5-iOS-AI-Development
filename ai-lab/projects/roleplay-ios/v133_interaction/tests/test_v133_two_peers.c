@@ -86,6 +86,20 @@ int main(void) {
     assert(n.pending==1 && n.packet_bytes==RP_V133_WIRE_BYTES);
     assert(receive_b(&n)==RP_V133_RECEIVED);
     assert(n.b.observed==1 && n.b.last_sender==101 && n.b.last_kind==RP_V133_GREET);
+    /* A sender field in the payload would not be trustworthy. Even an increased
+     * nonce must fail without transport-owned authentication or peer provenance. */
+    uint8_t attack[RP_V133_WIRE_BYTES];
+    memcpy(attack,n.packet,sizeof attack);
+    attack[32]=9;
+    rp_v133_delivery invalid_meta={101,4002,3,0};
+    assert(rp_v133_wire_deliver(&n.b.gate,&invalid_meta,attack,sizeof attack)==RP_V133_DENIED);
+    invalid_meta.authenticated=1;
+    invalid_meta.transport_sender=303; /* foreign peer */
+    assert(rp_v133_wire_deliver(&n.b.gate,&invalid_meta,attack,sizeof attack)==RP_V133_DENIED);
+    invalid_meta.transport_sender=101;
+    invalid_meta.transport_epoch=4; /* wrong epoch */
+    assert(rp_v133_wire_deliver(&n.b.gate,&invalid_meta,attack,sizeof attack)==RP_V133_DENIED);
+    assert(n.b.observed==1);
     n.pending=1;
     assert(receive_b(&n)==RP_V133_DENIED); /* replay */
     n.packet[6]=1; /* reserved byte tamper */
