@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'ai-lab/winstom_rp_audit.py'
+      - 'ai-lab/winstom_lmx_objc_map.py'
+      - 'ai-lab/tests/test_winstom_lmx_objc_map.py'
       - 'ai-lab/tests/test_winstom_rp_audit.py'
       - 'ai-lab/projects/roleplay-ios/v133_interaction/**'
       - '.github/workflows/winstom-rp-ipa-audit.yml'
@@ -34,7 +36,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/tests/test_winstom_rp_audit.py
+      - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/winstom_lmx_objc_map.py ai-lab/tests/test_winstom_rp_audit.py ai-lab/tests/test_winstom_lmx_objc_map.py
+      - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_lmx_objc_map.py' -v
       - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v
 
   v133-interaction-gate:
