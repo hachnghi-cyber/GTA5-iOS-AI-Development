@@ -1,0 +1,72 @@
+name: Police RP R38 - iPhoneOS ARM64 dylib (no game IPA)
+on:
+  push:
+    branches:
+      - feature/police-rp-r38-macos-build-20261115
+  pull_request:
+    paths:
+      - '.github/workflows/police-rp-r38-macos.yml'
+      - 'research/police-rp-r38/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runner-probe:
+    name: Verify GitHub-hosted Ubuntu runner availability
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm runner started
+        run: |
+          echo 'GitHub-hosted runner started; Apple SDK build is a separate macOS job.'
+          uname -a
+  build-iphoneos:
+    name: Link ARM64 dylib with Apple iPhoneOS SDK
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify source payload (no GTA assets)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '03d13f1848443ec7e7d23f0f7eedad6e922e79ec5e36b4d358e4d04642ce1810  research/police-rp-r38/r38-ios-source.tar.xz' | shasum -a 256 -c -
+          mkdir -p ci-r38
+          tar -xJf research/police-rp-r38/r38-ios-source.tar.xz -C ci-r38
+          test "$(find ci-r38/src -maxdepth 1 -name '*.c' | wc -l | tr -d ' ')" -eq 28
+          test -f ci-r38/ios/build_r38.sh
+          test -f ci-r38/tools/verify_r38_macho.py
+          if find ci-r38 -type f \( -name '*.ipa' -o -name '*.rpf' -o -name '*.p12' -o -name '*.mobileprovision' \) | grep -q .; then
+            echo 'Forbidden game/signing payload found' >&2
+            exit 1
+          fi
+      - name: Xcode / iPhoneOS SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-path
+      - name: Compile, link and verify iOS dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ci-r38
+          sh ios/build_r38.sh
+          python3 tools/verify_r38_macho.py build/ios-r38/libPoliceRP_R38.dylib
+          shasum -a 256 build/ios-r38/libPoliceRP_R38.dylib > build/ios-r38/R38-sha256.txt
+      - name: Upload unsigned dylib and verification evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PoliceRP-R38-iPhoneOS-ARM64-unsigned
+          path: |
+            ci-r38/build/ios-r38/libPoliceRP_R38.dylib
+            ci-r38/build/ios-r38/R38-macho-report.json
+            ci-r38/build/ios-r38/R38-load-commands.txt
+            ci-r38/build/ios-r38/R38-exports.txt
+            ci-r38/build/ios-r38/R38-sha256.txt
+          if-no-files-found: error
+          retention-days: 14
