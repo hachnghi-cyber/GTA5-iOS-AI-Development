@@ -34,6 +34,11 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "The user-supplied Winstom 0.7.171 IPA was statically inventoried: bundle com.winstom.rp, iOS minimum 18.0, GTA5 ARM64 UUID 048DCEFF-A696-3E7A-9086-2A9953C909CD, seven Mach-O images cryptid=0, an avenor RP WebKit interaction bridge, and Westrayn native transport/OneSync diagnostic strings.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_STATIC_AUDIT.md; IPA SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
+      "scope": "Static user-provided binary inspection only. Not proof of police arrest, working OneSync, runtime network synchronization or v13 binary compatibility."
     }
   ],
   "unknowns": [
@@ -42,7 +47,8 @@
     "RAGE/native API compatibility of the specific iOS port",
     "Which network packet transport and session lifecycle the current game build supports",
     "Which Roleplay source snapshot is latest and already tested on a real device",
-    "Apple SDK build/link/signing availability, and hardware crash/performance results"
+    "Apple SDK build/link/signing availability, and hardware crash/performance results",
+    "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results."
   ],
   "baseline": {
     "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
@@ -167,7 +173,7 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Winstom follow-up: use ai-lab/winstom_rp_audit.py on a verified GTA V iOS v13 baseline and Winstom via explicit user-provided HTTPS download URLs in manual Actions; validate binary deltas, then trace avenor -> lmx RP interaction -> authenticated transport on a test device. Other Roleplay backlog remains unchanged.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
