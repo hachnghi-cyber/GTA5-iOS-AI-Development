@@ -64,6 +64,11 @@
       "claim": "Phase 5 Winstom lmx native call-path: LMXMessageProxy didReceiveScriptMessage forwards to target, AVPanel compares action 'interact' via isEqual:, and separate state function reads 'cuffed'/'follow' with objectForKeyedSubscript:. A clean-room 40-byte PRP3 v1 codec was added to v13.3 source-only module; GCC and Clang host ASan/UBSan 3-test suites and Apple ARM64 freestanding object compilation pass locally.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE5_DISPATCH_WIRE.md; ai-lab/projects/roleplay-ios/v133_interaction/{include/rp_v133_wire.h,src/rp_v133_wire.c,tests/test_v133_wire.c,tests/test_v133_two_peers.c,tools/run_host_tests.sh}; local archive WINSTOM-v13.3-PHASE5-RP-WIRE-SOURCE.zip SHA256 4c273a2de6df867e5b5d318d416d9548b13f3fd568984475620c8f7f934233ae",
       "scope": "Read-only Winstom static disassembly, simulated network and source compilation only; NOT real police cuff, engine transport, two iPhone tests, or CI success."
+    },
+    {
+      "claim": "Phase 6: Winstom ObjC method inventory separates WRTransport (NSURLSession HTTP), WRAccountSession (account tokens), WRVoice (voice host/port/ticket, encodeAndSend/receive) from the still-unproven Westrayn gameplay sender transport. R19/H5 user-source device sample documents sender_auth=0 and gameplay=0 in eight Decide and eight MPJ2 samples. A Python read-only PRP3 trace auditor and synthetic unit tests were added for version/nonce/session/sender consistency.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE6_TRACE_VALIDATION.md; ai-lab/projects/roleplay-ios/v133_interaction/tools/verify_device_trace.py; ai-lab/projects/roleplay-ios/v133_interaction/tests/test_verify_device_trace.py; local Phase 6 source ZIP SHA256 635c216d93851a1d7b31f33056b501e4b5261fe05b7296b975f71d91d9f35160",
+      "scope": "Read-only static Mach-O/ObjC and prior H5 sampled evidence; locally executed 13 Python tests and reran GCC/Clang ASan/UBSan Phase 5 host tests. GitHub Actions is failing; no iPhone authenticated sender, gameplay or actual network proof."
     }
   ],
   "unknowns": [
@@ -200,7 +205,7 @@
       ]
     }
   ],
-  "next_action": "Phase 6: identify a real v13.3 game-thread callback and authenticated transport delivery metadata (trusted sender/session); connect only a read-only PRP3 greet A→B probe after obtaining runtime evidence. Do not use Winstom lmx addresses as v13.3 hooks, nor enable real-player cuff/escort before two-phone confirmation. Investigate why GitHub Actions jobs fail before logs are available.",
+  "next_action": "Phase 7 P0: from a verified original v13.3 RAGE game-thread callback, record engine-owned authenticated sender/session+epoch with no gameplay changes and correlate one PRP3 greeting from two iPhones using the Phase 6 offline verifier. R19/H5 sender_auth remains 0; do not infer sender from MPJ2 slot/remote pointer, do not transplant Winstom WRTransport/WRVoice, and do not enable cuff/escort. CI blocker Issue #17 unresolved.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
