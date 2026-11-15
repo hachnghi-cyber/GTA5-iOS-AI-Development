@@ -13,6 +13,15 @@ permissions:
   contents: read
 
 jobs:
+  runner-probe:
+    name: Verify GitHub-hosted Ubuntu runner availability
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm runner started
+        run: |
+          echo 'GitHub-hosted runner started; Apple SDK build is a separate macOS job.'
+          uname -a
   build-iphoneos:
     name: Link ARM64 dylib with Apple iPhoneOS SDK
     runs-on: macos-15
