@@ -4,6 +4,7 @@ on:
     paths:
       - 'ai-lab/winstom_rp_audit.py'
       - 'ai-lab/tests/test_winstom_rp_audit.py'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/**'
       - '.github/workflows/winstom-rp-ipa-audit.yml'
   workflow_dispatch:
     inputs:
@@ -35,6 +36,34 @@ jobs:
           python-version: '3.12'
       - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/tests/test_winstom_rp_audit.py
       - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v
+
+  v133-interaction-gate:
+    name: v13.3 RP interaction C11 source-only tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: GCC with ASan and UBSan
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c tests/test_v133_interact_gate.c \
+            -o /tmp/v133_interact_gate
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_interact_gate
+      - name: Clang strict host build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -O2 \
+            -I include src/rp_v133_interact_gate.c tests/test_v133_interact_gate.c \
+            -o /tmp/v133_interact_gate_clang
+          /tmp/v133_interact_gate_clang
 
   analyze:
     name: Analyze authorized IPA; no binary publication
