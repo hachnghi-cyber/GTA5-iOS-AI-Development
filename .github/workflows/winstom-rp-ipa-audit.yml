@@ -1,0 +1,120 @@
+name: Winstom RP - Read-only IPA audit
+on:
+  pull_request:
+    paths:
+      - 'ai-lab/winstom_rp_audit.py'
+      - 'ai-lab/tests/test_winstom_rp_audit.py'
+      - '.github/workflows/winstom-rp-ipa-audit.yml'
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'Authorized Winstom IPA direct HTTPS URL; avoid credentials in URL'
+        required: true
+        type: string
+      baseline_url:
+        description: 'Optional original GTA V iOS v13 IPA direct HTTPS URL'
+        required: false
+        type: string
+      expected_sha256:
+        description: 'Optional Winstom IPA SHA-256'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Synthetic-only Python tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/tests/test_winstom_rp_audit.py
+      - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v
+
+  analyze:
+    name: Analyze authorized IPA; no binary publication
+    if: github.event_name == 'workflow_dispatch'
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download Winstom IPA over HTTPS
+        env:
+          IPA_URL: ${{ inputs.ipa_url }}
+          EXPECTED_SHA: ${{ inputs.expected_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$IPA_URL" != https://* ]]; then
+            echo "::error::IPA URL must begin with https://"
+            exit 2
+          fi
+          curl --proto '=https' --proto-redir '=https' --fail --location \
+            --silent --show-error --retry 2 --max-time 1800 \
+            --max-filesize 3000000000 \
+            --output "$RUNNER_TEMP/winstom.ipa" "$IPA_URL"
+          if [[ -n "$EXPECTED_SHA" ]]; then
+            if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{64}$ ]]; then
+              echo "::error::expected_sha256 must be 64 hex characters"
+              exit 2
+            fi
+            printf '%s  %s\n' "$EXPECTED_SHA" "$RUNNER_TEMP/winstom.ipa" | sha256sum -c -
+          fi
+          unzip -tqq "$RUNNER_TEMP/winstom.ipa" >/dev/null
+          echo "ZIP verified; IPA remains in runner temp storage."
+      - name: Download optional baseline v13 IPA
+        env:
+          BASELINE_URL: ${{ inputs.baseline_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$BASELINE_URL" ]]; then
+            echo "No v13 baseline URL. Binary diff will be unavailable."
+            exit 0
+          fi
+          if [[ "$BASELINE_URL" != https://* ]]; then
+            echo "::error::Baseline URL must begin with https://"
+            exit 2
+          fi
+          curl --proto '=https' --proto-redir '=https' --fail --location \
+            --silent --show-error --retry 2 --max-time 1800 \
+            --max-filesize 3000000000 \
+            --output "$RUNNER_TEMP/v13.ipa" "$BASELINE_URL"
+          unzip -tqq "$RUNNER_TEMP/v13.ipa" >/dev/null
+      - name: Generate structural report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p report
+          if [[ -f "$RUNNER_TEMP/v13.ipa" ]]; then
+            python ai-lab/winstom_rp_audit.py "$RUNNER_TEMP/winstom.ipa" \
+              --baseline "$RUNNER_TEMP/v13.ipa" \
+              --output-json report/WINSTOM_AUDIT.json \
+              --output-md report/WINSTOM_AUDIT.md
+          else
+            python ai-lab/winstom_rp_audit.py "$RUNNER_TEMP/winstom.ipa" \
+              --output-json report/WINSTOM_AUDIT.json \
+              --output-md report/WINSTOM_AUDIT.md
+          fi
+          cat report/WINSTOM_AUDIT.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload metadata and reports only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: winstom-rp-static-report
+          if-no-files-found: warn
+          path: |
+            report/WINSTOM_AUDIT.json
+            report/WINSTOM_AUDIT.md
+          retention-days: 7
