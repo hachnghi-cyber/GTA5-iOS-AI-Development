@@ -45,10 +45,11 @@ def macho_metadata(data):
     """Parse a bounded Mach-O header sample; never disassemble or execute it."""
     if len(data) < 32:
         return None
-    if data[:4] in (b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca",
+    magic = bytes(data[:4])  # zf streaming header is a bytearray, not hashable
+    if magic in (b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca",
                     b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"):
-        endian = ">" if data[:4] in (b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf") else "<"
-        is64 = data[:4] in (b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca")
+        endian = ">" if magic in (b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf") else "<"
+        is64 = magic in (b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca")
         count = struct.unpack_from(endian + "I", data, 4)[0]
         arch_size = 32 if is64 else 20
         archs = []
@@ -61,7 +62,7 @@ def macho_metadata(data):
             archs.append({"cpu_type": hex(cpu), "slice_offset": offset})
         return {"format": "fat", "archs": archs,
                 "warning": "fat-slices-not-parsed; use per-slice Mach-O tooling"}
-    endian = MACH64_MAGICS.get(data[:4])
+    endian = MACH64_MAGICS.get(magic)
     if endian is None:
         return None
     _, cpu, subtype, filetype, ncmds, sizeofcmds, flags, reserved = struct.unpack_from(
@@ -264,8 +265,8 @@ def markdown_report(report):
         "",
         "Status: **STATIC_ONLY**. Input is not executed, decrypted or modified.",
         "",
-        f"- Input IPA: \`{cand['file']}\`",
-        f"- IPA SHA-256: \`{cand['sha256']}\`",
+        f"- Input IPA: `{cand['file']}`",
+        f"- IPA SHA-256: `{cand['sha256']}`",
         f"- IPA size: {cand['size_bytes']} bytes",
         f"- ZIP files: {cand['archive']['files']}",
         f"- Recognized Mach-O: {len(cand['binaries'])}",
@@ -274,15 +275,15 @@ def markdown_report(report):
     ]
     for app in cand["apps"]:
         lines.append(
-            f"- \`{app['bundle_id']}\`: version={app['version']}, "
+            f"- `{app['bundle_id']}`: version={app['version']}, "
             f"build={app['build']}, min iOS={app['minimum_ios']}, "
-            f"executable=\`{app['executable']}\`")
+            f"executable=`{app['executable']}`")
     lines.extend(["", "## Mach-O inventory (UUID / FairPlay flag)"])
     for b in cand["binaries"][:100]:
         m = b["macho"]
-        lines.append(f"- \`{b['normalized_path']}\`: "
+        lines.append(f"- `{b['normalized_path']}`: "
                      f"UUID={m.get('uuid')}, cryptid={m.get('cryptid')}, "
-                     f"ARM64={m.get('is_arm64')}, SHA256=\`{b['sha256']}\`")
+                     f"ARM64={m.get('is_arm64')}, SHA256=`{b['sha256']}`")
     if delta:
         lines.extend([
             "", "## Mach-O comparison vs. baseline",
@@ -292,7 +293,7 @@ def markdown_report(report):
             f"- Identical binaries: {delta['identical_binary_count']}",
         ])
         for b in delta["changed_binaries"][:100]:
-            lines.append(f"- Changed \`{b['path']}\` "
+            lines.append(f"- Changed `{b['path']}` "
                          f"UUID {b['old_uuid']} -> {b['new_uuid']}; "
                          f"added deps={b['added_linked_libraries']}")
     lines.extend([
