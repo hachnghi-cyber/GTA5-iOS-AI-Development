@@ -54,6 +54,11 @@
       "claim": "Original GTA V iOS v13.3 IPA independently loaded and SHA256/UUID verified; compared all 16 original Mach-O images against Winstom's seven Mach-O images. Winstom GTA5 adds direct lmx and wf dylib imports, libgtacompat adds wf, libgtamsl SHA256 matches exactly; GTA5, libgtacompat and winemetal hashes/UUIDs and layout differ. Winstom lmx ObjC relative method metadata resolves 26 classes and 357 class-linked methods including actual native message handler IMPs.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_BINARY_DIFF_PHASE3.md; v13.3 IPA SHA256 7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126; ai-lab/winstom_lmx_objc_map.py",
       "scope": "Static SHA256/Mach-O/imports/section diff and metadata disassembly only; does not establish Winstom source provenance, v13.3 engine hooks, trusted networking or playable RP."
+    },
+    {
+      "claim": "Winstom lmx native CFString xrefs: AVPanel method 0xb2358 references rp/interact, a distinct code function at 0xba738 references cuffed/follow; 0x112214 references interact and target. Added synthetic two-endpoint source-only greet/documents test with replay, distance, session migration and consent checks; GCC ASan+UBSan and Clang host binaries pass locally.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_CFSTRING_ROUTE_PHASE4.md; ai-lab/projects/roleplay-ios/v133_interaction/tests/test_v133_two_peers.c; local test outputs 2026-11-16",
+      "scope": "Static code references + synthetic test only; neither proves 0xba738 mutates actual in-game player state nor establishes a true authenticated network carrier."
     }
   ],
   "unknowns": [
@@ -189,7 +194,7 @@
       ]
     }
   ],
-  "next_action": "v13.3 RP: preserve v13.3 build; inspect Winstom lmx's AVPanel and LMXMessageProxy native message dispatch in disassembly, and obtain authenticated sender/session metadata from a true v13.3 game-native session callback. Do NOT transplant Winstom offsets or enable cuff/escort until a two-phone authenticated greet proof passes. Source-only v133_interaction tests pass locally; GitHub CI currently failure with inaccessible job logs.",
+  "next_action": "Phase 4 complete static work: v13.3/Winstom binary comparison and narrow CFString action refs verified. Phase 5 priority is actual v13.3 runtime engine-owned authenticated sender/session/game-frame adapters and real two-iPhone 'greet' A→B logs; do not enable cuff/escort or replace game dylibs from Winstom. GitHub Actions runner failure unresolved.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
