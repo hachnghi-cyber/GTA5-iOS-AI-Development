@@ -634,10 +634,15 @@
       ],
       "previous_iphoneos_result": "cancelled; no job steps",
       "change": "Use macos-15-intel, previously proven for PR16 iPhoneOS arm64, and require host-regression success before linking",
-      "new_run": "pending push",
+      "new_run": 43967710185,
       "native_source_changed": false,
       "linked_dylib_verified": false,
-      "device_verified": false
+      "device_verified": false,
+      "runner_commit": "c4b8841a159bb40743763ffdd187d6e430909bca",
+      "host_regression": "success",
+      "iphoneos_failure": "E0 linked, then lipo rejected the input path placed after -verify_arch arm64 as an architecture name; E1/E3 not reached",
+      "fix": "Place dylib input before -verify_arch arm64 as required by lipo usage",
+      "fixed_sdk_retest": "pending"
     }
   }
 }

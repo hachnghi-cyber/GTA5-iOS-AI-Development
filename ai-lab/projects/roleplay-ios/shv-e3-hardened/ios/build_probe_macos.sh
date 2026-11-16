@@ -35,7 +35,7 @@ xcrun otool -l "$OUT/RBPProbe.shv.dylib" > "$OUT/loadcommands.txt"
 # unrelated load command is NOT sufficient evidence.
 awk '/cmd LC_RPATH/{rpath=1;next} rpath && /path @loader_path /{found=1;rpath=0} END{exit !found}' \
   "$OUT/loadcommands.txt" || { echo 'LC_RPATH @loader_path missing' >&2; exit 1; }
-xcrun lipo -verify_arch arm64 "$OUT/RBPProbe.shv.dylib" || {
+xcrun lipo "$OUT/RBPProbe.shv.dylib" -verify_arch arm64 || {
  echo 'Missing arm64 slice' >&2; exit 1;
 }
 xcrun lipo -info "$OUT/RBPProbe.shv.dylib" | tee "$OUT/architecture.txt"
