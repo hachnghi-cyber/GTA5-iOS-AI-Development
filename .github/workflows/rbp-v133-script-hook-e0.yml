@@ -25,9 +25,10 @@ jobs:
           python3 -m unittest discover -s ai-lab/projects/roleplay-ios/shv-e0/tests -p 'test_*.py' -v
 
   ios-link:
-    if: github.event_name == 'workflow_dispatch'
+    # One-shot macOS attempt only when explicitly marked in the commit or manually dispatched.
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[E0-iOS]') }}
     runs-on: macos-15
-    timeout-minutes: 12
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - name: Link iPhoneOS ARM64 dylib (no IPA, no signing)
