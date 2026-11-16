@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+void prp_start_tls_probe(NSString *folder);
+
 #define PRP_EXPECTED_UUID "EB122C35-96F4-307F-91C3-A2255DD9C685"
 
 static NSString *prp_uuid_of_main_image(void) {
@@ -42,7 +44,7 @@ static void prp_phase8_launch_probe(void) {
         NSString *entry = [NSString stringWithFormat:
             @"schema=prp-v133-launch-probe-v1\n"
              "phase=launch\n"
-             "source_revision=phase9-carrier-unbound\n"
+             "source_revision=tls-probe-opt-in\n"
              "gta5_uuid=%@\n"
              "expected_uuid=%@\n"
              "gta5_uuid_matches=%d\n"
@@ -69,5 +71,6 @@ static void prp_phase8_launch_probe(void) {
                        encoding:NSUTF8StringEncoding error:&error];
         }
         if (error) NSLog(@"[PRP_V133_PHASE8] file write unavailable; see device console");
+        if (exact) prp_start_tls_probe(documents);
     }
 }

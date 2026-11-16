@@ -61,8 +61,9 @@ jobs:
             -fobjc-arc -fvisibility=hidden \
             -O2 -Wall -Wextra -Werror -dynamiclib \
             -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
-            -framework Foundation \
+            -framework Foundation -framework Network -framework Security \
             ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133LaunchProbe.m \
+            -I "$MODULE/include" "$MODULE/ios/PRPV133TLSProbe.m" \
             out/rp_v133_*.o \
             -o out/PoliceRPV133Probe.dylib
           xcrun lipo -info out/PoliceRPV133Probe.dylib
@@ -79,7 +80,7 @@ jobs:
           cp ai-lab/projects/roleplay-ios/v133_interaction/ios/Make_Phase8_IPA_macOS_Linux.sh out/
           chmod +x out/Make_Phase8_IPA_macOS_Linux.sh
           bash -n out/Make_Phase8_IPA_macOS_Linux.sh
-          printf 'NO IPA. Startup diagnostics only. Phase9 carrier/gate/mailbox compiled but UNBOUND. NO police arrest or multiplayer transport. Use allowlisted original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
+          printf 'NO IPA. Startup diagnostics only. Optional private TLS diagnostic, game transport UNBOUND. NO gameplay changes. Use allowlisted original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
       - uses: actions/upload-artifact@v4
         with:
           name: GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA

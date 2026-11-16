@@ -122,6 +122,8 @@ def main():
     ap.add_argument('--out', type=Path, help='New unsigned test IPA path')
     ap.add_argument('--enable-file-sharing', action='store_true',
                     help='Expose Documents/PoliceRP-v13.3-Phase8.txt in iOS Files app')
+    ap.add_argument('--enable-tls-probe', action='store_true',
+                    help='Add the iOS local network purpose string for a private TLS diagnostic')
     opts = ap.parse_args()
     if (opts.bridge is None) != (opts.out is None):
         ap.error('--bridge and --out must be given together, or neither for inspect-only')
@@ -152,12 +154,16 @@ def main():
         if opts.out.exists():
             raise FileExistsError('Output already exists; refusing to overwrite')
         plist_bytes = source.read(PLIST_PATH)
-        if opts.enable_file_sharing:
+        if opts.enable_file_sharing or opts.enable_tls_probe:
             plist = plistlib.loads(plist_bytes)
             if not isinstance(plist, dict):
                 raise ValueError('App Info.plist is not a dictionary')
-            plist['UIFileSharingEnabled'] = True
-            plist['LSSupportsOpeningDocumentsInPlace'] = True
+            if opts.enable_file_sharing:
+                plist['UIFileSharingEnabled'] = True
+                plist['LSSupportsOpeningDocumentsInPlace'] = True
+            if opts.enable_tls_probe:
+                plist.setdefault('NSLocalNetworkUsageDescription',
+                                 'Connect to your paired computer on the local network for the RP diagnostic.')
             fmt = (plistlib.FMT_BINARY if plist_bytes.startswith(b'bplist00')
                    else plistlib.FMT_XML)
             plist_bytes = plistlib.dumps(plist, fmt=fmt, sort_keys=False)

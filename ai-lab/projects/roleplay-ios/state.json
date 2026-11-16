@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Port the verified direct mTLS pairing to a native iOS test client. Verify iPhone-to-host transport in a controlled session, then bind paired RP identity to consenting v13.3 game participants and the verified game callback. Keep the native scripted-event route and gameplay actions disabled pending evidence.",
+  "next_action": "Verify ARM64 TLS probe build, package locally, re-sign, and run iPhone-to-Windows mTLS diagnostic on the same private LAN. Require new matching host and device logs before declaring transport working on iPhone. Keep RP gameplay disabled pending game identity mapping and authority.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -403,6 +403,14 @@
       "engine_identity_mapping_verified": false,
       "ios_adapter_integrated": false,
       "two_iphone_verified": false
+    },
+    "native_tls_diagnostic": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133TLSProbe.m",
+      "host_runner": "ai-lab/projects/roleplay-ios/v133_interaction/tools/run_ios_tls_probe.py",
+      "generated_kit_host_tls_test_passed": true,
+      "device_tested": false,
+      "engine_sender_mapping_verified": false,
+      "gameplay_rp_enabled": false
     }
   }
 }

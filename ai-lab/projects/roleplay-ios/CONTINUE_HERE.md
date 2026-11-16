@@ -18,7 +18,8 @@ tiếp tục từ điểm này. Còn chờ scripted receive trong phiên Sandbox
 ## Hướng transport RP độc lập
 
 `PRP3_DIRECT_TLS_VI.md` ghi bản tham chiếu TLS hai chiều chạy được trên host.
-Tiếp theo là adapter iOS độc lập và thử iPhone ↔ máy tính. Giữ nguyên gate
+Đã có mã probe iOS và bộ sinh cấu hình Windows. Tiếp theo là build, ký lại
+và thử iPhone ↔ máy tính. Giữ nguyên gate
 v13.3 và không dùng ID TLS như slot hay danh tính engine nếu chưa đối chiếu.
 
 ## Nguồn sự thật

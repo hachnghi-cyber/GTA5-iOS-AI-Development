@@ -1,5 +1,7 @@
 """Real loopback TLS1.3 transport, using ephemeral test identities only."""
 
+import base64
+import json
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta, timezone
@@ -15,13 +17,17 @@ import unittest
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 path = Path(__file__).resolve().parents[1] / "tools" / "prp3_direct_tls.py"
-spec = importlib.util.spec_from_file_location("direct_tls", path)
+spec = importlib.util.spec_from_file_location("prp3_direct_tls", path)
 tls = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = tls
 spec.loader.exec_module(tls)
+runner_spec = importlib.util.spec_from_file_location("ios_tls_kit", path.with_name("run_ios_tls_probe.py"))
+kit = importlib.util.module_from_spec(runner_spec)
+runner_spec.loader.exec_module(kit)
 
 
 def issue(label, key, authority, ca_key):
@@ -102,6 +108,35 @@ class DirectTransportTests(unittest.TestCase):
         return (tls.PeerSession(tls.Pairing(11, 22, 123, 7, self.pins["b"]), self.credentials["a"]),
                 tls.PeerSession(tls.Pairing(22, 11, 123, client_epoch, self.pins["a"]),
                                 self.credentials[client_cert]))
+
+    def test_generated_iphone_kit_interoperates_with_host_responder(self):
+        with tempfile.TemporaryDirectory() as sandbox:
+            folder = Path(sandbox) / "device-kit"
+            kit.prepare(folder, ipaddress.IPv4Address("127.0.0.1"), 44533)
+            phone = json.loads((folder / kit.CONFIG_NAME).read_text())
+            host = json.loads((folder / kit.HOST_NAME).read_text())
+            key, cert, _ = pkcs12.load_key_and_certificates(
+                base64.b64decode(phone["identity"], validate=True), phone["passphrase"].encode())
+            self.assertEqual(cert.fingerprint(hashes.SHA256()).hex(), host["client_pin"])
+            (folder / "test-client.pem").write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+            (folder / "test-client.key").write_bytes(key.private_bytes(serialization.Encoding.PEM,
+                    serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+            anchor = x509.load_der_x509_certificate(base64.b64decode(phone["anchor"], validate=True))
+            self.assertEqual(anchor.public_bytes(serialization.Encoding.PEM), (folder / "ca.pem").read_bytes())
+
+            def configured(config, pin, prefix):
+                return tls.PeerSession(tls.Pairing(
+                    *(int(config[v]) for v in ("local_id", "peer_id", "session", "epoch")), pin),
+                    tls.Credentials(folder / (prefix + ".pem"), folder / (prefix + ".key"), folder / "ca.pem"))
+            server = configured(host, bytes.fromhex(host["client_pin"]), "host")
+            client = configured(phone, base64.b64decode(phone["server_pin"], validate=True), "test-client")
+            p = client.pairing
+            with connection(server, client) as (a, b):
+                b.send(frame(p.peer_id, session=p.session_id, epoch=p.epoch))
+                kit.respond(a, server.pairing)
+                self.assertEqual(b.receive().wire, frame(p.local_id, kind=2, session=p.session_id, epoch=p.epoch))
+            with self.assertRaises(FileExistsError):
+                kit.prepare(folder, ipaddress.IPv4Address("127.0.0.1"), 44533)
 
     def test_real_tls_two_way_preserves_exact_prp3_and_attaches_paired_identity(self):
         with connection(*self.pair()) as (a, b):

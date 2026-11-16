@@ -85,6 +85,7 @@ class PackerTests(unittest.TestCase):
             folder = Path(directory)
             source = folder / "GTAV-v13.3.ipa"
             target = folder / "GTAV-v13.3-Phase8-Probe-UNSIGNED.ipa"
+            tls_target = folder / "GTAV-v13.3-TLS-Probe-UNSIGNED.ipa"
             bridge = folder / "PoliceRPV133Probe.dylib"
             main_bytes = fixture()
             bridge_bytes = fixture(filetype=mod.MH_DYLIB)
@@ -105,6 +106,12 @@ class PackerTests(unittest.TestCase):
                     "--enable-file-sharing",
                 ]):
                     mod.main()
+                with mock.patch.object(sys, "argv", [
+                    "patch_exact_v133_probe.py", "--ipa", str(source),
+                    "--bridge", str(bridge), "--out", str(tls_target),
+                    "--enable-file-sharing", "--enable-tls-probe",
+                ]):
+                    mod.main()
             finally:
                 mod.GTA5_SHA256, mod.IPA_SHA256 = old_game_sha, old_ipa_sha
 
@@ -122,6 +129,13 @@ class PackerTests(unittest.TestCase):
                 self.assertIs(plist_after["UIFileSharingEnabled"], True)
                 self.assertIs(plist_after["LSSupportsOpeningDocumentsInPlace"], True)
                 self.assertEqual(plist_after["CFBundleIdentifier"], "com.macport.gtav")
+                self.assertNotIn("NSLocalNetworkUsageDescription", plist_after)
+            with zipfile.ZipFile(tls_target) as out:
+                self.assertIsNone(out.testzip())
+                tls_plist = plistlib.loads(out.read(mod.PLIST_PATH))
+                self.assertEqual(tls_plist.keys(), plist_after.keys() | {"NSLocalNetworkUsageDescription"})
+                self.assertTrue(tls_plist.pop("NSLocalNetworkUsageDescription"))
+                self.assertEqual(tls_plist, plist_after)
 
     def test_refuses_non_macho(self):
         with self.assertRaises(ValueError):
