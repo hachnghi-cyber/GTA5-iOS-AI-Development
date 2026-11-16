@@ -1,0 +1,42 @@
+name: GTA v13.3 ScriptHook E0 iPhoneOS build (diagnostic only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/rbp-script-hook-e0-20261116
+    paths:
+      - 'ai-lab/projects/roleplay-ios/shv-e0/**'
+      - '.github/workflows/rbp-v133-script-hook-e0.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  host-mock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mock ScriptHook callback (not device)
+        run: |
+          CC=clang bash ai-lab/projects/roleplay-ios/shv-e0/scripts/run_host_test.sh
+          CC=gcc bash ai-lab/projects/roleplay-ios/shv-e0/scripts/run_host_test.sh
+          python3 -m unittest discover -s ai-lab/projects/roleplay-ios/shv-e0/tests -p 'test_*.py' -v
+
+  ios-link:
+    # One-shot macOS attempt only when explicitly marked in the commit or manually dispatched.
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[E0-iOS]') }}
+    runs-on: macos-15
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link iPhoneOS ARM64 dylib (no IPA, no signing)
+        run: bash ai-lab/projects/roleplay-ios/shv-e0/scripts/build_iphoneos.sh "$PWD/out"
+      - name: Upload unsigned dylib and static evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: RBP-v133-ScriptHook-E0-UNSIGNED-DYLIB-NOT-DEVICE-TESTED
+          path: out/
+          if-no-files-found: error
+          retention-days: 7

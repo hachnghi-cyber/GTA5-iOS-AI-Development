@@ -8,7 +8,7 @@
   "target": "Native multiplayer Police Roleplay on verified GTA V iOS v13.3; preserve stock modes, prefer existing multiplayer, and do not require a user-operated RP server",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
-  "last_known_github_pr": 16,
+  "last_known_github_pr": 18,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -109,6 +109,31 @@
       "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16; implementation 63cfdf33c34ffbe5c50163048830e050a618da82; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973",
       "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
       "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
+    },
+    {
+      "claim": "Separate v13.3 ScriptHookV E0 diagnostic source committed on PR #18; Clang/GCC Linux host-mock loader/register/tick/detach passed, and branch-scoped iPhoneOS SDK CI was configured. No original GTA binary was changed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/18 ; commit e65903d96216d8e477ec8ebd952b5b6895592545",
+      "scope": "LOCAL HOST MOCK ONLY. iOS dylib link pending CI; ScriptHook callback and RAGE action on real iPhone not validated; native receive provenance in PR #16 remains blocked."
+    },
+    {
+      "claim": "Exact v13.3 ScriptHookV ARM64 _scriptWait at offset 0x56B4 has a NULL-context return path skipping _sh_swap; isolated E0 probe was hardened against no-yield busy-spins with 16ms wait, 120-tick bound and four-fast-return guard. GitHub Linux host-mock + nine log-classifier tests passed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43895737607 ; commit 9d2423f862125fcb405dcc46e0ccd426e2deafa2",
+      "scope": "Static disassembly and mock host CI only. No confirmation of scheduler behavior on iPhone, no iPhoneOS SDK linked dylib or network-origin gameplay event."
+    },
+    {
+      "claim": "Phase 6 fixed an E0 test coverage gap: 120/120 normal callback ticks + completion and 4-call null-context fast-return termination independently passed Clang and GCC mocks; local ASan/UBSan passed. Exact user-provided v13.3 IPA ScriptHookV SHA256/UUID and nine ARM64 instruction words matched a read-only ABI guard.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43898228546 ; commit 438f2c9d1771bc3cd4e5aa948b98034c33708245 ; ai-lab/projects/roleplay-ios/shv-e0/PHASE6_ABI_AUDIT.md",
+      "scope": "STATIC EXACT-BINARY + HOST MOCK ONLY. Github CI host job success with 15 Python tests, macOS ios-link skipped (manual-only); no on-device ScriptHook tick, no iPhoneOS link, no verified native gameplay or remote event."
+    },
+    {
+      "claim": "E0 dyld loader boundary tested using separately preloaded ScriptHookV fixture and synthetic Mach-O headers, including invalid UUID, duplicate image, malformed load commands, and success/detach. Build script now respects CC and GitHub Actions log demonstrates real Clang and GCC runs, 15 Python tests PASS.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43900440909 ; commit d39cef688369c86869e96409b15a997d5954a2b0",
+      "scope": "Host Linux unit/integration fixtures only; synthetic dyld APIs do not constitute execution by Apple dyld, real ScriptHookV runtime callbacks, gameplay natives or two-iPhone network proof."
+    },
+    {
+      "claim": "Exact v13.3 ScriptHookV loader checks: signed original SHA256 and UUID, 16 ARM64 instruction guards and stock ScriptHookV loader strings; stock loader subtracts before/after script counters and reports N new scripts. New read-only pair-log classifier distinguishes loaded/registered/callback and rejects stale, contradictory or uncorrelated device logs. CI host PASS 37 Python tests and C Clang/GCC mock; no real E0 runtime test.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43902811673 ; commit 2e369dda94fcef2bb63787d0e68c44743ef6fde5 ; ai-lab/projects/roleplay-ios/shv-e0/PHASE8_LOADER_CONTRACT.md",
+      "scope": "STATIC exact IPA + HOST CI only; no on-device E0 callback, no iPhoneOS linked dylib or validated two-iPhone roleplay gameplay. Historical user-provided posthook demonstrates prior plugin scheduler but not current E0 or online sender authentication."
     }
   ],
   "unknowns": [
@@ -525,6 +550,50 @@
         "GCC ASan/UBSan",
         "Clang ASan/UBSan"
       ]
+    },
+    "independent_script_hook_e0": {
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e0",
+      "pr": 18,
+      "base_pr": 16,
+      "source_commit": "e65903d96216d8e477ec8ebd952b5b6895592545",
+      "host_clang_mock_pass": true,
+      "host_gcc_mock_pass": true,
+      "ios_build": "PENDING_GITHUB_CI",
+      "device_loaded": false,
+      "script_callback_on_iphone": false,
+      "online_rage_action": false,
+      "next_gate": "Link E0 on an available Xcode/iPhoneOS SDK macOS runner (or a trusted Mac), sign + install under exact v13.3 app with correct authorization, retrieve same-run stock posthook.log and Documents/RBPProbeE0.log; classify with tools/evaluate_e0_pair.py. Independently test PR#16 native sender/session provenance. Do not enable RP.",
+      "phase5_commit": "9d2423f862125fcb405dcc46e0ccd426e2deafa2",
+      "phase5_host_ci_run": 43895737607,
+      "phase5_host_ci": "SUCCESS (Linux mock + nine Python parser tests)",
+      "phase5_ios_ci": "SKIPPED (manual-only); old macOS job cancelled",
+      "script_wait_static_fast_return_verified": true,
+      "script_wait_guard": "16ms wait, 120 max ticks, 4 consecutive under 0.5ms returns -> fail closed",
+      "phase6_commit": "438f2c9d1771bc3cd4e5aa948b98034c33708245",
+      "phase6_host_run": 43898228546,
+      "phase6_host_ci": "PASS (Clang+GCC normal 120-tick and fast-return mock; 15 Python tests)",
+      "phase6_local_asan_ubsan": "PASS (Clang both modes, detect_leaks=0)",
+      "phase6_exact_shv_sha256": "a86451f766925adf9fa8dfedd8cfa92f9895bd68fda16b3795e6f747fef2196d",
+      "phase6_exact_shv_uuid": "F768B7B5-AD75-39F4-83D3-8E49234325B5",
+      "phase6_static_arm64_verified_words": 9,
+      "phase6_fiber_return_semantics": "_sh_fiber_main invokes callback and handles return through completed state 2 + _sh_swap (STATIC only)",
+      "phase6_ios_build": "SKIPPED (manual-only macOS workflow)",
+      "phase6_one_shot_ios_ci_run": 43898609050,
+      "phase6_one_shot_ios_ci_status": "QUEUED (macOS-15 runner not yet assigned; no dylib artifact)",
+      "phase6_one_shot_trigger_commit": "4b6d368a35c2fcfa0bace6dfc507b58f135f04ea",
+      "phase7_commit": "d39cef688369c86869e96409b15a997d5954a2b0",
+      "phase7_ci_run": 43900440909,
+      "phase7_ci_result": "SUCCESS: Clang/GCC actual compilers, E0 host mock + synthetic dyld/Mach-O UUID negative paths, 15 Python tests",
+      "phase7_local_sanitizer_result": "PASS: Clang ASan/UBSan dyld mock on Linux",
+      "phase7_limitation": "Exact Apple dyld, code signing and ScriptHookV on device still UNTESTED; native sender provenance PR#16 not verified",
+      "ios_link_run_id": 43898609050,
+      "ios_link_result_at_checkpoint": "CANCELLED, no iPhoneOS dylib artifact",
+      "phase8_commit": "2e369dda94fcef2bb63787d0e68c44743ef6fde5",
+      "phase8_ci_run": 43902811673,
+      "phase8_ci": "SUCCESS; Clang/GCC E0 host mocks, 37 Python tests, ios-link SKIPPED on push",
+      "phase8_local_exact_ipa": "PASS; SHA256+UUID+16 static ARM64 words and loader literals",
+      "phase8_device_log_pair": "NOT TESTED on current iPhone; parser tests synthetic only",
+      "historical_shv_loader_device": "Older user-supplied log has Menyoo plugin (2 scripts) and first script tick (4 scripts); original log build unspecified; not proof of E0 in current v13.3"
     }
   }
 }
