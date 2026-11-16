@@ -635,14 +635,19 @@
       "previous_iphoneos_result": "cancelled; no job steps",
       "change": "Use macos-15-intel, previously proven for PR16 iPhoneOS arm64, and require host-regression success before linking",
       "new_run": 43967710185,
-      "native_source_changed": false,
+      "native_source_changed": true,
       "linked_dylib_verified": false,
       "device_verified": false,
       "runner_commit": "c4b8841a159bb40743763ffdd187d6e430909bca",
       "host_regression": "success",
       "iphoneos_failure": "E0 linked, then lipo rejected the input path placed after -verify_arch arm64 as an architecture name; E1/E3 not reached",
       "fix": "Place dylib input before -verify_arch arm64 as required by lipo usage",
-      "fixed_sdk_retest": "pending"
+      "fixed_sdk_retest": "pending new iPhoneOS E0/E1/E3 run",
+      "lipo_fix_commit": "a029c5249f7eb4a48926becbd59c361bfd721a85",
+      "lipo_retest_run": 43968040826,
+      "lipo_retest": "E0/E1 linked and passed arm64, iPhoneOS, DllMain, rpath/dependency checks; E3 failed before link: arc4random_buf hidden by POSIX feature-test macro",
+      "darwin_header_fix": "Enable _DARWIN_C_SOURCE before system headers on Apple to retain the SDK declaration for arc4random_buf; no manual prototype or weaker warnings",
+      "darwin_header_source": "https://github.com/apple/darwin-xnu/blob/main/bsd/sys/cdefs.h"
     }
   }
 }

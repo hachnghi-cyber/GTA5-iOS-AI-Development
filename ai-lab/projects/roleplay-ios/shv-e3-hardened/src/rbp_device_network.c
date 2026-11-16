@@ -1,3 +1,7 @@
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+/* arc4random_buf is a Darwin extension hidden by strict POSIX headers. */
+#define _DARWIN_C_SOURCE 1
+#endif
 #define _POSIX_C_SOURCE 200809L
 #include "rbp_device_network.h"
 #include "rbp_device_log.h"
