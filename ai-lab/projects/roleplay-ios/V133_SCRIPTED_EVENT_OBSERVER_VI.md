@@ -80,6 +80,19 @@ Với iPhone đã tin cậy máy tính, Developer Mode đã bật, DeveloperDisk
 uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai>
 ```
 
+Nếu debugproxy ngắt ngay ở `qSupported` trước attach, kiểm tra DeveloperDiskImage
+sau khi reconnect/reboot. Trong lần thử 2026-11-16, ba lần handshake bị
+`WinError 10053`; sau lệnh dưới, `jobs_update --stock-job` đã lấy mẫu thật.
+Đây là điều kiện khôi phục đã quan sát, chưa chứng minh mọi lỗi 10053 cùng nguyên nhân.
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python -m pymobiledevice3 mounter auto-mount
+```
+
+Lệnh dùng cơ chế developer chính thức, yêu cầu Developer Mode và có thể tải
+image từ Apple. Không cần cài lại IPA. Mẫu local job thật và giới hạn lần đo
+được lưu tại `baselines/v133-stock-job-device-20261116.json`.
+
 Bundle ID phải là của bản GTA đã cài. Công cụ tự tra PID và giữ debugproxy
 trên loopback. Timeout khi app ở background đã được thử và breakpoint
 được gỡ trước khi thoát. Kết quả chỉ có nhãn luồng theo mẫu, PC trúng điểm

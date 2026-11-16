@@ -114,6 +114,15 @@
       "claim": "Exact v13.3 GTA5 static disassembly verifies Cxn ID allocation (high16 marker and low16 slot), full 32-bit CloseConnection match and OnNetEvent peer-list connection match, plus P2pDecrypt success with an out-flag of zero forwarded through HandleReceivedPacket to Unpack. Read-only audit matches original user IPA SHA256/UUID and 26 exact ARM64 words; 6 local tests passed.",
       "evidence": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md; cd05556e70bee188d7662237079f4a2ce7162d11; exact user IPA /mnt/data/GTAV-v13.3.ipa (local only)",
       "scope": "STATIC_BINARY and LOCAL TEST ONLY. High16 is not a cryptographic authenticated generation; the out flag is not sender attestation; no iPhone receive-context/peer authorization or two-iPhone gameplay verified."
+    },
+    {
+      "scope": "One stopped sample on 2026-11-16. No active police duty, authenticated sender, scripted receive, session generation or two-iPhone gameplay proof. Debugger removal/detach acknowledged; later app log backgrounded and PID lookup returned 0, cause not established.",
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/v133-stock-job-device-20261116.json",
+      "claim": "A real Windows USB jobs_update stop on exact v13.3 observed the local stock job fields as empty known ID, kind=0 and state=0, with matching MacportOnlineUpdate caller."
+    },
+    {
+      "claim": "PR19 E0/E1/E3 unsigned dylibs linked for iPhoneOS ARM64; DllMain, UUIDs, rpath, platform, dependencies and SHA256 independently inspected after download. No iPhone E0/E1/E3 or RP claim.",
+      "evidence": "PR19 commit 1e910d4205ba0c2c3050c230d91b14604fb3bedd, Actions 43969424836, baselines/e3-iphoneos-build-1e910d4.json"
     }
   ],
   "unknowns": [
@@ -491,13 +500,14 @@
       "live_game_identity_provider_bound": false,
       "two_iphone_gameplay_verified": false,
       "native_duty_candidate": {
-        "scope": "static plus previous text logs; no new runtime memory observation",
+        "scope": "One real jobs_update memory sample in stock Sandbox: empty known job ID, kind=0, state=0; no active duty/quit or role authorization verified",
         "symbols": 49,
         "branches": 31,
         "observations": 46,
         "observer": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py --stock-job",
         "read_only_scope": "one exact-build jobs_update stop; job ID classification and two scalar fields",
-        "new_phone_sample": false
+        "new_phone_sample": true,
+        "evidence": "ai-lab/projects/roleplay-ios/baselines/v133-stock-job-device-20261116.json"
       },
       "host_ci_run": 43843235701,
       "host_ci_conclusion": "success",
@@ -518,7 +528,7 @@
       "ci": "success",
       "new_ios_build_needed": false,
       "device_sample_obtained": false,
-      "last_device_attempt": "NoDeviceConnectedError from Windows usbmux",
+      "last_device_attempt": "2026-11-17: USB reconnected; after DDI mount scripted handler and OnNetEvent each timed out at 30s; jobs_update hit exact caller, kind/state 0. App still running; all hardware removals/detaches acknowledged. No peer-origin sample.",
       "authenticated_sender_verified": false,
       "session_generation_verified": false,
       "engine_adapter_bound": false,
@@ -529,7 +539,8 @@
       "host_sanitizers": [
         "GCC ASan/UBSan",
         "Clang ASan/UBSan"
-      ]
+      ],
+      "device_attempt_evidence": "baselines/v133-usb-receive-attempts-20261117.json"
     },
     "native_v133_connection_chain": {
       "source_commit": "cd05556e70bee188d7662237079f4a2ce7162d11",
@@ -586,14 +597,25 @@
       "local_core_build": "PASS: 3 Mach-O ARM64 relocatable objects and deterministic static libRBPPhase9Core-arm64.a",
       "local_core_sha256": "cd383ba20e5dc9fe9c16685cebb596d7fff1bac04f5c5c707102311823a554e1",
       "local_core_archive": "GTA_v13.3_PHASE9_ARM64_CORE_BUILD.zip (conversation artifact, not GitHub)",
-      "iphoneos_link": "QUEUED at last check, no iPhoneOS dylib artifact; Xcode not in Linux runtime",
+      "iphoneos_link": "SUCCESS: E0/E1/E3 linked and validated with Xcode iPhoneOS SDK 18.5, minimum iOS 16.3, ARM64",
       "ipa_signed": false,
       "iphone_e0_verified": false,
       "iphone_e1_verified": false,
       "iphone_e3_verified": false,
       "rage_sender_session_authenticated": false,
       "online_police_rp_enabled": false,
-      "next_gate": "Finish pending macOS runner build of unsigned E0/E1/E3 dylibs, inspect _DllMain/export/LC_BUILD_VERSION/deps. Legitimately sign as part of exact v13.3 IPA. Verify E0 in Story/Online, E1 HUD and E3 two-device LAN; independently verify PR#16 real transport sender+session before RP."
+      "next_gate": "E0 loader/tick device test requires a correctly signed build. Native receive-context/authenticated sender/session evidence remains required before any RP action. E3 host HMAC diagnostic is not a RAGE identity binding.",
+      "followup_run": 43969424836,
+      "followup_commit": "1e910d4205ba0c2c3050c230d91b14604fb3bedd",
+      "artifact_id": 14278505355,
+      "artifact_sha256": "9f75bfc5d1304fda0740ab12fce9fefddb55061013117a1231f20af4235d70a9",
+      "build_evidence": "baselines/e3-iphoneos-build-1e910d4.json",
+      "build_fixes": [
+        "c4b8841: macos-15-intel and host prerequisite",
+        "a029c52: lipo input ordering",
+        "25ab79f: Darwin header extension; successful SDK build 43968789184",
+        "1e910d4: latest concurrent PR19 Security RNG and Bash 3.2 array correction; SDK build 43969424836 successful"
+      ]
     }
   }
 }

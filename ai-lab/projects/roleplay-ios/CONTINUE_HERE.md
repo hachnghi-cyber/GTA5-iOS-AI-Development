@@ -7,6 +7,12 @@
 Checkpoint tiếp nối yêu cầu **Operation RAGE Breakthrough** nằm ở
 `ROLEPLAY_CONTINUE.md`; sơ đồ receive/local ở `ENGINE_INTEGRATION_MAP.md`.
 Ưu tiên native multiplayer, không yêu cầu người dùng vận hành server RP riêng.
+Mốc 2026-11-17: đã thu hai mẫu timeout 30s (`script_event_handler`,
+`on_net_event`) và mẫu `jobs_update` trúng đúng caller sau khi mount DDI.
+Xem `baselines/v133-usb-receive-attempts-20261117.json`; chưa có receive hit.
+Build E0/E1/E3 ở PR #19 đã qua iPhoneOS ARM64 và host sanitizer:
+commit `1e910d4`, Actions `43969424836`; xem baseline build tương ứng.
+Đây là dylib chưa ký, chưa phải kết quả gameplay trên iPhone.
 Observer USB có `--receive-context` để kiểm tra call chain và liên hệ sender;
 phần mở rộng này chưa có mẫu iPhone thật, không cấp quyền gameplay.
 

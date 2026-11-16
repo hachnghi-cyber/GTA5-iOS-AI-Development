@@ -1,0 +1,67 @@
+{
+  "source_commit": "1e910d4205ba0c2c3050c230d91b14604fb3bedd",
+  "ci_run": 43969424836,
+  "artifact_id": 14278505355,
+  "archive_sha256": "9f75bfc5d1304fda0740ab12fce9fefddb55061013117a1231f20af4235d70a9",
+  "stages": {
+    "E0": {
+      "arch": "ARM64",
+      "type": "MH_DYLIB",
+      "dependencies": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "rpaths": [
+        "@loader_path"
+      ],
+      "install_name": "@rpath/RBPProbe.shv.dylib",
+      "uuid": "8ED83718-2823-3C7D-A823-15AA5B2C07E4",
+      "platform": "IOS",
+      "minos": "16.3.0",
+      "sdk": "18.5.0",
+      "DllMain_exported": true,
+      "code_signature_load_command": false,
+      "sha256": "0aa55cbd9bb47b76755b621c329bea08222255ff86ff99f6bd60274ccd52a9b4"
+    },
+    "E1": {
+      "arch": "ARM64",
+      "type": "MH_DYLIB",
+      "dependencies": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "rpaths": [
+        "@loader_path"
+      ],
+      "install_name": "@rpath/RBPProbe.shv.dylib",
+      "uuid": "AC09C42A-92D8-35FE-A32E-2596D03B4565",
+      "platform": "IOS",
+      "minos": "16.3.0",
+      "sdk": "18.5.0",
+      "DllMain_exported": true,
+      "code_signature_load_command": false,
+      "sha256": "2347b74f776afdf9cbd970263c56f4d49781a6c23b1a147bd8229dc80fb946cc"
+    },
+    "E3": {
+      "arch": "ARM64",
+      "type": "MH_DYLIB",
+      "dependencies": [
+        "/System/Library/Frameworks/Security.framework/Security",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "rpaths": [
+        "@loader_path"
+      ],
+      "install_name": "@rpath/RBPProbe.shv.dylib",
+      "uuid": "90F076F1-0D9E-3A0F-ABCE-3C5F296AAF0E",
+      "platform": "IOS",
+      "minos": "16.3.0",
+      "sdk": "18.5.0",
+      "DllMain_exported": true,
+      "code_signature_load_command": false,
+      "sha256": "781adc210d395f0a0c681e8bed2662db70ae269fb3c3c5e619f51513fce86cf3"
+    }
+  },
+  "status": "IPHONEOS_LINK_AND_STRUCTURE_VERIFIED_ONLY",
+  "signed_for_install": false,
+  "device_tested": false,
+  "authenticated_rage_sender_verified": false
+}
