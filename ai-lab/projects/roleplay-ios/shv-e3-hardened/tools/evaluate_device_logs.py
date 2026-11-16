@@ -20,7 +20,12 @@ def check_e0(run,stage):
             'SCRIPT_REGISTER_ATTEMPTED',
             f'SCRIPT_CALLBACK_ENTER stage={stage}',
             'SCRIPT_TICK tick=1']
-    return {x:(x in run) for x in needed}
+    result={x:(x in run) for x in needed}
+    # A successful earlier callback marker cannot override a subsequent failure.
+    fail_closed=('FAIL_CLOSED', 'SCRIPT_WAIT_FAST_RETURN=1',
+                 'SHV_SYMBOL_RESOLUTION_FAILED', 'SCRIPT_HOOK_UUID_MATCH=0')
+    result['no_script_fail_closed']=not any(marker in run for marker in fail_closed)
+    return result
 
 def assess(stage,b_log,a_log=None,visual_observed=False):
     b=latest_run(b_log)
@@ -37,20 +42,29 @@ def assess(stage,b_log,a_log=None,visual_observed=False):
         def sequences(contents, expression):
             return {int(m.group(1)) for m in re.finditer(expression,contents)}
         transmitted=sequences(a,r'(?m)^\[RBP_NET\] PACKET_TRANSMITTED seq=(\d+) attempt=\d+\s*$')
-        acked=sequences(a,r'(?m)^\[RBP_NET\] ACK_VERIFIED seq=(\d+) \(not a gameplay ACK\)\s*$')
+        acked=sequences(a,r'(?m)^\[RBP_NET\] ACK_VERIFIED seq=(\d+) \(queue receipt ONLY\)\s*$')
         received=sequences(b,r'(?m)^\[RBP_NET\] PACKET_ACCEPTED seq=(\d+) ack_sent=1\s*$')
         invoked=sequences(b,r'(?m)^\[RBP_PROBE\] REMOTE_E3_GAME_ACTION_INVOKED=1 seq=(\d+) tick=\d+ thread=\S+\s*$')
-        common=transmitted & acked & received & invoked
+        queued=sequences(b,r'(?m)^\[RBP_PROBE\] NATIVE_INVOCATION_REPORT_QUEUED=1 seq=(\d+) \(NOT visual proof\)\s*$')
+        reported=sequences(b,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_SENT=1 seq=(\d+) \(API call only\)\s*$')
+        verified=sequences(a,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_VERIFIED seq=(\d+) \(native API invoked, NOT HUD observed\)\s*$')
+        # All seven phases must match the SAME sequence in this latest run.
+        # This checks log consistency, not device provenance or RAGE replication.
+        common=transmitted & acked & received & invoked & queued & reported & verified
         checks['A_udp_transmitted']=bool(transmitted)
         checks['A_queue_ack_verified']=bool(acked)
         checks['B_udp_accepted']=bool(received)
         checks['B_remote_native_invoked']=bool(invoked)
+        checks['B_native_report_queued']=bool(queued)
+        checks['B_native_report_sent']=bool(reported)
+        checks['A_native_report_verified']=bool(verified)
         checks['same_sequence_correlated_A_B']=bool(common)
         matched_sequences=sorted(common)
         if not all(checks['A_E0'].values()) or not all(checks[k] for k in (
             'A_udp_transmitted','A_queue_ack_verified','B_udp_accepted',
-            'B_remote_native_invoked','same_sequence_correlated_A_B')):
-            reasons.append('E3 two-device event pipeline not established with matching sequence')
+            'B_remote_native_invoked','B_native_report_queued','B_native_report_sent',
+            'A_native_report_verified','same_sequence_correlated_A_B')):
+            reasons.append('E3 two-device event/ACK/native-report pipeline not established with matching sequence')
     if stage>=1 and not visual_observed:
         reasons.append('visual gameplay observation not provided; native log alone is not gameplay proof')
     def all_pass(obj):
