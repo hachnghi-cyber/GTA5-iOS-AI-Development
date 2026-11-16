@@ -9,6 +9,17 @@
 3. Giải nén, cần `PoliceRPV133Probe.dylib`, `patch_exact_v133_probe.py`, `README_TEST_VI.md`, `sha256.txt`.
 4. Artifact không chứa GTA5, IPA hoặc asset có bản quyền; game của người dùng vẫn nằm cục bộ.
 
+## Tạo IPA nhanh bằng kéo-thả (Windows)
+
+1. Tải artifact **GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA** từ GitHub Actions; giải nén toàn bộ.
+2. Trên máy tính Windows cài **Python 3** (cần lệnh `py -3` hoặc `python`). **Kéo file `GTAV-v13.3.ipa` gốc thả vào `Make_Phase8_IPA_Windows.bat`** nằm trong thư mục artifact.
+3. File `GTAV-v13.3-Phase8-Probe-UNSIGNED.ipa` sẽ được tạo **bên cạnh IPA gốc**, nếu và chỉ nếu hash và Mach-O đúng. Không xóa hoặc ghi đè file gốc.
+4. Dùng công cụ ký IPA riêng của bạn để **ký lại cả app + embedded dylib cùng một Apple Team ID**, sau đó mới cài lên iPhone. Chữ ký cũ hết hiệu lực khi sửa executable. <https://support.apple.com/guide/security-pdf/app-code-signing-process-sec7c917bf14/web>
+
+Trên **macOS hoặc Linux**, dùng `sh Make_Phase8_IPA_macOS_Linux.sh /duong/dan/GTAV-v13.3.ipa` (cần Python 3). Tất cả thao tác đóng gói IPA thực hiện **trên máy tính của bạn**, không tải IPA/game assets lên GitHub.
+
+Đây là **IPA thử startup read-only**; không có còng tay hay RP Online. Không coi file unsigned là đã cài được.
+
 ## Tạo IPA thử, giữ bản gốc
 
 Dùng **đúng** `GTAV-v13.3.ipa` gốc của người dùng, SHA-256 IPA:
