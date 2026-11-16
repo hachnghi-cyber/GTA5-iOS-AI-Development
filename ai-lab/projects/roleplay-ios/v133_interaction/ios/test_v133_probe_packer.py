@@ -1,6 +1,11 @@
 """Synthetic Mach-O tests. No GTA binaries are used in this test."""
 import hashlib
 import importlib.util
+import plistlib
+import sys
+import tempfile
+import zipfile
+from unittest import mock
 import struct
 import unittest
 from pathlib import Path
@@ -74,6 +79,49 @@ class PackerTests(unittest.TestCase):
                 mod.patch_gta5(raw)
         finally:
             mod.GTA5_SHA256 = previous
+
+    def test_full_unsigned_ipa_repack_and_file_sharing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = folder / "GTAV-v13.3.ipa"
+            target = folder / "GTAV-v13.3-Phase8-Probe-UNSIGNED.ipa"
+            bridge = folder / "PoliceRPV133Probe.dylib"
+            main_bytes = fixture()
+            bridge_bytes = fixture(filetype=mod.MH_DYLIB)
+            plist = plistlib.dumps({"CFBundleIdentifier": "com.macport.gtav"},
+                                   fmt=plistlib.FMT_BINARY)
+            with zipfile.ZipFile(source, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(mod.GTA5_PATH, main_bytes)
+                archive.writestr(mod.PLIST_PATH, plist)
+                archive.writestr("Payload/GTAV.app/unchanged.txt", b"KEEP_THIS_ASSET")
+            bridge.write_bytes(bridge_bytes)
+            old_game_sha, old_ipa_sha = mod.GTA5_SHA256, mod.IPA_SHA256
+            try:
+                mod.GTA5_SHA256 = hashlib.sha256(main_bytes).hexdigest()
+                mod.IPA_SHA256 = hashlib.sha256(source.read_bytes()).hexdigest()
+                with mock.patch.object(sys, "argv", [
+                    "patch_exact_v133_probe.py", "--ipa", str(source),
+                    "--bridge", str(bridge), "--out", str(target),
+                    "--enable-file-sharing",
+                ]):
+                    mod.main()
+            finally:
+                mod.GTA5_SHA256, mod.IPA_SHA256 = old_game_sha, old_ipa_sha
+
+            self.assertTrue(target.is_file())
+            with zipfile.ZipFile(source) as original, zipfile.ZipFile(target) as out:
+                self.assertIsNone(out.testzip())
+                self.assertEqual(out.read("Payload/GTAV.app/unchanged.txt"), b"KEEP_THIS_ASSET")
+                self.assertEqual(out.read(mod.BRIDGE_PATH), bridge_bytes)
+                edited_gta = out.read(mod.GTA5_PATH)
+                self.assertEqual(len(edited_gta), len(main_bytes))
+                self.assertEqual(edited_gta[4096:], main_bytes[4096:])
+                self.assertIn(mod.LOAD_PATH, mod.header_info(edited_gta)["dylibs"])
+                self.assertEqual(original.read(mod.GTA5_PATH), main_bytes)
+                plist_after = plistlib.loads(out.read(mod.PLIST_PATH))
+                self.assertIs(plist_after["UIFileSharingEnabled"], True)
+                self.assertIs(plist_after["LSSupportsOpeningDocumentsInPlace"], True)
+                self.assertEqual(plist_after["CFBundleIdentifier"], "com.macport.gtav")
 
     def test_refuses_non_macho(self):
         with self.assertRaises(ValueError):
