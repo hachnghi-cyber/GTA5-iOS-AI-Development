@@ -124,6 +124,11 @@
       "claim": "Phase11 E3 source rejects blank HMAC keys/session/player/peer IDs at BOTH sandbox config parser and direct network-start API; strict Apple iPhoneOS build script now validates real LC_RPATH, ARM64, LC_BUILD_VERSION platform IOS, and avoids strong linking game private libs. Local Clang/GCC host tests pass; exact user IPA SHA256+ScriptHook baseline preflight and 46/46 Python tests pass.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43923116112 ; commit 61b7c70661014d02d0a1f480cc9191cc570e3594 ; ai-lab/projects/roleplay-ios/shv-e3-hardened/PHASE11_IOS_BRINGUP.md",
       "scope": "HOST + EXACT ORIGINAL IPA STATIC EVIDENCE ONLY. macOS iphoneos-link queued, no linked/signed iOS dylib, no current E0/E1/E3 runtime and no authenticated RAGE remote gameplay."
+    },
+    {
+      "claim": "GTA v13.3 diagnostic ScriptHook E0 E1 E3 successfully linked in real macOS Xcode16.4 iPhoneOS SDK18.5 as unsigned ARM64 MH_DYLIBs for platform IOS minimum16.3, exported DllMain, LC_RPATH @loader_path; E3 links Security.framework. Three locally packaged unsigned diagnostic IPAs each preserve all 59 original entries byte-identically and add exactly one independent stage plugin.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43969424836 ; GitHub artifact 14278505355 ; source commits 9f3342eb74483e15cbbb0479f0e2c8d5d8bcb0d7 and 1e910d4205ba0c2c3050c230d91b14604fb3bedd",
+      "scope": "Xcode link and local static IPA ZIP verification only. All dylibs and IPA copies UNSIGNED; no iPhone runtime callback/HUD/two-phone E3 or RAGE-authenticated sender/session proof. Gameplay PoliceRP NOT enabled."
     }
   ],
   "unknowns": [
@@ -648,6 +653,39 @@
       "lipo_retest": "E0/E1 linked and passed arm64, iPhoneOS, DllMain, rpath/dependency checks; E3 failed before link: arc4random_buf hidden by POSIX feature-test macro",
       "darwin_header_fix": "Enable _DARWIN_C_SOURCE before system headers on Apple to retain the SDK declaration for arc4random_buf; no manual prototype or weaker warnings",
       "darwin_header_source": "https://github.com/apple/darwin-xnu/blob/main/bsd/sys/cdefs.h"
+    },
+    "experimental_e3_phase12": {
+      "github_pr": 19,
+      "branch": "feature/rbp-e3-hardened-20261116",
+      "source_commit": "ae2f09c69f4b68dd918892d6915ac54313dbbf0f",
+      "apple_syntax_commit": "31daaaa81e1c7e01da53e7949349cc58a528b83e",
+      "ios_rng_fix_commit": "9f3342eb74483e15cbbb0479f0e2c8d5d8bcb0d7",
+      "ios_bash_fix_commit": "1e910d4205ba0c2c3050c230d91b14604fb3bedd",
+      "ios_github_run_id": 43969424836,
+      "ios_github_run_result": "SUCCESS: host-regression + iphoneos-link (Xcode 16.4, iPhoneOS SDK 18.5, min iOS 16.3)",
+      "ios_unsigned_artifact_id": 14278505355,
+      "ios_dylib_sha256": {
+        "E0": "0aa55cbd9bb47b76755b621c329bea08222255ff86ff99f6bd60274ccd52a9b4",
+        "E1": "2347b74f776afdf9cbd970263c56f4d49781a6c23b1a147bd8229dc80fb946cc",
+        "E3": "781adc210d395f0a0c681e8bed2662db70ae269fb3c3c5e619f51513fce86cf3"
+      },
+      "local_ipa_packaging": "Three separate UNSIGNED diagnostic IPA copies E0/E1/E3; each retains 59 original IPA entries byte-for-byte and adds Frameworks/RBPProbe.shv.dylib; ZIP CRC PASS",
+      "local_unsigned_ipa_sha256": {
+        "E0": "68bc4a7b8a4de7dd530e3c01fec61b9e7e2bf1b8cf925f95a4d279ff2df881e8",
+        "E1": "d57683c112ca00dd290c49180ad24cd2ea2838414dac48cd18f5cb6af797a4fc",
+        "E3": "98690564d3a7312b22cbf2bb8c72b97b0463812ffbc5f80c45e8bf2979a7a5dd"
+      },
+      "source_only_zip_sha256": "82bc21cc962bd4f62c1734d0f18350052aad1fc1586acc74e5d2a45ad816971b",
+      "host_regression": "Clang/GCC 49/49 Python tests with 0 skipped; two Linux UDP processes; injected native receipt lost/recovered once; ASan/UBSan; 12x fault-injection stress PASS",
+      "apple_sdk_linked_dylibs": true,
+      "real_iphone_tested": false,
+      "app_development_signed": false,
+      "e0_runtime_callback_verified": false,
+      "e1_visible_hud_verified": false,
+      "e3_two_iphone_verified": false,
+      "authenticated_rage_sender_session_verified": false,
+      "police_rp_gameplay_enabled": false,
+      "next_gate": "Development sign exact E0 unsigned IPA and its embedded frameworks using valid cert/profile; verify fresh posthook.log & Documents/RBPProbe.log SCRIPT_CALLBACK_ENTER in Story and Online separately. Only if E0 PASS proceed E1 local HUD video then E3 two-iPhone LAN. PR16 sender/session authorization and engine game-thread dispatch required before arrest/escort/jail."
     }
   }
 }
