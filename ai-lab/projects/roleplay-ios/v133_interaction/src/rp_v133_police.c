@@ -101,8 +101,12 @@ bool rp_police_get(const rp_police_world *world, uint64_t id, rp_police_member *
     return true;
 }
 
-static bool saw_pair(const rp_police_observation *obs, uint64_t actor, uint64_t target) {
-    return obs && obs->actor == actor && obs->target == target && obs->same_game_instance;
+static bool saw_pair(const rp_police_world *world, const rp_police_observation *obs,
+                     uint64_t actor, uint64_t target) {
+    return obs && obs->actor == actor && obs->target == target && obs->same_game_instance &&
+        obs->session == world->session && obs->epoch == world->epoch &&
+        obs->observed_at_ms <= world->now_ms &&
+        world->now_ms - obs->observed_at_ms <= RP_V133_POLICE_MAX_OBSERVATION_AGE_MS;
 }
 
 static bool self_action(rp_police_world *world, rp_police_member *actor,
@@ -118,7 +122,7 @@ static bool self_action(rp_police_world *world, rp_police_member *actor,
             return true;
         case RP_POLICE_DUTY_START:
             if (!actor->consent || actor->on_duty || actor->role != RP_POLICE_OFFICER ||
-                actor->custody != RP_POLICE_FREE || !saw_pair(obs, actor->id, actor->id) ||
+                actor->custody != RP_POLICE_FREE || !saw_pair(world, obs, actor->id, actor->id) ||
                 !obs->native_duty_eligible) return false;
             actor->on_duty = true;
             return true;
@@ -145,7 +149,7 @@ static bool custody_action(rp_police_world *world, rp_police_member *actor,
                            const rp_police_observation *obs) {
     if (!actor->consent || !actor->on_duty || actor->role != RP_POLICE_OFFICER ||
         actor->custody != RP_POLICE_FREE || !target->consent ||
-        !saw_pair(obs, actor->id, target->id) || !obs->native_duty_eligible ||
+        !saw_pair(world, obs, actor->id, target->id) || !obs->native_duty_eligible ||
         obs->distance_cm > RP_V133_MAX_INTERACT_CM) return false;
 
     if (op == RP_POLICE_CUFF) {

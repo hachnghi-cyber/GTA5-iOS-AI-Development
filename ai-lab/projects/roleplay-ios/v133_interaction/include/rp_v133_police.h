@@ -9,6 +9,7 @@ extern "C" {
 
 #define RP_V133_POLICE_CAPACITY RP_V133_MAX_TRACKED_PEERS
 #define RP_V133_POLICE_JAIL_MS UINT64_C(60000)
+#define RP_V133_POLICE_MAX_OBSERVATION_AGE_MS UINT64_C(250)
 
 typedef enum {
     RP_POLICE_CITIZEN = 1,
@@ -52,6 +53,9 @@ typedef struct {
 typedef struct {
     uint64_t actor;
     uint64_t target;
+    uint64_t session;
+    uint64_t epoch;
+    uint64_t observed_at_ms; /* Same authority clock as rp_police_tick. */
     uint64_t vehicle_id;
     uint32_t distance_cm;
     uint8_t seat;

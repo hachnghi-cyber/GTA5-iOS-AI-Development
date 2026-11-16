@@ -21,7 +21,7 @@ static bool act(rp_police_world *world, uint64_t actor, uint64_t target,
 
 static rp_police_observation observed(uint64_t actor, uint64_t target) {
     return (rp_police_observation){
-        .actor = actor, .target = target, .vehicle_id = CAR,
+        .actor = actor, .target = target, .session = 123, .epoch = 7, .vehicle_id = CAR,
         .distance_cm = 400, .seat = 1, .same_game_instance = true,
         .native_duty_eligible = true, .police_vehicle = true, .seat_available = true
     };
@@ -129,6 +129,7 @@ static void test_full_custody_and_seat_conflict(void) {
     assert(!act(&world, COP, PLAYER, RP_POLICE_JAIL, &obs));
     obs.both_at_jail_intake = true;
     assert(rp_police_tick(&world, 1000));
+    obs.observed_at_ms = world.now_ms;
     assert(act(&world, COP, PLAYER, RP_POLICE_JAIL, &obs));
     assert(member(&world, PLAYER).jail_until_ms == 61000);
     assert(!rp_police_tick(&world, 999));
@@ -136,6 +137,7 @@ static void test_full_custody_and_seat_conflict(void) {
     assert(member(&world, PLAYER).custody == RP_POLICE_JAILED);
     assert(rp_police_tick(&world, 61000));
     assert(member(&world, PLAYER).custody == RP_POLICE_FREE);
+    obs.observed_at_ms = world.now_ms;
     assert(act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
     assert(act(&world, COP, PLAYER, RP_POLICE_JAIL, &obs));
     assert(act(&world, COP, PLAYER, RP_POLICE_RELEASE_JAIL, &obs));
@@ -170,6 +172,26 @@ static void test_disconnect_duty_and_generation_cleanup(void) {
     assert(!rp_police_apply(&world, &old_sender, &old_cmd, 0));
 }
 
+static void test_custody_requires_fresh_authority_evidence(void) {
+    rp_police_world world;
+    ready(&world);
+    rp_police_observation obs = observed(COP, PLAYER);
+    assert(rp_police_tick(&world, 1000));
+    obs.observed_at_ms = world.now_ms - RP_V133_POLICE_MAX_OBSERVATION_AGE_MS - 1u;
+    assert(!act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
+    obs.observed_at_ms = world.now_ms + 1u;
+    assert(!act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
+    obs.observed_at_ms = world.now_ms - RP_V133_POLICE_MAX_OBSERVATION_AGE_MS;
+    obs.epoch--;
+    assert(!act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
+    obs.epoch++;
+    obs.session++;
+    assert(!act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
+    obs.session--;
+    assert(member(&world, PLAYER).custody == RP_POLICE_FREE);
+    assert(act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
+}
+
 static void test_bounds(void) {
     rp_police_world world;
     ready(&world);
@@ -177,6 +199,7 @@ static void test_bounds(void) {
     assert(act(&world, COP, PLAYER, RP_POLICE_CUFF, &obs));
     obs.both_at_jail_intake = true;
     assert(rp_police_tick(&world, UINT64_MAX - RP_V133_POLICE_JAIL_MS + 1u));
+    obs.observed_at_ms = world.now_ms;
     assert(!act(&world, COP, PLAYER, RP_POLICE_JAIL, &obs));
     assert(member(&world, PLAYER).custody == RP_POLICE_CUFFED);
     assert(rp_police_init(&world, 1, 1));
@@ -191,6 +214,7 @@ int main(void) {
     test_policy_and_sender_metadata();
     test_full_custody_and_seat_conflict();
     test_disconnect_duty_and_generation_cleanup();
+    test_custody_requires_fresh_authority_evidence();
     test_bounds();
     puts("Police authority: PASS (source-only synthetic decisions)");
     return 0;

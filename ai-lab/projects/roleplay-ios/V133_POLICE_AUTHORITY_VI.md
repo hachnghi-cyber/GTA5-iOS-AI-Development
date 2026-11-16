@@ -3,7 +3,9 @@
 `rp_v133_police.c` chạy ở một trình xử lý có quyền quyết định trong một
 phiên RP. Nó dùng metadata sender/session/generation đã xác thực, trạng
 thái đã chọn tham gia và snapshot do phía có thẩm quyền cung cấp. Snapshot
-phải vừa được xác minh cho đúng cặp người chơi và đúng phiên game. Payload
+phải khớp đúng cặp người chơi, phiên, generation và thời điểm không quá
+250 ms trên cùng đồng hồ đơn điệu của authority. Cửa sổ này là chính sách
+thử nghiệm. Sau giật hoặc pause, cần lấy snapshot mới. Payload
 chỉ yêu cầu một thao tác, có nonce. Nó không cấp quyền, cung cấp khoảng
 cách hay tự chứng nhận danh tính.
 

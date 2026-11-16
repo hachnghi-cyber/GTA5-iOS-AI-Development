@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Prove mapping from a paired RP ID to a consenting v13.3 game participant and a fresh authority snapshot. Integrate the approved PRPC/PRPA operation path with the verified TLS and game callback only after that proof. Verify the release and resynchronization path on two real iPhones in a private Sandbox session.",
+  "next_action": "Implement and verify the engine adapter that maps the mutually authenticated RP identity to a consenting current-game participant and emits a timestamped authority snapshot from the verified callback. Verify real application, cleanup and sync on two iPhones in a controlled Sandbox session before enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -460,7 +460,12 @@
       "scope": "Authority decisions and latest-transaction idempotency. Not yet routed over gameplay TLS.",
       "engine_integration": false,
       "device_tested": false,
-      "host_ci_requested": true
+      "host_ci_requested": true,
+      "host_ci_run_before_freshness_gate": 43841634165,
+      "host_ci_conclusion": "success",
+      "ios_source_build_before_freshness_gate": 43841625655,
+      "fresh_authority_observation_max_age_ms": 250,
+      "freshness_gate_verified_on_device": false
     }
   }
 }

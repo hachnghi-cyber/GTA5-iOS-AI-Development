@@ -17,7 +17,7 @@ static void ready(rp_police_world *world) {
     assert(rp_police_admit(world, PLAYER, RP_POLICE_CITIZEN));
     const rp_v133_delivery cop = {COP, 123, 7, 1}, player = {PLAYER, 123, 7, 1};
     const rp_police_observation job = {
-        .actor = COP, .target = COP, .same_game_instance = true, .native_duty_eligible = true
+        .actor = COP, .target = COP, .session = 123, .epoch = 7, .same_game_instance = true, .native_duty_eligible = true
     };
     const rp_police_command c1 = {123, 7, COP, 1, RP_POLICE_OPT_IN};
     const rp_police_command c2 = {123, 7, COP, 2, RP_POLICE_DUTY_START};
@@ -32,7 +32,7 @@ static void test_authenticated_retry_replays_decision_without_reapplying(void) {
     ready(&world);
     const rp_v133_delivery cop = {COP, 123, 7, 1}, player = {PLAYER, 123, 7, 1};
     rp_police_observation snapshot = {
-        .actor = COP, .target = PLAYER, .same_game_instance = true,
+        .actor = COP, .target = PLAYER, .session = 123, .epoch = 7, .same_game_instance = true,
         .distance_cm = 401, .native_duty_eligible = true
     };
     rp_police_command cmd = {123, 7, PLAYER, 3, RP_POLICE_CUFF};
