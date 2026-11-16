@@ -22,7 +22,10 @@ if [[ "$STAGE" == 3 ]]; then
  SOURCES+=("$ROOT/src/rbp_wire_c.c" "$ROOT/src/rbp_crypto.c" \
            "$ROOT/src/rbp_device_network.c")
 fi
-xcrun clang "${CFLAGS[@]}" -dynamiclib "${SOURCES[@]}" \
+# E3 uses Security.framework for nonce generation; E0/E1 stay minimal.
+APPLE_FRAMEWORKS=()
+if [[ "$STAGE" == 3 ]]; then APPLE_FRAMEWORKS=(-framework Security); fi
+xcrun clang "${CFLAGS[@]}" -dynamiclib "${SOURCES[@]}" "${APPLE_FRAMEWORKS[@]}" \
  -Wl,-install_name,@rpath/RBPProbe.shv.dylib -Wl,-rpath,@loader_path \
  -o "$OUT/RBPProbe.shv.dylib"
 # Loader-visible export and per-plugin rpath are required for this build.

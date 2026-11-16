@@ -22,3 +22,7 @@ Target: user-provided GTA V iOS v13.3, pinned UUID/SHA unchanged. Original GTA5 
 ## Apple conditional-branch syntax gate
 
 Linux host CI now syntax-checks E0/E1/E3 Apple branches using explicitly fake mach-o/mach/CommonCrypto declarations with both Clang and GCC. This is NOT an iPhoneOS SDK link, signed dylib, or device test. The original IPA already has NSLocalNetworkUsageDescription, NSBonjourServices (_gtavmp._udp), and UIFileSharingEnabled=true; no Info.plist modifications needed.
+
+## Actual iPhoneOS build remediation
+
+Xcode 16.4 log of run 43968040826: E0 and E1 linked for ARM64/platform IOS. E3 failed on arc4random_buf undeclared under strict C11. The E3-only native nonce path now uses SecRandomCopyBytes from the iPhoneOS Security framework, which is explicitly linked in stage 3. Test-only Apple header stubs are not SDK headers. Host 49/49 tests with Clang and GCC PASS, zero skipped. This is not yet proof of a successful E3 iPhoneOS link or device gameplay.

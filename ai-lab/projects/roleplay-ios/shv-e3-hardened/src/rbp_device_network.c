@@ -15,6 +15,9 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <Security/SecRandom.h>
+#endif
 
 static int hex_digit(char c) {
     if(c>='0'&&c<='9')return c-'0';
@@ -128,7 +131,8 @@ static int same_sockaddr(const struct sockaddr_in *x,const struct sockaddr_in *y
 }
 static int random_nonce(uint8_t nonce[8]) {
 #ifdef __APPLE__
-    arc4random_buf(nonce,8);return 1;
+    /* SDK declared cryptographic randomness; fail closed if unavailable. */
+    return SecRandomCopyBytes(kSecRandomDefault,8,nonce)==0;
 #else
     FILE *f=fopen("/dev/urandom","rb");if(!f)return 0;
     int good=fread(nonce,1,8,f)==8;fclose(f);return good;
