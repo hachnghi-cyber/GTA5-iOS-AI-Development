@@ -50,7 +50,7 @@ jobs:
           done
           xcrun --sdk iphoneos clang -arch arm64 \
             -isysroot "$SDK" -miphoneos-version-min=16.3 \
-            -x objective-c -fobjc-arc -fvisibility=hidden \
+            -fobjc-arc -fvisibility=hidden \
             -O2 -Wall -Wextra -Werror -dynamiclib \
             -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
             -framework Foundation \

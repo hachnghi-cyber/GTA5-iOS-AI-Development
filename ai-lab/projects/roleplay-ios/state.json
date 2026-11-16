@@ -257,9 +257,20 @@
   "research_branch": "feature/winstom-rp-ipa-audit-20261116",
   "last_work": {
     "base_commit": "59d46193fd71dc995e283ea1fafebc7485e451de",
-    "phase9_ci": "pending push",
+    "phase9_ci": {
+      "source_checks": {
+        "run_id": 43797954365,
+        "conclusion": "success"
+      },
+      "first_ios_build": {
+        "run_id": 43797946300,
+        "conclusion": "failure",
+        "cause": "Forced -x objective-c applied to object files; fix awaiting rerun"
+      }
+    },
     "device_tested": false,
     "two_device_tested": false,
-    "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md"
+    "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md",
+    "implementation_commit": "dafc8c55775542d2ecd29dde8570d92e2da7ff77"
   }
 }

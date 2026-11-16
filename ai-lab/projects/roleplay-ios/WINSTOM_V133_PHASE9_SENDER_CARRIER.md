@@ -168,4 +168,13 @@ user's exact local binaries, not documentation examples.
 Rollback: reinstall the untouched original IPA; no original file is overwritten.
 Revert this change for source rollback. No merge is performed.
 
-CI/artifact follow-up: pending first push of this change; no CI result is assumed.
+CI for implementation commit `dafc8c55775542d2ecd29dde8570d92e2da7ff77`:
+[Winstom RP source checks](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43797954365)
+passed, including all seven C programs under GCC and Clang ASan/UBSan. The optional
+private-IPA analysis job was skipped; the actual IPA checks above ran locally.
+[First iOS build](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43797946300)
+failed at linking because the inherited `-x objective-c` also applied to the newly
+added object files. All C compilation and static-analysis commands before that
+step completed. The follow-up removes the forced source language so `.m` is
+compiled as Objective-C and `.o` files are linked as objects. A successful rerun
+and artifact inspection are still required; no on-device result is implied.

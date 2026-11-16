@@ -17,3 +17,13 @@ Ghi lại để tránh lặp lại.
 
 ## Các giải pháp thành công
 Chỉ ghi thành công sau khi kiểm chứng.
+
+## Phase 9 iOS build: object files treated as Objective-C (2026-11-16)
+
+- Commit: `dafc8c55775542d2ecd29dde8570d92e2da7ff77`.
+- CI run: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43797946300
+- Symptom: `source file is not valid UTF-8` for ARM64 `.o` files at the dylib link step.
+- Cause: `-x objective-c` applied to every subsequent input, including compiled objects.
+- Fix: omit the forced language; Clang recognizes `.m` and `.o` by their extensions.
+- Status: fix prepared; successful macOS CI rerun and artifact verification required.
+- This is a build configuration error, not an iPhone crash or multiplayer result.
