@@ -85,3 +85,44 @@ trên loopback. Timeout khi app ở background đã được thử và breakpoin
 được gỡ trước khi thoát. Kết quả chỉ có nhãn luồng theo mẫu, PC trúng điểm
 đo, và LR khớp lệnh gọi trực tiếp đã đối chiếu. Đây là bằng chứng callback
 chạy, chưa đo nhịp frame hoặc xác minh luồng nhận scripted event.
+
+## Windows USB: scripted-event observation (source-only extension)
+
+The same existing Python USB observer can now sample four **exact-build,
+read-only** entry points individually. This is useful when only a Windows
+computer is available. It requires the development-signed application already
+running, USB trust, Developer Mode, and a working debugproxy connection.
+
+From the repository root, in PowerShell:
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py com.macport.gtav --site on_net_event --wait-seconds 30
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py com.macport.gtav --site script_event_handler --wait-seconds 30
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py com.macport.gtav --site script_decide --wait-seconds 30
+```
+
+Use the actual bundle identifier if signing added a supported suffix.
+Start the controlled Sandbox session **before** invoking the script.
+Each invocation attaches, validates the running Mach-O UUID and the four
+allowlisted ARM64 instruction words, installs one hardware breakpoint,
+continues for at most 30 seconds, clears the breakpoint, and detaches.
+The stop temporarily pauses the game. This tool is intended for a test
+session and should not be used with unrelated players.
+
+Capture a baseline without peers, then repeat with a cooperating peer
+performing an ordinary in-game event. Preserve the output JSON and a
+short description of each action, including whether the peer was present.
+A stop at `on_net_event`, `script_event_handler` or `script_decide`
+**does not** by itself establish network origin, sender authentication,
+game session generation, custom payload delivery or valid Roleplay behavior.
+The observer deliberately reports these as unverified. It reads no event
+payload, entity memory, account tokens or player identifiers.
+
+The command `--stock-job` is only permitted with
+`--site jobs_update`. The existing default `jobs_update` mode remains
+unchanged for old command lines. Valid `--wait-seconds` are 1 through 60.
+
+To graduate from this PC-only trace to engine transport integration, capture
+a genuine receive stack with LLDB (or an equivalent *validated* call stack),
+then separately establish a session-bound sender identity and its lifetime.
+Without that evidence, Police RP gameplay remains disabled.
