@@ -24,3 +24,18 @@ that provenance and the pump context are verified.
 
 Raw logs remain local. This checkpoint intentionally omits session invitations,
 player names, identifiers and runtime addresses.
+
+## Windows USB retest
+
+Windows found the GTA installation under its signing-suffixed bundle ID,
+started it over USB without terminating an existing instance, and downloaded
+only GTA diagnostic files over File Sharing. A new Phase 9 launch marker at
+08:42:53 UTC confirms the expected UUID. The stock Sandbox scene loaded at
+79.53 s and logged another `MacportOnlineUpdate` stack at 79.55 s. The sampled
+log contains no `CScriptedGameEvent` or `ProcessEventData` frames.
+
+The installed app reports `get-task-allow=true`. With Developer Mode
+already enabled, a personalized DeveloperDiskImage mounted successfully
+and the loopback debugproxy answered the debugger capability query. No
+debugger attached to GTA in this retest. RP sender/session and two-device
+delivery remain unverified.

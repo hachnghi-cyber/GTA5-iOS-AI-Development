@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Use the external read-only LLDB observer on the existing development-signed Phase 9 iPhone build. Obtain jobs_update, script_event_handler and script_decide stack samples for a stock event in a controlled session and clear_session coverage on departure. Prove connection-to-sender/session generation and pointer lifetime before binding PRP3EV01. Real two-iPhone RP acceptance remains pending.",
+  "next_action": "Continue with an iOS-capable LLDB client and the development-signed Phase 9 iPhone build. Windows USB launch, GTA log collection and a loopback debugproxy capability exchange were verified. Capture the scripted handler in a controlled session with a second participant and verify sender/session provenance before binding PRP3. There is still no two-device RP test.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -359,6 +359,20 @@
       "scripted_event_sender_authenticated": false,
       "session_generation_verified": false,
       "runtime_adapter": "unbound"
+    },
+    "windows_usb_retest": {
+      "time_utc": "2026-11-16 08:42:53 +0000",
+      "device": "iPhone14,3",
+      "app_launched_from_windows_usb": true,
+      "fresh_probe_uuid_matches": true,
+      "stock_sandbox_scene_loaded": true,
+      "macport_online_update_sample_seconds": 79.55,
+      "get_task_allow": true,
+      "debugproxy_capability_exchange": true,
+      "debugger_attached": false,
+      "scripted_receive_observed": false,
+      "rp_network_enabled": false,
+      "raw_logs_published": false
     }
   }
 }
