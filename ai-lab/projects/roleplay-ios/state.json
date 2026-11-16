@@ -412,7 +412,9 @@
       "engine_sender_mapping_verified": false,
       "gameplay_rp_enabled": false,
       "windows_lan_cli_reference_test_passed": true,
-      "host_ci_run": 43838604101
+      "host_ci_run": 43838604101,
+      "mac_arm_host_run_queued_on_last_observation": 43839001640,
+      "build_retry": "standard Intel macOS 15 host, cross-compile iPhoneOS arm64 using Xcode SDK"
     }
   }
 }

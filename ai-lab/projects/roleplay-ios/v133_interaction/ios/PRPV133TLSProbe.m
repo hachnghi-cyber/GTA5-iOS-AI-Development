@@ -2,6 +2,8 @@
 #import <Foundation/Foundation.h>
 #import <Network/Network.h>
 #import <Security/Security.h>
+#import <Security/SecProtocolMetadata.h>
+#import <Security/SecProtocolOptions.h>
 #import <CommonCrypto/CommonDigest.h>
 #include <arpa/inet.h>
 #include <string.h>

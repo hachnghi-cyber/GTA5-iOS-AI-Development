@@ -18,7 +18,8 @@ permissions:
 jobs:
   iPhone_arm64_probe:
     name: Compile iPhoneOS arm64 read-only startup dylib
-    runs-on: macos-15
+    # Use an Intel host queue; the iPhoneOS compiler still targets arm64 below.
+    runs-on: macos-15-intel
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
