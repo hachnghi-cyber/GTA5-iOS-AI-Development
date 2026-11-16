@@ -17,7 +17,9 @@
 #include <sys/time.h>
 #include <time.h>
 #include <dlfcn.h>
-#if defined(__APPLE__) && !defined(RBP_E0_HOST_TEST)
+#if defined(RBP_E0_TEST_DYLD)
+#include "../tests/fake_dyld.h" /* host-only Mach-O/dyld boundary regression */
+#elif defined(__APPLE__) && !defined(RBP_E0_HOST_TEST)
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 #include <mach/machine.h>
@@ -70,7 +72,7 @@ static void e0_log(const char *format, ...) {
     pthread_mutex_unlock(&g_log_mutex);
 }
 
-#if defined(__APPLE__) && !defined(RBP_E0_HOST_TEST)
+#if (defined(__APPLE__) && !defined(RBP_E0_HOST_TEST)) || defined(RBP_E0_TEST_DYLD)
 static const uint8_t k_target_uuid[16] = {
     0xF7,0x68,0xB7,0xB5,0xAD,0x75,0x39,0xF4,
     0x83,0xD3,0x8E,0x49,0x23,0x43,0x25,0xB5
