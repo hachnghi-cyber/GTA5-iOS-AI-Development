@@ -126,3 +126,29 @@ To graduate from this PC-only trace to engine transport integration, capture
 a genuine receive stack with LLDB (or an equivalent *validated* call stack),
 then separately establish a session-bound sender identity and its lifetime.
 Without that evidence, Police RP gameplay remains disabled.
+
+## Receive context — phân biệt đường nhận với dispatch nội bộ
+
+Tại đúng entry của `script_event_handler`, tùy chọn mới đọc tối đa bốn frame
+đã đối chiếu và frame nguồn. Nó kiểm tra tám hash thân hàm trước khi đặt
+hardware breakpoint, đọc các tham chiếu sender/destination và so connection ID.
+Không đọc payload, khóa, tên hay xuất ID/con trỏ. Xem `ENGINE_INTEGRATION_MAP.md`
+để biết ABI, lifetime và giới hạn. Đây là mã đã test bằng fixture; chưa có
+mẫu runtime của tùy chọn này.
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --site script_event_handler --receive-context --wait-seconds 30
+```
+
+Phép đo: dùng bản đang ký phát triển, Sandbox foreground; lấy mẫu không peer
+rồi với peer hợp tác tạo một sự kiện game bình thường. Không bơm custom packet.
+`context_status=observed` cùng `observed_path=engine_receive_dispatch` cho biết
+chuỗi frame nhận khớp. `engine_source_association_observed=true` chỉ cho biết
+tham chiếu và connection ID tại điểm dừng khớp. `local_sendbuffer_dispatch`
+chứng minh đó là nhánh nội bộ nên không tính là nhận remote. Timeout hay một
+frame không khớp không chứng minh transport không hỗ trợ; ghi nguyên trạng
+và đối chiếu call path khác trước khi sửa profile.
+
+Mọi cờ authenticated sender, session generation, custom RP event vẫn false.
+Exit code 1 nếu không trúng breakpoint hoặc context không đầy đủ. Lỗi đọc
+vẫn đi qua gỡ breakpoint và detach; không đổi sang software breakpoint.

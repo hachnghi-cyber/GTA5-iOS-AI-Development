@@ -5,6 +5,7 @@ running in Sandbox. This tool uses a loopback Apple debugproxy connection.
 It can briefly pause GTA and never falls back to a software breakpoint.
 """
 import argparse
+import hashlib
 import json
 import re
 import socket
@@ -151,12 +152,112 @@ def read_stock_job(remote, base, sample):
     }
 
 
-def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
+def verify_context_code(remote, base, profile):
+    """Guard full functions, including every prologue and tail-call path."""
+    for guard in profile['code_guards']:
+        size = guard['size']
+        if not 4 <= size <= 4096 or size % 4:
+            raise DebugProtocolError('invalid receive-context code bounds')
+        address = base + int(guard['va'], 16) - IMAGE_VMADDR
+        code = b''.join(remote.memory(address + start, min(1024, size - start))
+                        for start in range(0, size, 1024))
+        if hashlib.sha256(code).hexdigest() != guard['sha256']:
+            raise DebugProtocolError('receive-context live code mismatch')
+
+
+def read_receive_context(remote, base, profile):
+    """Follow only the disassembled chain at handler ENTRY, before its prologue.
+
+    No general unwinding, stack scanning, PAC stripping, packet/key/name dumps,
+    function calls, writes or retained pointers. All values die before resume.
+    Even a consistent engine association cannot attest cryptographic identity.
+    """
+    result = {'observed_path': 'undetermined', 'network_receive_stack_confirmed': False,
+              'engine_source_association_observed': False, 'context_status': 'incomplete',
+              'matched_frames': []}
+
+    def pointer(value, alignment=8):
+        return 0 < value < (1 << 48) and value % alignment == 0
+
+    def live(va):
+        return base + int(va, 16) - IMAGE_VMADDR
+
+    # Preserve raw PC/LR/FP and peer pointers only within this one stopped sample.
+    sp = remote.read_register(31)
+    fp = remote.read_register(29)
+    lr = remote.read_register(30)
+    if not pointer(sp, 16):
+        result['context_status'] = 'unsupported_stack_pointer'
+        return result
+
+    def frame_ok(value):
+        return pointer(value, 16) and sp <= value <= sp + 65536 - 16
+
+    dispatch_fp = None
+    for frame in profile['frames']:
+        if not frame_ok(fp) or lr != live(frame['return_va']):
+            result['context_status'] = 'frame_or_callsite_mismatch'
+            return result
+        result['matched_frames'].append(frame['function'])
+        if frame['function'] == 'dispatch':
+            dispatch_fp = fp
+        parent, saved_lr = struct.unpack('<QQ', remote.memory(fp, 16))
+        if not frame_ok(parent) or parent < fp + 16:
+            result['context_status'] = 'invalid_frame_chain'
+            return result
+        fp, lr = parent, saved_lr
+
+    origin = next((name for name, spec in profile['origins'].items()
+                   if lr == live(spec['return_va'])), None)
+    if origin is None or dispatch_fp is None:
+        result['context_status'] = 'unrecognized_dispatch_origin'
+        return result
+    result['observed_path'] = origin
+    result['network_receive_stack_confirmed'] = origin == 'engine_receive_dispatch'
+
+    message = fp + profile['origins'][origin]['message_fp_offset']
+    if message < sp or message + 0x20 > fp:
+        result['context_status'] = 'message_outside_frame'
+        return result
+    source, = struct.unpack('<Q', remote.memory(message + profile['message_source_offset'], 8))
+    destination, = struct.unpack('<Q', remote.memory(message + profile['message_destination_offset'], 8))
+    result['handler_source_matches_message'] = pointer(source) and source == remote.read_register(1)
+    result['handler_destination_matches_message'] = pointer(destination) and destination == remote.read_register(2)
+    result['source_destination_distinct'] = source != destination
+    refs_match = (result['handler_source_matches_message'] and
+                  result['handler_destination_matches_message'] and
+                  result['source_destination_distinct'])
+    if not refs_match:
+        result['context_status'] = 'handler_reference_mismatch'
+        return result
+    if origin == 'engine_receive_dispatch':
+        event, = struct.unpack('<Q', remote.memory(
+            dispatch_fp + profile['dispatch_saved_event_fp_offset'], 8))
+        if not pointer(event):
+            result['context_status'] = 'invalid_event_pointer'
+            return result
+        event_connection, = struct.unpack('<i', remote.memory(
+            event + profile['event_connection_offset'], 4))
+        player_connection, = struct.unpack('<i', remote.memory(
+            source + profile['player_connection_offset'], 4))
+        result['connection_id_matches_source'] = event_connection >= 0 and event_connection == player_connection
+        result['engine_source_association_observed'] = result['connection_id_matches_source']
+        if not result['connection_id_matches_source']:
+            result['context_status'] = 'connection_mismatch'
+            return result
+    result['context_status'] = 'observed'
+    return result
+
+
+def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
+            receive_context=False):
     """Capture exactly one guarded PC stop. A breakpoint hit is NOT sender proof."""
     if site not in OBSERVABLE_SITES:
         raise ValueError("unsupported observation site")
     if stock_job and site != "jobs_update":
         raise ValueError("--stock-job is only valid at jobs_update")
+    if receive_context and site != 'script_event_handler':
+        raise ValueError('--receive-context is only valid at script_event_handler')
     if not 1 <= wait_seconds <= 60:
         raise ValueError("wait_seconds outside bounded range")
     va = int(metadata["symbols"][site]["va"], 16)
@@ -165,6 +266,13 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         raise DebugProtocolError("ARM64 PC register layout mismatch")
     if remote.request(b"qRegisterInfo1e").partition(b";")[0] not in (b"name:lr", b"name:x30"):
         raise DebugProtocolError("ARM64 LR register layout mismatch")
+    if receive_context:
+        for number, names in ((29, (b'fp', b'x29')), (31, (b'sp',)),
+                              (1, (b'x1',)), (2, (b'x2',))):
+            name = remote.request(f'qRegisterInfo{number:x}'.encode()).partition(b';')[0]
+            if name not in tuple(b'name:' + n for n in names):
+                raise DebugProtocolError('receive-context register layout mismatch')
+        verify_context_code(remote, base, metadata['receive_context'])
     hardware = f"{address:x},4".encode()
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
@@ -181,7 +289,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         if tid is None:
             raise DebugProtocolError("no selected thread in stop reply")
         require_ok(remote, b"Hg" + tid, "stopped thread selection")
-        hit = remote.read_register(32) == address
+        hit = remote.read_register(32) == address and reply.startswith(b'T05')
         callsite_matches = False
         if site == "jobs_update" and hit and not timed_out:
             caller = next(b for b in metadata["branches"]
@@ -203,12 +311,16 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         }
         if stock_job and callsite_matches:
             sample["stock_job_candidate"] = read_stock_job(remote, base, metadata["stock_job_sample"])
+        if receive_context and hit and not timed_out:
+            remote.conn.settimeout(3)
+            sample.update(read_receive_context(remote, base, metadata['receive_context']))
         return sample
     finally:
         require_ok(remote, b"z1," + hardware, "hardware breakpoint removal")
 
 
-def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
+def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
+                receive_context=False):
     metadata = json.loads(BASELINE.read_text(encoding="utf-8"))
     if metadata["uuid"] != UUID:
         raise DebugProtocolError("static baseline UUID mismatch")
@@ -235,12 +347,14 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
                 if remote.memory(address, 4) != struct.pack("<I", int(guard["word"], 16)):
                     raise DebugProtocolError("local job metadata instruction guard mismatch")
-        return capture(remote, base, metadata, stock_job=stock_job, site=site, wait_seconds=wait_seconds)
+        return capture(remote, base, metadata, stock_job=stock_job, site=site,
+                       wait_seconds=wait_seconds, receive_context=receive_context)
     finally:
         require_ok(remote, b"D", "detach")
 
 
-def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
+def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
+            receive_context=False):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
     result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
                             capture_output=True, text=True, timeout=20, check=True)
@@ -264,7 +378,8 @@ def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
             else:
                 with conn:
                     conn.settimeout(5)
-                    return run_capture(conn, pid, stock_job=stock_job, site=site, wait_seconds=wait_seconds)
+                    return run_capture(conn, pid, stock_job=stock_job, site=site,
+                                       wait_seconds=wait_seconds, receive_context=receive_context)
         raise DebugProtocolError("loopback debugproxy connect deadline elapsed")
     finally:
         if proxy.poll() is None:
@@ -281,6 +396,8 @@ def main():
                         help="Read-only single hardware breakpoint site; does not authenticate an event.")
     parser.add_argument("--wait-seconds", type=int, default=3,
                         help="Bounded time (1-60 seconds) to observe one stop; no polling loop.")
+    parser.add_argument('--receive-context', action='store_true',
+                        help='At script_event_handler entry, compare exact guarded receive/local frame chains and sender references. Does not authenticate a peer.')
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
@@ -288,12 +405,16 @@ def main():
         parser.error("--stock-job is valid only with --site jobs_update")
     if not 1 <= args.wait_seconds <= 60:
         parser.error("--wait-seconds must be between 1 and 60")
+    if args.receive_context and args.site != 'script_event_handler':
+        parser.error('--receive-context requires --site script_event_handler')
     try:
-        sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds)
+        sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds,
+                         args.receive_context)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
-    return 0 if sample["hardware_stop_at_expected_pc"] else 1
+    complete = not args.receive_context or sample.get('context_status') == 'observed'
+    return 0 if sample["hardware_stop_at_expected_pc"] and complete else 1
 
 
 if __name__ == "__main__":

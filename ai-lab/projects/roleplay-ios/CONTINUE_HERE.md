@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Checkpoint tiếp nối yêu cầu **Operation RAGE Breakthrough** nằm ở
+`ROLEPLAY_CONTINUE.md`; sơ đồ receive/local ở `ENGINE_INTEGRATION_MAP.md`.
+Ưu tiên native multiplayer, không yêu cầu người dùng vận hành server RP riêng.
+Observer USB có `--receive-context` để kiểm tra call chain và liên hệ sender;
+phần mở rộng này chưa có mẫu iPhone thật, không cấp quyền gameplay.
+
 Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng
 GTA v13.3 và Winstom 0.7.177. Bản IPA chẩn đoán cục bộ đã qua kiểm tra ZIP và Mach-O.

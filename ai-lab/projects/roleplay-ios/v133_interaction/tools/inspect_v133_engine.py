@@ -254,6 +254,20 @@ def inspect(data):
         ('on_net_event', 0x58, 0xb940192b, 'player connection ID load at +0x18'),
         ('on_net_event', 0x5c, 0x6b0a017f, 'compare player connection ID with transport event'),
         ('on_net_event', 0x94, 0xa9012be9, 'ReceivedMessageData source/destination from engine pointers'),
+        ('on_net_event', 0x14, 0x910183fd, 'frame pointer is sp+0x60; message starts at sp'),
+        ('on_net_event', 0x18, 0xaa0203f4, 'preserve netEvent argument in x20'),
+        ('on_net_event', 0x40, 0xb9403e8a, 'load netEvent connection ID at +0x3c'),
+        ('dispatch', 0x4, 0xa9034ff4, 'save caller x20/x19 at sp+0x30'),
+        ('dispatch', 0xc, 0x910103fd, 'frame pointer is sp+0x40; saved netEvent at fp-0x10'),
+        ('dispatch', 0x7c, 0xd63f0120, 'indirect member callback; return offset +0x80'),
+        ('process_events', 0x18, 0x910143fd, 'frame pointer is sp+0x50 before dynamic stack allocation'),
+        ('process_events', 0xd0, 0xaa1403e1, 'forward source player in x1 before ProcessEventData'),
+        ('process_events', 0xd4, 0xf94003e2, 'forward saved destination in x2'),
+        ('packed_events', 0x10, 0x9100c3fd, 'frame pointer is sp+0x30 before payload stack allocation'),
+        ('on_message', 0x10, 0x910143fd, 'frame pointer is sp+0x50'),
+        ('send_buffer', 0x18, 0x9101c3fd, 'local branch frame pointer is sp+0x70'),
+        ('send_buffer', 0x80, 0xa90187e6, 'local branch source/destination written at sp+0x18'),
+        ('send_buffer', 0x94, 0x910023e1, 'local branch passes message at sp+8, hence fp-0x68'),
         ('script_decide', 0x30, 0xaa0103e3, 'first netPlayer reference forwarded as constructor x3'),
         ('group_event_ctor2', 0x70, 0x394086a8, 'read engine player slot byte at +0x21'),
         ('group_event_ctor2', 0x7c, 0x39402029, 'read payload byte at +8'),
@@ -310,12 +324,45 @@ def inspect(data):
             raise ValueError('event vtable assertion failed: ' + target)
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
+    # Exact function boundaries and frame layouts were independently disassembled.
+    # ProcessEventData tail-branches into the handler without creating a frame.
+    # Hash the entire functions used by the optional USB observation, so a live
+    # prologue/callsite patch cannot silently change the interpretation of x29.
+    context_sizes = {'script_event_handler': 0x130, 'process_data': 0x114,
+                     'process_events': 0x314, 'packed_events': 0x16c,
+                     'on_message': 0xb0, 'dispatch': 0xf4,
+                     'on_net_event': 0x110, 'send_buffer': 0x14c}
+    context = {
+        'site': 'script_event_handler',
+        'frames': [
+            {'function': name, 'return_va': hex(sites[name] + delta)}
+            for name, delta in (('process_events', 0xe4), ('packed_events', 0x138),
+                                ('on_message', 0x7c), ('dispatch', 0x80))
+        ],
+        'origins': {
+            'engine_receive_dispatch': {'return_va': hex(sites['on_net_event'] + 0xa8),
+                                        'message_fp_offset': -0x60},
+            'local_sendbuffer_dispatch': {'return_va': hex(sites['send_buffer'] + 0x9c),
+                                          'message_fp_offset': -0x68},
+        },
+        'message_source_offset': 0x10, 'message_destination_offset': 0x18,
+        'dispatch_saved_event_fp_offset': -0x10,
+        'event_connection_offset': 0x3c, 'player_connection_offset': 0x18,
+        'code_guards': [
+            {'function': name, 'va': hex(sites[name]), 'size': length,
+             'sha256': hashlib.sha256(data[off + sites[name] - va:
+                                          off + sites[name] - va + length]).hexdigest()}
+            for name, length in context_sizes.items()
+        ],
+        'scope': 'bounded frame and pointer equality observation only; no authentication or session proof',
+    }
     return dict(status='STATIC_VERIFIED', executable_sha256=SHA256, uuid=UUID,
                 symbols={k: dict(name=SYMBOLS[k], va=hex(v)) for k,v in sites.items()},
                 branches=branches, observations=observations,
                 scripted_event={'registered_type': 0x1c, 'payload_max_bytes': 432,
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites={key: hex(word(sites[key])) for key in trace_sites},
+                receive_context=context,
                 stock_job_sample={
                     'id_va': '0x10363fd98', 'kind_va': '0x10363f8d8', 'state_va': '0x10362c240',
                     'guard_sites': [

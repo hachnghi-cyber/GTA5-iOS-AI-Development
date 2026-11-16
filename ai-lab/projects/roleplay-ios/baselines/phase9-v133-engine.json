@@ -426,6 +426,90 @@
       "observation": "ReceivedMessageData source/destination from engine pointers"
     },
     {
+      "at": "0x102024928",
+      "function": "on_net_event",
+      "word": "0x910183fd",
+      "observation": "frame pointer is sp+0x60; message starts at sp"
+    },
+    {
+      "at": "0x10202492c",
+      "function": "on_net_event",
+      "word": "0xaa0203f4",
+      "observation": "preserve netEvent argument in x20"
+    },
+    {
+      "at": "0x102024954",
+      "function": "on_net_event",
+      "word": "0xb9403e8a",
+      "observation": "load netEvent connection ID at +0x3c"
+    },
+    {
+      "at": "0x102026118",
+      "function": "dispatch",
+      "word": "0xa9034ff4",
+      "observation": "save caller x20/x19 at sp+0x30"
+    },
+    {
+      "at": "0x102026120",
+      "function": "dispatch",
+      "word": "0x910103fd",
+      "observation": "frame pointer is sp+0x40; saved netEvent at fp-0x10"
+    },
+    {
+      "at": "0x102026190",
+      "function": "dispatch",
+      "word": "0xd63f0120",
+      "observation": "indirect member callback; return offset +0x80"
+    },
+    {
+      "at": "0x10200c170",
+      "function": "process_events",
+      "word": "0x910143fd",
+      "observation": "frame pointer is sp+0x50 before dynamic stack allocation"
+    },
+    {
+      "at": "0x10200c228",
+      "function": "process_events",
+      "word": "0xaa1403e1",
+      "observation": "forward source player in x1 before ProcessEventData"
+    },
+    {
+      "at": "0x10200c22c",
+      "function": "process_events",
+      "word": "0xf94003e2",
+      "observation": "forward saved destination in x2"
+    },
+    {
+      "at": "0x10200be1c",
+      "function": "packed_events",
+      "word": "0x9100c3fd",
+      "observation": "frame pointer is sp+0x30 before payload stack allocation"
+    },
+    {
+      "at": "0x10200a79c",
+      "function": "on_message",
+      "word": "0x910143fd",
+      "observation": "frame pointer is sp+0x50"
+    },
+    {
+      "at": "0x101ffee4c",
+      "function": "send_buffer",
+      "word": "0x9101c3fd",
+      "observation": "local branch frame pointer is sp+0x70"
+    },
+    {
+      "at": "0x101ffeeb4",
+      "function": "send_buffer",
+      "word": "0xa90187e6",
+      "observation": "local branch source/destination written at sp+0x18"
+    },
+    {
+      "at": "0x101ffeec8",
+      "function": "send_buffer",
+      "word": "0x910023e1",
+      "observation": "local branch passes message at sp+8, hence fp-0x68"
+    },
+    {
       "at": "0x101912c74",
       "function": "script_decide",
       "word": "0xaa0103e3",
@@ -681,6 +765,93 @@
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
     "migrate_end": "0xa9ba6ffc"
+  },
+  "receive_context": {
+    "site": "script_event_handler",
+    "frames": [
+      {
+        "function": "process_events",
+        "return_va": "0x10200c23c"
+      },
+      {
+        "function": "packed_events",
+        "return_va": "0x10200bf44"
+      },
+      {
+        "function": "on_message",
+        "return_va": "0x10200a808"
+      },
+      {
+        "function": "dispatch",
+        "return_va": "0x102026194"
+      }
+    ],
+    "origins": {
+      "engine_receive_dispatch": {
+        "return_va": "0x1020249bc",
+        "message_fp_offset": -96
+      },
+      "local_sendbuffer_dispatch": {
+        "return_va": "0x101ffeed0",
+        "message_fp_offset": -104
+      }
+    },
+    "message_source_offset": 16,
+    "message_destination_offset": 24,
+    "dispatch_saved_event_fp_offset": -16,
+    "event_connection_offset": 60,
+    "player_connection_offset": 24,
+    "code_guards": [
+      {
+        "function": "script_event_handler",
+        "va": "0x10191259c",
+        "size": 304,
+        "sha256": "a485bbc78441fbb0fcc87e5da8cbc7ddbf86c69eb132f3f2648ba3d2935ee257"
+      },
+      {
+        "function": "process_data",
+        "va": "0x10200d9ec",
+        "size": 276,
+        "sha256": "5225aa1a480837776b5f8a804481d885b7be72f981e1eb5b80ad870db1ce4c5c"
+      },
+      {
+        "function": "process_events",
+        "va": "0x10200c158",
+        "size": 788,
+        "sha256": "db8bdb7486efdd4257f4b4eccfce47264c28d30f722af0791ddeccc2f324a217"
+      },
+      {
+        "function": "packed_events",
+        "va": "0x10200be0c",
+        "size": 364,
+        "sha256": "ec7b7bc3da3556357a35fa28d25c13feda2a838b3da5c5ea5e39295b6089f252"
+      },
+      {
+        "function": "on_message",
+        "va": "0x10200a78c",
+        "size": 176,
+        "sha256": "70e9c4aa4976917ece6e49ba5f3f5f8696616621a5ed0fc7b62d0cd28a8abdf4"
+      },
+      {
+        "function": "dispatch",
+        "va": "0x102026114",
+        "size": 244,
+        "sha256": "8e214c74c0c38a83c8fa4de730a0b16710dfe97774c6f4b3a41340e41264deac"
+      },
+      {
+        "function": "on_net_event",
+        "va": "0x102024914",
+        "size": 272,
+        "sha256": "a0a1cb18d83c44cd1ce5038fa67e9604e6f6b2ddcabfe53f9f1bec679d6c0a15"
+      },
+      {
+        "function": "send_buffer",
+        "va": "0x101ffee34",
+        "size": 332,
+        "sha256": "04ce8ca4e01d85a7ea5940ce7800b386288a81725b020b33b95b3a3ec5ff4c04"
+      }
+    ],
+    "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
   },
   "stock_job_sample": {
     "id_va": "0x10363fd98",

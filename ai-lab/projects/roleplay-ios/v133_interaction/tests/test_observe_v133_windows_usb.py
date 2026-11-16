@@ -1,7 +1,11 @@
 """Synthetic transport fixtures for the Windows observer. No device evidence."""
 import importlib.util
+import hashlib
+import json
+import struct
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 path = Path(__file__).resolve().parents[1] / "tools" / "observe_v133_windows_usb.py"
 spec = importlib.util.spec_from_file_location("observer_usb", path)
@@ -94,6 +98,9 @@ class _BreakRemote:
             return b"name:pc;bitsize:64;"
         if packet == b"qRegisterInfo1e":
             return b"name:lr;bitsize:64;"
+        if packet in (b'qRegisterInfo1d', b'qRegisterInfo1f', b'qRegisterInfo1', b'qRegisterInfo2'):
+            return {b'qRegisterInfo1d': b'name:fp;', b'qRegisterInfo1f': b'name:sp;',
+                    b'qRegisterInfo1': b'name:x1;', b'qRegisterInfo2': b'name:x2;'}[packet]
         if packet.startswith((b"Z1,", b"z1,", b"Hg")):
             return b"OK"
         raise AssertionError("unexpected debugger packet")
@@ -142,6 +149,12 @@ class ScriptEventObserverTests(unittest.TestCase):
                                   site="script_event_handler")
         self.assertFalse(sample["hardware_stop_at_expected_pc"])
 
+    def test_other_stop_signal_at_same_pc_does_not_report_breakpoint_hit(self):
+        remote = _BreakRemote(self.pc)
+        with patch.object(remote, 'receive', return_value=b'T0bthread:abcd;'):
+            sample = observer.capture(remote, self.base, self.metadata, site='script_event_handler')
+        self.assertFalse(sample['hardware_stop_at_expected_pc'])
+
     def test_timeout_is_not_a_breakpoint_hit_even_if_pc_matches(self):
         remote = _BreakRemote(self.pc, time_out=True)
         sample = observer.capture(remote, self.base, self.metadata,
@@ -153,6 +166,7 @@ class ScriptEventObserverTests(unittest.TestCase):
 
     def test_reject_unsupported_site_stock_job_and_unbounded_wait(self):
         for kwargs in ({"site": "unverified_hook"},
+                       {'site': 'jobs_update', 'receive_context': True},
                        {"site": "script_event_handler", "stock_job": True},
                        {"site": "script_event_handler", "wait_seconds": 0},
                        {"site": "script_event_handler", "wait_seconds": 61}):
@@ -162,3 +176,180 @@ class ScriptEventObserverTests(unittest.TestCase):
                     observer.capture(remote, self.base, self.metadata, **kwargs)
                 self.assertEqual(remote.sent, [])
                 self.assertEqual(remote.requests, [])
+
+    def test_context_memory_error_still_removes_hardware_breakpoint(self):
+        remote = _BreakRemote(self.pc)
+        self.metadata['receive_context'] = {}
+        with patch.object(observer, 'verify_context_code'), \
+                patch.object(observer, 'read_receive_context',
+                             side_effect=observer.DebugProtocolError('unreadable memory')):
+            with self.assertRaisesRegex(observer.DebugProtocolError, 'unreadable memory'):
+                observer.capture(remote, self.base, self.metadata,
+                                 site='script_event_handler', receive_context=True)
+        self.assertTrue(remote.requests[-1].startswith(b'z1,'))
+        self.assertFalse(any(request.startswith((b'M', b'P', b'Z0,')) for request in remote.requests))
+
+    def test_context_is_not_read_after_timeout_or_wrong_pc(self):
+        for remote in (_BreakRemote(self.pc, time_out=True), _BreakRemote(self.pc + 4)):
+            self.metadata['receive_context'] = {}
+            with patch.object(observer, 'verify_context_code'), \
+                    patch.object(observer, 'read_receive_context') as read:
+                sample = observer.capture(remote, self.base, self.metadata,
+                                          site='script_event_handler', receive_context=True)
+                read.assert_not_called()
+            self.assertFalse(sample['network_receive_stack_confirmed'])
+
+
+class _ContextMemory:
+    """Golden synthetic stack from independently disassembled call/frame sites.
+
+    Literal layout here intentionally does not generate a stack from the
+    observer's profile. It represents the instant BEFORE handler's prologue.
+    """
+    base = 0x100000000
+    sp = 0x160000000
+    source = 0x170001000
+    destination = 0x170002000
+    event = 0x170003000
+
+    def __init__(self, local=False):
+        self.frames = [self.sp + delta for delta in (0x1090, 0x14d0, 0x1530, 0x1580, 0x15f0)]
+        self.regs = {31: self.sp, 29: self.frames[0], 30: 0x10200c23c,
+                     1: self.source, 2: self.destination}
+        self.reads = []
+        origin_lr = 0x101ffeed0 if local else 0x1020249bc
+        self.data = {self.frames[i]: struct.pack('<QQ', self.frames[i+1], lr)
+                     for i, lr in enumerate((0x10200bf44, 0x10200a808, 0x102026194, origin_lr))}
+        message = self.frames[4] - (0x68 if local else 0x60)
+        self.data[message + 0x10] = struct.pack('<Q', self.source)
+        self.data[message + 0x18] = struct.pack('<Q', self.destination)
+        self.data[self.frames[3] - 0x10] = struct.pack('<Q', self.event)
+        self.data[self.event + 0x3c] = struct.pack('<i', 19)
+        self.data[self.source + 0x18] = struct.pack('<i', 19)
+
+    def read_register(self, number):
+        return self.regs[number]
+
+    def memory(self, address, size):
+        self.reads.append((address, size))
+        data = self.data[address]
+        assert len(data) == size
+        return data
+
+
+class ReceiveContextTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.profile = json.loads(observer.BASELINE.read_text(encoding='utf-8'))['receive_context']
+
+    def sample(self, memory):
+        return observer.read_receive_context(memory, memory.base, self.profile)
+
+    def test_receive_chain_matches_source_but_not_authentication(self):
+        memory = _ContextMemory()
+        sample = self.sample(memory)
+        self.assertEqual(sample['context_status'], 'observed')
+        self.assertEqual(sample['observed_path'], 'engine_receive_dispatch')
+        self.assertTrue(sample['network_receive_stack_confirmed'])
+        self.assertTrue(sample['engine_source_association_observed'])
+        self.assertTrue(sample['connection_id_matches_source'])
+        self.assertEqual(sample['matched_frames'],
+                         ['process_events', 'packed_events', 'on_message', 'dispatch'])
+        self.assertFalse(any('authentic' in key or 'session' in key for key in sample))
+        for private_value in (memory.source, memory.destination, memory.event, memory.sp):
+            self.assertNotIn(str(private_value), json.dumps(sample))
+            self.assertNotIn(hex(private_value), json.dumps(sample))
+
+    def test_full_capture_keeps_all_auth_and_gameplay_gates_false(self):
+        metadata = json.loads(observer.BASELINE.read_text(encoding='utf-8'))
+        memory = _ContextMemory()
+        pc = int(metadata['symbols']['script_event_handler']['va'], 16)
+        memory.regs[32] = pc
+        remote = _BreakRemote(pc)
+        remote.memory = memory.memory
+        remote.read_register = memory.read_register
+        with patch.object(observer, 'verify_context_code'):
+            sample = observer.capture(remote, memory.base, metadata,
+                                      site='script_event_handler', receive_context=True)
+        self.assertTrue(sample['engine_source_association_observed'])
+        for field in ('authenticated_rp_sender_verified', 'session_generation_verified',
+                      'custom_rp_event_received'):
+            self.assertIs(sample[field], False)
+        self.assertTrue(remote.requests[-1].startswith(b'z1,'))
+
+    def test_local_dispatch_cannot_claim_network_receive(self):
+        memory = _ContextMemory(local=True)
+        sample = self.sample(memory)
+        self.assertEqual(sample['context_status'], 'observed')
+        self.assertEqual(sample['observed_path'], 'local_sendbuffer_dispatch')
+        self.assertFalse(sample['network_receive_stack_confirmed'])
+        self.assertFalse(sample['engine_source_association_observed'])
+        self.assertFalse(any(address >= memory.source for address, _ in memory.reads))
+
+    def test_source_or_destination_mismatch_rejects_association_before_dereference(self):
+        for reg in (1, 2):
+            memory = _ContextMemory()
+            memory.regs[reg] += 8
+            sample = self.sample(memory)
+            self.assertEqual(sample['context_status'], 'handler_reference_mismatch')
+            self.assertFalse(sample['engine_source_association_observed'])
+            self.assertFalse(any(address >= memory.source for address, _ in memory.reads))
+
+    def test_negative_or_mismatched_connection_is_not_associated(self):
+        for connection in (-1, 20):
+            memory = _ContextMemory()
+            memory.data[memory.event + 0x3c] = struct.pack('<i', connection)
+            sample = self.sample(memory)
+            self.assertEqual(sample['context_status'], 'connection_mismatch')
+            self.assertFalse(sample['engine_source_association_observed'])
+
+    def test_unknown_callsite_or_pac_bits_are_not_stripped(self):
+        for lr in (0x10200c240, 0xdead00010200c23c):
+            memory = _ContextMemory()
+            memory.regs[30] = lr
+            sample = self.sample(memory)
+            self.assertEqual(sample['context_status'], 'frame_or_callsite_mismatch')
+            self.assertFalse(sample['network_receive_stack_confirmed'])
+            self.assertEqual(memory.reads, [])
+
+    def test_cycle_unaligned_and_out_of_bounds_frames_fail_without_scan(self):
+        for delta in (0, -16, 1, 65536):
+            memory = _ContextMemory()
+            memory.data[memory.frames[0]] = struct.pack('<QQ', memory.frames[0] + delta, 0x10200bf44)
+            sample = self.sample(memory)
+            self.assertEqual(sample['context_status'], 'invalid_frame_chain')
+            self.assertFalse(sample['network_receive_stack_confirmed'])
+            self.assertEqual(len(memory.reads), 1)
+
+    def test_null_source_and_invalid_event_pointer_are_rejected(self):
+        for field in ('source', 'event'):
+            memory = _ContextMemory()
+            address = memory.frames[4] - 0x50 if field == 'source' else memory.frames[3] - 0x10
+            memory.data[address] = bytes(8)
+            sample = self.sample(memory)
+            self.assertFalse(sample['engine_source_association_observed'])
+            self.assertIn(sample['context_status'], ('handler_reference_mismatch', 'invalid_event_pointer'))
+
+    def test_unknown_origin_never_classifies_as_receive(self):
+        memory = _ContextMemory()
+        memory.data[memory.frames[3]] = struct.pack('<QQ', memory.frames[4], 0x1020249c0)
+        sample = self.sample(memory)
+        self.assertEqual(sample['context_status'], 'unrecognized_dispatch_origin')
+        self.assertFalse(sample['network_receive_stack_confirmed'])
+
+    def test_changed_function_code_is_rejected_before_observation(self):
+        code = bytes.fromhex('fd7b04a9fd030191')
+        profile = {'code_guards': [{'va': '0x100001000', 'size': len(code),
+                                    'sha256': hashlib.sha256(code).hexdigest()}]}
+
+        class Memory:
+            def memory(self, address, size):
+                self.assertion = (address, size)
+                return code
+
+        memory = Memory()
+        observer.verify_context_code(memory, 0x100000000, profile)
+        self.assertEqual(memory.assertion, (0x100001000, 8))
+        code = bytes(8)
+        with self.assertRaisesRegex(observer.DebugProtocolError, 'live code mismatch'):
+            observer.verify_context_code(memory, 0x100000000, profile)

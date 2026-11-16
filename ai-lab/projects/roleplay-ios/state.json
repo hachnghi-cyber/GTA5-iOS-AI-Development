@@ -4,8 +4,8 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-device-to-host-mtls-verified-police-authority-host-only",
-  "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
+  "phase": "v13.3-native-receive-provenance-discovery",
+  "target": "Native multiplayer Police Roleplay on verified GTA V iOS v13.3; preserve stock modes, prefer existing multiplayer, and do not require a user-operated RP server",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
   "last_known_github_pr": 16,
@@ -104,6 +104,11 @@
       "claim": "Windows USB exact-build observer extended to capture on_net_event, script_event_handler and script_decide with bounded hardware breakpoints, and fail-closed origin/authentication output. Synthetic observer tests and C11 RP interaction suite passed on GitHub Actions after source commits.",
       "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py; tests/test_observe_v133_windows_usb.py; V133_SCRIPTED_EVENT_OBSERVER_VI.md; commit ed02bd17077a6b07d11ceef88ca01e011b2524a2; ai-lab/projects/roleplay-ios/RAGE_SOURCE_HUNTER_20261116.md; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43872978849 (Synthetic-only Python tests and v13.3 RP interaction C11 source-only tests: success)",
       "scope": "GitHub source and CI synthetic verification only. No live iPhone scripted receive, engine-authenticated player ID, custom GTA network event or two-iPhone Police RP gameplay has been verified by this change."
+    },
+    {
+      "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16",
+      "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
+      "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
     }
   ],
   "unknowns": [
@@ -243,7 +248,7 @@
       ]
     }
   ],
-  "next_action": "Check CI on PR #16 for Windows USB scripted-event site tests. In a consented Sandbox test, capture jobs_update idle/duty/quit and on_net_event/script_event_handler/script_decide with exact UUID via USB. Correlate validated receive-stack provenance, session generation and engine-to-RP identity before enabling gameplay or carrier injection. Collect two-iPhone runtime evidence when available.",
+  "next_action": "Reconnect the development-signed iPhone in controlled Sandbox and run script_event_handler --receive-context with a cooperating peer. Check exact receive/local frame chain and engine source association, then trace authenticated membership, session incarnation and thread/lifetime before enabling PRP3 or native cuff/release. A second iPhone is required for final A/B gameplay validation.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -494,6 +499,25 @@
       "ios_source_build": 43843224585,
       "ios_source_build_conclusion": "success",
       "host_binaries": 10
+    },
+    "receive_context_observer": {
+      "parent_commit": "64e450ef7616fd35b32e0646241be0f8a08bc7d2",
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py",
+      "map": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md",
+      "checkpoint": "ai-lab/projects/roleplay-ios/ROLEPLAY_CONTINUE.md",
+      "scope": "Exact-build read-only debugger observation; four caller frames plus receive/local origin; source/destination pointer and connection-ID comparisons",
+      "local_exact_ipa_inspector": "passed",
+      "whole_function_code_guards": 8,
+      "python_tests_passed": 54,
+      "usb_tests_passed": 21,
+      "ci": "pending",
+      "new_ios_build_needed": false,
+      "device_sample_obtained": false,
+      "last_device_attempt": "NoDeviceConnectedError from Windows usbmux",
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false,
+      "engine_adapter_bound": false,
+      "two_iphone_gameplay_verified": false
     }
   }
 }
