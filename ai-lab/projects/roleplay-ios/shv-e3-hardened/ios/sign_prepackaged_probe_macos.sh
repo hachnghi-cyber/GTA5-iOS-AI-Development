@@ -25,12 +25,19 @@ python3 "$ROOT/tools/verify_existing_probe_ipa.py" \
 WORK="$(mktemp -d /tmp/rbp-phase13.XXXXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 security cms -D -i "$PROFILE" > "$WORK/profile.plist"
+# Require one valid Keychain identity and fingerprint membership in the
+# provisioning profile's DeveloperCertificates BEFORE signing nested code.
+security find-identity -v -p codesigning > "$WORK/identities.txt"
+SIGN_SHA="$(python3 "$ROOT/tools/resolve_signing_identity.py" \
+  --identity-list "$WORK/identities.txt" --identity "$IDENTITY")"
 if [[ -n "$UDID" ]];then
  python3 "$ROOT/tools/check_development_profile.py" \
-  --decoded-profile "$WORK/profile.plist" --entitlements "$ENTS" --device-udid "$UDID" >/dev/null
+  --decoded-profile "$WORK/profile.plist" --entitlements "$ENTS" \
+  --signing-certificate-sha1 "$SIGN_SHA" --device-udid "$UDID" >/dev/null
 else
  python3 "$ROOT/tools/check_development_profile.py" \
-  --decoded-profile "$WORK/profile.plist" --entitlements "$ENTS" >/dev/null
+  --decoded-profile "$WORK/profile.plist" --entitlements "$ENTS" \
+  --signing-certificate-sha1 "$SIGN_SHA" >/dev/null
 fi
 mkdir "$WORK/repack"
 unzip -q "$UNSIGNED" -d "$WORK/repack"
@@ -39,10 +46,25 @@ APP="$WORK/repack/Payload/GTAV.app"
 cp "$APP/GTA5" "$WORK/GTA5.before-sign"
 cp "$PROFILE" "$APP/embedded.mobileprovision"
 while IFS= read -r -d '' dylib;do
- codesign --force --sign "$IDENTITY" --timestamp=none "$dylib"
+ codesign --force --sign "$SIGN_SHA" --timestamp=none "$dylib"
 done < <(find "$APP/Frameworks" -name '*.dylib' -type f -print0)
-codesign --force --sign "$IDENTITY" --timestamp=none --entitlements "$ENTS" "$APP"
+codesign --force --sign "$SIGN_SHA" --timestamp=none --entitlements "$ENTS" "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
+# Validate entitlements embedded in the ACTUAL signed application, not
+# just the requested plist. No certificate/profile/UDID leaves this Mac.
+codesign --display --entitlements :- "$APP" > "$WORK/signed-entitlements.plist" \
+  2> "$WORK/codesign-entitlements.stderr"
+if [[ -n "$UDID" ]];then
+ python3 "$ROOT/tools/check_development_profile.py" \
+  --decoded-profile "$WORK/profile.plist" \
+  --entitlements "$WORK/signed-entitlements.plist" \
+  --signing-certificate-sha1 "$SIGN_SHA" --device-udid "$UDID" >/dev/null
+else
+ python3 "$ROOT/tools/check_development_profile.py" \
+  --decoded-profile "$WORK/profile.plist" \
+  --entitlements "$WORK/signed-entitlements.plist" \
+  --signing-certificate-sha1 "$SIGN_SHA" >/dev/null
+fi
 python3 "$ROOT/tools/verify_code_preserved.py" "$WORK/GTA5.before-sign" "$APP/GTA5" >/dev/null
 ( cd "$WORK/repack" && zip -qr "$OUT" Payload )
 unzip -tqq "$OUT" || { rm -f "$OUT";echo 'Signed IPA failed CRC' >&2;exit 1; }
