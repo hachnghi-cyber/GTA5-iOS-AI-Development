@@ -129,6 +129,11 @@
       "claim": "GTA v13.3 diagnostic ScriptHook E0 E1 E3 successfully linked in real macOS Xcode16.4 iPhoneOS SDK18.5 as unsigned ARM64 MH_DYLIBs for platform IOS minimum16.3, exported DllMain, LC_RPATH @loader_path; E3 links Security.framework. Three locally packaged unsigned diagnostic IPAs each preserve all 59 original entries byte-identically and add exactly one independent stage plugin.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43969424836 ; GitHub artifact 14278505355 ; source commits 9f3342eb74483e15cbbb0479f0e2c8d5d8bcb0d7 and 1e910d4205ba0c2c3050c230d91b14604fb3bedd",
       "scope": "Xcode link and local static IPA ZIP verification only. All dylibs and IPA copies UNSIGNED; no iPhone runtime callback/HUD/two-phone E3 or RAGE-authenticated sender/session proof. Gameplay PoliceRP NOT enabled."
+    },
+    {
+      "claim": "Phase13 added fail-closed integrity checker for three original-byte-identical 59-entry unsigned diagnostic IPAs, a dedicated macOS Apple Development signing wrapper for already embedded E0/E1/E3 dylibs and exact profile/entitlements preflight. E0 device log now requires final tick 900 and SCRIPT_CALLBACK_COMPLETE=1 ticks=901, not just first tick. GitHub host tests and 18 new synthetic signing/security tests PASS.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43974446552 ; PR19 commits c79da6093300a6997dd6128652f6b1edc2933f16 and 5768abd2229f6f66723a9c08dcf88b0265d18821",
+      "scope": "Exact input IPA static comparison done locally; synthetic security tests and host regression on GitHub. No Apple signing identity/profile available in runtime; macOS codesign NOT EXECUTED for Phase13; no E0/E1/E3 device evidence or authenticated RAGE Roleplay."
     }
   ],
   "unknowns": [
@@ -686,6 +691,24 @@
       "authenticated_rage_sender_session_verified": false,
       "police_rp_gameplay_enabled": false,
       "next_gate": "Development sign exact E0 unsigned IPA and its embedded frameworks using valid cert/profile; verify fresh posthook.log & Documents/RBPProbe.log SCRIPT_CALLBACK_ENTER in Story and Online separately. Only if E0 PASS proceed E1 local HUD video then E3 two-iPhone LAN. PR16 sender/session authorization and engine game-thread dispatch required before arrest/escort/jail."
+    },
+    "experimental_e3_phase13": {
+      "pr": 19,
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e3-hardened/",
+      "source_commit": "c79da6093300a6997dd6128652f6b1edc2933f16",
+      "e0_full_completion_commit": "5768abd2229f6f66723a9c08dcf88b0265d18821",
+      "verified_run_id": 43974446552,
+      "github_run": "host-regression SUCCESS; ios-link SKIPPED (already linked E0/E1/E3 binaries from prior run)",
+      "github_new_tests": "18/18 PASS, synthetic profile and archive security; existing Clang/GCC host pipeline SUCCESS",
+      "actual_local_e0_e1_e3_unsigned_ipa": "All 59 original entries byte-identical, one correct stage dylib SHA256, checks PASS",
+      "sign_prepackaged_probe_macos": "Source created and shell syntax checked; NOT executed with a real Apple certificate or provisioning profile",
+      "stage_0_evidence_gate": "SCRIPT_TICK tick=900 and SCRIPT_CALLBACK_COMPLETE=1 ticks=901 in last run, plus UUID/registration/callback and no FAIL_CLOSED",
+      "xcode_unsigned_modules_previously_linked": true,
+      "iphoneos_app_signed": false,
+      "iphone_runtime_verified": false,
+      "online_rage_sender_auth_verified": false,
+      "police_rp_enabled": false,
+      "next_gate": "With user's valid development profile+certificate (keep private), sign exact E0 IPA; install on physical iPhone, collect fresh same-run posthook.log, Documents/RBPProbe.log and crash logs, check E0 callback completion. Then E1 visual HUD, E3 controlled LAN two iPhones; separately PR16 authoritative RAGE sender/session provenance."
     }
   }
 }
