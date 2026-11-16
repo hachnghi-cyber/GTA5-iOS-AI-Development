@@ -109,6 +109,11 @@
       "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16; implementation 63cfdf33c34ffbe5c50163048830e050a618da82; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973",
       "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
       "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
+    },
+    {
+      "claim": "Exact v13.3 GTA5 static disassembly verifies Cxn ID allocation (high16 marker and low16 slot), full 32-bit CloseConnection match and OnNetEvent peer-list connection match, plus P2pDecrypt success with an out-flag of zero forwarded through HandleReceivedPacket to Unpack. Read-only audit matches original user IPA SHA256/UUID and 26 exact ARM64 words; 6 local tests passed.",
+      "evidence": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md; cd05556e70bee188d7662237079f4a2ce7162d11; exact user IPA /mnt/data/GTAV-v13.3.ipa (local only)",
+      "scope": "STATIC_BINARY and LOCAL TEST ONLY. High16 is not a cryptographic authenticated generation; the out flag is not sender attestation; no iPhone receive-context/peer authorization or two-iPhone gameplay verified."
     }
   ],
   "unknowns": [
@@ -525,6 +530,25 @@
         "GCC ASan/UBSan",
         "Clang ASan/UBSan"
       ]
+    },
+    "native_v133_connection_chain": {
+      "source_commit": "cd05556e70bee188d7662237079f4a2ce7162d11",
+      "receive_semantics_fix_commit": "9e09a0a005ab03596e5e122de117eaa7ede29e83",
+      "report": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md",
+      "real_ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+      "gta5_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "static_opcode_pins": 26,
+      "local_binary_audit": "PASS on original GTA5, pinned SHA256/UUID",
+      "local_python_tests": "PASS 6/6; original plus mutation negatives",
+      "github_runner_binary_audit": "NO: original private IPA intentionally absent",
+      "source_ci": "CHECK_PENDING",
+      "source_provenance_verified_on_device": false,
+      "authenticated_sender_verified": false,
+      "game_thread_verified": false,
+      "custom_event_received": false,
+      "roleplay_enabled": false,
+      "next_gate": "Controlled developer-signed iPhone stock Sandbox: capture script_event_handler --receive-context with cooperative peer. Require separate call-chain and same-event source association, then trace sender authorization, session incarnation and reconnect/migration. No hook or gameplay enabled."
     }
   }
 }
