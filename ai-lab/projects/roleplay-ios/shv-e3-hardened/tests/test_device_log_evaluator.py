@@ -5,6 +5,7 @@ import unittest
 from tools.evaluate_device_logs import assess
 
 BASE = '''[RBP_PROBE] RUN_BEGIN phase=4 stage=3 platform=iphoneos-target
+[RBP_PROBE] SOURCE_CHECKPOINT=phase12-e3-receipt-retry
 [RBP_PROBE] DLLMAIN_ATTACH stage=3
 [RBP_PROBE] SCRIPT_HOOK_UUID_MATCH=1
 [RBP_PROBE] SCRIPT_REGISTER_ATTEMPTED
@@ -23,6 +24,13 @@ B = BASE + '''[RBP_NET] PACKET_ACCEPTED seq=1 ack_sent=1
 '''
 
 class DeviceLogEvaluate(unittest.TestCase):
+    def test_stale_phase11_log_without_phase12_marker_rejected(self):
+        a=A.replace('[RBP_PROBE] SOURCE_CHECKPOINT=phase12-e3-receipt-retry\n','')
+        b=B.replace('[RBP_PROBE] SOURCE_CHECKPOINT=phase12-e3-receipt-retry\n','')
+        r=assess(3,b,a,True)
+        self.assertFalse(r['all_log_preconditions_met'])
+        self.assertFalse(r['observations']['B_E0']['SOURCE_CHECKPOINT=phase12-e3-receipt-retry'])
+
     def test_host_mock_rejected(self):
         e0=BASE.replace('stage=3','stage=0').replace('platform=iphoneos-target','platform=host-mock')
         self.assertFalse(assess(0,e0)['all_log_preconditions_met'])
@@ -50,6 +58,24 @@ class DeviceLogEvaluate(unittest.TestCase):
         self.assertTrue(r['all_log_preconditions_met'])
         self.assertEqual(r['evidence_level'],'LOGS_PLUS_MANUAL_VISUAL')
         self.assertFalse(r['rage_multiplayer_replication_verified'])
+
+    def test_lost_native_report_recovered_without_duplicate_gameplay(self):
+        b=B.replace('NATIVE_INVOCATION_REPORT_SENT=1',
+                    'NATIVE_INVOCATION_REPORT_SENT=0') + (
+            '[RBP_NET] PACKET_DUPLICATE seq=1 ack_sent=1\n'
+            '[RBP_NET] NATIVE_INVOCATION_REPORT_RETRY_SENT=1 seq=1 (cached API call only)\n')
+        a=A.replace('[RBP_NET] NATIVE_INVOCATION_REPORT_VERIFIED',
+                    '[RBP_NET] NATIVE_RECEIPT_STATUS_QUERY_SENT=1 seq=1\n'
+                    '[RBP_NET] NATIVE_INVOCATION_REPORT_VERIFIED')
+        r=assess(3,b,a)
+        self.assertTrue(r['all_log_preconditions_met'])
+        self.assertTrue(r['observations']['B_native_report_recovered'])
+        self.assertFalse(r['rage_multiplayer_replication_verified'])
+
+    def test_second_native_call_for_same_sequence_is_rejected(self):
+        r=assess(3,B+'[RBP_PROBE] REMOTE_E3_GAME_ACTION_INVOKED=1 seq=1 tick=19 thread=0xaaaa\n',A,True)
+        self.assertFalse(r['all_log_preconditions_met'])
+        self.assertFalse(r['observations']['B_native_called_once_per_seq'])
 
     def test_native_report_not_sent(self):
         bad=B.replace('NATIVE_INVOCATION_REPORT_SENT=1','NATIVE_INVOCATION_REPORT_SENT=0')

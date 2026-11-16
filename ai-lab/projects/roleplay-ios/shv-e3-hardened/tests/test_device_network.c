@@ -122,6 +122,11 @@ int main(void) {
     assert(ninit==3 && npush==4 && ncall==3);
     assert(last_hash==UINT64_C(0x9D77056A530643F6));
     assert(rbp_network_report_native_invocation(&receiver,receipt.sequence,receipt.nonce)==1);
+    /* Fault-injected loss of original report is recovered without executing
+     * the game-native adapter more than once. */
+    for(int i=0;i<1000 && !atomic_load(&sender.native_receipt_verified);i++)snooze(5);
+    assert(atomic_load(&sender.native_receipt_verified));
+    assert(ninit==3 && npush==4 && ncall==3);
     /* Ensure send ACK does NOT trigger second duplicate game-thread event. */
     snooze(500);
     assert(rbp_diagnostic_game_tick(&qb,&fake)==0);

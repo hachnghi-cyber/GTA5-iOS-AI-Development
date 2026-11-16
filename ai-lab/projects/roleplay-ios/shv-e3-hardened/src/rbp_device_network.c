@@ -130,13 +130,46 @@ static int random_nonce(uint8_t nonce[8]) {
     int good=fread(nonce,1,8,f)==8;fclose(f);return good;
 #endif
 }
-/* Called ONLY on the UDP receive thread. The script thread never sends UDP.
- * Only the last accepted diagnostic action is eligible; a raced/ambiguous
- * sequence is rejected rather than falsely claiming execution on sender A.
- */
+/* Cache a completed native-API receipt on the UDP worker for up to 12s.
+ * A duplicate authenticated ACTION may request ONLY the cached result.
+ * No repeated UDP packet may schedule a second game-native invocation. */
+#define RBP_RECEIPT_CACHE_MS UINT64_C(12000)
+typedef struct {
+    uint64_t sequence;
+    uint64_t published_ms;
+    uint8_t nonce[8];
+} rbp_completed_receipt;
+
+static int send_native_receipt_frame(rbp_device_network *s,int sock,
+                  const struct sockaddr_in *peer,socklen_t peer_len,
+                  uint64_t sequence,const uint8_t nonce[8],int is_retry) {
+    rbp_frame_c report={0};report.kind=RBP_KIND_NATIVE_INVOKED;
+    report.sequence=sequence;report.timestamp_ms=wall_ms();
+    memcpy(report.sender,s->conf.self,16);
+    memcpy(report.target,s->conf.peer,16);
+    memcpy(report.session,s->conf.session,16);
+    memcpy(report.nonce,nonce,8);
+    uint8_t wire[96];
+    if(!rbp_wire_encode(&report,s->conf.key,wire))return 0;
+#if defined(RBP_TEST_DROP_INITIAL_NATIVE_REPORT)
+    /* Host test ONLY. Never compiled into the iPhoneOS diagnostic artifact. */
+    static int first_report=1;
+    if(!is_retry && first_report){
+        first_report=0;
+        rbp_logf("[RBP_NET] INITIAL_NATIVE_RECEIPT_LOST_TEST_ONLY seq=%llu\n",
+                 (unsigned long long)sequence);
+        return 0;
+    }
+#else
+    (void)is_retry;
+#endif
+    return sendto(sock,wire,sizeof wire,0,
+                  (const struct sockaddr*)peer,peer_len)==(ssize_t)sizeof wire;
+}
+
 static void emit_native_invocation_report(rbp_device_network *s,int sock,
-                                          const struct sockaddr_in *last_peer,
-                                          socklen_t last_len,int has_peer) {
+                  const struct sockaddr_in *last_peer,socklen_t last_len,
+                  int has_peer,rbp_completed_receipt *completed) {
     if(atomic_load_explicit(&s->receipt_state,memory_order_acquire)!=2)return;
     uint64_t seq=s->receipt_sequence;
     uint8_t nonce[8];memcpy(nonce,s->receipt_nonce,8);
@@ -146,17 +179,11 @@ static void emit_native_invocation_report(rbp_device_network *s,int sock,
         atomic_store_explicit(&s->receipt_state,0,memory_order_release);
         memset(nonce,0,sizeof nonce);return;
     }
-    rbp_frame_c report={0};report.kind=RBP_KIND_NATIVE_INVOKED;
-    report.sequence=seq;report.timestamp_ms=wall_ms();
-    memcpy(report.sender,s->conf.self,16);
-    memcpy(report.target,s->conf.peer,16);
-    memcpy(report.session,s->conf.session,16);
-    memcpy(report.nonce,nonce,8);
-    uint8_t wire[96];int transmitted=0;
-    if(rbp_wire_encode(&report,s->conf.key,wire)) {
-        transmitted=sendto(sock,wire,sizeof wire,0,
-                      (const struct sockaddr*)last_peer,last_len)==(ssize_t)sizeof wire;
-    }
+    completed->sequence=seq;
+    completed->published_ms=wall_ms();
+    memcpy(completed->nonce,nonce,8);
+    int transmitted=send_native_receipt_frame(s,sock,last_peer,last_len,
+                                              seq,nonce,0);
     rbp_logf("[RBP_NET] NATIVE_INVOCATION_REPORT_SENT=%d seq=%llu (API call only)\n",
              transmitted,(unsigned long long)seq);
     memset(nonce,0,sizeof nonce);
@@ -178,8 +205,10 @@ static void network_receiver(rbp_device_network *s,int sock) {
     uint8_t buffer[512],ack[96];
     struct sockaddr_in last_peer={0};socklen_t last_len=sizeof(last_peer);
     int has_peer=0;
+    rbp_completed_receipt completed={0};
     for(;atomic_load(&s->running);) {
-        emit_native_invocation_report(s,sock,&last_peer,last_len,has_peer);
+        emit_native_invocation_report(s,sock,&last_peer,last_len,has_peer,
+                                      &completed);
         struct sockaddr_in peer={0};socklen_t n=sizeof(peer);
         ssize_t bytes=recvfrom(sock,buffer,sizeof(buffer),0,(struct sockaddr*)&peer,&n);
         if(bytes<0){
@@ -202,12 +231,27 @@ static void network_receiver(rbp_device_network *s,int sock) {
             rbp_logf("[RBP_NET] %s seq=%llu ack_sent=%d\n",
               status==RBP_RX_DUPLICATE?"PACKET_DUPLICATE":"PACKET_ACCEPTED",
               (unsigned long long)wire_sequence(ack),sent==96);
+            /* The decoder checked the same source IP/port, HMAC and nonce.
+             * The DUPLICATE path cannot re-enqueue gameplay. The cache is
+             * written ONLY after the successful game-thread callback. */
+            uint64_t now=wall_ms();
+            if(status==RBP_RX_DUPLICATE && completed.sequence!=0 &&
+               completed.sequence==s->receiver.committed_sequence &&
+               memcmp(completed.nonce,s->receiver.committed_nonce,8)==0 &&
+               now>=completed.published_ms &&
+               now-completed.published_ms<=RBP_RECEIPT_CACHE_MS) {
+                int report_sent=send_native_receipt_frame(s,sock,&peer,n,
+                                   completed.sequence,completed.nonce,1);
+                rbp_logf("[RBP_NET] NATIVE_INVOCATION_REPORT_RETRY_SENT=%d seq=%llu (cached API call only)\n",
+                         report_sent,(unsigned long long)completed.sequence);
+            }
         } else if(status==RBP_RX_BUSY) {
             rbp_logf("[RBP_NET] QUEUE_BUSY_NO_ACK\n");
         } else {
             rbp_logf("[RBP_NET] REJECTED_PACKET\n");
         }
     }
+    memset(&completed,0,sizeof completed);
 }
 static void network_sender(rbp_device_network *s,int sock) {
     struct sockaddr_in peer={0};
@@ -247,6 +291,14 @@ static void network_sender(rbp_device_network *s,int sock) {
          * displayed the HUD. No retries of native gameplay are attempted. */
         for(unsigned trial=0;verified && !report_verified && trial<10 &&
             atomic_load(&s->running);trial++) {
+            if(trial>0 && trial%2==0) {
+                /* Retransmit EXACT same authenticated ping. Receiver must
+                 * return only its cached completion, not run native twice. */
+                int sent=sendto(sock,wire,96,0,
+                    (struct sockaddr*)&peer,sizeof peer)==96;
+                rbp_logf("[RBP_NET] NATIVE_RECEIPT_STATUS_QUERY_SENT=%d seq=%llu\n",
+                         sent,(unsigned long long)f.sequence);
+            }
             uint8_t buf[512];struct sockaddr_in src={0};socklen_t len=sizeof src;
             ssize_t n=recvfrom(sock,buf,sizeof buf,0,(struct sockaddr*)&src,&len);
             rbp_frame_c report={0};uint64_t current_ms=wall_ms();
@@ -255,6 +307,8 @@ static void network_sender(rbp_device_network *s,int sock) {
                rbp_response_matches_request(&report,&f,RBP_KIND_NATIVE_INVOKED,current_ms))
                report_verified=1;
         }
+        atomic_store_explicit(&s->native_receipt_verified,
+                              verified && report_verified,memory_order_release);
         rbp_logf("[RBP_NET] %s seq=%llu (native API invoked, NOT HUD observed)\n",
                  verified && report_verified ? "NATIVE_INVOCATION_REPORT_VERIFIED" :
                  "NATIVE_INVOCATION_REPORT_UNCONFIRMED",
@@ -281,6 +335,7 @@ int rbp_network_start(rbp_device_network *s, const rbp_device_config *conf,rbp_h
     memcpy(s->receiver.session,conf->session,16);
     s->receiver.max_skew_ms=15000;
     atomic_init(&s->running,1);atomic_init(&s->send_once,0);atomic_init(&s->active,0);atomic_init(&s->receipt_state,0);
+    atomic_init(&s->native_receipt_verified,0);
     pthread_t *p=malloc(sizeof(*p));if(!p){atomic_store(&s->running,0);return 0;}
     if(pthread_create(p,NULL,network_main,s)!=0){free(p);atomic_store(&s->running,0);return 0;}
     s->thread_token=p;return 1;

@@ -19,6 +19,7 @@ typedef struct {
   rbp_handoff *handoff;
   atomic_int running, send_once, active;
   atomic_int receipt_state; /* 0 empty, 1 writer, 2 ready: one-shot diagnostic */
+  atomic_int native_receipt_verified; /* sender observed HMAC result; NOT in-game visibility */
   uint64_t receipt_sequence;
   uint8_t receipt_nonce[8];
   void *thread_token; /* points to heap-allocated pthread_t; NEVER used on game thread */

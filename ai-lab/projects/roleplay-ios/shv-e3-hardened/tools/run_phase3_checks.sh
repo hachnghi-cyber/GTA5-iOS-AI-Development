@@ -20,7 +20,7 @@ CFLAGS=(-std=c11 -O1 -g -Wall -Wextra -Werror -pedantic -fsanitize=address,undef
 ./build/test_rbp_wire_c > evidence/wire_c_sanitizers.log 2>&1
 "$CC" "${CFLAGS[@]}" src/rbp_handoff.c src/rbp_native_adapter.c tests/test_native_adapter.c -o build/test_native_adapter
 ./build/test_native_adapter > evidence/native_mock_sanitizers.log 2>&1
-"$CC" "${CFLAGS[@]}" src/rbp_handoff.c src/rbp_wire_c.c src/rbp_crypto.c src/rbp_native_adapter.c src/rbp_device_network.c src/rbp_device_log.c tests/test_device_network.c -lcrypto -pthread -o build/test_network
+"$CC" "${CFLAGS[@]}" src/rbp_handoff.c src/rbp_wire_c.c src/rbp_crypto.c src/rbp_native_adapter.c src/rbp_device_network.c src/rbp_device_log.c -DRBP_TEST_DROP_INITIAL_NATIVE_REPORT tests/test_device_network.c -lcrypto -pthread -o build/test_network
 ./build/test_network > evidence/network_sanitizers.log 2>&1
 "$CC" "${CFLAGS[@]}" -D_POSIX_C_SOURCE=200809L -Wl,--export-dynamic tests/test_plugin_loader_host.c -ldl -o build/test_plugin_loader_host
 for stage in 0 1 3; do

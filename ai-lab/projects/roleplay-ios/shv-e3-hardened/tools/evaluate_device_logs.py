@@ -14,7 +14,8 @@ def latest_run(content):
     return '' if pos<0 else content[pos:]
 
 def check_e0(run,stage):
-    needed=[f'RUN_BEGIN phase=4 stage={stage} platform=iphoneos-target',
+    needed=['SOURCE_CHECKPOINT=phase12-e3-receipt-retry',
+            f'RUN_BEGIN phase=4 stage={stage} platform=iphoneos-target',
             f'DLLMAIN_ATTACH stage={stage}',
             'SCRIPT_HOOK_UUID_MATCH=1',
             'SCRIPT_REGISTER_ATTEMPTED',
@@ -46,7 +47,11 @@ def assess(stage,b_log,a_log=None,visual_observed=False):
         received=sequences(b,r'(?m)^\[RBP_NET\] PACKET_ACCEPTED seq=(\d+) ack_sent=1\s*$')
         invoked=sequences(b,r'(?m)^\[RBP_PROBE\] REMOTE_E3_GAME_ACTION_INVOKED=1 seq=(\d+) tick=\d+ thread=\S+\s*$')
         queued=sequences(b,r'(?m)^\[RBP_PROBE\] NATIVE_INVOCATION_REPORT_QUEUED=1 seq=(\d+) \(NOT visual proof\)\s*$')
-        reported=sequences(b,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_SENT=1 seq=(\d+) \(API call only\)\s*$')
+        reported_first=sequences(b,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_SENT=1 seq=(\d+) \(API call only\)\s*$')
+        reported_retry=sequences(b,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_RETRY_SENT=1 seq=(\d+) \(cached API call only\)\s*$')
+        # First report may be dropped; a RETRY counts only if the same
+        # sequence already reached the game-native adapter exactly once.
+        reported=reported_first | reported_retry
         verified=sequences(a,r'(?m)^\[RBP_NET\] NATIVE_INVOCATION_REPORT_VERIFIED seq=(\d+) \(native API invoked, NOT HUD observed\)\s*$')
         # All seven phases must match the SAME sequence in this latest run.
         # This checks log consistency, not device provenance or RAGE replication.
@@ -57,18 +62,28 @@ def assess(stage,b_log,a_log=None,visual_observed=False):
         checks['B_remote_native_invoked']=bool(invoked)
         checks['B_native_report_queued']=bool(queued)
         checks['B_native_report_sent']=bool(reported)
+        checks['B_native_report_recovered']=bool(common & reported_retry)
+        native_calls=[int(x) for x in re.findall(
+          r'(?m)^\[RBP_PROBE\] REMOTE_E3_GAME_ACTION_INVOKED=1 seq=(\d+) tick=\d+ thread=\S+\s*$',b)]
+        # A retry must NEVER cause a second invocation for the same action.
+        checks['B_native_called_once_per_seq']=all(
+            native_calls.count(seq)==1 for seq in common)
         checks['A_native_report_verified']=bool(verified)
         checks['same_sequence_correlated_A_B']=bool(common)
         matched_sequences=sorted(common)
         if not all(checks['A_E0'].values()) or not all(checks[k] for k in (
             'A_udp_transmitted','A_queue_ack_verified','B_udp_accepted',
             'B_remote_native_invoked','B_native_report_queued','B_native_report_sent',
-            'A_native_report_verified','same_sequence_correlated_A_B')):
+            'A_native_report_verified','same_sequence_correlated_A_B',
+            'B_native_called_once_per_seq')):
             reasons.append('E3 two-device event/ACK/native-report pipeline not established with matching sequence')
     if stage>=1 and not visual_observed:
         reasons.append('visual gameplay observation not provided; native log alone is not gameplay proof')
     def all_pass(obj):
-        return all(all_pass(x) for x in obj.values()) if isinstance(obj,dict) else obj is True
+        if isinstance(obj,dict):
+            return all(all_pass(v) for k,v in obj.items()
+                       if k!='B_native_report_recovered')
+        return obj is True
     result={
         'stage':stage,
         'observations':checks,

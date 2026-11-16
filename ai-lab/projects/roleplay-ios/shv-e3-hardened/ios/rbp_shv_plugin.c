@@ -285,6 +285,7 @@ int DllMain(void *module, unsigned reason, void *reserved) {
         rbp_logf("[RBP_PROBE] RUN_BEGIN phase=4 stage=%d platform=%s pid=%ld start_ms=%llu",
                  RBP_PROBE_STAGE,platform,(long)getpid(),
                  (unsigned long long)started.tv_sec*1000u + (unsigned long long)started.tv_usec/1000u);
+        rbp_logf("[RBP_PROBE] SOURCE_CHECKPOINT=phase12-e3-receipt-retry\n");
         rbp_logf("[RBP_PROBE] DLLMAIN_ATTACH stage=%d\n",RBP_PROBE_STAGE);
         if(!resolve_shv()){
             rbp_logf("[RBP_PROBE] SHV_SYMBOL_RESOLUTION_FAILED\n");return 0;
