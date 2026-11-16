@@ -1,0 +1,61 @@
+name: GTA v13.3 - iPhone Launch Probe (NO GAME IPA)
+
+on:
+  push:
+    branches:
+      - feature/winstom-rp-ipa-audit-20261116
+    paths:
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/ios/**'
+      - '.github/workflows/build-v133-phase8-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iPhone_arm64_probe:
+    name: Compile iPhoneOS arm64 read-only startup dylib
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check local packer and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ai-lab/projects/roleplay-ios/v133_interaction/ios/patch_exact_v133_probe.py
+          python3 -m unittest discover \
+            -s ai-lab/projects/roleplay-ios/v133_interaction/ios \
+            -p 'test_v133_probe_packer.py' -v
+      - name: Compile diagnostic dylib using iPhoneOS SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang -arch arm64 \
+            -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -x objective-c -fobjc-arc -fvisibility=hidden \
+            -O2 -Wall -Wextra -Werror -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
+            -framework Foundation \
+            ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133LaunchProbe.m \
+            -o out/PoliceRPV133Probe.dylib
+          xcrun lipo -info out/PoliceRPV133Probe.dylib
+          xcrun otool -D out/PoliceRPV133Probe.dylib
+          xcrun vtool -show-build out/PoliceRPV133Probe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPV133Probe.dylib > out/sha256.txt
+      - name: Bundle safe patcher and instructions (no game data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/patch_exact_v133_probe.py out/
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/README_TEST_VI.md out/
+          printf 'NO IPA. NO police arrest. NO multiplayer transport. Use only exact original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA
+          path: out/
+          retention-days: 7
