@@ -101,9 +101,9 @@
       "scope": "STATIC_VERIFIED; 65 local Python tests pass. New 56-byte source carrier feeds existing mailbox without trusting slot. C sanitizer/Apple builds pending this commit CI. No engine adapter, cryptographic authentication proof, signing or device test."
     },
     {
-      "claim": "Windows USB exact-build observer was extended to capture three scripted/game network entry sites (on_net_event, script_event_handler, script_decide) with bounded hardware breakpoints and a fail-closed result schema. Regression tests were added but have not yet been confirmed by this turn's CI.",
-      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py; tests/test_observe_v133_windows_usb.py; V133_SCRIPTED_EVENT_OBSERVER_VI.md; commit ed02bd17077a6b07d11ceef88ca01e011b2524a2; ai-lab/projects/roleplay-ios/RAGE_SOURCE_HUNTER_20261116.md",
-      "scope": "GitHub source/code review only. Neither synthetic test execution, native engine sender authentication, nor two-iPhone RP event delivery is claimed by this entry."
+      "claim": "Windows USB exact-build observer extended to capture on_net_event, script_event_handler and script_decide with bounded hardware breakpoints, and fail-closed origin/authentication output. Synthetic observer tests and C11 RP interaction suite passed on GitHub Actions after source commits.",
+      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py; tests/test_observe_v133_windows_usb.py; V133_SCRIPTED_EVENT_OBSERVER_VI.md; commit ed02bd17077a6b07d11ceef88ca01e011b2524a2; ai-lab/projects/roleplay-ios/RAGE_SOURCE_HUNTER_20261116.md; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43872978849 (Synthetic-only Python tests and v13.3 RP interaction C11 source-only tests: success)",
+      "scope": "GitHub source and CI synthetic verification only. No live iPhone scripted receive, engine-authenticated player ID, custom GTA network event or two-iPhone Police RP gameplay has been verified by this change."
     }
   ],
   "unknowns": [
