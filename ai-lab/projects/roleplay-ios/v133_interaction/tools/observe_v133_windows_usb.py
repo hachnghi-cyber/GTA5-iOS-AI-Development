@@ -18,7 +18,8 @@ from pathlib import Path
 BASELINE = Path(__file__).resolve().parents[2] / "baselines" / "phase9-v133-engine.json"
 UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 IMAGE_VMADDR = 0x100000000
-SITE = "jobs_update"
+DEFAULT_SITE = "jobs_update"
+OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event")
 MAX_REPLY = 16384
 
 
@@ -150,8 +151,15 @@ def read_stock_job(remote, base, sample):
     }
 
 
-def capture(remote, base, metadata, stock_job=False):
-    va = int(metadata["symbols"][SITE]["va"], 16)
+def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
+    """Capture exactly one guarded PC stop. A breakpoint hit is NOT sender proof."""
+    if site not in OBSERVABLE_SITES:
+        raise ValueError("unsupported observation site")
+    if stock_job and site != "jobs_update":
+        raise ValueError("--stock-job is only valid at jobs_update")
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    va = int(metadata["symbols"][site]["va"], 16)
     address = base + va - IMAGE_VMADDR
     if remote.request(b"qRegisterInfo20").partition(b";")[0] != b"name:pc":
         raise DebugProtocolError("ARM64 PC register layout mismatch")
@@ -161,7 +169,7 @@ def capture(remote, base, metadata, stock_job=False):
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
         remote.send(b"c")
-        remote.conn.settimeout(3)
+        remote.conn.settimeout(wait_seconds)
         timed_out = False
         try:
             reply = remote.receive()
@@ -174,27 +182,33 @@ def capture(remote, base, metadata, stock_job=False):
             raise DebugProtocolError("no selected thread in stop reply")
         require_ok(remote, b"Hg" + tid, "stopped thread selection")
         hit = remote.read_register(32) == address
-        caller = next(b for b in metadata["branches"]
-                      if b["source"] == "online_update" and b["target"] == SITE)
-        return_address = base + int(caller["at"], 16) - IMAGE_VMADDR + 4
+        callsite_matches = False
+        if site == "jobs_update" and hit and not timed_out:
+            caller = next(b for b in metadata["branches"]
+                          if b["source"] == "online_update" and b["target"] == site)
+            return_address = base + int(caller["at"], 16) - IMAGE_VMADDR + 4
+            callsite_matches = remote.read_register(30) == return_address
         sample = {
-            "site": SITE,
+            "site": site,
             "timed_out": timed_out,
             "hardware_stop_at_expected_pc": hit and not timed_out,
-            "macport_online_update_callsite_matches": hit and not timed_out
-                and remote.read_register(30) == return_address,
+            "macport_online_update_callsite_matches": callsite_matches,
             "thread_label": "T1",
+            # A single PC/LR observation cannot prove inbound network provenance.
+            "observed_path": "undetermined",
+            "network_receive_stack_confirmed": False,
             "authenticated_rp_sender_verified": False,
             "session_generation_verified": False,
+            "custom_rp_event_received": False,
         }
-        if stock_job and sample["macport_online_update_callsite_matches"]:
+        if stock_job and callsite_matches:
             sample["stock_job_candidate"] = read_stock_job(remote, base, metadata["stock_job_sample"])
         return sample
     finally:
         require_ok(remote, b"z1," + hardware, "hardware breakpoint removal")
 
 
-def run_capture(conn, pid, stock_job=False):
+def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
     metadata = json.loads(BASELINE.read_text(encoding="utf-8"))
     if metadata["uuid"] != UUID:
         raise DebugProtocolError("static baseline UUID mismatch")
@@ -211,22 +225,22 @@ def run_capture(conn, pid, stock_job=False):
         if not reported or int(reported[1], 16) != pid:
             raise DebugProtocolError("attached PID mismatch")
         base = main_image(remote)
-        for site in (SITE, "script_event_handler", "script_decide"):
-            va = int(metadata["symbols"][site]["va"], 16)
-            expected = struct.pack("<I", int(metadata["trace_sites"][site], 16))
+        for guarded_site in OBSERVABLE_SITES:
+            va = int(metadata["symbols"][guarded_site]["va"], 16)
+            expected = struct.pack("<I", int(metadata["trace_sites"][guarded_site], 16))
             if remote.memory(base + va - IMAGE_VMADDR, 4) != expected:
-                raise DebugProtocolError("live instruction mismatch at " + site)
+                raise DebugProtocolError("live instruction mismatch at " + guarded_site)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
                 if remote.memory(address, 4) != struct.pack("<I", int(guard["word"], 16)):
                     raise DebugProtocolError("local job metadata instruction guard mismatch")
-        return capture(remote, base, metadata, stock_job)
+        return capture(remote, base, metadata, stock_job=stock_job, site=site, wait_seconds=wait_seconds)
     finally:
         require_ok(remote, b"D", "detach")
 
 
-def collect(bundle, stock_job=False):
+def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
     result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
                             capture_output=True, text=True, timeout=20, check=True)
@@ -250,7 +264,7 @@ def collect(bundle, stock_job=False):
             else:
                 with conn:
                     conn.settimeout(5)
-                    return run_capture(conn, pid, stock_job)
+                    return run_capture(conn, pid, stock_job=stock_job, site=site, wait_seconds=wait_seconds)
         raise DebugProtocolError("loopback debugproxy connect deadline elapsed")
     finally:
         if proxy.poll() is None:
@@ -262,12 +276,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", help="Installed GTA bundle identifier, including its signing suffix if any.")
     parser.add_argument("--stock-job", action="store_true",
-                        help="Also sample the exact-build local stock job fields, without role attestation.")
+                        help="Also sample exact-build local stock job fields at jobs_update only.")
+    parser.add_argument("--site", choices=OBSERVABLE_SITES, default=DEFAULT_SITE,
+                        help="Read-only single hardware breakpoint site; does not authenticate an event.")
+    parser.add_argument("--wait-seconds", type=int, default=3,
+                        help="Bounded time (1-60 seconds) to observe one stop; no polling loop.")
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
+    if args.stock_job and args.site != "jobs_update":
+        parser.error("--stock-job is valid only with --site jobs_update")
+    if not 1 <= args.wait_seconds <= 60:
+        parser.error("--wait-seconds must be between 1 and 60")
     try:
-        sample = collect(args.bundle, args.stock_job)
+        sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
