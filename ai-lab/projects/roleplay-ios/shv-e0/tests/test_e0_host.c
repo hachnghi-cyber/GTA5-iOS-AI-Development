@@ -7,11 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <unistd.h>
 static jmp_buf done;
 static void (*callback)(void);
-static int registers, unregisters, waits;
+static int registers, unregisters, waits, quick_wait;
 __attribute__((visibility("default")))
 void scriptRegister(void *mod, void(*func)(void)) {
     assert(mod == (void *)(uintptr_t)0x1234);
@@ -27,7 +28,14 @@ void scriptUnregister(void *mod) {
     unregisters++;
 }
 __attribute__((visibility("default")))
-void scriptWait(uint32_t ms) { assert(ms == 0); if (++waits == 31) longjmp(done, 1); }
+void scriptWait(uint32_t ms) {
+    assert(ms == 16);
+    ++waits;
+    if (quick_wait) return;
+    struct timespec nap = {.tv_sec = 0, .tv_nsec = 2000000};
+    nanosleep(&nap, NULL);
+    if (waits == 31) longjmp(done, 1);
+}
 static int has(const char *p, const char *needle) {
     FILE *f = fopen(p,"rb"); assert(f);
     char buf[4096];
@@ -56,6 +64,12 @@ int main(int argc, char **argv) {
     assert(!has(log,"CALLBACK_ENTER"));
     if (!setjmp(done)) callback();
     assert(waits==31);
+    assert(!has(log,"SCRIPT_WAIT_FAST_RETURN=1"));
+    quick_wait=1; /* NULL-context no-yield regression */
+    callback();
+    assert(waits == 35);
+    assert(has(log,"SCRIPT_WAIT_FAST_RETURN=1 FAIL_CLOSED"));
+    assert(!has(log,"SCRIPT_CALLBACK_COMPLETE=1"));
     assert(has(log,"SCRIPT_HOOK_UUID_CHECK=HOST_MOCK_ONLY"));
     assert(has(log,"CALLBACK_ENTER"));
     assert(has(log,"SCRIPT_TICK=1"));
@@ -67,6 +81,6 @@ int main(int argc, char **argv) {
     assert(unlink(log)==0);
     assert(rmdir(documents)==0);
     assert(rmdir(home)==0);
-    puts("PASS E0 host MOCK registration, callback, tick, detach; NOT iPhone");
+    puts("PASS E0 host MOCK bounded callback and null-context fail-closed; NOT iPhone");
     return 0;
 }

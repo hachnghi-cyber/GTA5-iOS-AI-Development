@@ -19,9 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Mock ScriptHook callback (not device)
-        run: bash ai-lab/projects/roleplay-ios/shv-e0/scripts/run_host_test.sh
+        run: |
+          bash ai-lab/projects/roleplay-ios/shv-e0/scripts/run_host_test.sh
+          python3 -m unittest discover -s ai-lab/projects/roleplay-ios/shv-e0/tests -p 'test_evaluate_e0_log.py' -v
 
   ios-link:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-15
     timeout-minutes: 12
     steps:

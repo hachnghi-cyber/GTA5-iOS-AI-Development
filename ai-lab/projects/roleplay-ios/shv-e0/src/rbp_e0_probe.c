@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <time.h>
 #include <dlfcn.h>
 #if defined(__APPLE__) && !defined(RBP_E0_HOST_TEST)
 #include <mach-o/dyld.h>
@@ -131,13 +132,47 @@ static void *find_existing_script_hook(void) {
 }
 #endif
 
+/* Actual ScriptHookV _scriptWait on this UUID can return immediately when the
+ * current script context is NULL; do not spin forever in the game thread. */
+#define E0_WAIT_MILLISECONDS 16u
+#define E0_MAX_TICKS 120u
+#define E0_FAST_RETURN_NS 500000ull
+#define E0_MAX_CONSECUTIVE_FAST_RETURNS 4u
+static uint64_t monotonic_ns(void) {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0 ||
+        now.tv_sec < 0 || now.tv_nsec < 0 || now.tv_nsec >= 1000000000L)
+        return 0;
+    return (uint64_t)now.tv_sec * 1000000000ull + (uint64_t)now.tv_nsec;
+}
 static void script_entry(void) {
     e0_log("[RBP_E0] CALLBACK_ENTER");
-    for (uint64_t tick = 1;; tick++) {
-        if (tick == 1 || tick == 30 || tick == 120)
-            e0_log("[RBP_E0] SCRIPT_TICK=%llu", (unsigned long long)tick);
-        g_wait(0);
+    unsigned fast_returns = 0;
+    for (uint32_t tick = 1; tick <= E0_MAX_TICKS; tick++) {
+        if (tick == 1 || tick == 30 || tick == E0_MAX_TICKS)
+            e0_log("[RBP_E0] SCRIPT_TICK=%u", tick);
+        const uint64_t before = monotonic_ns();
+        if (!before || !g_wait) {
+            e0_log("[RBP_E0] SCRIPT_CLOCK_OR_WAIT_INVALID=1 FAIL_CLOSED");
+            return;
+        }
+        g_wait(E0_WAIT_MILLISECONDS);
+        const uint64_t after = monotonic_ns();
+        if (!after || after < before) {
+            e0_log("[RBP_E0] SCRIPT_CLOCK_OR_WAIT_INVALID=1 FAIL_CLOSED");
+            return;
+        }
+        if (after - before < E0_FAST_RETURN_NS) {
+            fast_returns++;
+            if (fast_returns >= E0_MAX_CONSECUTIVE_FAST_RETURNS) {
+                e0_log("[RBP_E0] SCRIPT_WAIT_FAST_RETURN=1 FAIL_CLOSED");
+                return;
+            }
+        } else {
+            fast_returns = 0;
+        }
     }
+    e0_log("[RBP_E0] SCRIPT_CALLBACK_COMPLETE=1");
 }
 
 __attribute__((visibility("default")))
