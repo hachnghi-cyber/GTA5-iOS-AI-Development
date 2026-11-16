@@ -74,6 +74,11 @@
       "claim": "GitHub Actions Winstom audit and v13.3 RP synthetic CI recovered at commit 14e332a5: Winstom audit 5/5, Phase 6 offline trace verifier 14/14, ObjC mapper Python tests and C11 GCC/Clang ASan/UBSan pass on GitHub runner; AI Lab CI and Continuous Source Watch also succeed. Root cause was mutable Mach-O bytearray/memoryview used in dictionary lookup/UUID/dylib parsing.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076085 ; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076104 ; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076060 ; issue https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/17 closed; fix commit 14e332a5f69a4debe02e9975241a9b68798d8d86",
       "scope": "CI static and synthetic tests ONLY. GitHub manual IPA analysis job skipped in pull_request event. No real device, GTA Online private carrier, authenticated sender, or Police RP functionality proven."
+    },
+    {
+      "claim": "Phase 7: separate GTA v13.3 PRP3 40-byte mailbox implemented (64 queue slots, 8 events per game frame, nonblocking network producers, fail-closed trust metadata and session/epoch checks via existing gate). GitHub Actions GCC ASan+UBSan and Clang passed deterministic mailbox tests and four-thread concurrency stress; reproducible five-test run script passes on both toolchains. All Winstom, AI Lab and Source Watch CI jobs succeeded.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE7_MAILBOX.md; v133_interaction/include/rp_v133_mailbox.h; src/rp_v133_mailbox.c; tests/test_v133_mailbox.c; tests/test_v133_mailbox_threads.c; tools/run_host_tests.sh; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760288; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760234; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760343",
+      "scope": "Synthetic source-only host tests, no ThreadSanitizer, no Xcode/iPhone, no original GTA5 hook or network callback, no authenticated sender provenance or playable Police RP."
     }
   ],
   "unknowns": [
@@ -210,7 +215,7 @@
       ]
     }
   ],
-  "next_action": "Phase 7: inspect authorized v13.3 game-thread callback and authenticated RAGE source (CNetGamePlayer/net session metadata) and capture true A/B PRP3 events in private two-device test. Verify with Phase 6 verifier plus engine stack/source evidence; do not trust JSON provenance alone. Once authenticated network confirmed, implement opt-in host authoritative cuff/escort. Winstom/AI Lab/Watch CI green after bytearray fix; no IPA/gameplay release yet.",
+  "next_action": "Phase 8 P0: verify actual GTA v13.3 game-thread callback and authenticated sender/session metadata in native engine from user-authorized binary and live device logs. Do not use MPJ2 sender pointer/slot hints or Winstom WRTransport/WRVoice as auth. Only after a read-only A->B greet event with engine-owned provenance is proven, add host-authoritative opt-in cuff/escort; do not release IPA yet.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
