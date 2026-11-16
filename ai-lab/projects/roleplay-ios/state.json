@@ -129,6 +129,11 @@
       "claim": "E0 dyld loader boundary tested using separately preloaded ScriptHookV fixture and synthetic Mach-O headers, including invalid UUID, duplicate image, malformed load commands, and success/detach. Build script now respects CC and GitHub Actions log demonstrates real Clang and GCC runs, 15 Python tests PASS.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43900440909 ; commit d39cef688369c86869e96409b15a997d5954a2b0",
       "scope": "Host Linux unit/integration fixtures only; synthetic dyld APIs do not constitute execution by Apple dyld, real ScriptHookV runtime callbacks, gameplay natives or two-iPhone network proof."
+    },
+    {
+      "claim": "Exact v13.3 ScriptHookV loader checks: signed original SHA256 and UUID, 16 ARM64 instruction guards and stock ScriptHookV loader strings; stock loader subtracts before/after script counters and reports N new scripts. New read-only pair-log classifier distinguishes loaded/registered/callback and rejects stale, contradictory or uncorrelated device logs. CI host PASS 37 Python tests and C Clang/GCC mock; no real E0 runtime test.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43902811673 ; commit 2e369dda94fcef2bb63787d0e68c44743ef6fde5 ; ai-lab/projects/roleplay-ios/shv-e0/PHASE8_LOADER_CONTRACT.md",
+      "scope": "STATIC exact IPA + HOST CI only; no on-device E0 callback, no iPhoneOS linked dylib or validated two-iPhone roleplay gameplay. Historical user-provided posthook demonstrates prior plugin scheduler but not current E0 or online sender authentication."
     }
   ],
   "unknowns": [
@@ -557,7 +562,7 @@
       "device_loaded": false,
       "script_callback_on_iphone": false,
       "online_rage_action": false,
-      "next_gate": "Do NOT build more host scaffolding until actual macOS iPhoneOS SDK linking or user-device E0 evidence arrives. Independently continue PR #16 read-only receive-context observation when development-signed iPhone and controlled peer are available.",
+      "next_gate": "Link E0 on an available Xcode/iPhoneOS SDK macOS runner (or a trusted Mac), sign + install under exact v13.3 app with correct authorization, retrieve same-run stock posthook.log and Documents/RBPProbeE0.log; classify with tools/evaluate_e0_pair.py. Independently test PR#16 native sender/session provenance. Do not enable RP.",
       "phase5_commit": "9d2423f862125fcb405dcc46e0ccd426e2deafa2",
       "phase5_host_ci_run": 43895737607,
       "phase5_host_ci": "SUCCESS (Linux mock + nine Python parser tests)",
@@ -582,7 +587,13 @@
       "phase7_local_sanitizer_result": "PASS: Clang ASan/UBSan dyld mock on Linux",
       "phase7_limitation": "Exact Apple dyld, code signing and ScriptHookV on device still UNTESTED; native sender provenance PR#16 not verified",
       "ios_link_run_id": 43898609050,
-      "ios_link_result_at_checkpoint": "QUEUED; no iPhoneOS dylib artifact confirmed"
+      "ios_link_result_at_checkpoint": "CANCELLED, no iPhoneOS dylib artifact",
+      "phase8_commit": "2e369dda94fcef2bb63787d0e68c44743ef6fde5",
+      "phase8_ci_run": 43902811673,
+      "phase8_ci": "SUCCESS; Clang/GCC E0 host mocks, 37 Python tests, ios-link SKIPPED on push",
+      "phase8_local_exact_ipa": "PASS; SHA256+UUID+16 static ARM64 words and loader literals",
+      "phase8_device_log_pair": "NOT TESTED on current iPhone; parser tests synthetic only",
+      "historical_shv_loader_device": "Older user-supplied log has Menyoo plugin (2 scripts) and first script tick (4 scripts); original log build unspecified; not proof of E0 in current v13.3"
     }
   }
 }
