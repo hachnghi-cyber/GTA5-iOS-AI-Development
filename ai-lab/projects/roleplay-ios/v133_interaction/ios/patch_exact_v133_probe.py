@@ -5,6 +5,7 @@ must be supplied; this deliberately refuses to generate a broken placeholder.
 """
 import argparse
 import hashlib
+import plistlib
 import struct
 import zipfile
 from pathlib import Path
@@ -13,6 +14,7 @@ from pathlib import Path
 IPA_SHA256 = '7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89'
 GTA5_SHA256 = 'f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc'
 GTA5_PATH = 'Payload/GTAV.app/GTA5'
+PLIST_PATH = 'Payload/GTAV.app/Info.plist'
 BRIDGE_PATH = 'Payload/GTAV.app/Frameworks/PoliceRPV133Probe.dylib'
 LOAD_PATH = b'@executable_path/Frameworks/PoliceRPV133Probe.dylib'
 MH_MAGIC_64 = 0xFEEDFACF
@@ -109,6 +111,8 @@ def main():
     ap.add_argument('--ipa', required=True, type=Path)
     ap.add_argument('--bridge', type=Path, help='Real arm64 dylib built on macOS')
     ap.add_argument('--out', type=Path, help='New unsigned test IPA path')
+    ap.add_argument('--enable-file-sharing', action='store_true',
+                    help='Expose Documents/PoliceRP-v13.3-Phase8.txt in iOS Files app')
     opts = ap.parse_args()
     if (opts.bridge is None) != (opts.out is None):
         ap.error('--bridge and --out must be given together, or neither for inspect-only')
@@ -120,6 +124,8 @@ def main():
             raise ValueError('Damaged original IPA')
         if GTA5_PATH not in source.namelist():
             raise ValueError('Missing GTA5 executable')
+        if PLIST_PATH not in source.namelist():
+            raise ValueError('Missing app Info.plist')
         if BRIDGE_PATH in source.namelist():
             raise ValueError('Probe already packaged')
         patched, details = patch_gta5(source.read(GTA5_PATH))
@@ -133,9 +139,20 @@ def main():
         check_bridge(bridge_bytes)
         if opts.out.exists():
             raise FileExistsError('Output already exists; refusing to overwrite')
+        plist_bytes = source.read(PLIST_PATH)
+        if opts.enable_file_sharing:
+            plist = plistlib.loads(plist_bytes)
+            if not isinstance(plist, dict):
+                raise ValueError('App Info.plist is not a dictionary')
+            plist['UIFileSharingEnabled'] = True
+            plist['LSSupportsOpeningDocumentsInPlace'] = True
+            fmt = (plistlib.FMT_BINARY if plist_bytes.startswith(b'bplist00')
+                   else plistlib.FMT_XML)
+            plist_bytes = plistlib.dumps(plist, fmt=fmt, sort_keys=False)
         with zipfile.ZipFile(opts.out, mode='x') as result:
             for item in source.infolist():
                 result.writestr(item, patched if item.filename == GTA5_PATH
+                                else plist_bytes if item.filename == PLIST_PATH
                                 else source.read(item.filename))
             entry = zipfile.ZipInfo(BRIDGE_PATH)
             entry.compress_type = zipfile.ZIP_DEFLATED
@@ -149,6 +166,8 @@ def main():
             raise ValueError('Bridge bytes changed during packaging')
         if verify.read(GTA5_PATH) != patched:
             raise ValueError('Patched GTA5 bytes changed during packaging')
+        if verify.read(PLIST_PATH) != plist_bytes:
+            raise ValueError('Info.plist bytes changed during packaging')
     print('Unsigned experimental IPA created:', opts.out)
     print('NOT INSTALLABLE UNTIL ALL MACH-O CODE SIGNATURES ARE RENEWED.')
 
