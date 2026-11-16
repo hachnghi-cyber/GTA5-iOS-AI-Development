@@ -89,6 +89,11 @@
       "claim": "Phase 8 iPhoneOS SDK boot-loader proof built on macOS-15 arm64: PRPV133LaunchProbe.m compiled to real arm64 PoliceRPV133Probe.dylib with install_name @executable_path/Frameworks/PoliceRPV133Probe.dylib. A local exact-IPA SHA-256 guarded unsigned packer and five synthetic Mach-O patcher tests were added. Mac workflow SUCCESS and artifact generated; no game IPA included.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43791400799 ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{PRPV133LaunchProbe.m,patch_exact_v133_probe.py,test_v133_probe_packer.py,README_TEST_VI.md}; artifact GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA",
       "scope": "Real iPhoneOS SDK link of a startup-only diagnostic dylib. No patcher run on the actual v13.3 IPA in the current execution environment, no signed or installable IPA created, no device boot test, no authenticated multiplayer or cuff/escort. Requires local exact original user IPA and user-managed signing."
+    },
+    {
+      "claim": "Phase 8 fast iPhone startup-probe packaging workflow now includes a Windows drag/drop local unsigned IPA maker and macOS/Linux one-command maker. Added 6th synthetic integration test covering full IPA rezip, exact build patch, resource preservation, binary size, bridge insertion and file-sharing plist. Apple iPhoneOS arm64 dylib build and all 6 tests succeeded on macos-15 GitHub Actions, with artifact containing dylib, patcher and both helper scripts.",
+      "evidence": "Build workflow https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43793010558 ; artifact 14192309099 `GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA` SHA256 archive 7419051d7545a0dfb40d78343fe7504754f0464d0050376ffad98b2ee95d09df ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{Make_Phase8_IPA_Windows.bat,Make_Phase8_IPA_macOS_Linux.sh,test_v133_probe_packer.py,README_TEST_VI.md}",
+      "scope": "Generated ARM64 diagnostic dylib and locally runnable packer; unit test used synthetic IPA. No actual GTA v13.3 patched IPA was created in this environment, as local container tool execution is unavailable. No signing, iPhone boot, transport, or Police RP gameplay validation."
     }
   ],
   "unknowns": [
@@ -225,7 +230,7 @@
       ]
     }
   ],
-  "next_action": "Phase 8 fast device smoke test: download macOS GitHub artifact from build-v133-phase8-probe run; locally run exact baseline SHA-guarded patcher on GTAV-v13.3.ipa with --enable-file-sharing, re-sign app+embedded dylib, boot on iPhone and return [PRP_V133_PHASE8] log / PoliceRP-v13.3-Phase8.txt plus run/crash if any. This only proves dyld load+UUID. Then identify actual GTA game-thread/authenticated sender callback and test PRP3 greet A->B; NO cuff/escort yet. Do not merge automatically or publish proprietary IPA.",
+  "next_action": "Prioritize real device startup proof: use downloaded Phase8 bundle with exact user-held GTAV-v13.3.ipa SHA256 7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89. Build local unsigned IPA with drag/drop helper, sign app+new dylib using same Apple Team ID, install on iPhone and collect PoliceRP-v13.3-Phase8.txt and startup crash logs. Once successful, identify real v13.3 RAGE game-thread authenticated sender/session callback for benign PRP3 greet between two devices; do not claim cuff/escort gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
