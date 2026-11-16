@@ -100,6 +100,22 @@ jobs:
             src/rp_v133_mailbox.c tests/test_v133_mailbox.c \
             -o /tmp/v133_mailbox_clang
           /tmp/v133_mailbox_clang
+      - name: Multi-producer network-thread mailbox stress (GCC/Clang)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -pthread -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
+            -o /tmp/v133_mailbox_threads
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_mailbox_threads
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -pthread -O2 \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
+            -o /tmp/v133_mailbox_threads_clang
+          /tmp/v133_mailbox_threads_clang
       - name: Clang strict host build
         shell: bash
         run: |
