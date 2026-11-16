@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
       - name: Validate debugger stack classification
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
+      - name: Verify exact-build connection-chain static contract (synthetic; no IPA)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_audit_v133_connection_chain.py' -v
       - name: Test direct PRP3 pairing over real TLS sockets
         run: |
           python -m pip install cryptography==50.0.2
