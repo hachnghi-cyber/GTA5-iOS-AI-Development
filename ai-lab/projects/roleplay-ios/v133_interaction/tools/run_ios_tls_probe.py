@@ -115,7 +115,7 @@ def serve(folder):
         client, _ = listener.accept()
         with session.open(client, server_side=True) as channel:
             respond(channel, pairing)
-    print(json.dumps({"iphone_greet_received": True, "documents_sent": True,
+    print(json.dumps({"paired_client_greet_received": True, "documents_sent": True,
                       "iphone_receive_requires_device_log": True, "gameplay_rp_enabled": False}))
 
 

@@ -56,7 +56,7 @@ phút. [Apple Network TLS](https://developer.apple.com/documentation/network/tls
    `prepare ... --ip ...`. Khi Windows báo sẵn sàng, mở app trên iPhone.
    Nếu iOS hỏi quyền mạng nội bộ, chọn cho phép để thực hiện phép thử.
    Có thể lấy log ngay từ launcher, không cần vào phòng chơi.
-4. Kết quả chỉ đạt hai chiều khi host báo `iphone_greet_received=true`
+4. Kết quả chỉ đạt hai chiều khi host báo `paired_client_greet_received=true`
    và log mới `PoliceRP-v13.3-TLS-Probe.txt` có
    `result=greet_sent_documents_received` cùng `paired_tls_verified=1`.
    Kiểm tra dấu thời gian để tránh dùng log cũ. Xóa cấu hình thử sau khi

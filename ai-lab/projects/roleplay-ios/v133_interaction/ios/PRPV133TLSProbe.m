@@ -236,7 +236,7 @@ void prp_start_tls_probe(NSString *folder) {
         NSFileHandle *file = [NSFileHandle fileHandleForReadingAtPath:path];
         if (!file) return; // No private test configuration, no network activity.
         NSData *data = [file readDataUpToLength:16385 error:NULL];
-        [file closeFile];
+        [file closeAndReturnError:NULL];
         id json = data.length && data.length <= 16384
             ? [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL] : nil;
         NSDictionary *config = [json isKindOfClass:[NSDictionary class]] ? json : nil;
@@ -273,6 +273,7 @@ void prp_start_tls_probe(NSString *folder) {
             sec_protocol_options_set_max_tls_protocol_version(options, tls_protocol_version_TLSv13);
             sec_protocol_options_add_tls_application_protocol(options, PRP_ALPN);
             sec_protocol_options_set_local_identity(options, identity);
+            sec_protocol_options_set_tls_resumption_enabled(options, false);
             sec_protocol_options_set_peer_authentication_required(options, true);
             sec_protocol_options_set_verify_block(options, ^(sec_protocol_metadata_t metadata,
                 sec_trust_t trust, sec_protocol_verify_complete_t done) {

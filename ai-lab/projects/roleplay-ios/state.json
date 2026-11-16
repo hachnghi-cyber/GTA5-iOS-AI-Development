@@ -410,7 +410,9 @@
       "generated_kit_host_tls_test_passed": true,
       "device_tested": false,
       "engine_sender_mapping_verified": false,
-      "gameplay_rp_enabled": false
+      "gameplay_rp_enabled": false,
+      "windows_lan_cli_reference_test_passed": true,
+      "host_ci_run": 43838604101
     }
   }
 }
