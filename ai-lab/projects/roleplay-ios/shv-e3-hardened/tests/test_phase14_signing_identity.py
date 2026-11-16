@@ -32,6 +32,10 @@ class IdentitySelection(unittest.TestCase):
         with self.assertRaises(IdentityError):resolve(SECURITY,"Apple Distribution: Test")
     def test_empty_keychain(self):
         with self.assertRaises(IdentityError):resolve("0 valid identities found",SHA1)
+    def test_sha1_must_not_select_distribution_identity(self):
+        item=SECURITY+'  3) '+("C"*40)+' "Apple Distribution: Test (ABCDE12345)"\n'
+        with self.assertRaisesRegex(IdentityError,"NOT an Apple Development"):
+            resolve(item,"C"*40)
     def test_invalid_selector(self):
         with self.assertRaises(IdentityError):resolve(SECURITY," "+LABEL1)
 class ProfileCertificate(unittest.TestCase):

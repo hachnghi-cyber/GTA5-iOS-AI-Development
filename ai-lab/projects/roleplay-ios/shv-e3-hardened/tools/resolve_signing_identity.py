@@ -29,6 +29,8 @@ def resolve(content,selector):
         matches=[x for x in matches if x[1]==selector]
     if len(matches)!=1:
         raise IdentityError("identity must match exactly one VALID Keychain entry")
+    if not matches[0][1].startswith("Apple Development: "):
+        raise IdentityError("selected SHA1 is NOT an Apple Development identity")
     return matches[0][0]
 
 def main():

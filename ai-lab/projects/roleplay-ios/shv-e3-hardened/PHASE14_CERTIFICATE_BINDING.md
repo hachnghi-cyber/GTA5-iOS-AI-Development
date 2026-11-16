@@ -15,3 +15,7 @@ Exact Phase12 E0/E1/E3 iPhoneOS ARM64 modules were already built in Xcode; these
 **Locally verified:** Phase13+14 Python tests 34/34 PASS (including 16 new tests); `bash -n` PASS. **Not verified:** real Keychain identity, Apple certificate, iPhone installation, E0 callback, E1 HUD, E3 on two devices or RAGE-authenticated sender/session. Fails closed when fingerprint does not match a profile certificate.
 
 Signing runbook remains in `PHASE13_SIGNING_PREFLIGHT_VI.md`. Prefer signing **E0 first** and collect fresh `posthook.log` + `RBPProbe.log` from the same run; do not attempt E3/PoliceRP until E0 passes.
+
+## Additional security regression
+
+The SHA-1 selector path now also validates the **resolved identity type**, rejecting Apple Distribution even when the caller supplies a correct 40-hex fingerprint. Exact label selection and fingerprint selection both require Apple Development. Local fixture tests 35/35 PASS; no real Keychain identity used.
