@@ -209,8 +209,14 @@ bool rp_police_apply(rp_police_world *world, const rp_v133_delivery *delivery,
     rp_police_member *actor = present_member(world, delivery->transport_sender);
     if (!actor || command->nonce <= actor->last_nonce) return false;
     actor->last_nonce = command->nonce;
-    if (command->target == actor->id)
-        return self_action(world, actor, command->operation, observation);
-    rp_police_member *target = present_member(world, command->target);
-    return target && custody_action(world, actor, target, command->operation, observation);
+    actor->last_target = command->target;
+    actor->last_operation = command->operation;
+    if (command->target == actor->id) {
+        actor->last_applied = self_action(world, actor, command->operation, observation);
+    } else {
+        rp_police_member *target = present_member(world, command->target);
+        actor->last_applied = target && custody_action(world, actor, target, command->operation,
+                                                       observation);
+    }
+    return actor->last_applied;
 }

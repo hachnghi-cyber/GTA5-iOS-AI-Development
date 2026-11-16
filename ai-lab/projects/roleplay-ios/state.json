@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Implement a fail-closed transaction/acknowledgment boundary for the verified authority rules. For engine integration prove the mapping from paired RP identity to a consenting v13.3 game participant and a fresh authoritative snapshot; test real roleplay in a controlled two-iPhone Sandbox session.",
+  "next_action": "Prove mapping from a paired RP ID to a consenting v13.3 game participant and a fresh authority snapshot. Integrate the approved PRPC/PRPA operation path with the verified TLS and game callback only after that proof. Verify the release and resynchronization path on two real iPhones in a private Sandbox session.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -453,6 +453,14 @@
       "host_ci_run": 43840665974,
       "host_ci_conclusion": "success",
       "host_binaries": 8
+    },
+    "police_transactions": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police_tx.c",
+      "format": "PRPC/PRPA v1; fixed 40 bytes; no sender in frame",
+      "scope": "Authority decisions and latest-transaction idempotency. Not yet routed over gameplay TLS.",
+      "engine_integration": false,
+      "device_tested": false,
+      "host_ci_requested": true
     }
   }
 }

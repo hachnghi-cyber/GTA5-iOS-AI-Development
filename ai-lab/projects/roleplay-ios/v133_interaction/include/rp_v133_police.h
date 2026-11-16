@@ -65,12 +65,15 @@ typedef struct {
 typedef struct {
     uint64_t id;
     uint64_t last_nonce;
+    uint64_t last_target;
     uint64_t custodian;
     uint64_t vehicle_id;
     uint64_t jail_until_ms;
+    rp_police_operation last_operation;
     rp_police_role role;
     rp_police_custody custody;
     uint8_t seat; /* Only meaningful in RP_POLICE_SEATED. */
+    bool last_applied;
     bool present;
     bool consent;
     bool on_duty;
