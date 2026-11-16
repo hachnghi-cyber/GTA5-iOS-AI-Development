@@ -43,3 +43,28 @@ này trả lại nguyên quyết định đã cấp mà không chạy lại thao
 target/operation nhưng giữ nonce, hoặc yêu cầu cũ hơn cache, authority
 từ chối. ACK chỉ ghi quyết định ban đầu. Nó không phải trạng thái mới
 nhất và không thể dùng riêng để áp lại hành động trong GTA.
+
+
+## Biên nối giữa kênh RP và engine
+
+`rp_v133_police_bridge.c` nhận đăng ký ghép cặp đã được xác minh độc lập
+từ phía có thẩm quyền. Liên kết 1:1 giữa ID của TLS và ID game giữ một
+mã lần gia nhập tăng dần trong generation của game. Khi rời phiên, yêu
+cầu và ACK gắn với người chơi cũ mất hiệu lực, đồng thời dọn trạng thái
+giữ phía authority. Replay counter giữ qua reconnect. Khi đổi generation
+cần ghép cặp và đồng ý tham gia lại.
+
+Hàm dispatch liên kết các lệnh với hai thành viên đang hoạt động. Snapshot
+còn phải khớp ID game, lần gia nhập, phiên/generation và instance thực.
+Thông tin vị trí, job và xe chỉ đến từ snapshot của authority. Mỗi lượt
+đăng ký chỉ xảy ra sau khi đã xác minh đúng người trên cả hai phía. Module
+chưa tự tìm nguồn xác minh này trong GTA. Test host dùng dữ liệu được cấp
+để kiểm tra mapping, chống tráo người sau reconnect và khóa khi đổi phiên.
+
+Đối chiếu tĩnh trên GTA v13.3 đã xác nhận `MacportJobStart` ghi ID và loại
+job vào metadata cục bộ. Hàm được gọi từ `MacportOnlineCommand` và cả đường
+`MacportJobsUpdate`. Nhánh cleanup trong bộ xử lý lệnh xóa trạng thái job
+sau khi gọi hàm cleanup. Log iPhone trước đó ghi `work cop_ls` và `work quit`.
+Metadata job mới là ứng viên kiểm tra điều kiện nhận ca. Nó không cấp vai
+cảnh sát hay chứng minh người gửi đã được xác thực. Chưa có đo bộ nhớ thời
+điểm nhận và bỏ ca trên iPhone với observer mới.

@@ -22,6 +22,7 @@ typedef struct {
 
 /* Separate protocol from PRP3 GREET/DOCUMENTS. No sender field. */
 bool rp_police_tx_encode(const rp_police_command *command, uint8_t *out, size_t size);
+bool rp_police_tx_decode_command(const uint8_t *wire, size_t size, rp_police_command *out);
 /* Authority-only. Returns a decision ACK for a new authenticated transaction,
  * or the cached ACK for an exact retry of the latest transaction. Does not
  * acknowledge a wrong session, unknown sender, malformed frame or old nonce.

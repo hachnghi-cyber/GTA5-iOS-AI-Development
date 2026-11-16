@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Implement and verify the engine adapter that maps the mutually authenticated RP identity to a consenting current-game participant and emits a timestamped authority snapshot from the verified callback. Verify real application, cleanup and sync on two iPhones in a controlled Sandbox session before enabling gameplay.",
+  "next_action": "Capture a read-only current-participant snapshot in a controlled Sandbox session, prove the external paired identity association and the lifetime of the engine participant, and independently verify stock cop job start/quit before enabling authority observations. Test real application, rollback and sync on two consenting iPhones.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -465,7 +465,22 @@
       "host_ci_conclusion": "success",
       "ios_source_build_before_freshness_gate": 43841625655,
       "fresh_authority_observation_max_age_ms": 250,
-      "freshness_gate_verified_on_device": false
+      "freshness_gate_verified_on_device": false,
+      "host_ci_run_with_freshness_gate": 43841926057,
+      "ios_source_build_with_freshness_gate": 43841914439
+    },
+    "police_identity_bridge": {
+      "module": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police_bridge.c",
+      "scope": "Source-only bookkeeping for independently verified RP-to-game associations",
+      "git_ci_requested": true,
+      "live_game_identity_provider_bound": false,
+      "two_iphone_gameplay_verified": false,
+      "native_duty_candidate": {
+        "scope": "static plus previous text logs; no new runtime memory observation",
+        "symbols": 49,
+        "branches": 31,
+        "observations": 45
+      }
     }
   }
 }

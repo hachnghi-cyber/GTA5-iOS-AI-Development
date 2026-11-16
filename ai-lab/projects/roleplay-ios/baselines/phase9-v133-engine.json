@@ -19,6 +19,18 @@
       "name": "__ZL17MacportJobsUpdateP4CPedi",
       "va": "0x1000eb57c"
     },
+    "online_command": {
+      "name": "__ZL20MacportOnlineCommandPKc",
+      "va": "0x1000f2d54"
+    },
+    "job_start": {
+      "name": "__ZL15MacportJobStartiPKcii",
+      "va": "0x1000f74b8"
+    },
+    "job_cleanup": {
+      "name": "__ZL17MacportJobCleanupi",
+      "va": "0x1000f5ba4"
+    },
     "job_send": {
       "name": "__ZL14MacportJobSendR13MacportJobMsgjj",
       "va": "0x1000f7d30"
@@ -211,6 +223,24 @@
       "at": "0x1000e66e0",
       "source": "online_update",
       "target": "jobs_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000f4950",
+      "source": "online_command",
+      "target": "job_start",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000ebcb4",
+      "source": "jobs_update",
+      "target": "job_start",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000f3a88",
+      "source": "online_command",
+      "target": "job_cleanup",
       "kind": "BL"
     },
     {
@@ -436,6 +466,42 @@
       "function": "jobs_update",
       "word": "0xb9414bf6",
       "observation": "read claimed slot from stack payload +8"
+    },
+    {
+      "at": "0x1000f78d4",
+      "function": "job_start",
+      "word": "0x9001aa48",
+      "observation": "ADRP for local job metadata"
+    },
+    {
+      "at": "0x1000f78d8",
+      "function": "job_start",
+      "word": "0x91366108",
+      "observation": "compute destination for job identifier"
+    },
+    {
+      "at": "0x1000f78fc",
+      "function": "job_start",
+      "word": "0x3900011f",
+      "observation": "terminate local job identifier"
+    },
+    {
+      "at": "0x1000f7900",
+      "function": "job_start",
+      "word": "0x9001aa48",
+      "observation": "ADRP for job kind metadata"
+    },
+    {
+      "at": "0x1000f7904",
+      "function": "job_start",
+      "word": "0xb908d913",
+      "observation": "store local job kind"
+    },
+    {
+      "at": "0x1000f3a8c",
+      "function": "online_command",
+      "word": "0xb902431f",
+      "observation": "clear job state after the cleanup call"
     },
     {
       "at": "0x101cd76e0",

@@ -25,7 +25,9 @@ v13.3 và không dùng ID TLS như slot hay danh tính engine nếu chưa đối
 ## Luật Police RP
 
 `V133_POLICE_AUTHORITY_VI.md` ghi mô-đun quyết định nhận ca, còng, áp giải,
-ghế xe và án tạm thời. Mô-đun chưa nối engine hoặc kênh TLS chẩn đoán.
+ghế xe và án tạm thời. Biên ánh xạ 1:1 đã có ở mức source. Cần nguồn
+snapshot game thật và bằng chứng ghép đúng người chơi trước khi nối
+engine vào kênh TLS.
 
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development

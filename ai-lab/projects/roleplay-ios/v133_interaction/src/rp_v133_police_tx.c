@@ -55,6 +55,15 @@ bool rp_police_tx_encode(const rp_police_command *command, uint8_t *out, size_t 
     return true;
 }
 
+bool rp_police_tx_decode_command(const uint8_t *wire, size_t size, rp_police_command *out) {
+    if (!out) return false;
+    *out = (rp_police_command){0};
+    rp_police_command parsed;
+    if (!decode(command_magic, wire, size, &parsed) || wire[6]) return false;
+    *out = parsed;
+    return true;
+}
+
 bool rp_police_tx_dispatch(rp_police_world *world, const rp_v133_delivery *delivery,
                           const rp_police_observation *observation,
                           const uint8_t *wire, size_t wire_size,
@@ -62,8 +71,8 @@ bool rp_police_tx_dispatch(rp_police_world *world, const rp_v133_delivery *deliv
     rp_police_command command;
     rp_police_member actor;
     if (!world || !delivery || delivery->authenticated != 1 || !ack ||
-        ack_size != RP_POLICE_TX_BYTES || !decode(command_magic, wire, wire_size, &command) ||
-        wire[6] || command.session != world->session || command.epoch != world->epoch ||
+        ack_size != RP_POLICE_TX_BYTES || !rp_police_tx_decode_command(wire, wire_size, &command) ||
+        command.session != world->session || command.epoch != world->epoch ||
         delivery->transport_session != world->session || delivery->transport_epoch != world->epoch ||
         !rp_police_get(world, delivery->transport_sender, &actor) ||
         command.nonce < actor.last_nonce) return false;
