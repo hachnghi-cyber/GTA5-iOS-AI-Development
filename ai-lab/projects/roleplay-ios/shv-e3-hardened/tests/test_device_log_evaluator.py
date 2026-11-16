@@ -11,6 +11,8 @@ BASE = '''[RBP_PROBE] RUN_BEGIN phase=4 stage=3 platform=iphoneos-target
 [RBP_PROBE] SCRIPT_REGISTER_ATTEMPTED
 [RBP_PROBE] SCRIPT_CALLBACK_ENTER stage=3
 [RBP_PROBE] SCRIPT_TICK tick=1
+[RBP_PROBE] SCRIPT_TICK tick=900
+[RBP_PROBE] SCRIPT_CALLBACK_COMPLETE=1 ticks=901
 [RBP_PROBE] LOCAL_E1_GAME_ACTION_INVOKED=1
 '''
 A = BASE + '''[RBP_NET] PACKET_TRANSMITTED seq=1 attempt=1
@@ -30,6 +32,21 @@ class DeviceLogEvaluate(unittest.TestCase):
         r=assess(3,b,a,True)
         self.assertFalse(r['all_log_preconditions_met'])
         self.assertFalse(r['observations']['B_E0']['SOURCE_CHECKPOINT=phase12-e3-receipt-retry'])
+
+    def test_one_tick_does_not_prove_e0_completion(self):
+        incomplete=B.replace('[RBP_PROBE] SCRIPT_TICK tick=900\n','')
+        incomplete=incomplete.replace('[RBP_PROBE] SCRIPT_CALLBACK_COMPLETE=1 ticks=901\n','')
+        result=assess(3,incomplete,A,True)
+        self.assertFalse(result['all_log_preconditions_met'])
+        self.assertFalse(result['observations']['B_E0']['SCRIPT_TICK tick=900'])
+
+    def test_false_callback_complete_does_not_pass(self):
+        bad=B.replace('SCRIPT_CALLBACK_COMPLETE=1','SCRIPT_CALLBACK_COMPLETE=0')
+        self.assertFalse(assess(3,bad,A,True)['all_log_preconditions_met'])
+
+    def test_failed_then_completed_does_not_pass(self):
+        bad=B+'[RBP_PROBE] SCRIPT_WAIT_FAST_RETURN=1 FAIL_CLOSED\n'
+        self.assertFalse(assess(3,bad,A,True)['all_log_preconditions_met'])
 
     def test_host_mock_rejected(self):
         e0=BASE.replace('stage=3','stage=0').replace('platform=iphoneos-target','platform=host-mock')

@@ -25,3 +25,7 @@ Test E0 only, collect fresh ScriptHook posthook.log and Documents/RBPProbe.log f
 ## Verification boundaries
 
 Exact locally supplied E0, E1, E3 UNSIGNED IPA original entry comparison: PASS (59 unchanged entries each). Synthetic Python negative/positive safety tests and Bash syntax: PASS locally. This signing wrapper has NOT executed real codesign because the current runtime has no macOS Keychain certificate or user provisioning profile. CI performs only test fixture checks and NEVER signs or handles the original proprietary IPA.
+
+## Phase 13 additional E0 runtime evidence correction
+
+The original device-log evaluator treated first SCRIPT_TICK tick=1 as sufficient for E0. This could label an early-stop/crash as success. It now requires the bounded full run SCRIPT_TICK tick=900 and SCRIPT_CALLBACK_COMPLETE=1 ticks=901 in the latest run, with no FAIL_CLOSED. These exact values come from RBP_MAX_SCRIPT_TICKS=900 and for-loop termination in ios/rbp_shv_plugin.c. A logfile remains textual evidence, not device attestation.

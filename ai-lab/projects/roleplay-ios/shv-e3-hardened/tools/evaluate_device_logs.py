@@ -20,7 +20,9 @@ def check_e0(run,stage):
             'SCRIPT_HOOK_UUID_MATCH=1',
             'SCRIPT_REGISTER_ATTEMPTED',
             f'SCRIPT_CALLBACK_ENTER stage={stage}',
-            'SCRIPT_TICK tick=1']
+            'SCRIPT_TICK tick=1',
+            'SCRIPT_TICK tick=900',
+            'SCRIPT_CALLBACK_COMPLETE=1 ticks=901']
     result={x:(x in run) for x in needed}
     # A successful earlier callback marker cannot override a subsequent failure.
     fail_closed=('FAIL_CLOSED', 'SCRIPT_WAIT_FAST_RETURN=1',
