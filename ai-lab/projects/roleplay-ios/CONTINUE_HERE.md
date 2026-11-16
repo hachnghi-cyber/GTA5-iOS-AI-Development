@@ -15,6 +15,12 @@ nếu chữ ký hiện tại cho phép debugger attach. Host Windows đã bắt 
 `jobs_update` qua USB trên đúng bản đã ký. Xem mục Windows trong runbook để
 tiếp tục từ điểm này. Còn chờ scripted receive trong phiên Sandbox có peer.
 
+## Hướng transport RP độc lập
+
+`PRP3_DIRECT_TLS_VI.md` ghi bản tham chiếu TLS hai chiều chạy được trên host.
+Tiếp theo là adapter iOS độc lập và thử iPhone ↔ máy tính. Giữ nguyên gate
+v13.3 và không dùng ID TLS như slot hay danh tính engine nếu chưa đối chiếu.
+
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development
 - Integration branch: `feature/gta-ai-lab-100-agents` cho đến khi PR #1 được merge.
