@@ -4,11 +4,11 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "v13.3-phase8-authenticated-sender-research",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
-  "last_known_github_pr": 1,
+  "last_known_github_pr": 16,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -79,6 +79,11 @@
       "claim": "Phase 7: separate GTA v13.3 PRP3 40-byte mailbox implemented (64 queue slots, 8 events per game frame, nonblocking network producers, fail-closed trust metadata and session/epoch checks via existing gate). GitHub Actions GCC ASan+UBSan and Clang passed deterministic mailbox tests and four-thread concurrency stress; reproducible five-test run script passes on both toolchains. All Winstom, AI Lab and Source Watch CI jobs succeeded.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE7_MAILBOX.md; v133_interaction/include/rp_v133_mailbox.h; src/rp_v133_mailbox.c; tests/test_v133_mailbox.c; tests/test_v133_mailbox_threads.c; tools/run_host_tests.sh; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760288; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760234; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760343",
       "scope": "Synthetic source-only host tests, no ThreadSanitizer, no Xcode/iPhone, no original GTA5 hook or network callback, no authenticated sender provenance or playable Police RP."
+    },
+    {
+      "claim": "Phase 8 source audit found `police-rp/v1.4/DIAGNOSTIC_READONLY_REPORT_V13.json` is named V13 but records old GTA5 UUID 6a498e32e70c334cbca3affd35e8d171 and SHA d252...8585b; same as HOOK_CANDIDATES_V12.json. Neither is a verified GTA5 v13.3 hook address. Added read-only fail-closed fingerprint guard and 5 Python regressions; new GitHub Actions Python job passed on runner.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE8_HOOK_VERSION_GUARD.md; ai-lab/projects/roleplay-ios/v133_interaction/tools/audit_hook_fingerprint.py; tests/test_audit_hook_fingerprint.py; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43788777959",
+      "scope": "Verified source metadata comparison and CI Python test only; no direct v13.3 binary disassembly or true authenticated sender callback, no game/police gameplay or device test."
     }
   ],
   "unknowns": [
@@ -215,7 +220,7 @@
       ]
     }
   ],
-  "next_action": "Phase 8 P0: verify actual GTA v13.3 game-thread callback and authenticated sender/session metadata in native engine from user-authorized binary and live device logs. Do not use MPJ2 sender pointer/slot hints or Winstom WRTransport/WRVoice as auth. Only after a read-only A->B greet event with engine-owned provenance is proven, add host-authoritative opt-in cuff/escort; do not release IPA yet.",
+  "next_action": "Phase 8 next: obtain original v13.3 GTA5 bytes and verify SHA256 f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc and UUID EB122C35-96F4-307F-91C3-A2255DD9C685 before inspecting MacportOnlineUpdate frame/caller ABI. Require engine-owned authenticated sender/session evidence (not v12 hook candidates, MPJ2 slot_hint or bare pointer). Leave PR #16 draft, no autopatch or gameplay claim; next hourly automation continues from current commit.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
