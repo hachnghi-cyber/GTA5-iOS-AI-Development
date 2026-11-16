@@ -99,6 +99,11 @@
       "claim": "Phase 9: both supplied IPA CRC/SHA inventories verified locally; v13.3 executable matches Phase 8 exactly despite changed archive hash; Winstom 0.7.177 lmx uses a new guarded profile (26 classes/368 methods). Exact v13.3 ARM64 evidence resolves sandbox callback, connection-associated sender dispatch, local dispatch exception, and conditional native slot write at payload +8 conflicting with bare PRP3 session_id.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md; baselines/phase9-inputs.json; baselines/phase9-v133-engine.json",
       "scope": "STATIC_VERIFIED; 65 local Python tests pass. New 56-byte source carrier feeds existing mailbox without trusting slot. C sanitizer/Apple builds pending this commit CI. No engine adapter, cryptographic authentication proof, signing or device test."
+    },
+    {
+      "claim": "Windows USB exact-build observer was extended to capture three scripted/game network entry sites (on_net_event, script_event_handler, script_decide) with bounded hardware breakpoints and a fail-closed result schema. Regression tests were added but have not yet been confirmed by this turn's CI.",
+      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py; tests/test_observe_v133_windows_usb.py; V133_SCRIPTED_EVENT_OBSERVER_VI.md; commit ed02bd17077a6b07d11ceef88ca01e011b2524a2; ai-lab/projects/roleplay-ios/RAGE_SOURCE_HUNTER_20261116.md",
+      "scope": "GitHub source/code review only. Neither synthetic test execution, native engine sender authentication, nor two-iPhone RP event delivery is claimed by this entry."
     }
   ],
   "unknowns": [
@@ -238,7 +243,7 @@
       ]
     }
   ],
-  "next_action": "Collect read-only stock job snapshots at idle, start and quit using the Windows USB observer. Then witness two paired participants in a controlled Sandbox and prove their current engine identity and incarnation before connecting the bridge to gameplay.",
+  "next_action": "Check CI on PR #16 for Windows USB scripted-event site tests. In a consented Sandbox test, capture jobs_update idle/duty/quit and on_net_event/script_event_handler/script_decide with exact UUID via USB. Correlate validated receive-stack provenance, session generation and engine-to-RP identity before enabling gameplay or carrier injection. Collect two-iPhone runtime evidence when available.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
