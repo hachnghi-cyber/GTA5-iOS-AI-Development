@@ -552,7 +552,7 @@
       "device_loaded": false,
       "script_callback_on_iphone": false,
       "online_rage_action": false,
-      "next_gate": "Manual workflow_dispatch macOS iPhoneOS link, legitimate app signing and fresh Story/Online E0 device logs; independently obtain PR#16 genuine native receive-context sample bound to sender/session provenance before enabling RP.",
+      "next_gate": "Inspect run 43898609050 ios-link, confirm actual iPhoneOS ARM64 Mach-O dylib artifact if success; then sign/install exact v13.3 application and obtain fresh device-origin callback logs. PR#16 authenticated receive-origin/session remains separate and blocked.",
       "phase5_commit": "9d2423f862125fcb405dcc46e0ccd426e2deafa2",
       "phase5_host_ci_run": 43895737607,
       "phase5_host_ci": "SUCCESS (Linux mock + nine Python parser tests)",
@@ -567,7 +567,10 @@
       "phase6_exact_shv_uuid": "F768B7B5-AD75-39F4-83D3-8E49234325B5",
       "phase6_static_arm64_verified_words": 9,
       "phase6_fiber_return_semantics": "_sh_fiber_main invokes callback and handles return through completed state 2 + _sh_swap (STATIC only)",
-      "phase6_ios_build": "SKIPPED (manual-only macOS workflow)"
+      "phase6_ios_build": "SKIPPED (manual-only macOS workflow)",
+      "phase6_one_shot_ios_ci_run": 43898609050,
+      "phase6_one_shot_ios_ci_status": "QUEUED (macOS-15 runner not yet assigned; no dylib artifact)",
+      "phase6_one_shot_trigger_commit": "4b6d368a35c2fcfa0bace6dfc507b58f135f04ea"
     }
   }
 }
