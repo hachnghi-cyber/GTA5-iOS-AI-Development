@@ -84,6 +84,11 @@
       "claim": "Phase 8 source audit found `police-rp/v1.4/DIAGNOSTIC_READONLY_REPORT_V13.json` is named V13 but records old GTA5 UUID 6a498e32e70c334cbca3affd35e8d171 and SHA d252...8585b; same as HOOK_CANDIDATES_V12.json. Neither is a verified GTA5 v13.3 hook address. Added read-only fail-closed fingerprint guard and 5 Python regressions; new GitHub Actions Python job passed on runner.",
       "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE8_HOOK_VERSION_GUARD.md; ai-lab/projects/roleplay-ios/v133_interaction/tools/audit_hook_fingerprint.py; tests/test_audit_hook_fingerprint.py; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43788777959",
       "scope": "Verified source metadata comparison and CI Python test only; no direct v13.3 binary disassembly or true authenticated sender callback, no game/police gameplay or device test."
+    },
+    {
+      "claim": "Phase 8 iPhoneOS SDK boot-loader proof built on macOS-15 arm64: PRPV133LaunchProbe.m compiled to real arm64 PoliceRPV133Probe.dylib with install_name @executable_path/Frameworks/PoliceRPV133Probe.dylib. A local exact-IPA SHA-256 guarded unsigned packer and five synthetic Mach-O patcher tests were added. Mac workflow SUCCESS and artifact generated; no game IPA included.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43791400799 ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{PRPV133LaunchProbe.m,patch_exact_v133_probe.py,test_v133_probe_packer.py,README_TEST_VI.md}; artifact GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA",
+      "scope": "Real iPhoneOS SDK link of a startup-only diagnostic dylib. No patcher run on the actual v13.3 IPA in the current execution environment, no signed or installable IPA created, no device boot test, no authenticated multiplayer or cuff/escort. Requires local exact original user IPA and user-managed signing."
     }
   ],
   "unknowns": [
@@ -220,7 +225,7 @@
       ]
     }
   ],
-  "next_action": "Phase 8 next: obtain original v13.3 GTA5 bytes and verify SHA256 f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc and UUID EB122C35-96F4-307F-91C3-A2255DD9C685 before inspecting MacportOnlineUpdate frame/caller ABI. Require engine-owned authenticated sender/session evidence (not v12 hook candidates, MPJ2 slot_hint or bare pointer). Leave PR #16 draft, no autopatch or gameplay claim; next hourly automation continues from current commit.",
+  "next_action": "Phase 8 fast device smoke test: download macOS GitHub artifact from build-v133-phase8-probe run; locally run exact baseline SHA-guarded patcher on GTAV-v13.3.ipa with --enable-file-sharing, re-sign app+embedded dylib, boot on iPhone and return [PRP_V133_PHASE8] log / PoliceRP-v13.3-Phase8.txt plus run/crash if any. This only proves dyld load+UUID. Then identify actual GTA game-thread/authenticated sender callback and test PRP3 greet A->B; NO cuff/escort yet. Do not merge automatically or publish proprietary IPA.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
 }
