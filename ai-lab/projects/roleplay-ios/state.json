@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-phase9-device-startup-and-sandbox-stack-verified",
+  "phase": "v13.3-scripted-event-static-verified-runtime-observer-ready",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Use the observed Macport sandbox VM and stock clone-create stacks as separate reference points. Trace the actual scripted-event receive path and prove authenticated connection-to-sender/session generation and pointer lifetime before binding PRP3EV01. Verify the pump context and cadence on hardware. Use two iPhones in a controlled session for real A-to-B RP acceptance.",
+  "next_action": "Use the external read-only LLDB observer on the existing development-signed Phase 9 iPhone build. Obtain jobs_update, script_event_handler and script_decide stack samples for a stock event in a controlled session and clear_session coverage on departure. Prove connection-to-sender/session generation and pointer lifetime before binding PRP3EV01. Real two-iPhone RP acceptance remains pending.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -342,6 +342,23 @@
       "rp_network_enabled": false,
       "two_device_rp_verified": false,
       "report": "ai-lab/projects/roleplay-ios/V133_PHASE9_DEVICE_STARTUP.md"
+    },
+    "scripted_receive_followup": {
+      "prior_device_checkpoint": "7ce7831fcd09e87c460a33ad1de4f382cd95cf43",
+      "static_baseline": "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json",
+      "symbols": 46,
+      "branches": 28,
+      "observations": 39,
+      "vtable_rebases": 2,
+      "native_capacity_bytes": 432,
+      "candidate_carrier_bytes": 56,
+      "observer": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_lldb.py",
+      "runbook": "ai-lab/projects/roleplay-ios/V133_SCRIPTED_EVENT_OBSERVER_VI.md",
+      "host_python_tests_passed": 25,
+      "observer_device_tested": false,
+      "scripted_event_sender_authenticated": false,
+      "session_generation_verified": false,
+      "runtime_adapter": "unbound"
     }
   }
 }

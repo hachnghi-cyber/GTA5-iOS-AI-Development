@@ -9,7 +9,9 @@ Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 GTA v13.3 và Winstom 0.7.177. Bản IPA chẩn đoán cục bộ đã qua kiểm tra ZIP và Mach-O.
 Probe đã chạy trên iPhone, vào Sandbox và ghi được hai đường gọi thực tế. Đọc
 `V133_PHASE9_DEVICE_STARTUP.md` để nối tiếp đúng mốc. Cần xác minh ABI và metadata
-của scripted event trước khi nối adapter RAGE.
+của scripted event trước khi nối adapter RAGE. Runbook lấy mẫu bằng hardware
+breakpoint nằm ở `V133_SCRIPTED_EVENT_OBSERVER_VI.md`. Không cần đổi IPA Phase 9
+nếu chữ ký hiện tại cho phép debugger attach.
 
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development

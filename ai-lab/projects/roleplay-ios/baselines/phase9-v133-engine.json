@@ -139,6 +139,50 @@
       "name": "__ZN11CTheScripts25GetCurrentGtaScriptThreadEv",
       "va": "0x100e32420"
     },
+    "register_events": {
+      "name": "__ZN17NetworkEventTypes21RegisterNetworkEventsEv",
+      "va": "0x10192a8fc"
+    },
+    "register_event": {
+      "name": "__ZN4rage11netEventMgr20RegisterNetworkEventEtPFvRNS_12datBitBufferERKNS_9netPlayerES5_tjjEPKc",
+      "va": "0x10200b93c"
+    },
+    "script_read": {
+      "name": "__ZN18CScriptedGameEvent6HandleERN4rage12datBitBufferERKNS0_9netPlayerES5_",
+      "va": "0x101912b8c"
+    },
+    "read_bits": {
+      "name": "__ZNK4rage12datBitBuffer8ReadBitsEPvii",
+      "va": "0x10000cb28"
+    },
+    "clear_session": {
+      "name": "__ZN15CNetworkSession12ClearSessionEj18LeaveSessionReason",
+      "va": "0x1017ef284"
+    },
+    "migrate_end": {
+      "name": "__ZN15CNetworkSession29ProcessSessionMigrateEndEventEPN4rage24snEventSessionMigrateEndE",
+      "va": "0x101810fd8"
+    },
+    "session_id": {
+      "name": "__ZNK4rage9snSession12GetSessionIdEv",
+      "va": "0x1019d255c"
+    },
+    "session_member": {
+      "name": "__ZNK4rage9snSession8IsMemberERKNS_9rlGamerIdE",
+      "va": "0x1019d2ea4"
+    },
+    "session_endpoint": {
+      "name": "__ZN15CNetworkSession23GetSessionNetEndpointIdERKN4rage11rlGamerInfoEPj",
+      "va": "0x1018046e8"
+    },
+    "session_peer_connection": {
+      "name": "__ZNK4rage9snSession10GetPeerCxnEm",
+      "va": "0x1019d62d4"
+    },
+    "session_peer_endpoint": {
+      "name": "__ZNK4rage9snSession17GetPeerEndpointIdEm",
+      "va": "0x1019d30d4"
+    },
     "active_script": {
       "name": "__ZN4rage9scrThread15GetActiveThreadEv",
       "va": "0x101faa42c"
@@ -276,6 +320,42 @@
       "source": "current_gta_script",
       "target": "active_script",
       "kind": "B"
+    },
+    {
+      "at": "0x10192abe8",
+      "source": "register_events",
+      "target": "register_event",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912c3c",
+      "source": "script_read",
+      "target": "read_bits",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ef388",
+      "source": "clear_session",
+      "target": "session_id",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101804720",
+      "source": "session_endpoint",
+      "target": "session_member",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101804740",
+      "source": "session_endpoint",
+      "target": "session_peer_connection",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101804760",
+      "source": "session_endpoint",
+      "target": "session_peer_endpoint",
+      "kind": "BL"
     }
   ],
   "observations": [
@@ -428,8 +508,108 @@
       "function": "session_state",
       "word": "0xb9058693",
       "observation": "conditionally write state enum, not a session generation"
+    },
+    {
+      "at": "0x10192abd4",
+      "function": "register_events",
+      "word": "0x90ffff42",
+      "observation": "ADRP x2 scripted handler page"
+    },
+    {
+      "at": "0x10192abd8",
+      "function": "register_events",
+      "word": "0x91167042",
+      "observation": "ADD x2 scripted handler offset"
+    },
+    {
+      "at": "0x10192abe4",
+      "function": "register_events",
+      "word": "0x52800381",
+      "observation": "w1 selects scripted event type 0x1c"
+    },
+    {
+      "at": "0x10200b960",
+      "function": "register_event",
+      "word": "0xf82a6922",
+      "observation": "write callback into indexed handler table"
+    },
+    {
+      "at": "0x10200da88",
+      "function": "process_data",
+      "word": "0xf959ed49",
+      "observation": "load callback from the same handler table"
+    },
+    {
+      "at": "0x10200da98",
+      "function": "process_data",
+      "word": "0xd61f0120",
+      "observation": "tail dispatch to indexed callback"
+    },
+    {
+      "at": "0x1019125fc",
+      "function": "script_event_handler",
+      "word": "0x90007888",
+      "observation": "ADRP event vtable address-point page"
+    },
+    {
+      "at": "0x101912600",
+      "function": "script_event_handler",
+      "word": "0x911ea108",
+      "observation": "ADD event vtable address-point offset"
+    },
+    {
+      "at": "0x101912614",
+      "function": "script_event_handler",
+      "word": "0xf90003e8",
+      "observation": "install event vtable on stack object"
+    },
+    {
+      "at": "0x10200c910",
+      "function": "handle_event",
+      "word": "0xf9402108",
+      "observation": "load Decide from event vtable slot +0x40"
+    },
+    {
+      "at": "0x10200c920",
+      "function": "handle_event",
+      "word": "0xd63f0100",
+      "observation": "call virtual Decide with source and destination refs"
+    },
+    {
+      "at": "0x101912c08",
+      "function": "script_read",
+      "word": "0xb9022668",
+      "observation": "store declared native event byte count"
+    },
+    {
+      "at": "0x101912c24",
+      "function": "script_read",
+      "word": "0x7106bd3f",
+      "observation": "compare length minus one with 431"
+    },
+    {
+      "at": "0x101912c28",
+      "function": "script_read",
+      "word": "0x54fffd68",
+      "observation": "skip payload read outside 1..432 bytes"
     }
   ],
+  "scripted_event": {
+    "registered_type": 28,
+    "payload_max_bytes": 432,
+    "primary_vtable_slots": {
+      "script_read": 56,
+      "script_decide": 64
+    }
+  },
+  "trace_sites": {
+    "jobs_update": "0x6db82beb",
+    "script_event_handler": "0xa9bb6ffc",
+    "script_decide": "0xa9be4ff4",
+    "on_net_event": "0xb9403c48",
+    "clear_session": "0xd10203ff",
+    "migrate_end": "0xa9ba6ffc"
+  },
   "engine_owned_sender_path_static": true,
   "cryptographic_authentication_verified": false,
   "runtime_thread_verified": false,

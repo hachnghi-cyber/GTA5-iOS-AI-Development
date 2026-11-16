@@ -49,6 +49,17 @@ SYMBOLS = {
     'script_run': '__ZN4rage9scrThread3RunEi',
     'script_vm_run': '__ZN4rage9scrThread3RunEPNS_8scrValueEPS2_RKNS_10scrProgramEPNS0_10SerializedE',
     'current_gta_script': '__ZN11CTheScripts25GetCurrentGtaScriptThreadEv',
+    'register_events': '__ZN17NetworkEventTypes21RegisterNetworkEventsEv',
+    'register_event': '__ZN4rage11netEventMgr20RegisterNetworkEventEtPFvRNS_12datBitBufferERKNS_9netPlayerES5_tjjEPKc',
+    'script_read': '__ZN18CScriptedGameEvent6HandleERN4rage12datBitBufferERKNS0_9netPlayerES5_',
+    'read_bits': '__ZNK4rage12datBitBuffer8ReadBitsEPvii',
+    'clear_session': '__ZN15CNetworkSession12ClearSessionEj18LeaveSessionReason',
+    'migrate_end': '__ZN15CNetworkSession29ProcessSessionMigrateEndEventEPN4rage24snEventSessionMigrateEndE',
+    'session_id': '__ZNK4rage9snSession12GetSessionIdEv',
+    'session_member': '__ZNK4rage9snSession8IsMemberERKNS_9rlGamerIdE',
+    'session_endpoint': '__ZN15CNetworkSession23GetSessionNetEndpointIdERKN4rage11rlGamerInfoEPj',
+    'session_peer_connection': '__ZNK4rage9snSession10GetPeerCxnEm',
+    'session_peer_endpoint': '__ZNK4rage9snSession17GetPeerEndpointIdEm',
     'active_script': '__ZN4rage9scrThread15GetActiveThreadEv',
 }
 
@@ -129,6 +140,58 @@ def branch_target(pc, word):
     return pc + imm*4
 
 
+def chained_rebase(data, address):
+    """Resolve one on-disk DYLD_CHAINED_PTR_64_OFFSET slot on the guarded image."""
+    count, = struct.unpack_from('<I', data, 16)
+    command = 32
+    segments = []
+    fixups = None
+    for _ in range(count):
+        kind, length = struct.unpack_from('<II', data, command)
+        if kind == 0x19:
+            segments.append(struct.unpack_from('<16sQQQQ', data, command + 8))
+        if kind == 0x80000034:
+            fixups = struct.unpack_from('<II', data, command + 8)
+        command += length
+    if fixups is None:
+        raise ValueError('missing chained fixups')
+    offset, length = fixups
+    blob = memoryview(data)[offset:offset + length]
+    version, starts = struct.unpack_from('<II', blob)
+    seg_count, = struct.unpack_from('<I', blob, starts)
+    base = next(vm for name, vm, _, _, _ in segments if name.rstrip(b'\0') == b'__TEXT')
+    if version != 0 or seg_count != len(segments):
+        raise ValueError('unsupported chained fixup header')
+    for index, (_, vm, _, file_offset, size) in enumerate(segments):
+        if not vm <= address <= vm + size - 8:
+            continue
+        start, = struct.unpack_from('<I', blob, starts + 4 + index * 4)
+        if not start:
+            break
+        at = starts + start
+        entry_size, page_size, fmt, segment_offset, _, pages = struct.unpack_from('<IHHQIH', blob, at)
+        if (page_size != 16384 or fmt != 6 or segment_offset != vm - base
+                or 22 + pages * 2 > entry_size or at + entry_size > len(blob)):
+            raise ValueError('unexpected vtable chain segment')
+        page, slot = divmod(address - vm, page_size)
+        if page >= pages:
+            break
+        cursor, = struct.unpack_from('<H', blob, at + 22 + 2 * page)
+        # Exact build's slot lies on a single-start, 4-byte-stride chain.
+        while cursor <= slot and cursor <= page_size - 8:
+            word, = struct.unpack_from('<Q', data, file_offset + page * page_size + cursor)
+            if cursor == slot:
+                if word >> 63 or (word >> 36) & 0x7fff:
+                    raise ValueError('expected plain image-relative vtable rebase')
+                return base + (word & ((1 << 36) - 1))
+            step = (word >> 51) & 0xfff
+            if not step:
+                break
+            cursor += step * 4
+        break
+    raise ValueError('vtable slot not on a supported fixup chain')
+
+
 def inspect(data):
     if hashlib.sha256(data).hexdigest() != SHA256:
         raise ValueError('SHA-256 mismatch: no v12/Winstom offset reuse')
@@ -164,6 +227,12 @@ def inspect(data):
         ('scripts_internal_process', 0x294, 'script_update_all', 'BL'),
         ('script_run', 0x16c, 'script_vm_run', 'BL'),
         ('current_gta_script', 0, 'active_script', 'B'),
+        ('register_events', 0x2ec, 'register_event', 'BL'),
+        ('script_read', 0xb0, 'read_bits', 'BL'),
+        ('clear_session', 0x104, 'session_id', 'BL'),
+        ('session_endpoint', 0x38, 'session_member', 'BL'),
+        ('session_endpoint', 0x58, 'session_peer_connection', 'BL'),
+        ('session_endpoint', 0x78, 'session_peer_endpoint', 'BL'),
     ):
         pc = sites[src]+delta
         w = word(pc)
@@ -198,6 +267,20 @@ def inspect(data):
         ('active_script', 0x18, 0xf9400000, 'read active script pointer through storage accessor'),
         ('session_state', 0x3c, 0x6b08003f, 'compare requested state with current state'),
         ('session_state', 0xd8, 0xb9058693, 'conditionally write state enum, not a session generation'),
+        ('register_events', 0x2d8, 0x90ffff42, 'ADRP x2 scripted handler page'),
+        ('register_events', 0x2dc, 0x91167042, 'ADD x2 scripted handler offset'),
+        ('register_events', 0x2e8, 0x52800381, 'w1 selects scripted event type 0x1c'),
+        ('register_event', 0x24, 0xf82a6922, 'write callback into indexed handler table'),
+        ('process_data', 0x9c, 0xf959ed49, 'load callback from the same handler table'),
+        ('process_data', 0xac, 0xd61f0120, 'tail dispatch to indexed callback'),
+        ('script_event_handler', 0x60, 0x90007888, 'ADRP event vtable address-point page'),
+        ('script_event_handler', 0x64, 0x911ea108, 'ADD event vtable address-point offset'),
+        ('script_event_handler', 0x78, 0xf90003e8, 'install event vtable on stack object'),
+        ('handle_event', 0x124, 0xf9402108, 'load Decide from event vtable slot +0x40'),
+        ('handle_event', 0x134, 0xd63f0100, 'call virtual Decide with source and destination refs'),
+        ('script_read', 0x7c, 0xb9022668, 'store declared native event byte count'),
+        ('script_read', 0x98, 0x7106bd3f, 'compare length minus one with 431'),
+        ('script_read', 0x9c, 0x54fffd68, 'skip payload read outside 1..432 bytes'),
     )
     observations = []
     for src, delta, expected, note in checks:
@@ -205,9 +288,21 @@ def inspect(data):
         if word(pc) != expected:
             raise ValueError(f'instruction assertion failed at {pc:#x}: {word(pc):#x}')
         observations.append(dict(at=hex(pc), function=src, word=hex(expected), observation=note))
+    # The stack event installs the primary table at 0x1028227a8. Its
+    # Read and Decide entries are chained rebases, not plain absolute pointers.
+    vtable = 0x1028227a8
+    virtual_slots = {'script_read': 0x38, 'script_decide': 0x40}
+    for target, slot in virtual_slots.items():
+        if chained_rebase(data, vtable + slot) != sites[target]:
+            raise ValueError('event vtable assertion failed: ' + target)
+    trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
+                   'on_net_event', 'clear_session', 'migrate_end')
     return dict(status='STATIC_VERIFIED', executable_sha256=SHA256, uuid=UUID,
                 symbols={k: dict(name=SYMBOLS[k], va=hex(v)) for k,v in sites.items()},
                 branches=branches, observations=observations,
+                scripted_event={'registered_type': 0x1c, 'payload_max_bytes': 432,
+                                'primary_vtable_slots': virtual_slots},
+                trace_sites={key: hex(word(sites[key])) for key in trace_sites},
                 engine_owned_sender_path_static=True, cryptographic_authentication_verified=False,
                 runtime_thread_verified=False, hook_installed=False,
                 transport_connected=False, two_device_verified=False,
