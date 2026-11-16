@@ -23,6 +23,12 @@ jobs:
         run: |
           cd ai-lab/projects/roleplay-ios/shv-e3-hardened
           CC=gcc bash tools/run_phase3_checks.sh
+      - name: Phase 13 prepackaged IPA + Apple Development profile safety checks
+        run: |
+          cd ai-lab/projects/roleplay-ios/shv-e3-hardened
+          python3 -m unittest discover -s tests -p 'test_phase13_preflight.py' -v
+          python3 -m py_compile tools/verify_existing_probe_ipa.py tools/check_development_profile.py
+          bash -n ios/sign_prepackaged_probe_macos.sh
   iphoneos-link:
     needs: host-regression
     # One explicit commit triggers one macOS build; other pushes run host checks only.
