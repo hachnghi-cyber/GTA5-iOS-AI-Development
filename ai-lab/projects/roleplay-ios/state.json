@@ -554,6 +554,27 @@
       "github_synthetic_test_result": "PASS: 7/7 synthetic Python tests; C11 source-only tests PASS",
       "github_actual_binary_test_result": "NOT RUN in CI; user IPA not available on public runner; local exact binary audit PASS 26/26",
       "remaining_blocker": "Device proof of same-event sender mapping + transport authentication + authoritative session incarnation, then real E1/E3 game actions."
+    },
+    "experimental_e3_hardened_phase9": {
+      "baseline": "Phase4 E0/E1/E3 source; GTA v13.3 IPA baseline unchanged",
+      "source_delivery": "Conversation artifact GTA_v13.3_PHASE9_E3_HARDENED_SOURCE_AND_TESTS.zip (not yet committed to GitHub)",
+      "source_zip_sha256": "8c05bf57ac0a70a12cfdd22423683fb9a2510c7745bbb39d9a3f81fb0394a529",
+      "patch_sha256": "7d19c57099ada47dc6be5980715c4ac95f362cbcae76a68bfb91fdb89454e0c2",
+      "host_result": "PASS: Clang + GCC strict, C ASan/UBSan, 37/37 Python tests, two Linux processes with real UDP and MOCK ScriptHook/native callbacks",
+      "major_fixes": [
+        "bounded 900-tick scriptWait(16) with no-yield fail-closed and cleanup",
+        "GCC pedantic-compliant dlsym resolution",
+        "explicit distinct native-invocation HMAC report after B game callback; queue ACK remains separate",
+        "strict nonce/seq/ID/session/skew matching; only diagnostic PING and mocked UI"
+      ],
+      "ios_dylib_linked": false,
+      "iphone_e0_verified": false,
+      "iphone_e1_verified": false,
+      "iphone_e3_verified": false,
+      "rage_transport_sender_auth_verified": false,
+      "actual_roleplay_gameplay_enabled": false,
+      "source_git_integration": "PENDING: local source ZIP / patch provided; do not claim E3 source is in this PR",
+      "next": "Import validated Phase9 source to dedicated E3 diagnostic branch. macOS Xcode iPhoneOS build/sign E0, collect same-run iPhone logs. Then E1 HUD and two-phone LAN E3, compare ACK and native-invocation report; independently prove PR16 native RAGE sender/session provenance before PoliceRP integration."
     }
   }
 }
