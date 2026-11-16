@@ -8,7 +8,7 @@
   "target": "Native multiplayer Police Roleplay on verified GTA V iOS v13.3; preserve stock modes, prefer existing multiplayer, and do not require a user-operated RP server",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
-  "last_known_github_pr": 16,
+  "last_known_github_pr": 18,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -109,6 +109,11 @@
       "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16; implementation 63cfdf33c34ffbe5c50163048830e050a618da82; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973",
       "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
       "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
+    },
+    {
+      "claim": "Separate v13.3 ScriptHookV E0 diagnostic source committed on PR #18; Clang/GCC Linux host-mock loader/register/tick/detach passed, and branch-scoped iPhoneOS SDK CI was configured. No original GTA binary was changed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/18 ; commit e65903d96216d8e477ec8ebd952b5b6895592545",
+      "scope": "LOCAL HOST MOCK ONLY. iOS dylib link pending CI; ScriptHook callback and RAGE action on real iPhone not validated; native receive provenance in PR #16 remains blocked."
     }
   ],
   "unknowns": [
@@ -525,6 +530,19 @@
         "GCC ASan/UBSan",
         "Clang ASan/UBSan"
       ]
+    },
+    "independent_script_hook_e0": {
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e0",
+      "pr": 18,
+      "base_pr": 16,
+      "source_commit": "e65903d96216d8e477ec8ebd952b5b6895592545",
+      "host_clang_mock_pass": true,
+      "host_gcc_mock_pass": true,
+      "ios_build": "PENDING_GITHUB_CI",
+      "device_loaded": false,
+      "script_callback_on_iphone": false,
+      "online_rage_action": false,
+      "next_gate": "Read run 43892852428 macos-15 ios-link output, then development-sign exact v13.3 IPA and observe fresh RBPProbeE0.log (Story and Online separately)."
     }
   }
 }
