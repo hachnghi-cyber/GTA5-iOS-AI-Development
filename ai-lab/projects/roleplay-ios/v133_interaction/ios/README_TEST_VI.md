@@ -16,7 +16,7 @@ Dùng **đúng** `GTAV-v13.3.ipa` gốc của người dùng, SHA-256 IPA:
 Giải nén artifact vào cùng thư mục với IPA, cài Python 3 rồi chạy:
 
 ```bash
-python3 patch_exact_v133_probe.py --ipa GTAV-v13.3.ipa --bridge PoliceRPV133Probe.dylib --out GTAV-v13.3-Phase8-Probe-UNSIGNED.ipa
+python3 patch_exact_v133_probe.py --ipa GTAV-v13.3.ipa --bridge PoliceRPV133Probe.dylib --out GTAV-v13.3-Phase8-Probe-UNSIGNED.ipa --enable-file-sharing
 ```
 
 Nếu script dừng vì hash/ZIP/thiếu header slack: **không tiếp tục và không ép vá offset**. Script chỉ thêm một lệnh tải dylib trong load commands của GTA5, chèn dylib vào Frameworks, giữ nguyên toàn bộ tài nguyên game khác. Thay đổi load command làm chữ ký cũ không hợp lệ.
@@ -26,7 +26,7 @@ Ký lại **toàn bộ app và embedded dylib** bằng chứng chỉ/provisionin
 ## Thử trên một iPhone
 
 1. Đầu tiên khởi động, kiểm tra màn hình launcher và Story Mode có vào được không. Chưa cần hai điện thoại.
-2. Tìm log console `[PRP_V133_PHASE8]` hoặc trong sandbox app Documents: `PoliceRP-v13.3-Phase8.txt`.
+2. Khi dùng --enable-file-sharing, mở Files → Trên iPhone của tôi → GTA V → PoliceRP-v13.3-Phase8.txt (tên thư mục phụ thuộc app sau ký). Nếu không thấy, tìm log console `[PRP_V133_PHASE8]` hoặc trong sandbox app Documents: `PoliceRP-v13.3-Phase8.txt`.
 3. Log hợp lệ phải có `gta5_uuid_matches=1`, `engine_game_thread_verified=0`, `authenticated_network_sender_verified=0`, `rp_network_enabled=0`.
 4. Chỉ khi khởi động ổn định mới thử Online với **1 người** và sau đó phòng riêng **2 người** nhằm xác nhận game gốc không bị hỏng. Chưa có hành động RP mới để bấm.
 5. Nếu văng, gửi crash report, run.log/posthook.log, iOS version và có/không thấy log `[PRP_V133_PHASE8]`. Không thử offset hoặc dylib khác.
