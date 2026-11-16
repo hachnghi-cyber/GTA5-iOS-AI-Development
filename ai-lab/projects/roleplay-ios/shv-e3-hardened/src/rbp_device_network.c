@@ -37,6 +37,7 @@ static int parse_port(const char *s,uint16_t *out) {
     if(*end||x<1024||x>65535)return 0;
     *out=(uint16_t)x;return 1;
 }
+static int config_sane(const rbp_device_config *c);
 int rbp_config_read(const char *path,rbp_device_config *out) {
     if(!path||!out)return 0;
     FILE *fp=fopen(path,"r");if(!fp)return 0;
@@ -68,10 +69,29 @@ int rbp_config_read(const char *path,rbp_device_config *out) {
     }
     if(ferror(fp))valid=0;
     fclose(fp);
-    if(!valid || seen!=0xff || !memcmp(temp.self,temp.peer,16)){
+    if(!valid || seen!=0xff || !config_sane(&temp)){
         memset(&temp,0,sizeof(temp));return 0;
     }
     *out=temp;memset(&temp,0,sizeof(temp));return 1;
+}
+/* Reject blank test secrets/identifiers before opening a socket. This is a
+ * minimum misconfiguration gate, NOT evidence of cryptographic RNG quality. */
+static int nonzero_bytes(const uint8_t *p,size_t n) {
+    uint8_t acc=0;
+    for(size_t i=0;i<n;i++)acc|=p[i];
+    return acc!=0;
+}
+static int config_sane(const rbp_device_config *c) {
+    if(!c || (c->mode!=1 && c->mode!=2) ||
+       c->listen_port<1024 || c->peer_port<1024 ||
+       !memchr(c->peer_ipv4,0,sizeof(c->peer_ipv4)) ||
+       !nonzero_bytes(c->self,sizeof c->self) ||
+       !nonzero_bytes(c->peer,sizeof c->peer) ||
+       !nonzero_bytes(c->session,sizeof c->session) ||
+       !nonzero_bytes(c->key,sizeof c->key) ||
+       !memcmp(c->self,c->peer,sizeof c->self)) return 0;
+    struct in_addr addr;
+    return inet_pton(AF_INET,c->peer_ipv4,&addr)==1;
 }
 static uint64_t wall_ms(void) {
     struct timeval t;
@@ -253,7 +273,7 @@ static void *network_main(void *ctx) {
     close(sock);atomic_store(&s->active,0);return NULL;
 }
 int rbp_network_start(rbp_device_network *s, const rbp_device_config *conf,rbp_handoff *q) {
-    if(!s||!conf||!q||!(conf->mode==1||conf->mode==2))return 0;
+    if(!s||!q||!config_sane(conf))return 0;
     memset(s,0,sizeof(*s));s->conf=*conf;s->handoff=q;
     memcpy(s->receiver.self,conf->self,16);
     memcpy(s->receiver.allowed_sender,conf->peer,16);

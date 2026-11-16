@@ -35,8 +35,10 @@ static void write_cfg(const char *name,int mode,int self,int peer,int local,int 
     fprintf(fp,"mode=%s\nlisten_port=%d\npeer_port=%d\npeer_ipv4=127.0.0.1\n",
                 mode==1?"receiver":"sender",local,remote);
     fprintf(fp,"self_id_hex=%032x\npeer_id_hex=%032x\nsession_hex=%032x\n",self,peer,0x45);
-    fprintf(fp,"key_hex=000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f\n");
-    if(extra)fprintf(fp,"mode=sender\n");
+    fprintf(fp,"key_hex=%s\n",extra==2 ?
+        "0000000000000000000000000000000000000000000000000000000000000000" :
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    if(extra==1)fprintf(fp,"mode=sender\n");
     fclose(fp);
 }
 int main(void) {
@@ -51,8 +53,25 @@ int main(void) {
     assert(rbp_config_read(a,&ca));assert(rbp_config_read(b,&cb));
     write_cfg(a,2,0x11,0x22,port_a,port_b,1);
     rbp_device_config invalid={0};assert(!rbp_config_read(a,&invalid));
+    write_cfg(a,2,0x11,0x22,port_a,port_b,2);
+    assert(!rbp_config_read(a,&invalid)); /* all-zero HMAC key */
     write_cfg(a,2,0x11,0x22,port_a,port_b,0);
     rbp_handoff qa,qb;rbp_handoff_init(&qa);rbp_handoff_init(&qb);
+    /* Direct callers cannot bypass the file parser's security gate. */
+    rbp_device_config bad=ca;
+    rbp_device_network rejected={0};
+    memset(bad.key,0,sizeof bad.key);
+    assert(!rbp_network_start(&rejected,&bad,&qa));
+    bad=ca;memset(bad.session,0,sizeof bad.session);
+    assert(!rbp_network_start(&rejected,&bad,&qa));
+    bad=ca;memset(bad.peer,0,sizeof bad.peer);
+    assert(!rbp_network_start(&rejected,&bad,&qa));
+    bad=ca;memset(bad.self,0,sizeof bad.self);
+    assert(!rbp_network_start(&rejected,&bad,&qa));
+    bad=ca;bad.peer_port=0;
+    assert(!rbp_network_start(&rejected,&bad,&qa));
+    bad=ca;memcpy(bad.peer_ipv4,"not-an-ip",10);
+    assert(!rbp_network_start(&rejected,&bad,&qa));
     rbp_device_network sender,receiver;
     assert(rbp_network_start(&receiver,&cb,&qb));
     assert(rbp_network_start(&sender,&ca,&qa));

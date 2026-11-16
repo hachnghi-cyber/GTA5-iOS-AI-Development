@@ -31,11 +31,21 @@ grep -Eq '[[:space:]]_DllMain$' "$OUT/exported_symbols.txt" || {
  echo 'DllMain export missing from linked plugin' >&2; exit 1;
 }
 xcrun otool -l "$OUT/RBPProbe.shv.dylib" > "$OUT/loadcommands.txt"
-grep -Fq '@loader_path' "$OUT/loadcommands.txt" || {
- echo 'LC_RPATH @loader_path missing' >&2; exit 1;
+# Parse the LC_RPATH command itself; a stray @loader_path string in an
+# unrelated load command is NOT sufficient evidence.
+awk '/cmd LC_RPATH/{rpath=1;next} rpath && /path @loader_path /{found=1;rpath=0} END{exit !found}' \
+  "$OUT/loadcommands.txt" || { echo 'LC_RPATH @loader_path missing' >&2; exit 1; }
+xcrun lipo -verify_arch arm64 "$OUT/RBPProbe.shv.dylib" || {
+ echo 'Missing arm64 slice' >&2; exit 1;
 }
-xcrun lipo -info "$OUT/RBPProbe.shv.dylib"
-xcrun otool -L "$OUT/RBPProbe.shv.dylib"
-xcrun vtool -show-build "$OUT/RBPProbe.shv.dylib"
+xcrun lipo -info "$OUT/RBPProbe.shv.dylib" | tee "$OUT/architecture.txt"
+xcrun otool -L "$OUT/RBPProbe.shv.dylib" | tee "$OUT/dependencies.txt"
+if grep -E '^[[:space:]]+.*(ScriptHookV|libgtacompat)\.dylib' "$OUT/dependencies.txt"; then
+ echo 'Unexpected strong link to optional game libraries' >&2; exit 1;
+fi
+xcrun vtool -show-build "$OUT/RBPProbe.shv.dylib" | tee "$OUT/platform.txt"
+grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' "$OUT/platform.txt" || {
+ echo 'LC_BUILD_VERSION is not iPhoneOS platform IOS' >&2; exit 1;
+}
 shasum -a 256 "$OUT/RBPProbe.shv.dylib" | tee "$OUT/SHA256.txt"
 printf '%s\n' "E${STAGE} dylib built only; NOT signed, NOT loaded, NOT tested in game." > "$OUT/README.txt"
