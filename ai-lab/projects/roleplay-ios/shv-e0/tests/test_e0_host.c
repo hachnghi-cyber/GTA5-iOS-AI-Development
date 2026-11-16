@@ -2,7 +2,6 @@
 /* This mocks all ScriptHookV calls; no RAGE/iPhone runtime is exercised. */
 #include <assert.h>
 #include <dlfcn.h>
-#include <setjmp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +9,6 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <unistd.h>
-static jmp_buf done;
 static void (*callback)(void);
 static int registers, unregisters, waits, quick_wait;
 __attribute__((visibility("default")))
@@ -34,7 +32,6 @@ void scriptWait(uint32_t ms) {
     if (quick_wait) return;
     struct timespec nap = {.tv_sec = 0, .tv_nsec = 2000000};
     nanosleep(&nap, NULL);
-    if (waits == 31) longjmp(done, 1);
 }
 static int has(const char *p, const char *needle) {
     FILE *f = fopen(p,"rb"); assert(f);
@@ -44,7 +41,9 @@ static int has(const char *p, const char *needle) {
     return strstr(buf,needle)!=NULL;
 }
 int main(int argc, char **argv) {
-    assert(argc == 2);
+    assert(argc == 3);
+    assert(!strcmp(argv[2], "normal") || !strcmp(argv[2], "fast"));
+    quick_wait = !strcmp(argv[2], "fast");
     char home[] = "/tmp/rbp-e0-test-XXXXXX";
     assert(mkdtemp(home));
     char documents[512], log[512];
@@ -62,18 +61,22 @@ int main(int argc, char **argv) {
     assert(registers == 1 && callback);
     assert(has(log,"SCRIPT_REGISTER_ATTEMPTED=1"));
     assert(!has(log,"CALLBACK_ENTER"));
-    if (!setjmp(done)) callback();
-    assert(waits==31);
-    assert(!has(log,"SCRIPT_WAIT_FAST_RETURN=1"));
-    quick_wait=1; /* NULL-context no-yield regression */
     callback();
-    assert(waits == 35);
-    assert(has(log,"SCRIPT_WAIT_FAST_RETURN=1 FAIL_CLOSED"));
-    assert(!has(log,"SCRIPT_CALLBACK_COMPLETE=1"));
+    if (quick_wait) {
+        assert(waits == 4);
+        assert(has(log,"SCRIPT_WAIT_FAST_RETURN=1 FAIL_CLOSED"));
+        assert(!has(log,"SCRIPT_CALLBACK_COMPLETE=1"));
+        assert(!has(log,"SCRIPT_TICK=30"));
+    } else {
+        assert(waits == 120);
+        assert(!has(log,"SCRIPT_WAIT_FAST_RETURN=1"));
+        assert(has(log,"SCRIPT_TICK=120"));
+        assert(has(log,"SCRIPT_CALLBACK_COMPLETE=1"));
+    }
     assert(has(log,"SCRIPT_HOOK_UUID_CHECK=HOST_MOCK_ONLY"));
     assert(has(log,"CALLBACK_ENTER"));
     assert(has(log,"SCRIPT_TICK=1"));
-    assert(has(log,"SCRIPT_TICK=30"));
+    if (!quick_wait) assert(has(log,"SCRIPT_TICK=30"));
     assert(entry((void *)(uintptr_t)0x1234,0,NULL)==1);
     assert(unregisters == 1 && !callback);
     assert(has(log,"DLLMAIN_DETACH"));
@@ -81,6 +84,6 @@ int main(int argc, char **argv) {
     assert(unlink(log)==0);
     assert(rmdir(documents)==0);
     assert(rmdir(home)==0);
-    puts("PASS E0 host MOCK bounded callback and null-context fail-closed; NOT iPhone");
+    printf("PASS E0 host MOCK mode=%s waits=%d registration, termination, detach; NOT iPhone\n", argv[2], waits);
     return 0;
 }
