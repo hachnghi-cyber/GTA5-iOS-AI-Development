@@ -305,6 +305,18 @@
       "zip_crc_passed": true,
       "pending_resigning": true,
       "device_tested": false
+    },
+    "package_checkpoint": "95af96e9d2e9709808b2937daec50cb9207b5bbf",
+    "engine_static_followup": {
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json",
+      "symbols": 35,
+      "branches": 22,
+      "observations": 25,
+      "local_tests_passed": 24,
+      "script_context": "VM run stores and restores active script; no runtime OS thread identity measured",
+      "packet_provenance": "Decrypt out-byte is forwarded to Unpack and can be zero on successful tunneling; no proof of end-to-end propagation with sender + session",
+      "session": "SetSessionState writes a state enum; no verified session identifier or epoch source",
+      "runtime_adapter": "unbound"
     }
   }
 }

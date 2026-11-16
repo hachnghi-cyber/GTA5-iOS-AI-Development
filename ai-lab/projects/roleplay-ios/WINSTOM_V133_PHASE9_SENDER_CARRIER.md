@@ -76,6 +76,26 @@ session ID/generation, disconnect lifetime and migration invalidation are still
 unbound. Carry copied validated identifiers/generation into the mailbox, never
 retain a CNetGamePlayer pointer past its native callback lifetime.
 
+## Static follow-up after the build checkpoint
+
+- **Script context.** `CTheScripts::Process` calls `InternalProcess`, which calls
+  `scrThread::UpdateAll`. Independently, `scrThread::Run(int)` sets the active
+  script before entering the VM and restores the prior value afterward.
+  `GetCurrentGtaScriptThread` forwards to the active-script accessor. This gives
+  a concrete script-context check for a future observer. It does not establish
+  the OS thread or cadence of the conditionally registered sandbox native.
+- **Receive context.** `CNetwork::Update` calls connection-manager `Update`,
+  which calls `Dispatch`. The receive-side decrypt routine has a separate
+  out-byte passed to `Unpack`, and successful tunneled decryption can leave that
+  byte zero. `Unpack` branches on the byte. There is no verified mapping of the
+  authentication result through queued events and indirect delegates to the
+  `ReceivedMessageData` sender/session seen by the RP handler.
+- **Session.** `SetSessionState` compares and conditionally writes a state enum.
+  That enum does not supply a verified session identity or generation.
+  Runtime acceptance needs a distinct remote receive observation, binding the
+  connection to the current session and proving invalidation on disconnect or
+  migration. Until then, keep receive and game-thread pump unbound.
+
 ## Newly found payload collision
 
 At `0x1006ad8cc` the constructor reads payload byte +8; when it differs from the
@@ -126,7 +146,7 @@ No Winstom endpoints were contacted and no accounts/tokens were extracted.
 ## Validation and reproduction
 
 - Local Windows Python 3.15: 32 AI Lab, 24 v133 Python, 9 packer tests passed.
-- `inspect_v133_engine.py` verified 24 symbols, 13 direct branches and 13 selected
+- `inspect_v133_engine.py` verified 35 symbols, 22 direct branches and 25 selected
   instructions against the actual private executable; SHA/UUID mismatch is rejected.
 - Actual audited IPA passed packer inspect-only; 80-byte load command fits
   12,168-byte padding without moving code.

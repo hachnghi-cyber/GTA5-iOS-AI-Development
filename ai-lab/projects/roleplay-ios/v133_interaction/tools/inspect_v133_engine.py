@@ -39,6 +39,17 @@ SYMBOLS = {
     'session_state': '__ZN15CNetworkSession15SetSessionStateENS_13eSessionStateEb',
     'handle_packet': '__ZN4rage20netConnectionManager20HandleReceivedPacketERKNS_10netAddressEPKvj',
     'p2p_decrypt': '__ZN4rage20netConnectionManager10P2pDecryptERKNS_10netAddressEPPhRjRb',
+    'packet_unpack': '__ZN4rage20netConnectionManager6UnpackERKNS_10netAddressEPKvjb',
+    'network_update': '__ZN8CNetwork6UpdateEb',
+    'connection_update': '__ZN4rage20netConnectionManager6UpdateEj',
+    'connection_dispatch': '__ZN4rage20netConnectionManager8DispatchEv',
+    'scripts_process': '__ZN11CTheScripts7ProcessEv',
+    'scripts_internal_process': '__ZN11CTheScripts15InternalProcessEv',
+    'script_update_all': '__ZN4rage9scrThread9UpdateAllEi',
+    'script_run': '__ZN4rage9scrThread3RunEi',
+    'script_vm_run': '__ZN4rage9scrThread3RunEPNS_8scrValueEPS2_RKNS_10scrProgramEPNS0_10SerializedE',
+    'current_gta_script': '__ZN11CTheScripts25GetCurrentGtaScriptThreadEv',
+    'active_script': '__ZN4rage9scrThread15GetActiveThreadEv',
 }
 
 
@@ -144,6 +155,15 @@ def inspect(data):
         ('script_decide', 0x40, 'group_event_ctor1', 'BL'),
         ('group_event_ctor2', 0x64, 'player_valid', 'BL'),
         ('handle_packet', 0x7c, 'p2p_decrypt', 'BL'),
+        ('handle_packet', 0x118, 'packet_unpack', 'BL'),
+        ('network_update', 0x4a4, 'connection_update', 'BL'),
+        ('network_update', 0x4f8, 'connection_update', 'BL'),
+        ('connection_update', 0x2c0, 'connection_dispatch', 'BL'),
+        ('connection_update', 0x404, 'connection_dispatch', 'BL'),
+        ('scripts_process', 0xac, 'scripts_internal_process', 'BL'),
+        ('scripts_internal_process', 0x294, 'script_update_all', 'BL'),
+        ('script_run', 0x16c, 'script_vm_run', 'BL'),
+        ('current_gta_script', 0, 'active_script', 'B'),
     ):
         pc = sites[src]+delta
         w = word(pc)
@@ -166,6 +186,18 @@ def inspect(data):
         ('jobs_update', 0x118, 0x7102b81f, 'script group event type 0xAE filter'),
         ('jobs_update', 0x130, 0x52801e82, 'retrieve 244-byte stock job message'),
         ('jobs_update', 0x13c, 0xb9414bf6, 'read claimed slot from stack payload +8'),
+        ('handle_packet', 0x50, 0x39006fff, 'initialize decrypt out-byte to zero'),
+        ('handle_packet', 0x104, 0x39406fe4, 'forward out-byte as fifth argument to Unpack'),
+        ('p2p_decrypt', 0x284, 0x52800008, 'successful tunneling branch writes zero'),
+        ('p2p_decrypt', 0x288, 0x390002c8, 'write out-byte separately from return value'),
+        ('packet_unpack', 0x24, 0xaa0403f6, 'preserve fifth argument for Unpack checks'),
+        ('packet_unpack', 0x320, 0x340009f6, 'one Unpack branch tests the boolean argument'),
+        ('packet_unpack', 0x3b4, 0x340067d6, 'second Unpack branch tests the boolean argument'),
+        ('script_run', 0xd0, 0xf9000014, 'publish active script before VM run'),
+        ('script_run', 0x174, 0xf90002b9, 'restore previous active script after VM run'),
+        ('active_script', 0x18, 0xf9400000, 'read active script pointer through storage accessor'),
+        ('session_state', 0x3c, 0x6b08003f, 'compare requested state with current state'),
+        ('session_state', 0xd8, 0xb9058693, 'conditionally write state enum, not a session generation'),
     )
     observations = []
     for src, delta, expected, note in checks:

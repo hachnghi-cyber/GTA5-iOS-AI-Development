@@ -98,6 +98,50 @@
     "p2p_decrypt": {
       "name": "__ZN4rage20netConnectionManager10P2pDecryptERKNS_10netAddressEPPhRjRb",
       "va": "0x101cd5ea4"
+    },
+    "packet_unpack": {
+      "name": "__ZN4rage20netConnectionManager6UnpackERKNS_10netAddressEPKvjb",
+      "va": "0x101cd6230"
+    },
+    "network_update": {
+      "name": "__ZN8CNetwork6UpdateEb",
+      "va": "0x1016fd174"
+    },
+    "connection_update": {
+      "name": "__ZN4rage20netConnectionManager6UpdateEj",
+      "va": "0x101cd8d48"
+    },
+    "connection_dispatch": {
+      "name": "__ZN4rage20netConnectionManager8DispatchEv",
+      "va": "0x101cd9810"
+    },
+    "scripts_process": {
+      "name": "__ZN11CTheScripts7ProcessEv",
+      "va": "0x100e3452c"
+    },
+    "scripts_internal_process": {
+      "name": "__ZN11CTheScripts15InternalProcessEv",
+      "va": "0x100e346e0"
+    },
+    "script_update_all": {
+      "name": "__ZN4rage9scrThread9UpdateAllEi",
+      "va": "0x101facf9c"
+    },
+    "script_run": {
+      "name": "__ZN4rage9scrThread3RunEi",
+      "va": "0x101faa8f0"
+    },
+    "script_vm_run": {
+      "name": "__ZN4rage9scrThread3RunEPNS_8scrValueEPS2_RKNS_10scrProgramEPNS0_10SerializedE",
+      "va": "0x101faaae8"
+    },
+    "current_gta_script": {
+      "name": "__ZN11CTheScripts25GetCurrentGtaScriptThreadEv",
+      "va": "0x100e32420"
+    },
+    "active_script": {
+      "name": "__ZN4rage9scrThread15GetActiveThreadEv",
+      "va": "0x101faa42c"
     }
   },
   "branches": [
@@ -178,6 +222,60 @@
       "source": "handle_packet",
       "target": "p2p_decrypt",
       "kind": "BL"
+    },
+    {
+      "at": "0x101cd77a8",
+      "source": "handle_packet",
+      "target": "packet_unpack",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1016fd618",
+      "source": "network_update",
+      "target": "connection_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1016fd66c",
+      "source": "network_update",
+      "target": "connection_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd9008",
+      "source": "connection_update",
+      "target": "connection_dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd914c",
+      "source": "connection_update",
+      "target": "connection_dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e345d8",
+      "source": "scripts_process",
+      "target": "scripts_internal_process",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e34974",
+      "source": "scripts_internal_process",
+      "target": "script_update_all",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101faaa5c",
+      "source": "script_run",
+      "target": "script_vm_run",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e32420",
+      "source": "current_gta_script",
+      "target": "active_script",
+      "kind": "B"
     }
   ],
   "observations": [
@@ -258,6 +356,78 @@
       "function": "jobs_update",
       "word": "0xb9414bf6",
       "observation": "read claimed slot from stack payload +8"
+    },
+    {
+      "at": "0x101cd76e0",
+      "function": "handle_packet",
+      "word": "0x39006fff",
+      "observation": "initialize decrypt out-byte to zero"
+    },
+    {
+      "at": "0x101cd7794",
+      "function": "handle_packet",
+      "word": "0x39406fe4",
+      "observation": "forward out-byte as fifth argument to Unpack"
+    },
+    {
+      "at": "0x101cd6128",
+      "function": "p2p_decrypt",
+      "word": "0x52800008",
+      "observation": "successful tunneling branch writes zero"
+    },
+    {
+      "at": "0x101cd612c",
+      "function": "p2p_decrypt",
+      "word": "0x390002c8",
+      "observation": "write out-byte separately from return value"
+    },
+    {
+      "at": "0x101cd6254",
+      "function": "packet_unpack",
+      "word": "0xaa0403f6",
+      "observation": "preserve fifth argument for Unpack checks"
+    },
+    {
+      "at": "0x101cd6550",
+      "function": "packet_unpack",
+      "word": "0x340009f6",
+      "observation": "one Unpack branch tests the boolean argument"
+    },
+    {
+      "at": "0x101cd65e4",
+      "function": "packet_unpack",
+      "word": "0x340067d6",
+      "observation": "second Unpack branch tests the boolean argument"
+    },
+    {
+      "at": "0x101faa9c0",
+      "function": "script_run",
+      "word": "0xf9000014",
+      "observation": "publish active script before VM run"
+    },
+    {
+      "at": "0x101faaa64",
+      "function": "script_run",
+      "word": "0xf90002b9",
+      "observation": "restore previous active script after VM run"
+    },
+    {
+      "at": "0x101faa444",
+      "function": "active_script",
+      "word": "0xf9400000",
+      "observation": "read active script pointer through storage accessor"
+    },
+    {
+      "at": "0x1017e9e20",
+      "function": "session_state",
+      "word": "0x6b08003f",
+      "observation": "compare requested state with current state"
+    },
+    {
+      "at": "0x1017e9ebc",
+      "function": "session_state",
+      "word": "0xb9058693",
+      "observation": "conditionally write state enum, not a session generation"
     }
   ],
   "engine_owned_sender_path_static": true,
