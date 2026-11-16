@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-phase9-engine-sender-path-carrier-unbound",
+  "phase": "v13.3-phase9-device-startup-and-sandbox-stack-verified",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -111,7 +111,7 @@
     "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated.",
     "Winstom native target bound to LMXMessageProxy at runtime and where native server grant/owner authoritative state is produced; v13.3 authenticated receiver/callback still unverified.",
     "Runtime remote connection authentication vs local dispatch, native callback thread and pointer lifetime remain unverified despite exact static sender path.",
-    "Only one iPhone is currently available; no signed device boot or two-device event test has been performed in this session."
+    "Only one iPhone is currently available. Phase 9 diagnostic startup and stock Sandbox were observed on that device. Scripted RP sender/session and two-device event delivery remain unverified."
   ],
   "baseline": {
     "ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Re-sign and install the local diagnostic IPA on the available iPhone, launch Story Mode and collect Documents/PoliceRP-v13.3-Phase8.txt or crash log. Validate the callback, session generation and authenticated remote sender before binding PRP3EV01. Run real A-to-B acceptance with two iPhones before enabling Police RP actions.",
+  "next_action": "Use the observed Macport sandbox VM and stock clone-create stacks as separate reference points. Trace the actual scripted-event receive path and prove authenticated connection-to-sender/session generation and pointer lifetime before binding PRP3EV01. Verify the pump context and cadence on hardware. Use two iPhones in a controlled session for real A-to-B RP acceptance.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -278,7 +278,7 @@
         "arch": "arm64"
       }
     },
-    "device_tested": false,
+    "device_tested": true,
     "two_device_tested": false,
     "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md",
     "implementation_commit": "dafc8c55775542d2ecd29dde8570d92e2da7ff77",
@@ -317,6 +317,31 @@
       "packet_provenance": "Decrypt out-byte is forwarded to Unpack and can be zero on successful tunneling; no proof of end-to-end propagation with sender + session",
       "session": "SetSessionState writes a state enum; no verified session identifier or epoch source",
       "runtime_adapter": "unbound"
+    },
+    "device_startup_evidence": {
+      "date": "2026-11-16",
+      "source_revision": "phase9-carrier-unbound",
+      "hardware": "iPhone14,3",
+      "ios": "18.6 (22G86)",
+      "probe_loaded": true,
+      "executable_uuid_matches": true,
+      "tested_mode": "stock Macport Sandbox, including joining a native session",
+      "story_mode_tested": false,
+      "log_end": "app backgrounded at 99.5 s; no crash recorded for this run in supplied logs",
+      "script_vm_stack_samples_seconds": [
+        22.59,
+        23.47
+      ],
+      "stock_clone_create_stack_samples_seconds": [
+        28.4,
+        83.33
+      ],
+      "common_macho_slide_symbol_count": 11,
+      "callback_os_thread_and_cadence_verified": false,
+      "authenticated_rp_sender_verified": false,
+      "rp_network_enabled": false,
+      "two_device_rp_verified": false,
+      "report": "ai-lab/projects/roleplay-ios/V133_PHASE9_DEVICE_STARTUP.md"
     }
   }
 }

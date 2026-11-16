@@ -7,8 +7,9 @@
 Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng
 GTA v13.3 và Winstom 0.7.177. Bản IPA chẩn đoán cục bộ đã qua kiểm tra ZIP và Mach-O.
-Bước trên thiết bị là ký lại, chạy probe khởi động và lấy log. Adapter RAGE vẫn chưa
-được nối khi chưa xác minh nguồn metadata và ABI trên thiết bị.
+Probe đã chạy trên iPhone, vào Sandbox và ghi được hai đường gọi thực tế. Đọc
+`V133_PHASE9_DEVICE_STARTUP.md` để nối tiếp đúng mốc. Cần xác minh ABI và metadata
+của scripted event trước khi nối adapter RAGE.
 
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development
