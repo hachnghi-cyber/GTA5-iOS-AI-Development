@@ -134,6 +134,11 @@
       "claim": "Phase13 added fail-closed integrity checker for three original-byte-identical 59-entry unsigned diagnostic IPAs, a dedicated macOS Apple Development signing wrapper for already embedded E0/E1/E3 dylibs and exact profile/entitlements preflight. E0 device log now requires final tick 900 and SCRIPT_CALLBACK_COMPLETE=1 ticks=901, not just first tick. GitHub host tests and 18 new synthetic signing/security tests PASS.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43974446552 ; PR19 commits c79da6093300a6997dd6128652f6b1edc2933f16 and 5768abd2229f6f66723a9c08dcf88b0265d18821",
       "scope": "Exact input IPA static comparison done locally; synthetic security tests and host regression on GitHub. No Apple signing identity/profile available in runtime; macOS codesign NOT EXECUTED for Phase13; no E0/E1/E3 device evidence or authenticated RAGE Roleplay."
+    },
+    {
+      "claim": "Phase14 fixed actual signing-integrity gap: profile check now verifies the selected Keychain Apple Development signing certificate fingerprint appears in DeveloperCertificates, detects ambiguous/Distribution identity selections, and revalidates post-codesign embedded entitlements. Local 35/35 fixture tests pass; GitHub host Clang/GCC regression SUCCESS.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43977376977 ; commit 3c7c94ec3f416ee6378fe71401c90341ed0107ae ; ai-lab/projects/roleplay-ios/shv-e3-hardened/PHASE14_CERTIFICATE_BINDING.md",
+      "scope": "Static signing preflight and host tests ONLY. No real Apple cert/profile/keychain material available; no signed IPA, installed E0, HUD E1, two-phone E3 or RAGE Police RP gameplay attestation."
     }
   ],
   "unknowns": [
@@ -709,6 +714,36 @@
       "online_rage_sender_auth_verified": false,
       "police_rp_enabled": false,
       "next_gate": "With user's valid development profile+certificate (keep private), sign exact E0 IPA; install on physical iPhone, collect fresh same-run posthook.log, Documents/RBPProbe.log and crash logs, check E0 callback completion. Then E1 visual HUD, E3 controlled LAN two iPhones; separately PR16 authoritative RAGE sender/session provenance."
+    },
+    "experimental_e3_phase14": {
+      "phase": "14: Apple Development code-signing certificate/profile identity binding",
+      "pr": 19,
+      "branch": "feature/rbp-e3-hardened-20261116",
+      "initial_source_commit": "e955c46e8fffb72829d36fa1b0bee4ae20149cdc",
+      "sha1_identity_fix_commit": "3c7c94ec3f416ee6378fe71401c90341ed0107ae",
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e3-hardened/",
+      "ci_run": 43977376977,
+      "ci_host_result": "SUCCESS: Clang/GCC host regression and phase13/14 signing preflight fixtures",
+      "ci_iphoneos_link": "SKIPPED: no E0/E1/E3 C dylib change; previous real iPhoneOS link run 43969424836 passed",
+      "local_python_tests": "35/35 PASS; 16 new identity/certificate tests + 19 phase13 tests",
+      "local_bash_syntax": "PASS",
+      "local_original_ipa_stage_preflight": "E0/E1/E3 all PASS from exact GTAV-v13.3.ipa and prepackaged unsigned diagnostic IPAs",
+      "signer_safety_changes": [
+        "Unique valid Keychain identity selection by exact Apple Development name or SHA1",
+        "SHA1 exact match to DER DeveloperCertificates in provisioning profile",
+        "reject Apple Distribution identity even with SHA1 selector",
+        "codesign with pinned fingerprint instead of ambiguous label",
+        "re-check actual embedded signed entitlements against exact profile before IPA export"
+      ],
+      "local_source_zip_sha256": "7b65702015b930ff77b5e0dee5fa4daf817213778930f806e843fdce06eb0ec8",
+      "apple_development_cert_available_in_session": false,
+      "signed_ipa_produced": false,
+      "iphone_e0_runtime_verified": false,
+      "iphone_e1_hud_verified": false,
+      "two_iphone_e3_verified": false,
+      "native_rage_sender_session_verified": false,
+      "roleplay_gameplay_enabled": false,
+      "next_gate": "On user-controlled Mac with Apple Development cert and matching profile: sign the E0 prepacked IPA with ios/sign_prepackaged_probe_macos.sh, install on provisioned iPhone, capture same-run posthook.log and Documents/RBPProbe.log (including SOURCE_CHECKPOINT, 900 ticks and completed callback) and iOS crash log if any. Do not advance to E1/E3 or bind remote Police RP before E0 and PR16 native sender/session authorization verified."
     }
   }
 }
