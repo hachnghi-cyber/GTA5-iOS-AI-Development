@@ -18,9 +18,14 @@ tiếp tục từ điểm này. Còn chờ scripted receive trong phiên Sandbox
 ## Hướng transport RP độc lập
 
 `PRP3_DIRECT_TLS_VI.md` ghi bản tham chiếu TLS hai chiều chạy được trên host.
-Đã có mã probe iOS và bộ sinh cấu hình Windows. Tiếp theo là build, ký lại
-và thử iPhone ↔ máy tính. Giữ nguyên gate
+Probe ARM64 đã build và IPA chẩn đoán chưa ký đã được kiểm tra cục bộ.
+Tiếp theo là ký lại và thử iPhone ↔ máy tính. Giữ nguyên gate
 v13.3 và không dùng ID TLS như slot hay danh tính engine nếu chưa đối chiếu.
+
+## Luật Police RP
+
+`V133_POLICE_AUTHORITY_VI.md` ghi mô-đun quyết định nhận ca, còng, áp giải,
+ghế xe và án tạm thời. Mô-đun chưa nối engine hoặc kênh TLS chẩn đoán.
 
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development

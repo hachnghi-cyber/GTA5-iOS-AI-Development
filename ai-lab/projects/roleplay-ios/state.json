@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Verify ARM64 TLS probe build, package locally, re-sign, and run iPhone-to-Windows mTLS diagnostic on the same private LAN. Require new matching host and device logs before declaring transport working on iPhone. Keep RP gameplay disabled pending game identity mapping and authority.",
+  "next_action": "Sign and install the verified ARM64 TLS diagnostic IPA, then test a newly paired iPhone-to-Windows exchange. Once a game identity and authority snapshot can be verified on-device, integrate the police decisions and test across two consenting iPhones in a private Sandbox session.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -414,7 +414,40 @@
       "windows_lan_cli_reference_test_passed": true,
       "host_ci_run": 43838604101,
       "mac_arm_host_run_queued_on_last_observation": 43839001640,
-      "build_retry": "standard Intel macOS 15 host, cross-compile iPhoneOS arm64 using Xcode SDK"
+      "build_retry": "standard Intel macOS 15 host, cross-compile iPhoneOS arm64 using Xcode SDK",
+      "build_commit": "ecfefc6377a355d3b4c0902353920cbc7d8fd71a",
+      "build_run": 43839768526,
+      "build_conclusion": "success",
+      "artifact_id": 14213040588,
+      "local_unsigned_package": {
+        "file": "GTAV-v13.3-TLS-Diagnostic-UNSIGNED.ipa",
+        "sha256": "d8baa787fbe76c910868bf6cafdb0d63f4db809f2912ff3696f65dc460adc7ff",
+        "size_bytes": 60216954,
+        "probe_sha256": "ab6cacef94322f2173d3474003185d4ef41ee8358b5e29e8cdb86aac878e377f",
+        "zip_crc_passed": true,
+        "preserved_original_entries": 58,
+        "changed_original_entries": [
+          "Payload/GTAV.app/GTA5"
+        ],
+        "dependencies": [
+          "/System/Library/Frameworks/Foundation.framework/Foundation",
+          "/System/Library/Frameworks/Network.framework/Network",
+          "/System/Library/Frameworks/Security.framework/Security",
+          "/usr/lib/libobjc.A.dylib",
+          "/usr/lib/libSystem.B.dylib",
+          "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+        ],
+        "unsigned": true,
+        "device_tested": false
+      }
+    },
+    "police_authority": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police.c",
+      "doc": "ai-lab/projects/roleplay-ios/V133_POLICE_AUTHORITY_VI.md",
+      "scope": "Source-only authority decisions for opt-in, duty, cuff, escort, passenger seat and temporary jail",
+      "host_ci_requested": true,
+      "engine_integration": false,
+      "device_tested": false
     }
   }
 }

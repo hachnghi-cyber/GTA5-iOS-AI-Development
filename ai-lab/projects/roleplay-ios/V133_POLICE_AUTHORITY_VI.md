@@ -1,0 +1,27 @@
+# Luật Police RP v13.3
+
+`rp_v133_police.c` chạy ở một trình xử lý có quyền quyết định trong một
+phiên RP. Nó dùng metadata sender/session/generation đã xác thực, trạng
+thái đã chọn tham gia và snapshot do phía có thẩm quyền cung cấp. Snapshot
+phải vừa được xác minh cho đúng cặp người chơi và đúng phiên game. Payload
+chỉ yêu cầu một thao tác, có nonce. Nó không cấp quyền, cung cấp khoảng
+cách hay tự chứng nhận danh tính.
+
+| Thao tác | Điều kiện và kết quả chính |
+| --- | --- |
+| Nhận ca | Người chơi đồng ý tham gia, được cấp vai cảnh sát và có job gốc hợp lệ |
+| Còng, tháo còng | Trong phạm vi 4 m, cùng phiên game và cả hai đã đồng ý. Người còng quản lý trạng thái đang giữ |
+| Áp giải | Bắt đầu khi đang còng, kết thúc về trạng thái đã còng |
+| Lên/xuống xe | Đưa người đang áp giải vào ghế khách trống của xe cảnh sát. Xuống đúng xe và vẫn còng |
+| Nhà tù | Xác minh cả hai ở cổng tiếp nhận, bắt đầu án thử 60 giây. Hết giờ hoặc có lệnh thả hợp lệ thì trả tự do |
+
+Rời phiên, bỏ ca hoặc rút đồng ý dọn trạng thái giữ theo chính sách thử.
+Reconnect trong cùng generation giữ nonce đã dùng. Một lệnh có envelope
+hợp lệ đã xác thực sẽ tiêu thụ nonce kể cả khi bị từ chối. Sau đổi generation
+phải lập lại phiên và quyền. Kiểm thử C dùng snapshot giả lập để kiểm tra
+luật, bao gồm giả danh, ghế trùng, timestamp tràn và lệnh sau ngắt kết nối.
+
+Probe iOS hiện có chỉ dành cho thử TLS GREET/DOCUMENTS. Các quyết định
+trong module này chưa được gửi qua TLS hoặc áp dụng lên game. Trước khi
+tích hợp, cần nối ID TLS với người chơi game đã đồng ý, chuyển snapshot
+và kết quả trên callback đã xác minh, rồi thử hành động trên hai thiết bị.

@@ -128,7 +128,7 @@ jobs:
             src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
             -o /tmp/v133_mailbox_threads_clang
           /tmp/v133_mailbox_threads_clang
-      - name: Reproduce all seven source-only test binaries from project runner
+      - name: Reproduce all eight source-only test binaries from project runner
         shell: bash
         run: |
           set -euo pipefail
