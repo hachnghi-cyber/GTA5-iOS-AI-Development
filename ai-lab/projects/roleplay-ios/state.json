@@ -548,7 +548,12 @@
       "game_thread_verified": false,
       "custom_event_received": false,
       "roleplay_enabled": false,
-      "next_gate": "Controlled developer-signed iPhone stock Sandbox: capture script_event_handler --receive-context with cooperative peer. Require separate call-chain and same-event source association, then trace sender authorization, session incarnation and reconnect/migration. No hook or gameplay enabled."
+      "next_gate": "Controlled developer-signed iPhone stock Sandbox: capture script_event_handler --receive-context with cooperative peer. Require separate call-chain and same-event source association, then trace sender authorization, session incarnation and reconnect/migration. No hook or gameplay enabled.",
+      "github_workflow_test_commit": "82fe44cb0848217def1543853a475ec8e63d5125",
+      "github_synthetic_run": 43906364389,
+      "github_synthetic_test_result": "PASS: 7/7 synthetic Python tests; C11 source-only tests PASS",
+      "github_actual_binary_test_result": "NOT RUN in CI; user IPA not available on public runner; local exact binary audit PASS 26/26",
+      "remaining_blocker": "Device proof of same-event sender mapping + transport authentication + authoritative session incarnation, then real E1/E3 game actions."
     }
   }
 }
