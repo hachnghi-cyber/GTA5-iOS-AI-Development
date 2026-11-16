@@ -25,5 +25,5 @@ Chỉ ghi thành công sau khi kiểm chứng.
 - Symptom: `source file is not valid UTF-8` for ARM64 `.o` files at the dylib link step.
 - Cause: `-x objective-c` applied to every subsequent input, including compiled objects.
 - Fix: omit the forced language; Clang recognizes `.m` and `.o` by their extensions.
-- Status: fix prepared; successful macOS CI rerun and artifact verification required.
+- Status: verified on `d56278d7af125dad0a717fdcda9534db4821c092` (macOS CI run 43798387409), with a verified local unsigned diagnostic IPA.
 - This is a build configuration error, not an iPhone crash or multiplayer result.

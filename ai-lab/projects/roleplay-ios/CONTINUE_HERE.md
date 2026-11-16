@@ -2,6 +2,14 @@
 
 **Tài liệu mở đầu bắt buộc trong MỖI cuộc trò chuyện GPT-6 mới.**
 
+## Checkpoint v13.3 hiện tại
+
+Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
+Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng
+GTA v13.3 và Winstom 0.7.177. Bản IPA chẩn đoán cục bộ đã qua kiểm tra ZIP và Mach-O.
+Bước trên thiết bị là ký lại, chạy probe khởi động và lấy log. Adapter RAGE vẫn chưa
+được nối khi chưa xác minh nguồn metadata và ABI trên thiết bị.
+
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development
 - Integration branch: `feature/gta-ai-lab-100-agents` cho đến khi PR #1 được merge.

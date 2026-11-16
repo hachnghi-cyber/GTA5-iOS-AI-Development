@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Use Phase 9 CI-built startup probe and allowlisted current IPA to make a local unsigned diagnostic IPA, then user re-signs and tests the available iPhone. Keep network/cuff flags zero. Validate the exact-build OnNetEvent -> ReceivedMessageData -> scripted-event sender path at runtime, excluding local SendBuffer, with session generation and authenticated connection proof before enabling the candidate PRP3EV01 carrier. A second iPhone is required for real A-to-B acceptance; do not replace this with synthetic tests.",
+  "next_action": "Re-sign and install the local diagnostic IPA on the available iPhone, launch Story Mode and collect Documents/PoliceRP-v13.3-Phase8.txt or crash log. Validate the callback, session generation and authenticated remote sender before binding PRP3EV01. Run real A-to-B acceptance with two iPhones before enabling Police RP actions.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -259,18 +259,52 @@
     "base_commit": "59d46193fd71dc995e283ea1fafebc7485e451de",
     "phase9_ci": {
       "source_checks": {
-        "run_id": 43797954365,
-        "conclusion": "success"
+        "conclusion": "success",
+        "run_id": 43798392324,
+        "private_ipa_job": "skipped"
       },
       "first_ios_build": {
         "run_id": 43797946300,
         "conclusion": "failure",
-        "cause": "Forced -x objective-c applied to object files; fix awaiting rerun"
+        "cause": "Forced -x objective-c applied to object files; fixed and verified in build_commit"
+      },
+      "ios_build": {
+        "conclusion": "success",
+        "run_id": 43798387409,
+        "artifact_id": 14194999462,
+        "artifact_sha256": "a50a1c7d58d642d4f3002307cccc241f210f1020c73172fcf5180859384ca9a6",
+        "sdk": "18.5",
+        "min_ios": "16.3",
+        "arch": "arm64"
       }
     },
     "device_tested": false,
     "two_device_tested": false,
     "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md",
-    "implementation_commit": "dafc8c55775542d2ecd29dde8570d92e2da7ff77"
+    "implementation_commit": "dafc8c55775542d2ecd29dde8570d92e2da7ff77",
+    "build_commit": "d56278d7af125dad0a717fdcda9534db4821c092",
+    "local_unsigned_diagnostic": {
+      "file": "GTAV-v13.3-Phase9-Diagnostic-UNSIGNED.ipa",
+      "ipa_sha256": "287dc4d6cb40cca713c26d983d044bbd257a3a3252e7c015f7345619c00c0a40",
+      "ipa_size": 60206600,
+      "input_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+      "probe_sha256": "bacd63b4782c4967dcc241dfacfbe1c9871c17fa25506f513f020136653fe93e",
+      "probe_dependencies": [
+        "/System/Library/Frameworks/Foundation.framework/Foundation",
+        "/usr/lib/libobjc.A.dylib",
+        "/usr/lib/libSystem.B.dylib",
+        "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+      ],
+      "analyzer_diagnostics": {
+        "rp_v133_carrier-analysis.plist": 0,
+        "rp_v133_interact_gate-analysis.plist": 0,
+        "rp_v133_mailbox-analysis.plist": 0,
+        "rp_v133_wire-analysis.plist": 0
+      },
+      "unchanged_ipa_entries": 58,
+      "zip_crc_passed": true,
+      "pending_resigning": true,
+      "device_tested": false
+    }
   }
 }

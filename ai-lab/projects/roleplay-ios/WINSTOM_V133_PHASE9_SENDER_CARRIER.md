@@ -156,8 +156,8 @@ user's exact local binaries, not documentation examples.
 
 ## Remaining gates and next action
 
-1. Produce local unsigned diagnostic IPA from the new successful Mac artifact;
-   user must re-sign app and embedded dylibs, install on the available iPhone and
+1. Re-sign the verified local unsigned diagnostic IPA (app and embedded dylibs),
+   install on the available iPhone and
    return `Documents/PoliceRP-v13.3-Phase8.txt` plus any crash log. This is a boot
    probe only, with network and police flags staying zero.
 2. Establish runtime callback context and remote connection authentication, then
@@ -176,5 +176,17 @@ private-IPA analysis job was skipped; the actual IPA checks above ran locally.
 failed at linking because the inherited `-x objective-c` also applied to the newly
 added object files. All C compilation and static-analysis commands before that
 step completed. The follow-up removes the forced source language so `.m` is
-compiled as Objective-C and `.o` files are linked as objects. A successful rerun
-and artifact inspection are still required; no on-device result is implied.
+compiled as Objective-C and `.o` files are linked as objects.
+
+[macOS iPhoneOS build](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43798387409)
+and [GCC/Clang sanitizer and Python checks](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43798392324)
+passed on `d56278d7af125dad0a717fdcda9534db4821c092`. The artifact's ZIP digest matched GitHub.
+The dylib is ARM64 iPhoneOS 16.3 (SDK 18.5), with only system dylib/framework imports.
+The four ARM64 Clang analysis plists contain zero diagnostics.
+
+Local `GTAV-v13.3-Phase9-Diagnostic-UNSIGNED.ipa` passed ZIP CRC. The only changed
+original entry is GTA5: one 80-byte load command plus the two header counters,
+with no code/section displacement. The other 58 entries, including the original
+Info.plist with File Sharing enabled, match byte for byte. The added dylib matches
+the CI artifact. Output SHA-256 `287dc4d6cb40cca713c26d983d044bbd257a3a3252e7c015f7345619c00c0a40`.
+The package remains local and requires re-signing and a hardware startup test.
