@@ -18,3 +18,7 @@ Target: user-provided GTA V iOS v13.3, pinned UUID/SHA unchanged. Original GTA5 
 - iPhoneOS macOS runner 43923116112 was CANCELLED before linking; no dylib produced. No hardware E0/E1/E3, no signed IPA, no RAGE sender/session ownership or cross-iPhone PoliceRP.
 
 **Important:** This direct UDP channel is an isolated, opt-in test, not RAGE multiplayer replication. A native report proves at most the adapter call path in a genuine device session, not visible HUD or changes to other players.
+
+## Apple conditional-branch syntax gate
+
+Linux host CI now syntax-checks E0/E1/E3 Apple branches using explicitly fake mach-o/mach/CommonCrypto declarations with both Clang and GCC. This is NOT an iPhoneOS SDK link, signed dylib, or device test. The original IPA already has NSLocalNetworkUsageDescription, NSBonjourServices (_gtavmp._udp), and UIFileSharingEnabled=true; no Info.plist modifications needed.

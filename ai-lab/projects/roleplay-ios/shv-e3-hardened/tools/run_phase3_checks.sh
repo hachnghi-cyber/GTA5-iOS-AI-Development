@@ -39,6 +39,21 @@ done
   tests/test_plugin_peer_host.c -ldl -pthread -o build/test_plugin_peer_host
 python3 tests/test_two_process_e3.py > evidence/two_process_e3.log 2>&1
 bash -n ios/build_probe_macos.sh ios/package_probe_macos.sh
+# Compile Apple conditional branches with HOST-ONLY fake SDK declarations.
+# This is NOT an iPhoneOS SDK link, signed dylib or device test.
+: > evidence/apple_stub_only_syntax.log
+for stage in 0 1 3; do
+  case "$stage" in
+    0) set -- ios/rbp_shv_plugin.c src/rbp_handoff.c src/rbp_device_log.c ;;
+    1) set -- ios/rbp_shv_plugin.c src/rbp_handoff.c src/rbp_device_log.c src/rbp_native_adapter.c ;;
+    3) set -- ios/rbp_shv_plugin.c src/rbp_handoff.c src/rbp_device_log.c src/rbp_native_adapter.c src/rbp_wire_c.c src/rbp_crypto.c src/rbp_device_network.c ;;
+  esac
+  "$CC" -std=c11 -Wall -Wextra -Werror -fsyntax-only \
+    -D__APPLE__ -D_GNU_SOURCE "-DRBP_PROBE_STAGE=$stage" \
+    -Itests/apple_stub -Iinclude "$@"
+  printf 'PASS stage=%s Apple conditional branch with HOST STUB headers; NOT SDK/link\n' \
+    "$stage" >> evidence/apple_stub_only_syntax.log
+done
 for src in src/rbp_handoff.c src/rbp_native_adapter.c src/rbp_wire_c.c; do
   name="$(basename "${src%.c}")"
   "${CROSS_CC:-clang}" -target arm64-apple-ios16.3 -ffreestanding -fno-builtin \
