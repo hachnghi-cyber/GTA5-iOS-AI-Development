@@ -23,10 +23,10 @@ if [[ "$STAGE" == 3 ]]; then
            "$ROOT/src/rbp_device_network.c")
 fi
 # E3 uses Security.framework for nonce generation; E0/E1 stay minimal.
-APPLE_FRAMEWORKS=()
-if [[ "$STAGE" == 3 ]]; then APPLE_FRAMEWORKS=(-framework Security); fi
-xcrun clang "${CFLAGS[@]}" -dynamiclib "${SOURCES[@]}" "${APPLE_FRAMEWORKS[@]}" \
- -Wl,-install_name,@rpath/RBPProbe.shv.dylib -Wl,-rpath,@loader_path \
+# Link options are ALWAYS nonempty, including on macOS Bash 3.2 with set -u.
+LINK_OPTS=( -Wl,-install_name,@rpath/RBPProbe.shv.dylib -Wl,-rpath,@loader_path )
+if [[ "$STAGE" == 3 ]]; then LINK_OPTS+=( -framework Security ); fi
+xcrun clang "${CFLAGS[@]}" -dynamiclib "${SOURCES[@]}" "${LINK_OPTS[@]}" \
  -o "$OUT/RBPProbe.shv.dylib"
 # Loader-visible export and per-plugin rpath are required for this build.
 xcrun nm -gU "$OUT/RBPProbe.shv.dylib" > "$OUT/exported_symbols.txt"
