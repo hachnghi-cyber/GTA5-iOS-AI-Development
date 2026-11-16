@@ -114,6 +114,11 @@
       "claim": "Exact v13.3 GTA5 static disassembly verifies Cxn ID allocation (high16 marker and low16 slot), full 32-bit CloseConnection match and OnNetEvent peer-list connection match, plus P2pDecrypt success with an out-flag of zero forwarded through HandleReceivedPacket to Unpack. Read-only audit matches original user IPA SHA256/UUID and 26 exact ARM64 words; 6 local tests passed.",
       "evidence": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md; cd05556e70bee188d7662237079f4a2ce7162d11; exact user IPA /mnt/data/GTAV-v13.3.ipa (local only)",
       "scope": "STATIC_BINARY and LOCAL TEST ONLY. High16 is not a cryptographic authenticated generation; the out flag is not sender attestation; no iPhone receive-context/peer authorization or two-iPhone gameplay verified."
+    },
+    {
+      "claim": "E3 Phase10 endpoint pin now rejects a correctly HMAC-signed diagnostic UDP frame from a source IP/port different from the configured peer before ACK/queue, while valid peer delivery+HMAC invocation receipt still succeeds. The device log evaluator now requires seven same-sequence stages including B native report queued/sent and A report verified, and rejects fail-closed states and stale runs.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43920561577 ; commit ba151f30b10508939e1d64285061c22a2bc2afac; PR https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/19",
+      "scope": "HOST C and Python tests only: 46/46 Python, sanitizer+two-process UDP PASS with both Clang and GCC, wrong-port test repeated 12x per compiler. No E3 iPhoneOS linked dylib, device callback or RAGE player synchronization validated."
     }
   ],
   "unknowns": [
@@ -560,7 +565,7 @@
       "source_delivery": "Conversation artifact GTA_v13.3_PHASE9_E3_HARDENED_SOURCE_AND_TESTS.zip (not yet committed to GitHub)",
       "source_zip_sha256": "8c05bf57ac0a70a12cfdd22423683fb9a2510c7745bbb39d9a3f81fb0394a529",
       "patch_sha256": "7d19c57099ada47dc6be5980715c4ac95f362cbcae76a68bfb91fdb89454e0c2",
-      "host_result": "PASS: Clang + GCC strict, C ASan/UBSan, 37/37 Python tests, two Linux processes with real UDP and MOCK ScriptHook/native callbacks",
+      "host_result": "PASS: Clang+GCC strict, ASan/UBSan, 46/46 Python tests, 2-process UDP, 12x per-compiler wrong-port stress (24/24)",
       "major_fixes": [
         "bounded 900-tick scriptWait(16) with no-yield fail-closed and cleanup",
         "GCC pedantic-compliant dlsym resolution",
@@ -573,8 +578,30 @@
       "iphone_e3_verified": false,
       "rage_transport_sender_auth_verified": false,
       "actual_roleplay_gameplay_enabled": false,
-      "source_git_integration": "PENDING: local source ZIP / patch provided; do not claim E3 source is in this PR",
-      "next": "Import validated Phase9 source to dedicated E3 diagnostic branch. macOS Xcode iPhoneOS build/sign E0, collect same-run iPhone logs. Then E1 HUD and two-phone LAN E3, compare ACK and native-invocation report; independently prove PR16 native RAGE sender/session provenance before PoliceRP integration."
+      "source_git_integration": "COMMITTED: Phase9 source lives at ai-lab/projects/roleplay-ios/shv-e3-hardened in draft PR#19; Phase10 tests and endpoint fixes also committed.",
+      "next": "macOS/Xcode iPhoneOS SDK link for E0 then sign with exact app; physical iPhone E0, E1 and two-phone E3 LAN logs/screens; separate PR16 RAGE sender/session binding still unverified.",
+      "current_phase": "10",
+      "ragemp_sender_auth_verified": false
+    },
+    "experimental_e3_phase10": {
+      "pr": 19,
+      "branch": "feature/rbp-e3-hardened-20261116",
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e3-hardened/",
+      "endpoint_fix_commit": "e14ba502e7f0fbc1b47321a0871071d5ca579054",
+      "sanitizer_test_race_fix_commit": "e1fa8103519f54e6a11d40dfb91f90fd113d24bf",
+      "log_gates_commit": "ba151f30b10508939e1d64285061c22a2bc2afac",
+      "ci_run_id": 43920561577,
+      "ci_status": "host-regression SUCCESS; iphoneos-link SKIPPED on push",
+      "python_tests": "46/46 PASS",
+      "wrong_port_stress": "12/12 Clang + 12/12 GCC PASS, ASan/UBSan",
+      "gh_test": "2-process UDP, script callback mock, ARM64 freestanding object tests PASS",
+      "ipa_original_modified": false,
+      "linked_iphoneos_dylib": false,
+      "device_verified": false,
+      "police_rp_enabled": false,
+      "source_zip_sha256": "c8680fd0d962158b47fc8629fbc3d66fdb568931f944049ee85d11cd8dfa8393",
+      "report": "ai-lab/projects/roleplay-ios/shv-e3-hardened/PHASE10_ENDPOINT_AND_LOG_GATES.md",
+      "next_gate": "A genuine iPhoneOS link + development signing, fresh E0 callback Story/Online logs, E1 visually observed HUD, E3 two-iPhone same-sequence ACK+invocation HMAC report. PR#16 RAGE network authentic sender/session incarnation proof separately required before gameplay."
     }
   }
 }
