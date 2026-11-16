@@ -29,3 +29,15 @@ connecting PRP3 or testing remote cuff/release. Only one iPhone is known here.
 
 Do not repeat the IPA inventory, TLS diagnostic or Phase 5–9 source work.
 Do not publish raw device logs, game payloads/assets, identities or keys.
+
+## Additional fail-closed diagnostic fix (2026-11-16)
+
+The observer no longer sets `network_receive_stack_confirmed` at frame-chain
+recognition before source/destination and connection ID comparisons. Instead
+it records `network_receive_call_chain_observed` as the weaker first gate;
+`network_receive_stack_confirmed` requires the complete same-event association.
+Host regression fixtures cover wrong handler references, connection mismatch,
+invalid event pointer, local SendBuffer and genuine synthetic receive; no
+sender authentication/session ownership or device origin is asserted.
+The USB device/controlled peer test remains required. No iPhoneOS build or
+additional game hook is implied by this source-only correction.

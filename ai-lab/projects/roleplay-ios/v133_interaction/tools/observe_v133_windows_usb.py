@@ -172,7 +172,8 @@ def read_receive_context(remote, base, profile):
     function calls, writes or retained pointers. All values die before resume.
     Even a consistent engine association cannot attest cryptographic identity.
     """
-    result = {'observed_path': 'undetermined', 'network_receive_stack_confirmed': False,
+    result = {'observed_path': 'undetermined', 'network_receive_call_chain_observed': False,
+              'network_receive_stack_confirmed': False,
               'engine_source_association_observed': False, 'context_status': 'incomplete',
               'matched_frames': []}
 
@@ -213,7 +214,10 @@ def read_receive_context(remote, base, profile):
         result['context_status'] = 'unrecognized_dispatch_origin'
         return result
     result['observed_path'] = origin
-    result['network_receive_stack_confirmed'] = origin == 'engine_receive_dispatch'
+    # A validated return-frame path is a *candidate receive call chain*, not
+    # yet an event/source association. Never mark the combined receive gate
+    # until references and connection IDs of this SAME stopped event agree.
+    result['network_receive_call_chain_observed'] = origin == 'engine_receive_dispatch'
 
     message = fp + profile['origins'][origin]['message_fp_offset']
     if message < sp or message + 0x20 > fp:
@@ -245,6 +249,9 @@ def read_receive_context(remote, base, profile):
         if not result['connection_id_matches_source']:
             result['context_status'] = 'connection_mismatch'
             return result
+        # This proves only pointer/connection equality at the stopped PC.
+        # It is NOT cryptographic authentication or durable session membership.
+        result['network_receive_stack_confirmed'] = True
     result['context_status'] = 'observed'
     return result
 
@@ -302,8 +309,11 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
             "hardware_stop_at_expected_pc": hit and not timed_out,
             "macport_online_update_callsite_matches": callsite_matches,
             "thread_label": "T1",
+            "thread_label_scope": "anonymous_single_capture_only",
+            "game_thread_affinity_verified": False,
             # A single PC/LR observation cannot prove inbound network provenance.
             "observed_path": "undetermined",
+            "network_receive_call_chain_observed": False,
             "network_receive_stack_confirmed": False,
             "authenticated_rp_sender_verified": False,
             "session_generation_verified": False,

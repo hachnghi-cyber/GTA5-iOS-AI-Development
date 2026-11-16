@@ -137,6 +137,9 @@ class ScriptEventObserverTests(unittest.TestCase):
             self.assertIs(sample[key], False)
         self.assertEqual(sample["observed_path"], "undetermined")
         self.assertFalse(sample["macport_online_update_callsite_matches"])
+        self.assertFalse(sample['network_receive_call_chain_observed'])
+        self.assertFalse(sample['game_thread_affinity_verified'])
+        self.assertEqual(sample['thread_label_scope'], 'anonymous_single_capture_only')
         self.assertEqual(remote.sent, [b"c"])
         self.assertEqual(remote.conn.timeouts, [30])
         self.assertEqual(remote.register_reads, [32])
@@ -250,6 +253,7 @@ class ReceiveContextTests(unittest.TestCase):
         sample = self.sample(memory)
         self.assertEqual(sample['context_status'], 'observed')
         self.assertEqual(sample['observed_path'], 'engine_receive_dispatch')
+        self.assertTrue(sample['network_receive_call_chain_observed'])
         self.assertTrue(sample['network_receive_stack_confirmed'])
         self.assertTrue(sample['engine_source_association_observed'])
         self.assertTrue(sample['connection_id_matches_source'])
@@ -282,6 +286,7 @@ class ReceiveContextTests(unittest.TestCase):
         sample = self.sample(memory)
         self.assertEqual(sample['context_status'], 'observed')
         self.assertEqual(sample['observed_path'], 'local_sendbuffer_dispatch')
+        self.assertFalse(sample['network_receive_call_chain_observed'])
         self.assertFalse(sample['network_receive_stack_confirmed'])
         self.assertFalse(sample['engine_source_association_observed'])
         self.assertFalse(any(address >= memory.source for address, _ in memory.reads))
@@ -292,6 +297,8 @@ class ReceiveContextTests(unittest.TestCase):
             memory.regs[reg] += 8
             sample = self.sample(memory)
             self.assertEqual(sample['context_status'], 'handler_reference_mismatch')
+            self.assertTrue(sample['network_receive_call_chain_observed'])
+            self.assertFalse(sample['network_receive_stack_confirmed'])
             self.assertFalse(sample['engine_source_association_observed'])
             self.assertFalse(any(address >= memory.source for address, _ in memory.reads))
 
@@ -301,6 +308,8 @@ class ReceiveContextTests(unittest.TestCase):
             memory.data[memory.event + 0x3c] = struct.pack('<i', connection)
             sample = self.sample(memory)
             self.assertEqual(sample['context_status'], 'connection_mismatch')
+            self.assertTrue(sample['network_receive_call_chain_observed'])
+            self.assertFalse(sample['network_receive_stack_confirmed'])
             self.assertFalse(sample['engine_source_association_observed'])
 
     def test_unknown_callsite_or_pac_bits_are_not_stripped(self):
@@ -327,6 +336,8 @@ class ReceiveContextTests(unittest.TestCase):
             address = memory.frames[4] - 0x50 if field == 'source' else memory.frames[3] - 0x10
             memory.data[address] = bytes(8)
             sample = self.sample(memory)
+            self.assertTrue(sample['network_receive_call_chain_observed'])
+            self.assertFalse(sample['network_receive_stack_confirmed'])
             self.assertFalse(sample['engine_source_association_observed'])
             self.assertIn(sample['context_status'], ('handler_reference_mismatch', 'invalid_event_pointer'))
 
@@ -335,6 +346,7 @@ class ReceiveContextTests(unittest.TestCase):
         memory.data[memory.frames[3]] = struct.pack('<QQ', memory.frames[4], 0x1020249c0)
         sample = self.sample(memory)
         self.assertEqual(sample['context_status'], 'unrecognized_dispatch_origin')
+        self.assertFalse(sample['network_receive_call_chain_observed'])
         self.assertFalse(sample['network_receive_stack_confirmed'])
 
     def test_changed_function_code_is_rejected_before_observation(self):

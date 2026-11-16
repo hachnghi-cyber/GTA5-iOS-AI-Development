@@ -72,3 +72,25 @@ on the same OS thread. No native gameplay call is enabled by this observer.
 Work on A first. B's existing diagnostic is evidence to preserve, not the
 requested user-operated RP server. Do not add another transport or gameplay
 prototype before this receive experiment and its identity/lifecycle follow-up.
+
+## Receive observability gate: phase 9 hardening (2026-11-16)
+
+The USB observer now emits **two different statuses** for a stopped scripted
+event, both strictly read-only:
+- `network_receive_call_chain_observed=true`: exact SHA256-guarded stack
+  frames terminate in `OnNetEvent` receive origin. Sender/source references
+  or connection identity **may still be invalid**.
+- `network_receive_stack_confirmed=true` (and
+  `engine_source_association_observed=true`): in addition to the receive
+  frame chain, same-stop message source/destination pointers equal handler
+  registers and a nonnegative event connection ID equals source connection
+  ID. **This is only engine-source association, not cryptographic
+  authentication, session membership lifetime or permission for Roleplay.**
+
+A sample with `handler_reference_mismatch`, `connection_mismatch` or
+`invalid_event_pointer` must never set `network_receive_stack_confirmed`.
+The first field may still be true when only its own call-chain predicate was
+proven. `thread_label=T1` is anonymous and valid for one capture only,
+not stable across attempts; `game_thread_affinity_verified` always remains
+false. No actual iPhone receive-context sample has been captured after this
+change. Older baseline reports are not retrospectively upgraded.
