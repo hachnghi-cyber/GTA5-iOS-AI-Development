@@ -11,7 +11,9 @@ Probe đã chạy trên iPhone, vào Sandbox và ghi được hai đường gọ
 `V133_PHASE9_DEVICE_STARTUP.md` để nối tiếp đúng mốc. Cần xác minh ABI và metadata
 của scripted event trước khi nối adapter RAGE. Runbook lấy mẫu bằng hardware
 breakpoint nằm ở `V133_SCRIPTED_EVENT_OBSERVER_VI.md`. Không cần đổi IPA Phase 9
-nếu chữ ký hiện tại cho phép debugger attach.
+nếu chữ ký hiện tại cho phép debugger attach. Host Windows đã bắt được
+`jobs_update` qua USB trên đúng bản đã ký. Xem mục Windows trong runbook để
+tiếp tục từ điểm này. Còn chờ scripted receive trong phiên Sandbox có peer.
 
 ## Nguồn sự thật
 - Repository: https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development

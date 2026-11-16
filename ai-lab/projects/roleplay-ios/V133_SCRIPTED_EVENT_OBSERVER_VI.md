@@ -62,3 +62,26 @@ chiếu. Tiếp theo phải chứng minh connection của **chính event** gắn
 sender, session ID và generation còn hiệu lực, rồi chứng minh invalidation
 khi rời phiên hoặc migration. Chỉ copy dữ liệu hợp lệ trong callback. Khi
 chưa có bằng chứng này, carrier và các thao tác Police RP giữ tắt.
+
+
+## Thu một mẫu game loop từ Windows qua USB
+
+Bản Phase 9 đã cài và ký phát triển cho phép attach. Trên iOS 18.6, CodeLLDB
+trên Windows dừng trong handshake với debugproxy chưa có tiến trình. Đường
+attach trực tiếp vào PID của GTA đã chạy được theo giao thức debug chuẩn.
+Tool chỉ đọc header Mach-O và các lệnh được allowlist, dùng một hardware
+breakpoint ở `jobs_update`, rồi gỡ breakpoint và detach trước khi xuất JSON.
+Nó không cài IPA hoặc sửa bộ nhớ GTA. [GDB Remote packets](https://www.sourceware.org/gdb/current/onlinedocs/gdb.html/Packets.html)
+
+Với iPhone đã tin cậy máy tính, Developer Mode đã bật, DeveloperDiskImage
+đã mount và scene Sandbox đang ở foreground, chạy từ thư mục dự án:
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai>
+```
+
+Bundle ID phải là của bản GTA đã cài. Công cụ tự tra PID và giữ debugproxy
+trên loopback. Timeout khi app ở background đã được thử và breakpoint
+được gỡ trước khi thoát. Kết quả chỉ có nhãn luồng theo mẫu, PC trúng điểm
+đo, và LR khớp lệnh gọi trực tiếp đã đối chiếu. Đây là bằng chứng callback
+chạy, chưa đo nhịp frame hoặc xác minh luồng nhận scripted event.

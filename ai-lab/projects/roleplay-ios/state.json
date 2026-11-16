@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-scripted-event-static-verified-runtime-observer-ready",
+  "phase": "v13.3-windows-usb-game-callback-observed",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Continue with an iOS-capable LLDB client and the development-signed Phase 9 iPhone build. Windows USB launch, GTA log collection and a loopback debugproxy capability exchange were verified. Capture the scripted handler in a controlled session with a second participant and verify sender/session provenance before binding PRP3. There is still no two-device RP test.",
+  "next_action": "Use Windows USB hardware debugging for a controlled Sandbox session with a second participant, capture the actual scripted-event handler and compare its caller/thread with the verified jobs_update stop. Prove connection-to-sender/session generation and callback pointer lifetime before enabling PRP3.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -373,6 +373,26 @@
       "scripted_receive_observed": false,
       "rp_network_enabled": false,
       "raw_logs_published": false
+    },
+    "windows_usb_game_callback": {
+      "prior_checkpoint": "4a07ee4d6c02c9009f4f1ac90d634302a5da10e7",
+      "device": "iPhone14,3",
+      "ios": "18.6",
+      "test_mode": "stock Sandbox in foreground",
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py",
+      "pymobiledevice3": "11.56.0",
+      "live_arm64_uuid_and_three_instruction_words_verified": true,
+      "site": "jobs_update",
+      "hardware_stop_at_expected_pc": true,
+      "macport_online_update_callsite_matches": true,
+      "stopped_thread_label": "T1",
+      "breakpoint_removed_and_detach_confirmed": true,
+      "background_timeout_cleanup_verified": true,
+      "authenticated_rp_sender_verified": false,
+      "session_generation_verified": false,
+      "thread_cadence_verified": false,
+      "scripted_receive_observed": false,
+      "two_device_rp_verified": false
     }
   }
 }

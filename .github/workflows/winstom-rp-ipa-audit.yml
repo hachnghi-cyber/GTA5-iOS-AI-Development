@@ -45,6 +45,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_verify_device_trace.py' -v
       - name: Validate exact-build engine evidence parser (synthetic fixtures)
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_inspect_v133_engine.py' -v
+      - name: Validate USB debugger reply parsing
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
       - name: Validate debugger stack classification
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
 
