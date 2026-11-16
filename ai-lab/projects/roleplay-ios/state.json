@@ -106,7 +106,7 @@
       "scope": "GitHub source and CI synthetic verification only. No live iPhone scripted receive, engine-authenticated player ID, custom GTA network event or two-iPhone Police RP gameplay has been verified by this change."
     },
     {
-      "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16",
+      "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16; implementation 63cfdf33c34ffbe5c50163048830e050a618da82; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973",
       "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
       "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
     }
@@ -510,14 +510,21 @@
       "whole_function_code_guards": 8,
       "python_tests_passed": 54,
       "usb_tests_passed": 21,
-      "ci": "pending",
+      "ci": "success",
       "new_ios_build_needed": false,
       "device_sample_obtained": false,
       "last_device_attempt": "NoDeviceConnectedError from Windows usbmux",
       "authenticated_sender_verified": false,
       "session_generation_verified": false,
       "engine_adapter_bound": false,
-      "two_iphone_gameplay_verified": false
+      "two_iphone_gameplay_verified": false,
+      "implementation_commit": "63cfdf33c34ffbe5c50163048830e050a618da82",
+      "ci_run": 43877645973,
+      "host_c_test_binaries": 10,
+      "host_sanitizers": [
+        "GCC ASan/UBSan",
+        "Clang ASan/UBSan"
+      ]
     }
   }
 }

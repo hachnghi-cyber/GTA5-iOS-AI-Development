@@ -2,8 +2,8 @@
 
 Branch: `feature/winstom-rp-ipa-audit-20261116`; PR #16 remains unmerged.
 Base checkpoint: `64e450ef7616fd35b32e0646241be0f8a08bc7d2`.
-This checkpoint is the commit containing this file; use `git log -1` and
-`state.json.last_work.receive_context_observer` for subsequent CI evidence.
+Implementation commit: `63cfdf33c34ffbe5c50163048830e050a618da82`.
+Use `git log -1` for the subsequent documentation/CI checkpoint commit.
 
 - New code: optional `--receive-context` in the existing Windows USB observer.
   Compares guarded call chain and source/destination references at scripted
@@ -12,7 +12,9 @@ This checkpoint is the commit containing this file; use `git log -1` and
 - Evidence: `ENGINE_INTEGRATION_MAP.md` and regenerated exact binary baseline.
 - Local verification: exact user IPA inspector PASS; 54 Python tests PASS,
   including 21 USB protocol/context tests. These are synthetic source tests.
-  GitHub CI is pending submission of this checkpoint.
+  [GitHub CI 43877645973](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973)
+  passed Python checks and all ten C binaries with GCC/Clang ASan/UBSan.
+  AI Lab and Source Watch also passed at the implementation commit.
 - No ARM64 source changed, so no repeated macOS build or IPA packaging needed.
 - Latest USB attempt: device absent; no new iPhone context sample obtained.
 - Risks: limited supported call chain, debugger pause, unverified authenticated
