@@ -266,6 +266,7 @@ def inspect(data):
         ('job_start', 0x444, 0x3900011f, 'terminate local job identifier'),
         ('job_start', 0x448, 0x9001aa48, 'ADRP for job kind metadata'),
         ('job_start', 0x44c, 0xb908d913, 'store local job kind'),
+        ('online_command', 0x800, 0xb001a9d8, 'load local job state page'),
         ('online_command', 0xd38, 0xb902431f, 'clear job state after the cleanup call'),
         ('handle_packet', 0x50, 0x39006fff, 'initialize decrypt out-byte to zero'),
         ('handle_packet', 0x104, 0x39406fe4, 'forward out-byte as fifth argument to Unpack'),
@@ -315,6 +316,14 @@ def inspect(data):
                 scripted_event={'registered_type': 0x1c, 'payload_max_bytes': 432,
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites={key: hex(word(sites[key])) for key in trace_sites},
+                stock_job_sample={
+                    'id_va': '0x10363fd98', 'kind_va': '0x10363f8d8', 'state_va': '0x10362c240',
+                    'guard_sites': [
+                        {'va': row['at'], 'word': row['word']} for row in observations
+                        if row['function'] in ('job_start', 'online_command')
+                    ],
+                    'scope': 'read-only local stock job candidate; not police role authority',
+                },
                 engine_owned_sender_path_static=True, cryptographic_authentication_verified=False,
                 runtime_thread_verified=False, hook_installed=False,
                 transport_connected=False, two_device_verified=False,

@@ -498,6 +498,12 @@
       "observation": "store local job kind"
     },
     {
+      "at": "0x1000f3554",
+      "function": "online_command",
+      "word": "0xb001a9d8",
+      "observation": "load local job state page"
+    },
+    {
       "at": "0x1000f3a8c",
       "function": "online_command",
       "word": "0xb902431f",
@@ -675,6 +681,42 @@
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
     "migrate_end": "0xa9ba6ffc"
+  },
+  "stock_job_sample": {
+    "id_va": "0x10363fd98",
+    "kind_va": "0x10363f8d8",
+    "state_va": "0x10362c240",
+    "guard_sites": [
+      {
+        "va": "0x1000f78d4",
+        "word": "0x9001aa48"
+      },
+      {
+        "va": "0x1000f78d8",
+        "word": "0x91366108"
+      },
+      {
+        "va": "0x1000f78fc",
+        "word": "0x3900011f"
+      },
+      {
+        "va": "0x1000f7900",
+        "word": "0x9001aa48"
+      },
+      {
+        "va": "0x1000f7904",
+        "word": "0xb908d913"
+      },
+      {
+        "va": "0x1000f3554",
+        "word": "0xb001a9d8"
+      },
+      {
+        "va": "0x1000f3a8c",
+        "word": "0xb902431f"
+      }
+    ],
+    "scope": "read-only local stock job candidate; not police role authority"
   },
   "engine_owned_sender_path_static": true,
   "cryptographic_authentication_verified": false,

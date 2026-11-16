@@ -136,7 +136,21 @@ def stop_thread(reply):
     return match[1] if match else None
 
 
-def capture(remote, base, metadata):
+def read_stock_job(remote, base, sample):
+    def read(field, size):
+        return remote.memory(base + int(sample[field], 16) - IMAGE_VMADDR, size)
+    raw_id = read("id_va", 40)
+    job_id, sep, _ = raw_id.partition(b"\0")
+    return {
+        "job_id_known": bool(sep) and job_id in (b"", b"cop_ls"),
+        "job_id_is_cop_ls": bool(sep) and job_id == b"cop_ls",
+        "stock_job_kind": struct.unpack("<i", read("kind_va", 4))[0],
+        "stock_job_state": struct.unpack("<i", read("state_va", 4))[0],
+        "police_role_authorized": False,
+    }
+
+
+def capture(remote, base, metadata, stock_job=False):
     va = int(metadata["symbols"][SITE]["va"], 16)
     address = base + va - IMAGE_VMADDR
     if remote.request(b"qRegisterInfo20").partition(b";")[0] != b"name:pc":
@@ -163,7 +177,7 @@ def capture(remote, base, metadata):
         caller = next(b for b in metadata["branches"]
                       if b["source"] == "online_update" and b["target"] == SITE)
         return_address = base + int(caller["at"], 16) - IMAGE_VMADDR + 4
-        return {
+        sample = {
             "site": SITE,
             "timed_out": timed_out,
             "hardware_stop_at_expected_pc": hit and not timed_out,
@@ -173,11 +187,14 @@ def capture(remote, base, metadata):
             "authenticated_rp_sender_verified": False,
             "session_generation_verified": False,
         }
+        if stock_job and sample["macport_online_update_callsite_matches"]:
+            sample["stock_job_candidate"] = read_stock_job(remote, base, metadata["stock_job_sample"])
+        return sample
     finally:
         require_ok(remote, b"z1," + hardware, "hardware breakpoint removal")
 
 
-def run_capture(conn, pid):
+def run_capture(conn, pid, stock_job=False):
     metadata = json.loads(BASELINE.read_text(encoding="utf-8"))
     if metadata["uuid"] != UUID:
         raise DebugProtocolError("static baseline UUID mismatch")
@@ -199,12 +216,17 @@ def run_capture(conn, pid):
             expected = struct.pack("<I", int(metadata["trace_sites"][site], 16))
             if remote.memory(base + va - IMAGE_VMADDR, 4) != expected:
                 raise DebugProtocolError("live instruction mismatch at " + site)
-        return capture(remote, base, metadata)
+        if stock_job:
+            for guard in metadata["stock_job_sample"]["guard_sites"]:
+                address = base + int(guard["va"], 16) - IMAGE_VMADDR
+                if remote.memory(address, 4) != struct.pack("<I", int(guard["word"], 16)):
+                    raise DebugProtocolError("local job metadata instruction guard mismatch")
+        return capture(remote, base, metadata, stock_job)
     finally:
         require_ok(remote, b"D", "detach")
 
 
-def collect(bundle):
+def collect(bundle, stock_job=False):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
     result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
                             capture_output=True, text=True, timeout=20, check=True)
@@ -228,7 +250,7 @@ def collect(bundle):
             else:
                 with conn:
                     conn.settimeout(5)
-                    return run_capture(conn, pid)
+                    return run_capture(conn, pid, stock_job)
         raise DebugProtocolError("loopback debugproxy connect deadline elapsed")
     finally:
         if proxy.poll() is None:
@@ -239,11 +261,13 @@ def collect(bundle):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", help="Installed GTA bundle identifier, including its signing suffix if any.")
+    parser.add_argument("--stock-job", action="store_true",
+                        help="Also sample the exact-build local stock job fields, without role attestation.")
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
     try:
-        sample = collect(args.bundle)
+        sample = collect(args.bundle, args.stock_job)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))

@@ -68,3 +68,11 @@ sau khi gọi hàm cleanup. Log iPhone trước đó ghi `work cop_ls` và `work
 Metadata job mới là ứng viên kiểm tra điều kiện nhận ca. Nó không cấp vai
 cảnh sát hay chứng minh người gửi đã được xác thực. Chưa có đo bộ nhớ thời
 điểm nhận và bỏ ca trên iPhone với observer mới.
+
+
+Có thể thêm `--stock-job` vào lệnh observer USB Windows đã dùng trước đó.
+Sau khi đối chiếu UUID, instruction và điểm dừng trong `jobs_update`, nó
+đọc đúng 40 byte của trường ID job và hai số trạng thái/loại job. Log chỉ
+cho biết ID có phải `cop_ls` hoặc rỗng hay không, cùng hai mã số. Không in
+ID lạ, địa chỉ hay token. Lấy mẫu ba mốc chưa nhận ca, đã nhận, đã bỏ ca
+trong Sandbox. Mã job vẫn chỉ là điều kiện, chưa có quyền Police RP.
