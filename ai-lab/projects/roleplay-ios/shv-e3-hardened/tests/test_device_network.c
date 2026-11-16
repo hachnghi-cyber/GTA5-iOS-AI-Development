@@ -88,7 +88,8 @@ int main(void) {
     assert(recvfrom(rogue,rogue_reply,96,0,NULL,NULL)<0);
     assert(errno==EAGAIN||errno==EWOULDBLOCK);
     assert(atomic_load(&qb.state)==RBP_EMPTY);
-    assert(receiver.receiver.committed_sequence==0);
+    /* Avoid unsynchronized reads of worker-owned receiver state. If rogue
+     * seq=44 had committed, subsequent legitimate seq=1 would be rejected. */
     close(rogue);
     /* Legitimate peer still works after an invalid endpoint is dropped. */
     assert(rbp_network_request_ping(&sender));
