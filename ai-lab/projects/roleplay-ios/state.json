@@ -119,6 +119,11 @@
       "claim": "E3 Phase10 endpoint pin now rejects a correctly HMAC-signed diagnostic UDP frame from a source IP/port different from the configured peer before ACK/queue, while valid peer delivery+HMAC invocation receipt still succeeds. The device log evaluator now requires seven same-sequence stages including B native report queued/sent and A report verified, and rejects fail-closed states and stale runs.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43920561577 ; commit ba151f30b10508939e1d64285061c22a2bc2afac; PR https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/19",
       "scope": "HOST C and Python tests only: 46/46 Python, sanitizer+two-process UDP PASS with both Clang and GCC, wrong-port test repeated 12x per compiler. No E3 iPhoneOS linked dylib, device callback or RAGE player synchronization validated."
+    },
+    {
+      "claim": "Phase11 E3 source rejects blank HMAC keys/session/player/peer IDs at BOTH sandbox config parser and direct network-start API; strict Apple iPhoneOS build script now validates real LC_RPATH, ARM64, LC_BUILD_VERSION platform IOS, and avoids strong linking game private libs. Local Clang/GCC host tests pass; exact user IPA SHA256+ScriptHook baseline preflight and 46/46 Python tests pass.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43923116112 ; commit 61b7c70661014d02d0a1f480cc9191cc570e3594 ; ai-lab/projects/roleplay-ios/shv-e3-hardened/PHASE11_IOS_BRINGUP.md",
+      "scope": "HOST + EXACT ORIGINAL IPA STATIC EVIDENCE ONLY. macOS iphoneos-link queued, no linked/signed iOS dylib, no current E0/E1/E3 runtime and no authenticated RAGE remote gameplay."
     }
   ],
   "unknowns": [
@@ -602,6 +607,24 @@
       "source_zip_sha256": "c8680fd0d962158b47fc8629fbc3d66fdb568931f944049ee85d11cd8dfa8393",
       "report": "ai-lab/projects/roleplay-ios/shv-e3-hardened/PHASE10_ENDPOINT_AND_LOG_GATES.md",
       "next_gate": "A genuine iPhoneOS link + development signing, fresh E0 callback Story/Online logs, E1 visually observed HUD, E3 two-iPhone same-sequence ACK+invocation HMAC report. PR#16 RAGE network authentic sender/session incarnation proof separately required before gameplay."
+    },
+    "experimental_e3_phase11": {
+      "pr": 19,
+      "branch": "feature/rbp-e3-hardened-20261116",
+      "source_commit": "61b7c70661014d02d0a1f480cc9191cc570e3594",
+      "source_dir": "ai-lab/projects/roleplay-ios/shv-e3-hardened/",
+      "ci_run_id": 43923116112,
+      "ci_host": "SUCCESS Clang/GCC",
+      "ci_iphoneos": "QUEUED (at last check; artifact not verified)",
+      "host_tests": "Clang/GCC full host PASS, 46/46 pinned Python tests PASS; GCC ASan/UBSan network PASS",
+      "ipa_original_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+      "gta5_original_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "shv_original_sha256": "a86451f766925adf9fa8dfedd8cfa92f9895bd68fda16b3795e6f747fef2196d",
+      "local_source_snapshot_zip_sha256": "0e5b9b291ec18499db3d5b00e8ba163afdcc08d98c653ce1aa8fc30fbbf7dca2",
+      "device_tested": false,
+      "signed_iphoneos_dylib": false,
+      "roleplay_enabled": false,
+      "next_gate": "Inspect macOS job 133495341539 and verify unsigned E0/E1/E3 dylib with otool, vtool, nm and artifact checksums if completed. Only after legitimate development signing/install collect E0 callback, E1 HUD, E3 two-phone logs; independently PR16 native sender/session auth before RP player actions."
     }
   }
 }
