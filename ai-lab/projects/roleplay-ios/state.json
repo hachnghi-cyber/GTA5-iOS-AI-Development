@@ -114,6 +114,11 @@
       "claim": "Separate v13.3 ScriptHookV E0 diagnostic source committed on PR #18; Clang/GCC Linux host-mock loader/register/tick/detach passed, and branch-scoped iPhoneOS SDK CI was configured. No original GTA binary was changed.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/18 ; commit e65903d96216d8e477ec8ebd952b5b6895592545",
       "scope": "LOCAL HOST MOCK ONLY. iOS dylib link pending CI; ScriptHook callback and RAGE action on real iPhone not validated; native receive provenance in PR #16 remains blocked."
+    },
+    {
+      "claim": "Exact v13.3 ScriptHookV ARM64 _scriptWait at offset 0x56B4 has a NULL-context return path skipping _sh_swap; isolated E0 probe was hardened against no-yield busy-spins with 16ms wait, 120-tick bound and four-fast-return guard. GitHub Linux host-mock + nine log-classifier tests passed.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43895737607 ; commit 9d2423f862125fcb405dcc46e0ccd426e2deafa2",
+      "scope": "Static disassembly and mock host CI only. No confirmation of scheduler behavior on iPhone, no iPhoneOS SDK linked dylib or network-origin gameplay event."
     }
   ],
   "unknowns": [
@@ -542,7 +547,13 @@
       "device_loaded": false,
       "script_callback_on_iphone": false,
       "online_rage_action": false,
-      "next_gate": "Read run 43892852428 macos-15 ios-link output, then development-sign exact v13.3 IPA and observe fresh RBPProbeE0.log (Story and Online separately)."
+      "next_gate": "Manually run macOS iPhoneOS workflow when runner time is available; sign and install dylib with matching development IPA, collect fresh RBPProbeE0.log and posthook.log for Story then Online; PR #16 authenticated receive-origin remains independent and unverified.",
+      "phase5_commit": "9d2423f862125fcb405dcc46e0ccd426e2deafa2",
+      "phase5_host_ci_run": 43895737607,
+      "phase5_host_ci": "SUCCESS (Linux mock + nine Python parser tests)",
+      "phase5_ios_ci": "SKIPPED (manual-only); old macOS job cancelled",
+      "script_wait_static_fast_return_verified": true,
+      "script_wait_guard": "16ms wait, 120 max ticks, 4 consecutive under 0.5ms returns -> fail closed"
     }
   }
 }
