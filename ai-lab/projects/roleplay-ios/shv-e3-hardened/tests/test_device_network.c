@@ -3,12 +3,14 @@
 #include "rbp_device_network.h"
 #include "rbp_native_adapter.h"
 #include <arpa/inet.h>
+#include <errno.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 static int ninit=0, npush=0, ncall=0;
@@ -56,6 +58,39 @@ int main(void) {
     assert(rbp_network_start(&sender,&ca,&qa));
     for(int i=0;i<1000 && (!atomic_load(&sender.active)||!atomic_load(&receiver.active));i++)snooze(5);
     assert(atomic_load(&sender.active)&&atomic_load(&receiver.active));
+    /* Negative: a valid HMAC with the correct sender ID/session from the
+     * WRONG UDP source port must not get an ACK or enter the game queue. */
+    int rogue=socket(AF_INET,SOCK_DGRAM,0); assert(rogue>=0);
+    struct sockaddr_in rogue_bind={0};
+    rogue_bind.sin_family=AF_INET;
+    rogue_bind.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+    rogue_bind.sin_port=0;
+    assert(bind(rogue,(struct sockaddr*)&rogue_bind,sizeof rogue_bind)==0);
+    struct sockaddr_in got_port={0};socklen_t got_len=sizeof got_port;
+    assert(getsockname(rogue,(struct sockaddr*)&got_port,&got_len)==0);
+    assert(ntohs(got_port.sin_port)!=(uint16_t)port_a);
+    rbp_frame_c forged={0};forged.kind=RBP_KIND_ACTION;
+    forged.action=RBP_DIAG_PING;forged.sequence=44;
+    struct timeval now={0};assert(gettimeofday(&now,NULL)==0);
+    forged.timestamp_ms=(uint64_t)now.tv_sec*1000u+(uint64_t)now.tv_usec/1000u;
+    memcpy(forged.sender,ca.self,16);
+    memcpy(forged.target,ca.peer,16);
+    memcpy(forged.session,ca.session,16);
+    memset(forged.nonce,0x99,sizeof forged.nonce);
+    uint8_t forged_wire[96];assert(rbp_wire_encode(&forged,ca.key,forged_wire));
+    struct sockaddr_in addr_b={0};addr_b.sin_family=AF_INET;
+    addr_b.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+    addr_b.sin_port=htons((uint16_t)port_b);
+    assert(sendto(rogue,forged_wire,96,0,(struct sockaddr*)&addr_b,sizeof addr_b)==96);
+    struct timeval timeout={.tv_sec=0,.tv_usec=300000};
+    assert(setsockopt(rogue,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof timeout)==0);
+    uint8_t rogue_reply[96];
+    assert(recvfrom(rogue,rogue_reply,96,0,NULL,NULL)<0);
+    assert(errno==EAGAIN||errno==EWOULDBLOCK);
+    assert(atomic_load(&qb.state)==RBP_EMPTY);
+    assert(receiver.receiver.committed_sequence==0);
+    close(rogue);
+    /* Legitimate peer still works after an invalid endpoint is dropped. */
     assert(rbp_network_request_ping(&sender));
     rbp_native_api fake={mock_init,mock_push,mock_call};
     rbp_diag_event receipt={0};int got=0;

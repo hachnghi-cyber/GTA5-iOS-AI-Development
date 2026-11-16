@@ -145,6 +145,16 @@ static void emit_native_invocation_report(rbp_device_network *s,int sock,
     atomic_store_explicit(&s->receipt_state,0,memory_order_release);
 }
 static void network_receiver(rbp_device_network *s,int sock) {
+    /* Accept diagnostic traffic only from the explicitly configured LAN peer.
+     * HMAC protects packet bytes but does not attest UDP source IP/port.
+     * Do not permit a different socket to replace last_peer or receive ACK. */
+    struct sockaddr_in authorized_peer={0};
+    authorized_peer.sin_family=AF_INET;
+    authorized_peer.sin_port=htons(s->conf.peer_port);
+    if(inet_pton(AF_INET,s->conf.peer_ipv4,&authorized_peer.sin_addr)!=1){
+        rbp_logf("[RBP_NET] PEER_IPV4_INVALID_FAIL_CLOSED\n");
+        return;
+    }
     uint8_t buffer[512],ack[96];
     struct sockaddr_in last_peer={0};socklen_t last_len=sizeof(last_peer);
     int has_peer=0;
@@ -156,6 +166,11 @@ static void network_receiver(rbp_device_network *s,int sock) {
             if(errno!=EAGAIN && errno!=EWOULDBLOCK && errno!=EINTR){
                 rbp_logf("[RBP_NET] RX_SOCKET_ERROR=%d\n",errno);
             }
+            continue;
+        }
+        if(!same_sockaddr(&peer,&authorized_peer)) {
+            /* Never print addresses, IDs or credentials in diagnostic logs. */
+            rbp_logf("[RBP_NET] UNEXPECTED_UDP_ENDPOINT_DROP\n");
             continue;
         }
         rbp_rx_result status=rbp_receiver_handle(&s->receiver,s->handoff,
