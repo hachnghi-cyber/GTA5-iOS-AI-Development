@@ -1,0 +1,270 @@
+{
+  "status": "STATIC_VERIFIED",
+  "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "symbols": {
+    "sandbox_program": {
+      "name": "__Z21MacportSandboxProgramv",
+      "va": "0x10003b2d8"
+    },
+    "sandbox_callback": {
+      "name": "__ZL20MacportSandboxNativeRN4rage9scrThread4InfoE",
+      "va": "0x10003b384"
+    },
+    "online_update": {
+      "name": "__ZL19MacportOnlineUpdatev",
+      "va": "0x1000e16f8"
+    },
+    "jobs_update": {
+      "name": "__ZL17MacportJobsUpdateP4CPedi",
+      "va": "0x1000eb57c"
+    },
+    "job_send": {
+      "name": "__ZL14MacportJobSendR13MacportJobMsgjj",
+      "va": "0x1000f7d30"
+    },
+    "register_command": {
+      "name": "__ZN4rage9scrThread15RegisterCommandEmPFvRNS0_4InfoEE",
+      "va": "0x101fad4d4"
+    },
+    "startup_script": {
+      "name": "__ZN11CTheScripts19LaunchStartupScriptEv",
+      "va": "0x100e33818"
+    },
+    "on_net_event": {
+      "name": "__ZN4rage16netPlayerMgrBase10OnNetEventEPNS_20netConnectionManagerEPKNS_8netEventE",
+      "va": "0x102024914"
+    },
+    "dispatch": {
+      "name": "__ZN4rage12atDelegator1IvRKNS_19ReceivedMessageDataEE8DispatchES3_",
+      "va": "0x102026114"
+    },
+    "send_buffer": {
+      "name": "__ZN4rage16netPlayerMgrBase10SendBufferEPKNS_9netPlayerEPKvjjPtS3_",
+      "va": "0x101ffee34"
+    },
+    "on_message": {
+      "name": "__ZN4rage11netEventMgr17OnMessageReceivedERKNS_19ReceivedMessageDataE",
+      "va": "0x10200a78c"
+    },
+    "packed_events": {
+      "name": "__ZN4rage11netEventMgr21HandlePackedEventsMsgERKNS_19ReceivedMessageDataE",
+      "va": "0x10200be0c"
+    },
+    "process_events": {
+      "name": "__ZN4rage11netEventMgr19ProcessPackedEventsERNS_12datBitBufferERKNS_9netPlayerES5_",
+      "va": "0x10200c158"
+    },
+    "process_data": {
+      "name": "__ZN4rage11netEventMgr16ProcessEventDataERKNS_9netPlayerES3_tjjtRNS_12datBitBufferE",
+      "va": "0x10200d9ec"
+    },
+    "handle_event": {
+      "name": "__ZN4rage11netEventMgr11HandleEventEPNS_12netGameEventERNS_12datBitBufferERKNS_9netPlayerES7_tjj",
+      "va": "0x10200c7ec"
+    },
+    "script_event_handler": {
+      "name": "__ZN18CScriptedGameEvent12EventHandlerERN4rage12datBitBufferERKNS0_9netPlayerES5_tjj",
+      "va": "0x10191259c"
+    },
+    "script_decide": {
+      "name": "__ZN18CScriptedGameEvent6DecideERKN4rage9netPlayerES3_",
+      "va": "0x101912c44"
+    },
+    "script_ctor": {
+      "name": "__ZN18CScriptedGameEventC1ER13CGameScriptIdPvjj",
+      "va": "0x10191246c"
+    },
+    "group_event_ctor1": {
+      "name": "__ZN24CEventNetworkScriptEventC1EPvjPKN4rage9netPlayerE",
+      "va": "0x1006ada0c"
+    },
+    "group_event_ctor2": {
+      "name": "__ZN24CEventNetworkScriptEventC2EPvjPKN4rage9netPlayerE",
+      "va": "0x1006ad850"
+    },
+    "player_valid": {
+      "name": "__ZNK4rage9netPlayer7IsValidEv",
+      "va": "0x102013b84"
+    },
+    "session_state": {
+      "name": "__ZN15CNetworkSession15SetSessionStateENS_13eSessionStateEb",
+      "va": "0x1017e9de4"
+    },
+    "handle_packet": {
+      "name": "__ZN4rage20netConnectionManager20HandleReceivedPacketERKNS_10netAddressEPKvj",
+      "va": "0x101cd7690"
+    },
+    "p2p_decrypt": {
+      "name": "__ZN4rage20netConnectionManager10P2pDecryptERKNS_10netAddressEPPhRjRb",
+      "va": "0x101cd5ea4"
+    }
+  },
+  "branches": [
+    {
+      "at": "0x100e33838",
+      "source": "startup_script",
+      "target": "sandbox_program",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10003b30c",
+      "source": "sandbox_program",
+      "target": "register_command",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10003b384",
+      "source": "sandbox_callback",
+      "target": "online_update",
+      "kind": "B"
+    },
+    {
+      "at": "0x1000e66e0",
+      "source": "online_update",
+      "target": "jobs_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1020249b8",
+      "source": "on_net_event",
+      "target": "dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101ffeecc",
+      "source": "send_buffer",
+      "target": "dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200a804",
+      "source": "on_message",
+      "target": "packed_events",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200bf40",
+      "source": "packed_events",
+      "target": "process_events",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200c238",
+      "source": "process_events",
+      "target": "process_data",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912688",
+      "source": "script_event_handler",
+      "target": "handle_event",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912c84",
+      "source": "script_decide",
+      "target": "group_event_ctor1",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1006ad8b4",
+      "source": "group_event_ctor2",
+      "target": "player_valid",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd770c",
+      "source": "handle_packet",
+      "target": "p2p_decrypt",
+      "kind": "BL"
+    }
+  ],
+  "observations": [
+    {
+      "at": "0x100e33834",
+      "function": "startup_script",
+      "word": "0x34000460",
+      "observation": "sandbox-mode guard; registration is conditional"
+    },
+    {
+      "at": "0x10003b2f4",
+      "function": "sandbox_program",
+      "word": "0x90000001",
+      "observation": "ADRP callback page into x1"
+    },
+    {
+      "at": "0x10003b2f8",
+      "function": "sandbox_program",
+      "word": "0x910e1021",
+      "observation": "ADD callback offset 0x384 into x1"
+    },
+    {
+      "at": "0x10202496c",
+      "function": "on_net_event",
+      "word": "0xb940192b",
+      "observation": "player connection ID load at +0x18"
+    },
+    {
+      "at": "0x102024970",
+      "function": "on_net_event",
+      "word": "0x6b0a017f",
+      "observation": "compare player connection ID with transport event"
+    },
+    {
+      "at": "0x1020249a8",
+      "function": "on_net_event",
+      "word": "0xa9012be9",
+      "observation": "ReceivedMessageData source/destination from engine pointers"
+    },
+    {
+      "at": "0x101912c74",
+      "function": "script_decide",
+      "word": "0xaa0103e3",
+      "observation": "first netPlayer reference forwarded as constructor x3"
+    },
+    {
+      "at": "0x1006ad8c0",
+      "function": "group_event_ctor2",
+      "word": "0x394086a8",
+      "observation": "read engine player slot byte at +0x21"
+    },
+    {
+      "at": "0x1006ad8cc",
+      "function": "group_event_ctor2",
+      "word": "0x39402029",
+      "observation": "read payload byte at +8"
+    },
+    {
+      "at": "0x1006ad8dc",
+      "function": "group_event_ctor2",
+      "word": "0xb9000828",
+      "observation": "conditional 32-bit sender slot overwrite at payload +8"
+    },
+    {
+      "at": "0x1000eb694",
+      "function": "jobs_update",
+      "word": "0x7102b81f",
+      "observation": "script group event type 0xAE filter"
+    },
+    {
+      "at": "0x1000eb6ac",
+      "function": "jobs_update",
+      "word": "0x52801e82",
+      "observation": "retrieve 244-byte stock job message"
+    },
+    {
+      "at": "0x1000eb6b8",
+      "function": "jobs_update",
+      "word": "0xb9414bf6",
+      "observation": "read claimed slot from stack payload +8"
+    }
+  ],
+  "engine_owned_sender_path_static": true,
+  "cryptographic_authentication_verified": false,
+  "runtime_thread_verified": false,
+  "hook_installed": false,
+  "transport_connected": false,
+  "two_device_verified": false,
+  "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload."
+}

@@ -43,6 +43,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_audit_hook_fingerprint.py' -v
       - name: Validate cross-device PRP3 trace checker (synthetic fixtures only)
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_verify_device_trace.py' -v
+      - name: Validate exact-build engine evidence parser (synthetic fixtures)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_inspect_v133_engine.py' -v
 
   v133-interaction-gate:
     name: v13.3 RP interaction C11 source-only tests
@@ -118,7 +120,7 @@ jobs:
             src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
             -o /tmp/v133_mailbox_threads_clang
           /tmp/v133_mailbox_threads_clang
-      - name: Reproduce all five source-only test binaries from project runner
+      - name: Reproduce all seven source-only test binaries from project runner
         shell: bash
         run: |
           set -euo pipefail

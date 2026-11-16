@@ -14,10 +14,13 @@ static NSString *prp_uuid_of_main_image(void) {
     if (!head || head->magic != MH_MAGIC_64 ||
         head->cputype != CPU_TYPE_ARM64) return nil;
     const struct mach_header_64 *h = (const struct mach_header_64 *)head;
+    if (h->sizeofcmds > 1024 * 1024 || h->ncmds > 4096) return nil;
     const uint8_t *ptr = (const uint8_t *)h + sizeof(*h);
+    const uint8_t *end = ptr + h->sizeofcmds;
     for (uint32_t i=0; i<h->ncmds; ++i) {
+        if ((size_t)(end - ptr) < sizeof(struct load_command)) return nil;
         const struct load_command *cmd = (const struct load_command *)ptr;
-        if (cmd->cmdsize < sizeof(*cmd) || cmd->cmdsize > 32768) return nil;
+        if (cmd->cmdsize < sizeof(*cmd) || cmd->cmdsize > (size_t)(end - ptr)) return nil;
         if (cmd->cmd == LC_UUID && cmd->cmdsize >= sizeof(struct uuid_command)) {
             const struct uuid_command *u = (const struct uuid_command *)ptr;
             const uint8_t *v = u->uuid;
@@ -39,6 +42,7 @@ static void prp_phase8_launch_probe(void) {
         NSString *entry = [NSString stringWithFormat:
             @"schema=prp-v133-launch-probe-v1\n"
              "phase=launch\n"
+             "source_revision=phase9-carrier-unbound\n"
              "gta5_uuid=%@\n"
              "expected_uuid=%@\n"
              "gta5_uuid_matches=%d\n"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Winstom 0.7.171 lmx ARM64 Objective-C method map (metadata only).
+"""Exact-build Winstom 0.7.171/0.7.177 lmx ObjC map (metadata only).
 
 READ-ONLY. Refuses a different Mach-O fingerprint: class/selector addresses
 below are not stable across recompiles, ASLR, or GTA5 v13.3 executable builds.
@@ -16,6 +16,18 @@ EXPECTED_LMX_UUID = "003f682bd578332c840e7b789cd594dc"
 CLASSLIST = (0x3fd688, 26)
 TEXT_METHLIST = (0x37a310, 0x37b948)
 REBASE_TARGET_BITS = (1 << 36) - 1
+PROFILES = {
+    EXPECTED_LMX_SHA256: ('0.7.171', EXPECTED_LMX_UUID, CLASSLIST, TEXT_METHLIST),
+    '206037a1eaeea734e44886e050558421d1df965c8fd4bd3c078c317ca300906a': (
+        '0.7.177', '98e342827c4d3e7b81c211a9803c8108',
+        (0x419e30, 26), (0x3914d8, 0x392b90)),
+}
+
+
+def select_profile(digest):
+    if digest not in PROFILES:
+        raise ValueError("Winstom lmx SHA-256 mismatch; DO NOT reuse offsets")
+    return PROFILES[digest]
 
 
 def decode_rebase(raw):
@@ -28,8 +40,8 @@ def decode_rebase(raw):
 def resolve(data):
     if len(data) < 0x410000 or data[:4] != b"\xcf\xfa\xed\xfe":
         raise ValueError("not expected thin64 Winstom lmx")
-    if hashlib.sha256(data).hexdigest() != EXPECTED_LMX_SHA256:
-        raise ValueError("Winstom lmx SHA-256 mismatch; DO NOT reuse offsets")
+    digest = hashlib.sha256(data).hexdigest()
+    version, expected_uuid, classlist, methlist = select_profile(digest)
     if struct.unpack_from("<I", data, 4)[0] != 0x0100000C:
         raise ValueError("not ARM64")
     uuid = None
@@ -42,7 +54,7 @@ def resolve(data):
         if cmd == 0x1b and length >= 24:
             uuid = data[off + 8:off + 24].hex()
         off += length
-    if uuid != EXPECTED_LMX_UUID:
+    if uuid != expected_uuid:
         raise ValueError("unexpected Mach-O UUID")
     def readq(p):
         if not 0 <= p <= len(data)-8: raise ValueError("pointer out of bounds")
@@ -54,8 +66,8 @@ def resolve(data):
         if e < 0: raise ValueError("unterminated class/selector")
         return data[p:e].decode("utf-8", "replace")
     classes = []
-    for i in range(CLASSLIST[1]):
-        class_va = readq(CLASSLIST[0] + i * 8)
+    for i in range(classlist[1]):
+        class_va = readq(classlist[0] + i * 8)
         if class_va is None: continue
         ro_va = readq(class_va + 32)
         if ro_va is None: continue
@@ -63,12 +75,12 @@ def resolve(data):
         list_va = readq(ro_va + 32)
         methods = []
         if list_va is not None:
-            if not TEXT_METHLIST[0] <= list_va < TEXT_METHLIST[1]:
+            if not methlist[0] <= list_va < methlist[1]:
                 raise ValueError("method list outside expected range")
             flags, count = struct.unpack_from("<II", data, list_va)
             if flags & 0x80000000 == 0 or flags & 0xffff != 12 or count > 512:
                 raise ValueError("unsupported method-list representation")
-            if list_va + 8 + count * 12 > TEXT_METHLIST[1]:
+            if list_va + 8 + count * 12 > methlist[1]:
                 raise ValueError("method list beyond section")
             for j in range(count):
                 entry = list_va + 8 + j * 12
@@ -79,8 +91,8 @@ def resolve(data):
                 imp = entry + 8 + imp_delta
                 methods.append({"selector": text(name_va), "imp_vmaddr": f"0x{imp:x}"})
         classes.append({"class": class_name, "methods": methods})
-    return {"source": "Winstom-0.7.171 lmx.dylib", "sha256": EXPECTED_LMX_SHA256,
-            "uuid": EXPECTED_LMX_UUID, "class_count": len(classes),
+    return {"source": f"Winstom-{version} lmx.dylib", "sha256": digest,
+            "uuid": expected_uuid, "class_count": len(classes),
             "class_linked_method_count": sum(len(c["methods"]) for c in classes),
             "classes": classes,
             "limitations": "ObjC metadata only; implementation address before ASLR; not a v13.3 hook"}

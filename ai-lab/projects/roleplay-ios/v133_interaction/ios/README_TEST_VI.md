@@ -1,5 +1,12 @@
 # GTA V iOS v13.3 — test nhanh Phase 8 (read-only startup probe)
 
+**Cập nhật Phase 9, 16/11/2026:** hỗ trợ thêm IPA xuất từ 3u SHA-256
+`7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7`.
+Executable vẫn phải khớp SHA/UUID v13.3. Artifact mới chứa thêm mã carrier/mailbox
+ARM64 chưa nối engine; log vẫn dùng tên Phase8 để tương thích và ghi
+`source_revision=phase9-carrier-unbound`. Đây vẫn chỉ là phép thử startup.
+Xem `../../WINSTOM_V133_PHASE9_SENDER_CARRIER.md` ở thư mục dự án để đọc bằng chứng mới.
+
 **Lưu ý quan trọng:** Đây là bản thử **khởi động và nạp dylib**, KHÔNG phải Police Roleplay hoàn chỉnh. Không có còng, áp giải hoặc gửi sự kiện Online. Mục tiêu thực tế đầu tiên là xác nhận native probe của chính v13.3 chạy được trong iPhone mà không ảnh hưởng chế độ chơi gốc.
 
 ## Build và lấy dylib

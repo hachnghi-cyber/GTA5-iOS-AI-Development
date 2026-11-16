@@ -1,3 +1,11 @@
+# Cập nhật Phase 9 (16/11/2026)
+
+Đọc [báo cáo sender/carrier](../WINSTOM_V133_PHASE9_SENDER_CARRIER.md).
+`rp_v133_carrier` bao gói PRP3 trong 56 byte, chừa payload +8..11 cho thao tác
+native đã quan sát tĩnh và đưa frame vào mailbox hiện có. Test hai endpoint vẫn
+là fixture host. Chưa có emitter/receiver gắn vào engine hoặc sender được xác
+thực trên iPhone. Không gửi bare PRP3 qua CScriptedGameEvent.
+
 # GTA V iOS v13.3 — Winstom-inspired interaction proof of concept
 
 **SOURCE ONLY — NOT an IPA and NOT working Online Police RP.**

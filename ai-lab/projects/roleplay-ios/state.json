@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-phase8-authenticated-sender-research",
+  "phase": "v13.3-phase9-engine-sender-path-carrier-unbound",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -94,10 +94,14 @@
       "claim": "Phase 8 fast iPhone startup-probe packaging workflow now includes a Windows drag/drop local unsigned IPA maker and macOS/Linux one-command maker. Added 6th synthetic integration test covering full IPA rezip, exact build patch, resource preservation, binary size, bridge insertion and file-sharing plist. Apple iPhoneOS arm64 dylib build and all 6 tests succeeded on macos-15 GitHub Actions, with artifact containing dylib, patcher and both helper scripts.",
       "evidence": "Build workflow https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43793010558 ; artifact 14192309099 `GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA` SHA256 archive 7419051d7545a0dfb40d78343fe7504754f0464d0050376ffad98b2ee95d09df ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{Make_Phase8_IPA_Windows.bat,Make_Phase8_IPA_macOS_Linux.sh,test_v133_probe_packer.py,README_TEST_VI.md}",
       "scope": "Generated ARM64 diagnostic dylib and locally runnable packer; unit test used synthetic IPA. No actual GTA v13.3 patched IPA was created in this environment, as local container tool execution is unavailable. No signing, iPhone boot, transport, or Police RP gameplay validation."
+    },
+    {
+      "claim": "Phase 9: both supplied IPA CRC/SHA inventories verified locally; v13.3 executable matches Phase 8 exactly despite changed archive hash; Winstom 0.7.177 lmx uses a new guarded profile (26 classes/368 methods). Exact v13.3 ARM64 evidence resolves sandbox callback, connection-associated sender dispatch, local dispatch exception, and conditional native slot write at payload +8 conflicting with bare PRP3 session_id.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md; baselines/phase9-inputs.json; baselines/phase9-v133-engine.json",
+      "scope": "STATIC_VERIFIED; 65 local Python tests pass. New 56-byte source carrier feeds existing mailbox without trusting slot. C sanitizer/Apple builds pending this commit CI. No engine adapter, cryptographic authentication proof, signing or device test."
     }
   ],
   "unknowns": [
-    "Current original IPA binary SHA-256, Mach-O UUID, engine and application version",
     "Actual available source code and legal provenance for the target IPA",
     "RAGE/native API compatibility of the specific iOS port",
     "Which network packet transport and session lifecycle the current game build supports",
@@ -105,18 +109,20 @@
     "Apple SDK build/link/signing availability, and hardware crash/performance results",
     "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results.",
     "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated.",
-    "Winstom native target bound to LMXMessageProxy at runtime and where native server grant/owner authoritative state is produced; v13.3 authenticated receiver/callback still unverified."
+    "Winstom native target bound to LMXMessageProxy at runtime and where native server grant/owner authoritative state is produced; v13.3 authenticated receiver/callback still unverified.",
+    "Runtime remote connection authentication vs local dispatch, native callback thread and pointer lifetime remain unverified despite exact static sender path.",
+    "Only one iPhone is currently available; no signed device boot or two-device event test has been performed in this session."
   ],
   "baseline": {
-    "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
-    "game_version": "user-labeled v12; CFBundleShortVersionString 1.0",
-    "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
+    "ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+    "game_version": "user-labeled v13.3; 3u export; CFBundleShortVersionString 1.0",
+    "macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
     "device_tested": false,
     "supported_ios_versions": [],
     "actual_build_artifact": null,
-    "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
-    "binary_count": 15,
-    "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+    "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+    "binary_count": 16,
+    "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/phase9-inputs.json"
   },
   "decisions": [
     {
@@ -151,19 +157,21 @@
         "No extracted copyrighted assets published"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2",
-      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required.",
+      "note": "Current v13.3 and Winstom 0.7.177 local inputs statically verified; exact sender/callback evidence added in Phase 9. Runtime integration remains blocked.",
       "evidence": [
         "ai-lab/projects/roleplay-ios/baselines/v12-verified.json",
-        "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md"
+        "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md",
+        "ai-lab/projects/roleplay-ios/baselines/phase9-inputs.json",
+        "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json"
       ]
     },
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
-        "RP-001"
+        "Runtime callback thread, remote connection authentication, session generation and pointer lifetime verification"
       ],
       "acceptance": [
         "Versioned ABI contracts",
@@ -188,7 +196,7 @@
     {
       "id": "RP-004",
       "priority": 4,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Create native client/server handshake proof of concept with tests",
       "blocked_on": [
         "RP-002"
@@ -230,7 +238,28 @@
       ]
     }
   ],
-  "next_action": "Prioritize real device startup proof: use downloaded Phase8 bundle with exact user-held GTAV-v13.3.ipa SHA256 7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89. Build local unsigned IPA with drag/drop helper, sign app+new dylib using same Apple Team ID, install on iPhone and collect PoliceRP-v13.3-Phase8.txt and startup crash logs. Once successful, identify real v13.3 RAGE game-thread authenticated sender/session callback for benign PRP3 greet between two devices; do not claim cuff/escort gameplay.",
+  "next_action": "Use Phase 9 CI-built startup probe and allowlisted current IPA to make a local unsigned diagnostic IPA, then user re-signs and tests the available iPhone. Keep network/cuff flags zero. Validate the exact-build OnNetEvent -> ReceivedMessageData -> scripted-event sender path at runtime, excluding local SendBuffer, with session generation and authenticated connection proof before enabling the candidate PRP3EV01 carrier. A second iPhone is required for real A-to-B acceptance; do not replace this with synthetic tests.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "historical_baselines": [
+    {
+      "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+      "game_version": "user-labeled v12; CFBundleShortVersionString 1.0",
+      "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
+      "device_tested": false,
+      "supported_ios_versions": [],
+      "actual_build_artifact": null,
+      "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+      "binary_count": 15,
+      "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+    }
+  ],
+  "research_branch": "feature/winstom-rp-ipa-audit-20261116",
+  "last_work": {
+    "base_commit": "59d46193fd71dc995e283ea1fafebc7485e451de",
+    "phase9_ci": "pending push",
+    "device_tested": false,
+    "two_device_tested": false,
+    "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md"
+  }
 }

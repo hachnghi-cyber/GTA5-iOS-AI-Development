@@ -6,6 +6,8 @@ on:
       - feature/winstom-rp-ipa-audit-20261116
     paths:
       - 'ai-lab/projects/roleplay-ios/v133_interaction/ios/**'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/src/**'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/include/**'
       - '.github/workflows/build-v133-phase8-probe.yml'
   workflow_dispatch:
 
@@ -35,6 +37,17 @@ jobs:
           set -euo pipefail
           mkdir -p out
           SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          MODULE=ai-lab/projects/roleplay-ios/v133_interaction
+          for source in "$MODULE"/src/*.c; do
+            name="$(basename "$source" .c)"
+            xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
+              -miphoneos-version-min=16.3 -std=c11 -O2 \
+              -fvisibility=hidden -Wall -Wextra -Werror -Wpedantic \
+              -I "$MODULE/include" -c "$source" -o "out/$name.o"
+            xcrun --sdk iphoneos clang --analyze -arch arm64 -isysroot "$SDK" \
+              -miphoneos-version-min=16.3 -std=c11 -I "$MODULE/include" \
+              "$source" -o "out/$name-analysis.plist"
+          done
           xcrun --sdk iphoneos clang -arch arm64 \
             -isysroot "$SDK" -miphoneos-version-min=16.3 \
             -x objective-c -fobjc-arc -fvisibility=hidden \
@@ -42,6 +55,7 @@ jobs:
             -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
             -framework Foundation \
             ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133LaunchProbe.m \
+            out/rp_v133_*.o \
             -o out/PoliceRPV133Probe.dylib
           xcrun lipo -info out/PoliceRPV133Probe.dylib
           xcrun otool -D out/PoliceRPV133Probe.dylib
@@ -57,7 +71,7 @@ jobs:
           cp ai-lab/projects/roleplay-ios/v133_interaction/ios/Make_Phase8_IPA_macOS_Linux.sh out/
           chmod +x out/Make_Phase8_IPA_macOS_Linux.sh
           bash -n out/Make_Phase8_IPA_macOS_Linux.sh
-          printf 'NO IPA. NO police arrest. NO multiplayer transport. Use only exact original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
+          printf 'NO IPA. Startup diagnostics only. Phase9 carrier/gate/mailbox compiled but UNBOUND. NO police arrest or multiplayer transport. Use allowlisted original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
       - uses: actions/upload-artifact@v4
         with:
           name: GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA

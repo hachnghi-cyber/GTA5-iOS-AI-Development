@@ -129,6 +129,25 @@ class PackerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             mod.check_bridge(b"FAKE DYLIB")
 
+    def test_rejects_truncated_command_table(self):
+        with self.assertRaisesRegex(ValueError, 'outside binary'):
+            mod.header_info(fixture()[:60])
+
+    def test_rejects_short_dylib_command(self):
+        raw = bytearray(fixture())
+        struct.pack_into('<IIII', raw, 16, 1, 8, 0, 0)
+        struct.pack_into('<II', raw, 32, mod.LC_LOAD_DYLIB, 8)
+        with self.assertRaisesRegex(ValueError, 'Short LC_LOAD_DYLIB'):
+            mod.header_info(raw)
+
+    def test_unknown_archive_still_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'unknown.ipa'
+            path.write_bytes(b'not an authorized exact input')
+            with mock.patch.object(sys, 'argv', ['packer', '--ipa', str(path)]):
+                with self.assertRaisesRegex(ValueError, 'IPA hash mismatch'):
+                    mod.main()
+
 
 if __name__ == "__main__":
     unittest.main()

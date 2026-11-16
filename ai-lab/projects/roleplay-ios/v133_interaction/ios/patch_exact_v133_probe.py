@@ -12,6 +12,11 @@ from pathlib import Path
 
 
 IPA_SHA256 = '7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89'
+# Independently audited 3u export. Main executable SHA/UUID are unchanged.
+# No wildcard or --force override: every archive variant is explicitly reviewed.
+ADDITIONAL_IPA_SHA256S = frozenset({
+    '7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7',
+})
 GTA5_SHA256 = 'f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc'
 GTA5_PATH = 'Payload/GTAV.app/GTA5'
 PLIST_PATH = 'Payload/GTAV.app/Info.plist'
@@ -36,6 +41,8 @@ def header_info(binary):
     if magic != MH_MAGIC_64 or cpu != CPU_TYPE_ARM64:
         raise ValueError('Expected a Mach-O arm64 binary')
     end = 32 + size
+    if end > len(binary) or ncmds > 4096:
+        raise ValueError('Load command table outside binary')
     off = 32
     first_section = len(binary)
     existing = []
@@ -56,6 +63,8 @@ def header_info(binary):
                 if section_offset:
                     first_section = min(first_section, section_offset)
         if cmd == LC_LOAD_DYLIB:
+            if cmdsize < 24:
+                raise ValueError('Short LC_LOAD_DYLIB')
             name_offset = struct.unpack_from('<I', binary, off + 8)[0]
             if 24 <= name_offset < cmdsize:
                 name = binary[off + name_offset:off + cmdsize].split(b'\x00')[0]
@@ -117,9 +126,12 @@ def main():
     if (opts.bridge is None) != (opts.out is None):
         ap.error('--bridge and --out must be given together, or neither for inspect-only')
 
-    if digest(opts.ipa.read_bytes()) != IPA_SHA256:
+    if digest(opts.ipa.read_bytes()) not in {IPA_SHA256, *ADDITIONAL_IPA_SHA256S}:
         raise ValueError('IPA hash mismatch; refused to patch a different build')
     with zipfile.ZipFile(opts.ipa) as source:
+        names = source.namelist()
+        if len(names) != len(set(names)):
+            raise ValueError('Duplicate archive entries')
         if source.testzip() is not None:
             raise ValueError('Damaged original IPA')
         if GTA5_PATH not in source.namelist():
