@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-windows-usb-game-callback-observed",
+  "phase": "v13.3-device-to-host-mtls-verified-police-authority-host-only",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -238,7 +238,7 @@
       ]
     }
   ],
-  "next_action": "Sign and install the verified ARM64 TLS diagnostic IPA, then test a newly paired iPhone-to-Windows exchange. Once a game identity and authority snapshot can be verified on-device, integrate the police decisions and test across two consenting iPhones in a private Sandbox session.",
+  "next_action": "Implement a fail-closed transaction/acknowledgment boundary for the verified authority rules. For engine integration prove the mapping from paired RP identity to a consenting v13.3 game participant and a fresh authoritative snapshot; test real roleplay in a controlled two-iPhone Sandbox session.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -408,7 +408,7 @@
       "source": "ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133TLSProbe.m",
       "host_runner": "ai-lab/projects/roleplay-ios/v133_interaction/tools/run_ios_tls_probe.py",
       "generated_kit_host_tls_test_passed": true,
-      "device_tested": false,
+      "device_tested": true,
       "engine_sender_mapping_verified": false,
       "gameplay_rp_enabled": false,
       "windows_lan_cli_reference_test_passed": true,
@@ -439,7 +439,9 @@
         ],
         "unsigned": true,
         "device_tested": false
-      }
+      },
+      "iphone_windows_diagnostic_verified": true,
+      "matched_diagnostic_log": "ai-lab/projects/roleplay-ios/baselines/phase10-iphone-windows-tls.json"
     },
     "police_authority": {
       "source": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police.c",
@@ -447,7 +449,10 @@
       "scope": "Source-only authority decisions for opt-in, duty, cuff, escort, passenger seat and temporary jail",
       "host_ci_requested": true,
       "engine_integration": false,
-      "device_tested": false
+      "device_tested": false,
+      "host_ci_run": 43840665974,
+      "host_ci_conclusion": "success",
+      "host_binaries": 8
     }
   }
 }

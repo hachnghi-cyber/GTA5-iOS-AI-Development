@@ -18,8 +18,8 @@ tiếp tục từ điểm này. Còn chờ scripted receive trong phiên Sandbox
 ## Hướng transport RP độc lập
 
 `PRP3_DIRECT_TLS_VI.md` ghi bản tham chiếu TLS hai chiều chạy được trên host.
-Probe ARM64 đã build và IPA chẩn đoán chưa ký đã được kiểm tra cục bộ.
-Tiếp theo là ký lại và thử iPhone ↔ máy tính. Giữ nguyên gate
+Probe ARM64 đã build, người dùng đã ký/cài, và iPhone ↔ Windows đã trao
+đổi GREET/DOCUMENTS qua TLS thật. Đọc log đã lọc trong baseline Phase 10. Giữ nguyên gate
 v13.3 và không dùng ID TLS như slot hay danh tính engine nếu chưa đối chiếu.
 
 ## Luật Police RP

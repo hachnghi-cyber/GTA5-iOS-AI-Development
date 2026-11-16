@@ -65,3 +65,18 @@ phút. [Apple Network TLS](https://developer.apple.com/documentation/network/tls
 Lần kiểm thử host giải mã PKCS#12 sinh từ kit rồi dùng một client Python
 đối chứng với responder trên socket TLS thật. Hành vi Security/Network
 framework, quyền mạng nội bộ và thiết bị iPhone cần kiểm chứng riêng.
+
+
+## Kết quả trên iPhone thật, 16/11/2026
+
+`ecfefc6` build probe ARM64 qua [Actions](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43839768526).
+Sau khi người dùng ký và cài, đã tạo một ghép cặp mới, chuyển cấu hình qua
+USB rồi mở GTA. Lúc 09:34:42 UTC log startup báo đúng UUID và revision
+`tls-probe-opt-in`. Windows nhận GREET và gửi DOCUMENTS. Lúc 09:34:43
+UTC log iPhone báo `result=greet_sent_documents_received` và
+`paired_tls_verified=1`. Cấu hình tạm đã được xóa khỏi iPhone.
+
+`baselines/phase10-iphone-windows-tls.json` lưu kết quả đã lọc. Trạng thái
+`engine_sender_mapping_verified=0` và `gameplay_rp_enabled=0` được giữ nguyên.
+Phép thử chạy trên một iPhone và Windows tại launcher. Phần áp dụng vào
+game và nghiệm thu với hai iPhone vẫn đang chờ.

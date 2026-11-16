@@ -1,0 +1,27 @@
+{
+  "scope": "one iPhone to Windows on a private LAN; diagnostic only",
+  "unsigned_build_commit": "ecfefc6377a355d3b4c0902353920cbc7d8fd71a",
+  "startup": {
+    "time": "2026-11-16 09:34:42 +0000",
+    "source_revision": "tls-probe-opt-in",
+    "gta5_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+    "gta5_uuid_matches": "1"
+  },
+  "windows": {
+    "paired_client_greet_received": true,
+    "documents_sent": true,
+    "iphone_receive_requires_device_log": true,
+    "gameplay_rp_enabled": false
+  },
+  "iphone": {
+    "time": "2026-11-16 09:34:43 +0000",
+    "schema": "prp3-tls-probe-v1",
+    "result": "greet_sent_documents_received",
+    "paired_tls_verified": "1",
+    "engine_sender_mapping_verified": "0",
+    "gameplay_rp_enabled": "0"
+  },
+  "temporary_phone_config_removed": true,
+  "signed_package_digest_measured": false,
+  "two_iphone_tested": false
+}
