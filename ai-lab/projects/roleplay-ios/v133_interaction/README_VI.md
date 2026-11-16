@@ -85,3 +85,27 @@ python3 tools/verify_device_trace.py --tx device_A_TX.jsonl --rx device_B_RX.jso
 Locally on 2026-11-16, 13 Python unit tests passed for the packaged Phase 6 implementation; three Phase 5 C11 regressions also passed under GCC and Clang ASan/UBSan. GitHub Actions is still marked failure; source-only tests are not an iPhone or network gameplay proof.
 
 See \`WINSTOM_V133_PHASE6_TRACE_VALIDATION.md\`. The R19/H5 captured diagnostics still showed \`sender_auth=0\` and \`gameplay=0\` in sampled event probes; no authenticated game transport is established.
+
+## Phase 7 — bounded mailbox + multi-threaded regression
+
+Files added:
+- `include/rp_v133_mailbox.h` and `src/rp_v133_mailbox.c`: 64-slot fixed-size, allocation-free C11 mailbox that copies only the exact 40-byte PRP3 frame and externally supplied native transport metadata.
+- `tests/test_v133_mailbox.c`: deterministic full-queue/drop, replay, eight events/frame, stale session and host migration, game-thread-only callbacks, reentrant revocation, clear.
+- `tests/test_v133_mailbox_threads.c`: four concurrent synthetic producer pthreads, 500 packets per sender, with one game-thread consumer.
+- `tools/run_host_tests.sh` now executes all **five** C11 test programs, under either GCC or Clang and ASan+UBSan.
+
+For a fresh Linux checkout:
+```bash
+cd ai-lab/projects/roleplay-ios/v133_interaction
+CC=gcc bash tools/run_host_tests.sh
+CC=clang bash tools/run_host_tests.sh
+```
+
+Verified GitHub Actions on PR #16, exact source commit `9855965f4f6f86304c6b683b1a186dcf9a2343c9`:
+- [Winstom RP CI SUCCESS](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760288).
+- [AI Lab CI SUCCESS](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760234).
+- [Source Watch SUCCESS](https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760343).
+
+The queue is intentionally **lossy** under load. Success counts vary by thread scheduling. GCC+ASan/UBSan and Clang verified memory-safety/undefined-behavior checks for the tested cases, **not** ThreadSanitizer or iOS runtime. `rp_v133_mailbox_pump()` must run on the genuine GTA game thread, and `rp_v133_mailbox_enqueue()` must be called only when the authentic native transport has already supplied a verified sender, session, epoch and channel authentication state. No such real callback has been established on v13.3 yet.
+
+Technical design and blockers: `WINSTOM_V133_PHASE7_MAILBOX.md`.
