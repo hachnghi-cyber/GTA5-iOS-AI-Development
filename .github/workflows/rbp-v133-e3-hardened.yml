@@ -1,0 +1,44 @@
+name: GTA v13.3 E3 Game Native Invocation Report (diagnostic only)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/rbp-e3-hardened-20261116
+    paths:
+      - 'ai-lab/projects/roleplay-ios/shv-e3-hardened/**'
+      - '.github/workflows/rbp-v133-e3-hardened.yml'
+permissions:
+  contents: read
+jobs:
+  host-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clang host mock UDP/native pipeline (no iPhone)
+        run: |
+          cd ai-lab/projects/roleplay-ios/shv-e3-hardened
+          CC=clang bash tools/run_phase3_checks.sh
+      - name: GCC host mock UDP/native pipeline (no iPhone)
+        run: |
+          cd ai-lab/projects/roleplay-ios/shv-e3-hardened
+          CC=gcc bash tools/run_phase3_checks.sh
+  iphoneos-link:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode iPhoneOS unsigned diagnostic dylibs
+        run: |
+          cd ai-lab/projects/roleplay-ios/shv-e3-hardened
+          bash ios/build_probe_macos.sh 0
+          bash ios/build_probe_macos.sh 1
+          bash ios/build_probe_macos.sh 3
+      - name: Upload UNSIGNED diagnostics only
+        uses: actions/upload-artifact@v4
+        with:
+          name: RBP-v133-E3-HARDENED-UNSIGNED-NOT-DEVICE-TESTED
+          path: ai-lab/projects/roleplay-ios/shv-e3-hardened/build/ios-e*/
+          if-no-files-found: error
+          retention-days: 7

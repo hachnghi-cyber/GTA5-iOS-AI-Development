@@ -1,0 +1,53 @@
+{
+  "project": "OPERATION RAGE BREAKTHROUGH v13.3 — Phase 9 hardened E3",
+  "based_on": "Phase 4 test source; original IPA untouched",
+  "ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+  "gta5_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "script_hook_uuid": "F768B7B5-AD75-39F4-83D3-8E49234325B5",
+  "tested": {
+    "host_c_compilers": [
+      "clang",
+      "gcc"
+    ],
+    "asan_ubsan": "PASS: C protocol, device network, mocked native adapter, plugin host integration",
+    "python_unit_tests": 37,
+    "python_skipped": 0,
+    "two_process_udp": "PASS: A queue ACK and independent B-native-called receipt matched original session/nonce/sequence and HMAC",
+    "dangerous_scheduler_fast_return": "PASS: callback returns after four fast returns, both compilers",
+    "normal_callback": "PASS: 900 wait calls, bounded completion, both compilers",
+    "arm64_apple_ios_objects": "PASS: three freestanding ARM64 Mach-O object files via clang, NOT dylib",
+    "original_ipa_preflight": "PASS",
+    "patch_does_not_modify_binary": true
+  },
+  "not_tested": [
+    "Xcode iPhoneOS SDK dylib link",
+    "codesign/install on iPhone",
+    "E0/E1 actual scheduler/HUD in GTA v13.3",
+    "E3 two real iPhones",
+    "RAGE native online sender authentication/session-generation",
+    "Police Roleplay remote effects"
+  ],
+  "security_boundaries": [
+    "UDP key from separate test config DOES NOT establish RAGE Online peer identity",
+    "First ACK means queue acceptance only",
+    "Second HMAC report means native-call function pointers attempted in callback, NOT HUD observed",
+    "No vehicle/ped/player gameplay mutations or remote arrest commands",
+    "Test proof uses two Linux processes and mocked game API"
+  ],
+  "changed_files": [
+    "include/rbp_device_network.h",
+    "include/rbp_handoff.h",
+    "include/rbp_native_adapter.h",
+    "include/rbp_wire_c.h",
+    "ios/rbp_shv_plugin.c",
+    "src/rbp_device_network.c",
+    "src/rbp_native_adapter.c",
+    "src/rbp_wire_c.c",
+    "tests/test_device_network.c",
+    "tests/test_plugin_loader_host.c",
+    "tests/test_plugin_peer_host.c",
+    "tests/test_rbp_wire_c.c",
+    "tests/test_two_process_e3.py",
+    "tools/run_phase3_checks.sh"
+  ]
+}
