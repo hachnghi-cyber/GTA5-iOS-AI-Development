@@ -119,6 +119,11 @@
       "claim": "Exact v13.3 ScriptHookV ARM64 _scriptWait at offset 0x56B4 has a NULL-context return path skipping _sh_swap; isolated E0 probe was hardened against no-yield busy-spins with 16ms wait, 120-tick bound and four-fast-return guard. GitHub Linux host-mock + nine log-classifier tests passed.",
       "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43895737607 ; commit 9d2423f862125fcb405dcc46e0ccd426e2deafa2",
       "scope": "Static disassembly and mock host CI only. No confirmation of scheduler behavior on iPhone, no iPhoneOS SDK linked dylib or network-origin gameplay event."
+    },
+    {
+      "claim": "Phase 6 fixed an E0 test coverage gap: 120/120 normal callback ticks + completion and 4-call null-context fast-return termination independently passed Clang and GCC mocks; local ASan/UBSan passed. Exact user-provided v13.3 IPA ScriptHookV SHA256/UUID and nine ARM64 instruction words matched a read-only ABI guard.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43898228546 ; commit 438f2c9d1771bc3cd4e5aa948b98034c33708245 ; ai-lab/projects/roleplay-ios/shv-e0/PHASE6_ABI_AUDIT.md",
+      "scope": "STATIC EXACT-BINARY + HOST MOCK ONLY. Github CI host job success with 15 Python tests, macOS ios-link skipped (manual-only); no on-device ScriptHook tick, no iPhoneOS link, no verified native gameplay or remote event."
     }
   ],
   "unknowns": [
@@ -547,13 +552,22 @@
       "device_loaded": false,
       "script_callback_on_iphone": false,
       "online_rage_action": false,
-      "next_gate": "Manually run macOS iPhoneOS workflow when runner time is available; sign and install dylib with matching development IPA, collect fresh RBPProbeE0.log and posthook.log for Story then Online; PR #16 authenticated receive-origin remains independent and unverified.",
+      "next_gate": "Manual workflow_dispatch macOS iPhoneOS link, legitimate app signing and fresh Story/Online E0 device logs; independently obtain PR#16 genuine native receive-context sample bound to sender/session provenance before enabling RP.",
       "phase5_commit": "9d2423f862125fcb405dcc46e0ccd426e2deafa2",
       "phase5_host_ci_run": 43895737607,
       "phase5_host_ci": "SUCCESS (Linux mock + nine Python parser tests)",
       "phase5_ios_ci": "SKIPPED (manual-only); old macOS job cancelled",
       "script_wait_static_fast_return_verified": true,
-      "script_wait_guard": "16ms wait, 120 max ticks, 4 consecutive under 0.5ms returns -> fail closed"
+      "script_wait_guard": "16ms wait, 120 max ticks, 4 consecutive under 0.5ms returns -> fail closed",
+      "phase6_commit": "438f2c9d1771bc3cd4e5aa948b98034c33708245",
+      "phase6_host_run": 43898228546,
+      "phase6_host_ci": "PASS (Clang+GCC normal 120-tick and fast-return mock; 15 Python tests)",
+      "phase6_local_asan_ubsan": "PASS (Clang both modes, detect_leaks=0)",
+      "phase6_exact_shv_sha256": "a86451f766925adf9fa8dfedd8cfa92f9895bd68fda16b3795e6f747fef2196d",
+      "phase6_exact_shv_uuid": "F768B7B5-AD75-39F4-83D3-8E49234325B5",
+      "phase6_static_arm64_verified_words": 9,
+      "phase6_fiber_return_semantics": "_sh_fiber_main invokes callback and handles return through completed state 2 + _sh_swap (STATIC only)",
+      "phase6_ios_build": "SKIPPED (manual-only macOS workflow)"
     }
   }
 }
