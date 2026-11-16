@@ -24,9 +24,11 @@ jobs:
           cd ai-lab/projects/roleplay-ios/shv-e3-hardened
           CC=gcc bash tools/run_phase3_checks.sh
   iphoneos-link:
+    needs: host-regression
     # One explicit commit triggers one macOS build; other pushes run host checks only.
     if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[E3-iOS]') }}
-    runs-on: macos-15
+    # Reuse the Intel runner proven by PR #16; clang still targets iPhoneOS arm64.
+    runs-on: macos-15-intel
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4

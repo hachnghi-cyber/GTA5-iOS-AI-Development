@@ -615,7 +615,7 @@
       "source_dir": "ai-lab/projects/roleplay-ios/shv-e3-hardened/",
       "ci_run_id": 43923116112,
       "ci_host": "SUCCESS Clang/GCC",
-      "ci_iphoneos": "QUEUED (at last check; artifact not verified)",
+      "ci_iphoneos": "CANCELLED before job steps; no dylib artifact established for run 43923116112",
       "host_tests": "Clang/GCC full host PASS, 46/46 pinned Python tests PASS; GCC ASan/UBSan network PASS",
       "ipa_original_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
       "gta5_original_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
@@ -625,6 +625,19 @@
       "signed_iphoneos_dylib": false,
       "roleplay_enabled": false,
       "next_gate": "Inspect macOS job 133495341539 and verify unsigned E0/E1/E3 dylib with otool, vtool, nm and artifact checksums if completed. Only after legitimate development signing/install collect E0 callback, E1 HUD, E3 two-phone logs; independently PR16 native sender/session auth before RP player actions."
+    },
+    "e3_iphoneos_build_followup": {
+      "parent_commit": "31daaaa81e1c7e01da53e7949349cc58a528b83e",
+      "previous_runs": [
+        43912516647,
+        43923116112
+      ],
+      "previous_iphoneos_result": "cancelled; no job steps",
+      "change": "Use macos-15-intel, previously proven for PR16 iPhoneOS arm64, and require host-regression success before linking",
+      "new_run": "pending push",
+      "native_source_changed": false,
+      "linked_dylib_verified": false,
+      "device_verified": false
     }
   }
 }
