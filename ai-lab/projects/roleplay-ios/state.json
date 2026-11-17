@@ -648,6 +648,46 @@
       "authority_status": "STATIC CANDIDATE ONLY: no verified remote sender/session owner; no authenticated RP delivery; no RAGE event hook; no PoliceRP gameplay enabled",
       "device_runtime_provenance_tested": false,
       "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independent CNetworkSession GamerInfo IsMember/GetPeerCxn/GetPeerEndpointId and actual RAGE authenticated receive path, with join/leave generation invalidation; then only consider game-thread police native calls after two-device validation."
+    },
+    "native_v133_sender_provenance_phase17": {
+      "pr": 16,
+      "branch": "feature/winstom-rp-ipa-audit-20261116",
+      "latest_code_commits": [
+        "53136d4143208a56612625625a1933077f1a44d2",
+        "ee95b03050c989d935881b93817bfde06779346a",
+        "4255b25d783aacc07bc6fb9a7f59e8982be2eaf5",
+        "8961d0789cdf54e4173c3dd88c778ab42789e947",
+        "92eced46a54b4cb6d483382e5717f7167654c77a",
+        "b96afec8e6a6add586d6c069b593e30c570b7e28",
+        "16936c5121252fddedc442d07b8f69f3d0f5b071",
+        "78633541ee05c7f9727af1f1e0b1a07b7dd7f7f1"
+      ],
+      "original_private_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "exact_macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "static_code_pins_unique": 128,
+      "independent_exact_binary_new_pins": "24/24 exact disassembly words from local original GTA5 MATCH; 104 prior audited pins",
+      "new_windows_usb_site": [
+        "on_net_event_pre_dispatch",
+        "on_connection_peer_verify"
+      ],
+      "on_net_event_pre_dispatch_va": "0x1020249a8",
+      "on_connection_peer_verify_va": "0x1017dfa48",
+      "native_chain": "CNetworkSession::OnConnectionEvent reads netEvent+0x3c -> NetworkInterface::GetPlayerFromConnectionId -> netPlayer::IsValid -> GetRlPeerId -> snSession::GetPeerCxn",
+      "peer_session_check": "CNetGamePlayer GetGamerInfo/rlPeerInfo GetPeerId independently compared with snSession+0xba30/+0xb930 GetPeerIdByCxn mapping; same event x1 peer register; does not authenticate transport",
+      "privacy": "96-bit temporary HMAC tag per debugger process for correlation of connection IDs; no raw IDs or keys logged",
+      "ci_phase17_source": {
+        "run_44000373924": "SUCCESS: Python synthetic, C11 source-only GCC/Clang ASan/UBSan",
+        "run_44000700884": "SUCCESS: Python & C11 for opaque LLDB tag",
+        "run_44000965904": "SUCCESS: Python Windows USB internal observer and C11 source tests",
+        "latest_windows_stop_tests": "new hardware-stop synthetic fixture added, CI pending"
+      },
+      "actual_windows_usb_internal_site_hit": false,
+      "actual_rage_packet_authenticated": false,
+      "actual_remote_netplayer_bound": false,
+      "actual_session_generation_verified": false,
+      "actual_two_iphone_roleplay": false,
+      "police_gameplay_enabled": false,
+      "next_gate": "Run the developer-signed single-iPhone Windows USB read-only hardware observer with actual controlled remote RAGE peer. Require verified internal OnConnectionEvent and OnNetEvent pre-dispatch samples; still must prove same packet's decrypt provenance and session generation across reconnect before allowing police action."
     }
   }
 }

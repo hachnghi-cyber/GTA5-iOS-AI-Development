@@ -113,3 +113,35 @@ All 24 native ARM64 instructions identified in the contiguous conditional `CNetw
 ## Phase 17f — Opaque per-process correlation between two RAGE event families
 
 The read-only LLDB observer now provides a **transient 96-bit HMAC connection tag** only after a positive synthetic-safe candidate check at `on_net_event_pre_dispatch` or `on_connection_peer_verify`. The secret key is generated inside the LLDB Python process and rotated when the debuggee process unique ID changes. Neither the key nor raw 32-bit connection IDs, pointer values or actual peer IDs are written to the report. Matching tags in one process can show the two event families referred to the same connection ID, but cannot establish they refer to the SAME packet, same RAGE generation, verified decrypt provenance or authenticated player. No game memory is modified. CI now explicitly runs synthetic pre-dispatch tests rather than relying on source presence alone. Real device LLDB capture still absent.
+
+## Phase 17g — Windows-only USB hardware diagnostic
+
+The repository Windows USB program `observe_v133_windows_usb.py` now supports
+`--site on_net_event_pre_dispatch` and
+`--site on_connection_peer_verify`. It uses the existing
+`pymobiledevice3` Developer Mode/debugproxy connection, checks the exact
+v13.3 Mach-O UUID and all guarded live opcode bytes, arms one hardware
+breakpoint with `Z1` only, and deletes it in `finally` with `z1`
+before detaching. A stop is accepted only if the ARM64 PC equals the
+guarded internal VA and the debugger reports a breakpoint stop.
+The device observer reads 32 or fewer players or session peers and redacts
+all IDs/pointers; it never emits a cryptographic sender proof.
+
+Windows command structure (run at repository root, when developer-signed
+game is OPEN and developer debug service is available):
+
+```powershell
+py -3 ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py YOUR_SIGNED_BUNDLE_ID --site on_connection_peer_verify --wait-seconds 30
+py -3 ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py YOUR_SIGNED_BUNDLE_ID --site on_net_event_pre_dispatch --wait-seconds 30
+```
+
+The bundle ID must be exact to the locally installed signed game. Use
+**one** command at a time. A timeout means no observation, not that a
+function does not exist. Never copy credentials, process memory, signing
+profiles or gamer IDs to diagnostics. Run only on a personally controlled
+device with a valid development entitlement. These are **unexecuted**
+hardware instructions, not a completed iPhone test.
+
+Current observations from E0/E1/E3 **cannot** be reused as RAGE
+sender/session evidence because E3 was separate UDP; a real remote
+RAGE peer must join for valid sample windows.
