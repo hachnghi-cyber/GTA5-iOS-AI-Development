@@ -89,3 +89,7 @@ This internal member check is NOT proof that rlGamerInfo corresponds
 to the actual network packet sender. The missing link remains the
 authenticated connection -> gamer info -> current session generation
 association; no PoliceRP action is enabled.
+
+## Phase 17 — Guarded OnNetEvent pre-dispatch probe
+
+An exact original GTA5 disassembly confirms that unslid VA `0x1020249a8` is reached AFTER type-4 event selection, payload and active-player checks, sender connection-ID match, and local-player existence, immediately before `ReceivedMessageData::Dispatch`. The pending hardware one-shot breakpoint uses `x19` manager, `x20` event, `x9` selected sender and `x10` local netPlayer and scans at most 32 linked players. All reports redact addresses and connection identifiers, label matches CANDIDATE ONLY, and explicitly set authenticated RAGE sender/session flags to false. Eighteen newly pinned ARM64 guard instructions (total 85) were checked against the original exact SHA256-pinned executable. This is strictly static/host evidence, not a hardware capture or proven authenticated peer.

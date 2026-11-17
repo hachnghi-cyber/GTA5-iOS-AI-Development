@@ -80,6 +80,24 @@ PINS={
     0x101804778:0x54000068, # reject endpoint on condition
     0x10180477c:0xb9000268, # store selected endpoint
     0x101804780:0x52800020, # return success (only checked path)
+    0x102024918:0x37f80848, # initial event connection sign guard
+    0x102024934:0xf9400048, # load event vtable
+    0x102024938:0xf9400d08, # load event type method
+    0x102024940:0xd63f0100, # call event type method
+    0x102024944:0x7100101f, # require event type 4
+    0x102024948:0x54000661, # reject other event type
+    0x10202494c:0xf9402688, # event payload pointer
+    0x102024950:0xb4000628, # reject missing payload
+    0x102024958:0x37f805ea, # reject negative connection ID
+    0x10202495c:0x3963e269, # player manager active byte
+    0x102024960:0x360005a9, # reject inactive manager
+    0x102024964:0xf9409669, # list head manager plus 0x128
+    0x102024968:0xb4000569, # reject empty netPlayer list
+    0x102024974:0x54000080, # branch when player connection matches
+    0x102024978:0xf9401d29, # next netPlayer plus 0x38
+    0x10202497c:0xb5ffff89, # loop while netPlayer exists
+    0x102024984:0xd000a80a, # branch reached after player ID match
+    0x102024990:0xb400042a, # reject unavailable local player
 }
 class AuditError(ValueError):pass
 
