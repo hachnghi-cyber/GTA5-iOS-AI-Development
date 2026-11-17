@@ -785,6 +785,14 @@
         "device_peer_table_match": false,
         "authenticated_sender_verified": false,
         "session_generation_verified": false
+      },
+      "session_swap_boundary": {
+        "status": "EXACT_BINARY_AND_SYNTHETIC_TESTS_PASSED",
+        "evidence": "Exact ClearSession branch calls SwapSessions. The guarded ARM64 block exchanges two slots in one store; a slot alone is not an incarnation.",
+        "mode": "--site session_swap",
+        "local_python_tests_passed": 121,
+        "device_sample": false,
+        "session_generation_verified": false
       }
     }
   }

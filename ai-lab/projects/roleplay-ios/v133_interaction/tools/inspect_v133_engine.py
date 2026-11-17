@@ -74,6 +74,7 @@ SYMBOLS = {
     'session_exists': '__ZNK4rage9snSession6ExistsEv',
     'session_is_established': '__ZNK4rage9rlSession13IsEstablishedEv',
     'peer_id_by_connection': '__ZNK4rage9snSession14GetPeerIdByCxnEi',
+    'swap_sessions': '__ZN15CNetworkSession12SwapSessionsEv',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
@@ -258,6 +259,7 @@ def inspect(data):
         ('register_events', 0x2ec, 'register_event', 'BL'),
         ('script_read', 0xb0, 'read_bits', 'BL'),
         ('clear_session', 0x104, 'session_id', 'BL'),
+        ('clear_session', 0x214, 'swap_sessions', 'BL'),
         ('get_current_session', 0x1c, 'session_exists', 'BL'),
         ('get_current_session', 0x3c, 'session_exists', 'BL'),
         ('session_exists', 0x4, 'session_is_established', 'B'),
@@ -349,6 +351,12 @@ def inspect(data):
         ('peer_id_by_connection', 8, 0xb94a3128, 'remote peer count'),
         ('peer_id_by_connection', 0x14, 0x9124c129, 'first remote peer slot'),
         ('peer_id_by_connection', 0x1c, 0xb940014b, 'read peer connection field'),
+        ('swap_sessions', 0x10, 0x9100c3fd, 'set the SwapSessions frame pointer'),
+        ('swap_sessions', 0x14, 0xaa0003f3, 'preserve the session manager in x19'),
+        ('swap_sessions', 0x60, 0x3dc00a60, 'load both session slots'),
+        ('swap_sessions', 0x64, 0x6e004001, 'exchange the two 64-bit halves'),
+        ('swap_sessions', 0x68, 0x3d800a61, 'store the exchanged session slots'),
+        ('swap_sessions', 0x6c, 0x3cc38261, 'next instruction after the store'),
         ('main_session_progress_native', 0x10, 0xb0012788, 'ADRP x8 session global page 0x1031ef000'),
         ('main_session_progress_native', 0x14, 0x91138108, 'ADD x8 storage offset 0x4e0'),
         ('main_session_progress_native', 0x18, 0xf9400100, 'load session object pointer into x0'),
@@ -380,6 +388,7 @@ def inspect(data):
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
     internal_sites = {
+        'session_swap': sites['swap_sessions'] + 0x68,
         'on_net_event_pre_dispatch': sites['on_net_event'] + 0x94,
         'on_connection_peer_verify': sites['on_connection_event'] + 0x654,
     }
@@ -424,6 +433,18 @@ def inspect(data):
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites=trace_words,
                 receive_context=context,
+                session_swap={
+                    'global_pointer_va': hex(session_global),
+                    'post_store_va': hex(sites['swap_sessions'] + 0x6c),
+                    'code_guards': [
+                        {'function': name, 'va': hex(sites[name]), 'size': length,
+                         'sha256': hashlib.sha256(data[off+sites[name]-va:
+                                                      off+sites[name]-va+length]).hexdigest()}
+                        for name, length in (('main_session_progress_native', 0x38),
+                                             ('swap_sessions', 0x1c0))
+                    ],
+                    'scope': 'transient slot address equality across the store; no generation attestation',
+                },
                 session_slots={
                     'global_pointer_va': hex(session_global),
                     'code_guards': [

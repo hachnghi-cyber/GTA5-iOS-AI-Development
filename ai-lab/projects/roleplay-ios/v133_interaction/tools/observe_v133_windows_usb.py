@@ -24,7 +24,7 @@ UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
 OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
-                    "on_net_event_pre_dispatch", "on_connection_peer_verify")
+                    "on_net_event_pre_dispatch", "on_connection_peer_verify", "session_swap")
 MAX_REPLY = 16384
 
 
@@ -450,6 +450,54 @@ def queue_stage_stop(remote, addresses, deadline):
         return pc, thread, 'hit'
 
 
+def capture_session_swap(remote, base, metadata, wait_seconds):
+    """Check slot order across one native store without retaining addresses."""
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    profile = metadata['session_swap']
+    verify_context_code(remote, base, profile, label='session-swap')
+    for number, names in ((19, (b'x19',)), (29, (b'fp', b'x29')), (32, (b'pc',))):
+        name = remote.request(f'qRegisterInfo{number:x}'.encode()).partition(b';')[0]
+        if name not in tuple(b'name:' + n for n in names):
+            raise DebugProtocolError('session-swap register layout mismatch')
+
+    pre = base + internal_site_va(metadata, 'session_swap') - IMAGE_VMADDR
+    post = base + int(profile['post_store_va'], 16) - IMAGE_VMADDR
+    if post != pre + 4:
+        raise DebugProtocolError('session-swap store and successor are not adjacent')
+    deadline = time.monotonic() + wait_seconds
+    sample = {'site': 'session_swap', 'status': 'incomplete',
+              'same_session_slots_swapped': False, 'session_generation_verified': False}
+    pc, thread, status = queue_stage_stop(remote, (pre,), deadline)
+    if pc is None:
+        sample['status'] = status
+        return sample
+
+    manager = remote.read_register(19)
+    frame = remote.read_register(29)
+    global_pointer = base + int(profile['global_pointer_va'], 16) - IMAGE_VMADDR
+    current_manager = int.from_bytes(remote.memory(global_pointer, 8), 'little')
+    if not 0 < manager < (1 << 48) - 0x30 or manager % 8 or manager != current_manager or not frame or frame % 16:
+        sample['status'] = 'invalid_session_swap_context'
+        return sample
+    before = struct.unpack('<QQ', remote.memory(manager + 0x20, 16))
+    if before[0] == before[1] or any(not 0 < ptr < 1 << 48 or ptr % 8 for ptr in before):
+        sample['status'] = 'ambiguous_slot_values'
+        return sample
+
+    pc, next_thread, status = queue_stage_stop(remote, (post,), deadline)
+    if pc is None:
+        sample['status'] = status
+    elif (next_thread != thread or remote.read_register(19) != manager
+          or remote.read_register(29) != frame):
+        sample['status'] = 'different_swap_invocation'
+    else:
+        after = struct.unpack('<QQ', remote.memory(manager + 0x20, 16))
+        sample['same_session_slots_swapped'] = after == before[::-1]
+        sample['status'] = 'slot_swap_observed' if sample['same_session_slots_swapped'] else 'unexpected_slot_order'
+    return sample
+
+
 def read_enqueue_transport(remote, base, profile, queue, queue_offset):
     """Read only the indicator passed to Unpack by this event's live caller."""
     result = {'caller_observed': False, 'decrypt_indicator': 'unobserved'}
@@ -706,6 +754,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                 raise DebugProtocolError("queue baseline fingerprint mismatch")
             return capture_queue_context(remote, base, metadata, queue['usb_profile'], wait_seconds,
                                          follow_scripted=receive_context)
+        if site == 'session_swap':
+            return capture_session_swap(remote, base, metadata, wait_seconds)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -795,7 +845,7 @@ def main():
     parser.add_argument("--stock-job", action="store_true",
                         help="Also sample exact-build local stock job fields at jobs_update only.")
     parser.add_argument("--site", choices=OBSERVABLE_SITES, default=DEFAULT_SITE,
-                        help="Read-only single hardware breakpoint site; does not authenticate an event.")
+                        help="Read-only observation site. session_swap checks before and after one store.")
     parser.add_argument("--wait-seconds", type=int, default=3,
                         help="Bounded time (1-60 seconds) to observe one stop; no polling loop.")
     parser.add_argument('--receive-context', action='store_true',
@@ -824,6 +874,8 @@ def main():
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
+    if args.site == 'session_swap':
+        return 0 if sample['same_session_slots_swapped'] else 1
     if args.queue_context:
         matched = (sample.get('same_queued_event_at_scripted_handler') if args.receive_context
                    else sample['queue_object_link_observed'])

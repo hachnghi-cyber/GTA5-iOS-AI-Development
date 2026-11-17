@@ -222,6 +222,21 @@ Lệnh `--site jobs_update --session-context` đọc riêng trạng thái hai sl
 để làm mẫu đối chứng trên một iPhone. Các cờ xác thực sender, membership
 và thế hệ phiên vẫn giữ nguyên.
 
+### Kiểm tra ranh giới đổi slot phiên
+
+Trên binary v13.3, `ClearSession` có một nhánh gọi `SwapSessions`. Hàm này
+đổi chỗ hai con trỏ slot, nên không thể dùng vị trí slot làm thế hệ phiên.
+Trong phiên thử, chạy lệnh dưới rồi thực hiện thao tác chuyển hoặc rời phiên
+trên iPhone. Chỉ nhánh thực sự gọi `SwapSessions` mới phát sinh mẫu này.
+
+```powershell
+python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id> --site session_swap --wait-seconds 45
+```
+
+`slot_swap_observed` yêu cầu hai giá trị đổi chỗ qua đúng một lệnh store,
+cùng thread và frame. Dữ liệu xuất chỉ gồm trạng thái và cờ so sánh.
+Timeout chỉ cho biết observer không bắt được lần hoán đổi trong cửa sổ đo.
+
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Công cụ kiểm tra thân hàm, frame `HandleReceivedPacket → Unpack`
 và connection manager trước khi đọc byte, khi cả hai frame vẫn còn sống.

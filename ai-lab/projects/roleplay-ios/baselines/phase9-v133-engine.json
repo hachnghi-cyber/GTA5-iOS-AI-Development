@@ -238,6 +238,10 @@
     "peer_id_by_connection": {
       "name": "__ZNK4rage9snSession14GetPeerIdByCxnEi",
       "va": "0x1019dc870"
+    },
+    "swap_sessions": {
+      "name": "__ZN15CNetworkSession12SwapSessionsEv",
+      "va": "0x1018043d4"
     }
   },
   "branches": [
@@ -407,6 +411,12 @@
       "at": "0x1017ef388",
       "source": "clear_session",
       "target": "session_id",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ef498",
+      "source": "clear_session",
+      "target": "swap_sessions",
       "kind": "BL"
     },
     {
@@ -904,6 +914,42 @@
       "observation": "read peer connection field"
     },
     {
+      "at": "0x1018043e4",
+      "function": "swap_sessions",
+      "word": "0x9100c3fd",
+      "observation": "set the SwapSessions frame pointer"
+    },
+    {
+      "at": "0x1018043e8",
+      "function": "swap_sessions",
+      "word": "0xaa0003f3",
+      "observation": "preserve the session manager in x19"
+    },
+    {
+      "at": "0x101804434",
+      "function": "swap_sessions",
+      "word": "0x3dc00a60",
+      "observation": "load both session slots"
+    },
+    {
+      "at": "0x101804438",
+      "function": "swap_sessions",
+      "word": "0x6e004001",
+      "observation": "exchange the two 64-bit halves"
+    },
+    {
+      "at": "0x10180443c",
+      "function": "swap_sessions",
+      "word": "0x3d800a61",
+      "observation": "store the exchanged session slots"
+    },
+    {
+      "at": "0x101804440",
+      "function": "swap_sessions",
+      "word": "0x3cc38261",
+      "observation": "next instruction after the store"
+    },
+    {
       "at": "0x100cfe324",
       "function": "main_session_progress_native",
       "word": "0xb0012788",
@@ -1003,6 +1049,7 @@
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
     "migrate_end": "0xa9ba6ffc",
+    "session_swap": "0x3d800a61",
     "on_net_event_pre_dispatch": "0xa9012be9",
     "on_connection_peer_verify": "0x9407da23"
   },
@@ -1092,6 +1139,25 @@
       }
     ],
     "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "session_swap": {
+    "global_pointer_va": "0x1031ef4e0",
+    "post_store_va": "0x101804440",
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "swap_sessions",
+        "va": "0x1018043d4",
+        "size": 448,
+        "sha256": "cc17b2b30075218cb5dd4575cb0310fd0ea9f02bd9e3a7f92d0b1e383ff1d267"
+      }
+    ],
+    "scope": "transient slot address equality across the store; no generation attestation"
   },
   "session_slots": {
     "global_pointer_va": "0x1031ef4e0",
@@ -1211,6 +1277,7 @@
   "two_device_verified": false,
   "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
   "internal_sites": {
+    "session_swap": "0x10180443c",
     "on_net_event_pre_dispatch": "0x1020249a8",
     "on_connection_peer_verify": "0x1017dfa48"
   },

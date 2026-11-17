@@ -131,6 +131,37 @@ class QueueUSBTests(unittest.TestCase):
                         ('Z', ENQUEUE), ('z', ENQUEUE), ('Z', DISPATCH), ('z', DISPATCH),
                         ('Z', PREDISPATCH), ('Z', caller), ('z', caller), ('z', PREDISPATCH))])
 
+    def test_session_swap_requires_the_adjacent_store_in_the_same_invocation(self):
+        for case in ('swap', 'unchanged', 'other_thread', 'aliased'):
+            with self.subTest(case=case):
+                pre, post = 0x10180443c, 0x101804440
+                global_pointer, manager = 0x1031ef4e0, 0x130000000
+                first, second, frame = 0x140000000, 0x141000000, 0x150000000
+                stages = [
+                    ({32: pre, 19: manager, 29: frame}, b'aaaa'),
+                    ({32: post, 19: manager, 29: frame}, b'bbbb' if case == 'other_thread' else b'aaaa'),
+                ]
+                before = (first, first if case == 'aliased' else second)
+                after = before if case == 'unchanged' else before[::-1]
+                addr = manager+0x20
+
+                class SwapRemote(Remote):
+                    def memory(self, address, size):
+                        if address == addr:
+                            pair = before if self.snapshot[32] == pre else after
+                            return struct.pack('<QQ', *pair)
+                        return super().memory(address, size)
+
+                remote = SwapRemote(stages, {global_pointer: manager})
+                with patch.object(usb, 'verify_context_code'):
+                    report = usb.capture_session_swap(remote, BASE, self.meta, 30)
+                self.assertEqual(report['same_session_slots_swapped'], case == 'swap')
+                self.assertFalse(report['session_generation_verified'])
+                self.assertEqual(remote.breakpoints, set())
+                self.assertNotIn(str(first), json.dumps(report))
+                if case == 'aliased':
+                    self.assertNotIn(f'Z1,{post:x},4'.encode(), remote.commands)
+
     def test_unrelated_dispatch_or_consumer_never_arms_predispatch(self):
         for wrong in ('event', 'return', 'consumer_queue'):
             with self.subTest(wrong=wrong):
