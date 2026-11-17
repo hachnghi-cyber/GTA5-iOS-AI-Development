@@ -13,6 +13,28 @@ observer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(observer)
 
 
+class USBSelectionTests(unittest.TestCase):
+    first = "01234567-0123456789ABCDEF"
+    second = "89ABCDEF-0123456789ABCDEF"
+
+    def test_single_cabled_device_even_with_wifi_entries(self):
+        devices = [
+            {"ConnectionType": "Network", "UniqueDeviceID": self.second},
+            {"ConnectionType": "Network", "UniqueDeviceID": self.first},
+            {"ConnectionType": "USB", "UniqueDeviceID": self.first},
+        ]
+        self.assertEqual(observer.select_usb_device(devices), self.first)
+        with self.assertRaisesRegex(observer.DebugProtocolError, "not connected over USB"):
+            observer.select_usb_device(devices, self.second)
+
+    def test_two_cabled_devices_require_explicit_selection(self):
+        devices = [{"ConnectionType": "USB", "UniqueDeviceID": value}
+                   for value in (self.first, self.second)]
+        with self.assertRaisesRegex(observer.DebugProtocolError, "multiple USB devices"):
+            observer.select_usb_device(devices)
+        self.assertEqual(observer.select_usb_device(devices, self.second.lower()), self.second)
+
+
 class Connection:
     def __init__(self, *chunks):
         self.chunks = iter(chunks)

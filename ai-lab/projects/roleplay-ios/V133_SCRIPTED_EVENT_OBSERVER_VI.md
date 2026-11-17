@@ -187,6 +187,10 @@ gắn hai cờ trạng thái với một scripted event cụ thể.
 Chạy trong Sandbox thử riêng trên bản đã ký phát triển. Nếu có người thứ hai,
 dùng thao tác game gốc đã thống nhất trước để kích hoạt lưu lượng đối chứng.
 
+Nếu cả hai iPhone đều cắm USB, thêm `--udid <mã-thiết-bị-đích>` để tra PID và
+attach trên cùng một máy. Xem mã cục bộ bằng `pymobiledevice3 usbmux list`
+và dùng mục có `ConnectionType: USB`.
+
 ```powershell
 uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --queue-context --wait-seconds 30
 ```

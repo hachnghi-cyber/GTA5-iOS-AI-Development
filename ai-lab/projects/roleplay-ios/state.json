@@ -754,7 +754,17 @@
       "current_device_readiness": "One iPhone on iOS 18.6, live UUID/code and two simultaneous hardware sites verified. Both sites removed and debugger detached. User reported public room or not in Sandbox. Measured a stopped preflight only.",
       "transport_commit": "162e584740e503f0fbf7937e48142bb4cfafffec",
       "transport_ci": "44014313853 SUCCESS Python and C11 ASan/UBSan jobs",
-      "device_preflight_evidence": "baselines/v133-phase19-usb-preflight-20261117.json"
+      "device_preflight_evidence": "baselines/v133-phase19-usb-preflight-20261117.json",
+      "usb_device_selection": {
+        "status": "DEVICE_PREFLIGHT_PASSED",
+        "rule": "Pin PID lookup and debugproxy to the same USB inventory identity. Require --udid when multiple USB devices are connected.",
+        "physical_devices_in_test": 1,
+        "case_sensitive_udid_lookup_reproduced": true,
+        "live_code_ranges_verified": 8,
+        "two_hardware_sites_removed_and_detach_acknowledged": true,
+        "local_python_tests_passed": 119,
+        "live_queue_event_observed": false
+      }
     }
   }
 }

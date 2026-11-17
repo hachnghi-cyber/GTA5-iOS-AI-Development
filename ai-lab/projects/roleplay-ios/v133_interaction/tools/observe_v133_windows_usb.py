@@ -629,18 +629,50 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
         require_ok(remote, b"D", "detach")
 
 
+def select_usb_device(devices, requested=None):
+    if not isinstance(devices, list) or any(not isinstance(row, dict) for row in devices):
+        raise DebugProtocolError("unexpected usbmux inventory")
+    candidates = {
+        identifier.lower(): identifier
+        for row in devices
+        if row.get("ConnectionType") == "USB"
+        and isinstance(identifier := row.get("UniqueDeviceID"), str)
+        and re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{8}-[0-9a-fA-F]{16})", identifier)
+    }
+    if requested is not None:
+        if requested.lower() not in candidates:
+            raise DebugProtocolError("requested device is not connected over USB")
+        return candidates[requested.lower()]
+    if len(candidates) > 1:
+        raise DebugProtocolError("multiple USB devices connected; select one with --udid")
+    if not candidates:
+        raise DebugProtocolError("no USB device connected")
+    return next(iter(candidates.values()))
+
+
 def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-            receive_context=False, session_context=False, queue_context=False):
+            receive_context=False, session_context=False, queue_context=False, udid=None):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
-    result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
-                            capture_output=True, text=True, timeout=20, check=True)
+    inventory = subprocess.run(pmd + ["usbmux", "list"], capture_output=True, text=True, timeout=20)
+    if inventory.returncode:
+        raise DebugProtocolError("could not list USB devices")
+    selected = select_usb_device(json.loads(inventory.stdout), udid)
+    device_args = ["--userspace", "--udid", selected]
+    try:
+        result = subprocess.run(
+            pmd + ["developer", "dvt", "process-id-for-bundle-id", *device_args, bundle],
+            capture_output=True, text=True, timeout=20)
+    except subprocess.TimeoutExpired:
+        raise DebugProtocolError("GTA process lookup timed out") from None
+    if result.returncode or not re.fullmatch(r"[0-9]+", result.stdout.strip()):
+        raise DebugProtocolError("could not look up the GTA process on the selected iPhone")
     pid = int(result.stdout.strip())
     if pid <= 1:
         raise ValueError("GTA is not running. Open stock Sandbox first.")
     with socket.socket() as reserve:
         reserve.bind(("127.0.0.1", 0))
         port = reserve.getsockname()[1]
-    proxy = subprocess.Popen(pmd + ["developer", "debugserver", "start-server", "--userspace",
+    proxy = subprocess.Popen(pmd + ["developer", "debugserver", "start-server", *device_args,
                                     "--host", "127.0.0.1", "--local-port", str(port)],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
@@ -661,12 +693,16 @@ def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
     finally:
         if proxy.poll() is None:
             proxy.terminate()
-            proxy.wait(timeout=6)
+            try:
+                proxy.wait(timeout=6)
+            except subprocess.TimeoutExpired:
+                raise DebugProtocolError("debugproxy did not terminate") from None
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", help="Installed GTA bundle identifier, including its signing suffix if any.")
+    parser.add_argument("--udid", help="Local USB device identifier. Required when multiple devices are connected.")
     parser.add_argument("--stock-job", action="store_true",
                         help="Also sample exact-build local stock job fields at jobs_update only.")
     parser.add_argument("--site", choices=OBSERVABLE_SITES, default=DEFAULT_SITE,
@@ -695,7 +731,7 @@ def main():
         parser.error('--queue-context cannot be combined with other observation modes')
     try:
         sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds,
-                         args.receive_context, args.session_context, args.queue_context)
+                         args.receive_context, args.session_context, args.queue_context, args.udid)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
