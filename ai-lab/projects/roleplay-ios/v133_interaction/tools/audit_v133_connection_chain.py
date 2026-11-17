@@ -39,6 +39,31 @@ PINS={
     0x101cd7710:0x34000500, # return==0 => reject
     0x101cd7794:0x39406fe4, # pass out flag in w4 to Unpack
     0x101cd77a8:0x97fffaa2, # Unpack call
+    0x1019d255c:0x9102a000, # snSession::GetSessionId adds rlSession +0xa8
+    0x1019d2560:0x140e6356, # tail branch into rlSession::GetId
+    0x101d6b2b8:0xf9429000, # rlSession::GetId loads 64-bit ID at +0x520
+    0x1019d62f0:0x91312000, # GetPeerCxn accesses rlPeerInfo member
+    0x1019d62f8:0xeb00029f, # GetPeerCxn compares peer ID
+    0x1019d6300:0x91310268, # GetPeerCxn selects local connection field
+    0x1019d6304:0xb9400100, # GetPeerCxn reads 32-bit connection
+    0x1019d6310:0xb8756a68, # GetPeerCxn remote peer list count
+    0x1019d632c:0x91002100, # GetPeerCxn remote peer info
+    0x1019d6330:0x940e3a1b, # GetPeerCxn remote peer ID getter
+    0x1019d6334:0xeb14001f, # GetPeerCxn peer ID compare
+    0x1019d6358:0x12800000, # GetPeerCxn missing peer returns -1
+    0x1019d30f0:0x91312000, # GetPeerEndpointId peer info
+    0x1019d30f8:0xeb00029f, # GetPeerEndpointId ID compare
+    0x1019d3100:0x91310268, # GetPeerEndpointId select field
+    0x1019d3104:0xb941e100, # GetPeerEndpointId endpoint field DIFFERENT from connection
+    0x1019d3110:0xb8756a68, # GetPeerEndpointId remote peer count
+    0x1019d312c:0x91002100, # GetPeerEndpointId remote peer info
+    0x1019d3130:0x940e469b, # GetPeerEndpointId remote peer getter
+    0x1019d3134:0xeb14001f, # GetPeerEndpointId remote peer compare
+    0x1019d3158:0x12800000, # GetPeerEndpointId missing returns -1
+    0x1020249a8:0xa9012be9, # OnNetEvent copies sender + local pointers
+    0x1020249b8:0x940005d7, # remote OnNetEvent dispatch
+    0x101ffeecc:0x94009c92, # LOCAL SendBuffer dispatch same delegate
+    0x1019d2ee8:0x940e3fb5, # snSession::IsMember compares gamer IDs
 }
 class AuditError(ValueError):pass
 
@@ -87,6 +112,11 @@ def audit(binary):
         "on_net_event_compares_event_and_peer_full_id":True,
         "decrypt_success_may_have_zero_out_flag":True,
         "authenticated_sender_verified":False,
+        "session_id_read_is_64bit_static":True,
+        "peer_connection_and_endpoint_are_distinct_fields":True,
+        "peer_lookup_not_found_returns_minus_one":True,
+        "local_send_buffer_reaches_same_delegate":True,
+        "connection_session_identity_is_static_candidate_only":True,
         "connection_lifetime_on_iphone_verified":False,
         "session_incarnation_verified":False,
         "remote_gameplay_verified":False,

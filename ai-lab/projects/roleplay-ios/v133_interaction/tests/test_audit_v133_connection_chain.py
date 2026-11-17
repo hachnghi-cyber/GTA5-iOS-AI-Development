@@ -16,7 +16,7 @@ def header():
 class TestConnectionChainContract(unittest.TestCase):
     def test_pins_expected(self):
         audit.verify_pins(audit.PINS.__getitem__)
-        self.assertEqual(len(audit.PINS),26)
+        self.assertEqual(len(audit.PINS),51)
     def test_opcode_tampering_fails(self):
         pins=dict(audit.PINS);first=next(iter(pins));pins[first]^=1
         with self.assertRaisesRegex(audit.AuditError,"opcode mismatch"):
@@ -29,6 +29,15 @@ class TestConnectionChainContract(unittest.TestCase):
     def test_uuid_load_command_malformed(self):
         b=header();struct.pack_into("<I",b,36,7)
         with self.assertRaises(audit.AuditError):audit.macho_uuid(b)
+    def test_peer_session_and_dual_dispatch_pins_never_authorize(self):
+        self.assertEqual(audit.PINS[0x1019d255c],0x9102a000)
+        self.assertEqual(audit.PINS[0x101d6b2b8],0xf9429000)
+        self.assertEqual(audit.PINS[0x1019d6358],0x12800000)
+        self.assertEqual(audit.PINS[0x1019d3158],0x12800000)
+        self.assertNotEqual(audit.PINS[0x1019d6304],audit.PINS[0x1019d3104])
+        self.assertIn(0x101ffeecc,audit.PINS)
+        self.assertIn(0x1020249b8,audit.PINS)
+        self.assertNotIn("authenticated_sender_verified",audit.PINS)
     def test_original_hash_is_required(self):
         with self.assertRaisesRegex(audit.AuditError,"wrong GTA5 SHA256"):
             audit.audit(header())
