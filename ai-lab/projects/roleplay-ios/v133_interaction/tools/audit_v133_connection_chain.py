@@ -93,7 +93,6 @@ PINS={
     0x102024960:0x360005a9, # reject inactive manager
     0x102024964:0xf9409669, # list head manager plus 0x128
     0x102024968:0xb4000569, # reject empty netPlayer list
-    0x102024974:0x54000080, # branch when player connection matches
     0x102024978:0xf9401d29, # next netPlayer plus 0x38
     0x10202497c:0xb5ffff89, # loop while netPlayer exists
     0x102024984:0xd000a80a, # branch reached after player ID match
