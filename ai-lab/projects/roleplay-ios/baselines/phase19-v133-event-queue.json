@@ -1,0 +1,65 @@
+{
+  "status": "PASS_STATIC_EXACT_BUILD",
+  "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "verified_opcode_pins": 65,
+  "verified_direct_call_targets": 12,
+  "verified_usb_additional_opcode_pins": 7,
+  "unpack_uses_event_queue": true,
+  "consumer_iteration_uses_next_event": true,
+  "manager_update_calls_dispatch": true,
+  "dispatch_routes_event_into_channel": true,
+  "channel_subscriber_callback_is_indirect": true,
+  "same_net_event_object_runtime_observed": false,
+  "queue_consumer_on_net_event_binding_runtime_observed": false,
+  "packet_cryptographic_sender_identity_verified": false,
+  "rage_membership_generation_verified": false,
+  "rp_actions_enabled": false,
+  "usb_profile": {
+    "enqueue_va": "0x101cd70bc",
+    "dispatch_event_va": "0x101cdbe50",
+    "dispatch_caller_returns": [
+      "0x101cd9ec4",
+      "0x101cd9fa0"
+    ],
+    "on_net_event_pre_dispatch_va": "0x1020249a8",
+    "code_guards": [
+      {
+        "function": "unpack_enqueue",
+        "va": "0x101cd7064",
+        "size": 96,
+        "sha256": "b784badb8eaa72613bbec16d9dbddf634619cef0387b1ce77e914bf6e6349bc7"
+      },
+      {
+        "function": "next_event",
+        "va": "0x101a3801c",
+        "size": 272,
+        "sha256": "6cd1525f5e6c641ffce44d8c1df8605274d10916321ce63cd9a445195fa709ff"
+      },
+      {
+        "function": "dispatch",
+        "va": "0x101cd9810",
+        "size": 2356,
+        "sha256": "55e283b338f2958737c2c892fd44b9b8b1e638814a7ec47b94b4b4368c862b34"
+      },
+      {
+        "function": "dispatch_event",
+        "va": "0x101cdbe50",
+        "size": 800,
+        "sha256": "3297ae20e9bb53faf2620fee60fab1e821629543d4584378b5fd08df15a1fac1"
+      },
+      {
+        "function": "channel_dispatch_event",
+        "va": "0x101cc9c98",
+        "size": 340,
+        "sha256": "b1a1c2ff83a44403993c1b748302678a414a07933c9aba1548c315bef7dc06d7"
+      },
+      {
+        "function": "on_net_event",
+        "va": "0x102024914",
+        "size": 272,
+        "sha256": "a0a1cb18d83c44cd1ce5038fa67e9604e6f6b2ddcabfe53f9f1bec679d6c0a15"
+      }
+    ]
+  }
+}

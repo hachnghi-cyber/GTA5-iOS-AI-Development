@@ -181,3 +181,24 @@ Mẫu thật ngày 2026-11-17 ghi `main=false`, `transition=true`. Dùng phép �
 để phân biệt trạng thái lúc vào phòng và lúc chơi trong phiên thử có peer.
 Phiên quan sát này chưa có mẫu từ `script_event_handler`, vì vậy chưa thể
 gắn hai cờ trạng thái với một scripted event cụ thể.
+
+## Phase 19: theo một event qua hàng đợi bằng USB
+
+Chạy trong Sandbox thử riêng trên bản đã ký phát triển. Nếu có người thứ hai,
+dùng thao tác game gốc đã thống nhất trước để kích hoạt lưu lượng đối chứng.
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --queue-context --wait-seconds 30
+```
+
+Trong một lần attach, observer lấy mẫu lúc `Unpack` chuẩn bị đưa event vào
+queue, xác nhận queue mà `Dispatch` đã đọc cùng event ở `DispatchEvent`, rồi
+kiểm tra event tại điểm `OnNetEvent` chọn sender. Hai điểm cuối phải cùng luồng.
+Nếu `DispatchEvent` trả về trước, observer ghi `returned_before_predispatch`
+và dừng. Nếu trúng event khác, bộ đo trả trạng thái mismatch. Mỗi lần attach
+chỉ theo một event và gỡ các hardware breakpoint trước khi detach.
+
+`queue_object_link_candidate_only` là dấu vết liên hệ theo địa chỉ đối tượng
+trong một lần đo. `native_candidate` ghi kết quả đối chiếu connection với
+netPlayer đã chọn. Các trường xác thực sender, thế hệ phiên và quyền RP
+vẫn tắt. Timeout hoặc mismatch giới hạn phạm vi của mẫu đo.

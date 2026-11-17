@@ -35,16 +35,25 @@ Use `git log -1` for the subsequent documentation/CI checkpoint commit.
 - PR #19 iPhoneOS build at `1e910d4` passed Actions `43969424836`.
   The later PR #19 checkpoint `844ea9c` records E3 PC-to-iPhone UDP ACK
   and the native call receipt, with RAGE player binding still pending.
+- Imported the queue audit and correlator from the user-supplied Phase 19
+  archive. All 21 original Python tests, 65 pins and 12 direct targets passed
+  locally against the exact binary. The archive omitted `tests/test_guard_v2.c`.
+  Use the repository's existing C11 guards for the RP source tests.
+- Windows `--queue-context` checks seven additional instructions and hashes
+  six code ranges, then attempts one queue-to-predispatch trace per attach.
+  It checks the actual consumer queue, matching event addresses and thread,
+  and ends the sample if the selected dispatch call returns first.
+  See `baselines/phase19-v133-event-queue.json` and the observer runbook.
 - Risks: limited supported call chain, debugger pause, unverified authenticated
   session/membership lifetime; read failure or unexpected chain rejects sample.
 
-Next action: reconnect the development-signed iPhone, then use a controlled
-Sandbox session with a cooperating peer. Follow
-`V133_RAGE_PROVENANCE_PHASE16.md` for the Phase 17 internal sites and
-`V133_SCRIPTED_EVENT_OBSERVER_VI.md` for the receive and session contexts.
-Preserve sanitized JSON and the triggering action. Establish one-event
-transport provenance, session lifetime and thread affinity before wiring
-PRP3 to gameplay. Final cuff/release validation requires two iPhones.
+Next action: use the development-signed iPhone in a controlled Sandbox
+session. Start with the queue-context experiment from the observer runbook,
+then compare with the Phase 17 peer check and a scripted receive capture
+with a cooperating peer. Preserve sanitized JSON and the triggering action.
+Establish transport provenance for the same event, session lifetime and
+thread affinity before wiring PRP3 to gameplay. Final cuff/release
+validation requires two iPhones.
 
 Do not repeat the IPA inventory, TLS diagnostic or Phase 5–9 source work.
 Do not publish raw device logs, game payloads/assets, identities or keys.

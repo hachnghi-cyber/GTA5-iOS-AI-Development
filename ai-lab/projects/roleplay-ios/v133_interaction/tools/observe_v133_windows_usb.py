@@ -14,9 +14,12 @@ import subprocess
 import sys
 import time
 import uuid
+from contextlib import ExitStack
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
 BASELINE = Path(__file__).resolve().parents[2] / "baselines" / "phase9-v133-engine.json"
+QUEUE_BASELINE = BASELINE.with_name("phase19-v133-event-queue.json")
 UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
@@ -155,6 +158,8 @@ def read_stock_job(remote, base, sample):
 
 def verify_context_code(remote, base, profile, label='receive-context'):
     """Guard full functions, including every prologue and tail-call path."""
+    if not profile['code_guards']:
+        raise DebugProtocolError('missing ' + label + ' code guards')
     for guard in profile['code_guards']:
         size = guard['size']
         if not 4 <= size <= 4096 or size % 4:
@@ -307,7 +312,6 @@ def read_internal_candidate(remote, base, metadata, site):
     if site not in ("on_net_event_pre_dispatch","on_connection_peer_verify"):
         return report
     try:
-        from importlib.util import spec_from_file_location,module_from_spec
         if site=="on_net_event_pre_dispatch":
             name="usb_pre_dispatch"
             path=Path(__file__).with_name("observe_v133_lldb.py")
@@ -348,6 +352,139 @@ def read_internal_candidate(remote, base, metadata, site):
     return report
 
 
+def wait_for_stop(remote, seconds):
+    """Continue the game. Interrupt and read its stop reply on a timeout."""
+    remote.send(b"c")
+    remote.conn.settimeout(seconds)
+    try:
+        reply = remote.receive()
+    except TimeoutError:
+        remote.conn.settimeout(3)
+        remote.conn.sendall(b"\x03")
+        return remote.receive(), True
+    return reply, False
+
+
+def queue_stage_stop(remote, addresses, deadline):
+    """Stop at the first allowed site and remove all of this stage's hardware BPs."""
+    if time.monotonic() >= deadline:
+        return None, None, 'timeout'
+    with ExitStack() as armed:
+        for address in addresses:
+            hardware = f"{address:x},4".encode()
+            require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
+            armed.callback(require_ok, remote, b"z1," + hardware, "hardware breakpoint removal")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None, None, 'timeout'
+        reply, timed_out = wait_for_stop(remote, remaining)
+        remote.conn.settimeout(3)
+        if timed_out:
+            return None, None, 'timeout'
+        thread = stop_thread(reply)
+        if not thread or not reply.startswith(b'T05'):
+            return None, None, 'unexpected_stop'
+        require_ok(remote, b"Hg" + thread, "stopped thread selection")
+        pc = remote.read_register(32)
+        if pc not in addresses:
+            return None, None, 'unexpected_pc'
+        return pc, thread, 'hit'
+
+
+def capture_queue_context(remote, base, metadata, profile, wait_seconds):
+    """Trace one queued event within a single attach, as a candidate association."""
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    spec = spec_from_file_location("usb_queue_correlation", Path(__file__).with_name("queue_correlation.py"))
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    correlation = module.QueueCorrelation(limit=1)
+
+    def live(va):
+        return base + int(va, 16) - IMAGE_VMADDR
+
+    enqueue = live(profile['enqueue_va'])
+    dispatch = live(profile['dispatch_event_va'])
+    returns = {live(va) for va in profile['dispatch_caller_returns']}
+    pre_dispatch = live(profile['on_net_event_pre_dispatch_va'])
+    if pre_dispatch != base + internal_site_va(metadata, 'on_net_event_pre_dispatch') - IMAGE_VMADDR:
+        raise DebugProtocolError('queue profile disagrees with pre-dispatch baseline')
+    for reg, names in ((0, (b'x0',)), (1, (b'x1',)), (9, (b'x9',)), (10, (b'x10',)),
+                       (19, (b'x19',)), (20, (b'x20',)), (21, (b'x21',)), (27, (b'x27',)),
+                       (28, (b'x28',)), (30, (b'lr', b'x30')), (32, (b'pc',))):
+        register = remote.request(f'qRegisterInfo{reg:x}'.encode()).partition(b';')[0]
+        if register not in tuple(b'name:' + name for name in names):
+            raise DebugProtocolError('queue-context register layout mismatch')
+    verify_context_code(remote, base, profile, label='queue-context')
+
+    sample = {
+        'site': 'phase19_queue_context',
+        'queue_context_status': 'incomplete',
+        'last_stage': 'enqueue',
+        'queue_object_link_observed': False,
+        'dispatch_and_predispatch_same_thread': False,
+        'authenticated_rp_sender_verified': False,
+        'session_generation_verified': False,
+        'game_thread_affinity_verified': False,
+        'custom_rp_event_received': False,
+    }
+    deadline = time.monotonic() + wait_seconds
+    pc, _, status = queue_stage_stop(remote, (enqueue,), deadline)
+    if pc is None:
+        sample['queue_context_status'] = status
+        return sample
+    queue = remote.read_register(0)
+    event = remote.read_register(1)
+    if correlation.observe_unpacked(queue, event) != 'QUEUED_CANDIDATE':
+        sample['queue_context_status'] = 'invalid_enqueue_registers'
+        return sample
+
+    sample['last_stage'] = 'dispatch_event'
+    pc, dispatch_thread, status = queue_stage_stop(remote, (dispatch,), deadline)
+    if pc is None:
+        sample['queue_context_status'] = status
+        return sample
+    manager = remote.read_register(0)
+    consumer = remote.read_register(21)
+    caller = remote.read_register(30)
+    # At the two guarded DispatchEvent calls, x28 is the result of NextEvent,
+    # x27 holds the manager and x21 points to that manager's event consumer.
+    if (caller not in returns or not 0 < manager < (1 << 48) - 0x2c8
+            or manager % 8 or remote.read_register(27) != manager
+            or consumer != manager + 0x2c0 or queue != manager + module.MANAGER_QUEUE_OFFSET
+            or remote.read_register(1) != event or remote.read_register(28) != event):
+        sample['queue_context_status'] = 'dispatch_event_mismatch'
+        return sample
+    current_queue, = struct.unpack('<Q', remote.memory(consumer, 8))
+    if correlation.observe_next(current_queue, event) != 'NEXT_CANDIDATE':
+        sample['queue_context_status'] = 'consumer_queue_mismatch'
+        return sample
+
+    sample['last_stage'] = 'on_net_event_pre_dispatch'
+    # Arm a stop at the caller's return too. A later event must never satisfy
+    # the final comparison after the selected DispatchEvent call has returned.
+    pc, thread, status = queue_stage_stop(remote, (pre_dispatch, caller), deadline)
+    if pc == caller:
+        sample['queue_context_status'] = 'returned_before_predispatch'
+        return sample
+    if pc is None:
+        sample['queue_context_status'] = status
+        return sample
+    if thread != dispatch_thread or remote.read_register(20) != event:
+        sample['queue_context_status'] = 'predispatch_event_or_thread_mismatch'
+        return sample
+    if correlation.observe_on_event(manager, event) != 'QUEUE_OBJECT_LINK_CANDIDATE_ONLY':
+        sample['queue_context_status'] = 'incomplete_queue_chain'
+        return sample
+
+    sample['queue_context_status'] = 'queue_object_link_candidate_only'
+    sample['queue_object_link_observed'] = True
+    sample['dispatch_and_predispatch_same_thread'] = True
+    sample['native_candidate'] = read_internal_candidate(
+        remote, base, metadata, 'on_net_event_pre_dispatch')
+    return sample
+
+
 def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             receive_context=False, session_context=False):
     """Capture exactly one guarded PC stop. A breakpoint hit is NOT sender proof."""
@@ -379,15 +516,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
     hardware = f"{address:x},4".encode()
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
-        remote.send(b"c")
-        remote.conn.settimeout(wait_seconds)
-        timed_out = False
-        try:
-            reply = remote.receive()
-        except TimeoutError:
-            timed_out = True
-            remote.conn.sendall(b"\x03")
-            reply = remote.receive()
+        reply, timed_out = wait_for_stop(remote, wait_seconds)
         tid = stop_thread(reply)
         if tid is None:
             raise DebugProtocolError("no selected thread in stop reply")
@@ -434,7 +563,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
 
 
 def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-                receive_context=False, session_context=False):
+                receive_context=False, session_context=False, queue_context=False):
     metadata = json.loads(BASELINE.read_text(encoding="utf-8"))
     if metadata["uuid"] != UUID:
         raise DebugProtocolError("static baseline UUID mismatch")
@@ -456,6 +585,11 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             expected = struct.pack("<I", int(metadata["trace_sites"][guarded_site], 16))
             if remote.memory(base + va - IMAGE_VMADDR, 4) != expected:
                 raise DebugProtocolError("live instruction mismatch at " + guarded_site)
+        if queue_context:
+            queue = json.loads(QUEUE_BASELINE.read_text(encoding="utf-8"))
+            if queue['uuid'] != UUID or queue['executable_sha256'] != metadata['executable_sha256']:
+                raise DebugProtocolError("queue baseline fingerprint mismatch")
+            return capture_queue_context(remote, base, metadata, queue['usb_profile'], wait_seconds)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -469,7 +603,7 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
 
 
 def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-            receive_context=False, session_context=False):
+            receive_context=False, session_context=False, queue_context=False):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
     result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
                             capture_output=True, text=True, timeout=20, check=True)
@@ -495,7 +629,7 @@ def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                     conn.settimeout(5)
                     return run_capture(conn, pid, stock_job=stock_job, site=site,
                                        wait_seconds=wait_seconds, receive_context=receive_context,
-                                       session_context=session_context)
+                                       session_context=session_context, queue_context=queue_context)
         raise DebugProtocolError("loopback debugproxy connect deadline elapsed")
     finally:
         if proxy.poll() is None:
@@ -516,6 +650,8 @@ def main():
                         help='At script_event_handler entry, compare exact guarded receive/local frame chains and sender references. Does not authenticate a peer.')
     parser.add_argument('--session-context', action='store_true',
                         help='At the verified jobs_update caller, read guarded native main/transition progress bits only. No session identity or authority.')
+    parser.add_argument('--queue-context', action='store_true',
+                        help='Trace one Phase 19 queue event through the guarded dispatcher within one attach. Use by itself.')
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
@@ -527,12 +663,17 @@ def main():
         parser.error('--receive-context requires --site script_event_handler')
     if args.session_context and args.site != 'jobs_update':
         parser.error('--session-context requires --site jobs_update')
+    if args.queue_context and (args.site != DEFAULT_SITE or args.stock_job
+                               or args.receive_context or args.session_context):
+        parser.error('--queue-context cannot be combined with other observation modes')
     try:
         sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds,
-                         args.receive_context, args.session_context)
+                         args.receive_context, args.session_context, args.queue_context)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
+    if args.queue_context:
+        return 0 if sample['queue_object_link_observed'] else 1
     complete = not args.receive_context or sample.get('context_status') == 'observed'
     complete = complete and (not args.session_context or sample.get('session_context_status') == 'observed')
     return 0 if sample["hardware_stop_at_expected_pc"] and complete else 1

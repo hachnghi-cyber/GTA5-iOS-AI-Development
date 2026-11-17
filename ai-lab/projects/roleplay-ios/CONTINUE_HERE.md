@@ -17,6 +17,9 @@ PR #19 đã qua build iPhoneOS ARM64 và ghi nhận thử nghiệm E3 PC → iPh
 với ACK và phản hồi gọi native. Xem checkpoint `844ea9c` của PR #19.
 Observer USB có `--receive-context` để kiểm tra call chain và liên hệ sender;
 tiếp tục cùng hai điểm đo Phase 17 trong phiên có peer thử nghiệm.
+Windows có thêm `--queue-context`, dùng bộ tương quan từ gói Phase 19 để theo
+một event qua enqueue, dispatcher và điểm chọn sender trong `OnNetEvent`.
+Lệnh và tiêu chí đọc kết quả nằm trong `V133_SCRIPTED_EVENT_OBSERVER_VI.md`.
 
 Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng

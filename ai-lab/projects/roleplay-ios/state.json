@@ -133,6 +133,11 @@
       "scope": "One game-loop USB sample. Runtime session identity, generation and authenticated receive remain unverified.",
       "evidence": "baselines/v133-usb-session-context-20261117.json",
       "claim": "A real iPhone stop at the guarded jobs_update caller read native main progress false and transition progress true."
+    },
+    {
+      "scope": "65 original and seven additional opcode checks, 12 call targets and 116 local test cases in repository. No on-device Phase 19 trace or authenticated sender yet.",
+      "claim": "Phase 19 user archive event queue audit reproduced on exact GTA v13.3; Windows USB mode is integrated and host tested.",
+      "evidence": "baselines/phase19-v133-event-queue.json"
     }
   ],
   "unknowns": [
@@ -272,7 +277,7 @@
       ]
     }
   ],
-  "next_action": "Use a development-signed iPhone and a cooperating peer in a controlled Sandbox session. Collect Phase 17 internal-site observations and a scripted receive-context hit, then link one queued event to its transport and live snSession. Check reconnect and migration before enabling RP. Two iPhones are required to verify cuff/release.",
+  "next_action": "Collect --queue-context on the development-signed iPhone in controlled Sandbox, then use cooperating peer traffic for the Phase 17 peer and scripted receive observations. Link the same event to authenticated transport and a live snSession across reconnect/migration before enabling RP.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -713,7 +718,25 @@
       "session_identity_verified": false,
       "session_generation_verified": false,
       "sender_authenticated": false,
-      "next_gate": "Correlate normal traffic from a cooperating peer with a receive hit and the current snSession. Keep capture scope and stop lifetimes separate."
+      "next_gate": "Correlate normal traffic from a cooperating peer with a receive hit and the current snSession. Keep capture scope and stop lifetimes separate.",
+      "ci": "PR16 55f164dacaaa6e4ee040ce037e2648eb5e3256ce Actions 44011485557 Python and C11 jobs passed"
+    },
+    "native_event_queue_phase19": {
+      "status": "STATIC_AND_HOST_VERIFIED",
+      "source_archive_sha256": "1a39b62a4b68782d53da3efcb3646bf5f3f9951f9f66c0700ec1803683ea9b3d",
+      "archive_manifest_entries_verified": 18,
+      "exact_ipa_audit": "65 Phase 19 opcode pins and 12 direct calls independently passed; 7 additional Windows trace pins",
+      "original_python_tests_passed": 21,
+      "original_c_test_limit": "Archive has the C guard source but omits tests/test_guard_v2.c. The 29 guard assertions in the supplied log were not independently rerun.",
+      "integrated_host_python_tests_passed": 116,
+      "audit_profile": "baselines/phase19-v133-event-queue.json",
+      "usb_mode": "--queue-context (one event per attach; two hardware sites only during last stage)",
+      "observed_association": "Compare enqueue queue/event with the real Dispatch consumer and OnNetEvent pre-dispatch. Same dispatcher thread and pre-return fence required.",
+      "usb_runtime_match_observed": false,
+      "authenticated_transport_verified": false,
+      "current_session_bound": false,
+      "two_iphone_verified": false,
+      "next": "Run this trace on the development-signed device in controlled Sandbox. Correlate a genuine stop with a cooperating peer and current session."
     }
   }
 }
