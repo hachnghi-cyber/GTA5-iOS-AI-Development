@@ -764,7 +764,8 @@
     "script_decide": "0xa9be4ff4",
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
-    "migrate_end": "0xa9ba6ffc"
+    "migrate_end": "0xa9ba6ffc",
+    "on_net_event_pre_dispatch": "0xa9012be9"
   },
   "receive_context": {
     "site": "script_event_handler",
@@ -895,5 +896,8 @@
   "hook_installed": false,
   "transport_connected": false,
   "two_device_verified": false,
-  "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload."
+  "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
+  "internal_sites": {
+    "on_net_event_pre_dispatch": "0x1020249a8"
+  }
 }

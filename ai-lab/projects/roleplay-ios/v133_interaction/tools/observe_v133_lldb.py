@@ -12,12 +12,12 @@ _thread_labels = {}
 
 
 def describe_stack(site, frames, thread_label):
-    remote = "on_net_event" in frames and "connection_dispatch" in frames
+    remote = any(x in frames for x in ("on_net_event", "on_net_event_pre_dispatch")) and "connection_dispatch" in frames
     local = "send_buffer" in frames
     path = "undetermined"
     if remote and not local:
         path = "network_receive_stack"
-    if local and "on_net_event" not in frames:
+    if local and not any(x in frames for x in ("on_net_event", "on_net_event_pre_dispatch")):
         path = "local_send_stack"
     return {
         "schema": "v133-lldb-observation-v1",
@@ -54,7 +54,10 @@ def arm(debugger, command, result, _):
         site = command.strip()
         if baseline["uuid"] != EXPECTED_UUID or site not in baseline["trace_sites"]:
             raise ValueError("Choose one site: " + ", ".join(baseline["trace_sites"]))
-        va = int(baseline["symbols"][site]["va"], 16)
+        if site in baseline.get("internal_sites", {}):
+            va = int(baseline["internal_sites"][site], 16)
+        else:
+            va = int(baseline["symbols"][site]["va"], 16)
         module = target.GetModuleAtIndex(0)
         address = module.ResolveFileAddress(va).GetLoadAddress(target)
         if address == lldb.LLDB_INVALID_ADDRESS:
@@ -135,6 +138,45 @@ def scan_remote_connection(read_u32, read_u64, manager_ptr, event_ptr):
     return report
 
 
+def scan_pre_dispatch(read_u32, read_u64, manager, event, chosen, local):
+    """Exact-UUID OnNetEvent+0x94 only. NO RAGE authentication authority."""
+    r={"status":"invalid_entry","players_scanned":0,
+       "selected_sender_in_player_list":False,
+       "authenticated_rp_sender_verified":False,
+       "session_membership_verified":False,"session_generation_verified":False}
+    if not all(isinstance(v,int) and v>0 for v in
+               (manager,event,chosen,local)):return r
+    if chosen==local:
+        r["status"]="sender_aliases_local"
+        return r
+    try:
+        conn=read_u32(event+0x3c)
+        if conn & 0x80000000 or conn!=read_u32(chosen+0x18):
+            r["status"]="sender_connection_mismatch";return r
+        node=read_u64(manager+0x128)
+        seen=set();matches=0;chosen_matches=0
+        for _ in range(32):
+            if not node:break
+            if node in seen:
+                r["status"]="list_cycle";return r
+            seen.add(node)
+            node_conn=read_u32(node+0x18)
+            nxt=read_u64(node+0x38)
+            r["players_scanned"]+=1
+            if node_conn==conn:
+                matches+=1
+                if node==chosen:chosen_matches+=1
+            node=nxt
+        if node:r["status"]="list_exceeds_32"
+        elif matches!=1 or chosen_matches!=1:r["status"]="no_unique_selected_sender"
+        else:
+            r["status"]="connection_candidate_only"
+            r["selected_sender_in_player_list"]=True
+    except (KeyError,TypeError,ValueError,RuntimeError,OverflowError):
+        r["status"]="read_failed"
+    return r
+
+
 def read_stopped_u(process, address, n):
     import lldb
     err = lldb.SBError()
@@ -183,6 +225,15 @@ def capture(debugger, command, result, _):
                 lambda address: read_stopped_u(process, address, 8),
                 mgr, evt
             )
+        if site == "on_net_event_pre_dispatch":
+            frame=thread.GetFrameAtIndex(0)
+            report["pre_dispatch"]=scan_pre_dispatch(
+                lambda a:read_stopped_u(process,a,4),
+                lambda a:read_stopped_u(process,a,8),
+                frame.FindRegister("x19").GetValueAsUnsigned(),
+                frame.FindRegister("x20").GetValueAsUnsigned(),
+                frame.FindRegister("x9").GetValueAsUnsigned(),
+                frame.FindRegister("x10").GetValueAsUnsigned())
         result.AppendMessage(json.dumps(report))
         _active = None
     except (AttributeError, OSError, ValueError) as exc:
