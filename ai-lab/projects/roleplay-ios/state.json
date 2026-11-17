@@ -763,6 +763,35 @@
       "rage_sender_session_authenticated": false,
       "police_rp_enabled": false,
       "next": "Sign/install exact E3 plugin on two authorized physical iPhones, one A sender and one B receiver. Generate fresh paired config with tools/make_two_phone_configs.py and put each at Documents/RBPProbe.cfg. Run both devices simultaneously and collect their LAST RUN logs and B HUD observation. This is ONLY diagnostic direct UDP LAN, not RAGE network transport."
+    },
+    "experimental_e3_phase15": {
+      "label": "One-iPhone + PC hardened E3 diagnostic sender kit v2",
+      "pr": 19,
+      "branch": "feature/rbp-e3-hardened-20261116",
+      "source_commit": "19597e65c10417380c1cf320ca4d7ccb0aa4d2fe",
+      "host_ci_run": 43989350310,
+      "host_regression": "SUCCESS: Clang and GCC; added 14 desktop-kit regression tests",
+      "iphoneos_link": "SKIPPED intentionally; no changes to iPhoneOS dylib",
+      "local_test_result": "14/14 PASS, PYTHONWARNINGS=error, 0 ResourceWarning, 0 skipped; Python + UDP loopback mock; no iPhone E3 test",
+      "local_kit_sha256": "b7c549b83c20bb2c5738e5703b2dfb11570b0ef1fb6540ad7424db61038ffff7",
+      "new_files": [
+        "tools/pc_sender.py",
+        "tools/prepare_one_phone_e3.py",
+        "tests/test_pc_sender.py",
+        "ONE_PHONE_E3_PC_PROBE.md"
+      ],
+      "safeguards": [
+        "Ready/Enter mode starts packet clock after GTA is already visible",
+        "Generate nonoverwriting one-time PC sender and iPhone receiver config pair",
+        "Check reciprocal ports, HMAC key, session, IDs, and OS actual outgoing PC IPv4",
+        "Socket closes even on operator cancellation",
+        "ACK-only is insufficient; require native-invocation receipt",
+        "Never embed actual secrets or config files in code, GitHub or report"
+      ],
+      "remote_iphone_tested": false,
+      "rage_online_replication_verified": false,
+      "police_rp_gameplay_enabled": false,
+      "next_gate": "After user has laptop, use signed unchanged E3 IPA on one iPhone with Documents/RBPProbe.cfg and run tools/pc_sender.py --iphone-config ... --ready on PC. Collect same-run phone RBPProbe.log and desktop result; do not claim RAGE networking from UDP receipt."
     }
   }
 }
