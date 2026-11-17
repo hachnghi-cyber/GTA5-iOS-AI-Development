@@ -177,6 +177,37 @@ def scan_pre_dispatch(read_u32, read_u64, manager, event, chosen, local):
     return r
 
 
+
+def scan_selected_peer_identity(read_u64, selected_netplayer, expected_getter):
+    """Never call game code. Verify exact CNetGamePlayer vtable layout."""
+    r={"status":"invalid_entry","peer_id_present":False,
+       "authenticated_rp_sender_verified":False,
+       "session_membership_verified":False}
+    if not all(isinstance(n,int) and n>0 for n in
+               (selected_netplayer,expected_getter)):
+        return r
+    try:
+        vtable=read_u64(selected_netplayer)
+        if not vtable or read_u64(vtable+0x38)!=expected_getter:
+            r["status"]="unexpected_gamer_info_vtable"
+            return r
+        player_info=read_u64(selected_netplayer+0xa0)
+        if not player_info:
+            r["status"]="missing_player_info"
+            return r
+        # CNetGamePlayer.GetGamerInfo=>CPlayerInfo+0x20,
+        # rlPeerInfo.GetPeerId=>rlGamerInfo+0x1d0.
+        peer_id=read_u64(player_info+0x20+0x1d0)
+        if not peer_id or peer_id==0xffffffffffffffff:
+            r["status"]="invalid_peer_id"
+            return r
+        r["status"]="netplayer_peer_id_candidate_only"
+        r["peer_id_present"]=True
+    except (KeyError,ValueError,RuntimeError,TypeError,OverflowError):
+        r["status"]="read_failed"
+    return r
+
+
 def read_stopped_u(process, address, n):
     import lldb
     err = lldb.SBError()
@@ -234,6 +265,41 @@ def capture(debugger, command, result, _):
                 frame.FindRegister("x20").GetValueAsUnsigned(),
                 frame.FindRegister("x9").GetValueAsUnsigned(),
                 frame.FindRegister("x10").GetValueAsUnsigned())
+        if site == "on_net_event_pre_dispatch":
+            if report["pre_dispatch"]["selected_sender_in_player_list"]:
+                pin=json.loads(BASELINE.read_text(encoding="utf-8"))["peer_info_static"]
+                module=target.GetModuleAtIndex(0)
+                try:
+                    for address_key, opcode_key in (
+                        ("getter_va","getter_instruction"),
+                        ("getter_next_va","getter_next_instruction"),
+                        ("peer_getter_va","peer_getter_instruction"),
+                    ):
+                        at=module.ResolveFileAddress(int(pin[address_key],16)).GetLoadAddress(target)
+                        if at==lldb.LLDB_INVALID_ADDRESS:
+                            raise ValueError("peer getter unmapped")
+                        expected=struct.pack("<I",int(pin[opcode_key],16))
+                        error=lldb.SBError()
+                        if process.ReadMemory(at,4,error)!=expected or error.Fail():
+                            raise ValueError("peer getter opcode mismatch")
+                    getter_va=int(pin["getter_va"],16)
+                    loaded_getter=module.ResolveFileAddress(getter_va).GetLoadAddress(target)
+                    selected=thread.GetFrameAtIndex(0).FindRegister("x9").GetValueAsUnsigned()
+                    report["peer_info_probe"]=scan_selected_peer_identity(
+                        lambda addr:read_stopped_u(process,addr,8),
+                        selected,loaded_getter)
+                except (KeyError,ValueError,RuntimeError,OverflowError):
+                    report["peer_info_probe"]={
+                        "status":"unsupported_peer_getter_build",
+                        "peer_id_present":False,
+                        "authenticated_rp_sender_verified":False,
+                        "session_membership_verified":False}
+            else:
+                report["peer_info_probe"]={
+                    "status":"skipped_unverified_connection",
+                    "peer_id_present":False,
+                    "authenticated_rp_sender_verified":False,
+                    "session_membership_verified":False}
         result.AppendMessage(json.dumps(report))
         _active = None
     except (AttributeError, OSError, ValueError) as exc:

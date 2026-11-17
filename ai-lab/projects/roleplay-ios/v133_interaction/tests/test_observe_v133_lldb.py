@@ -82,3 +82,44 @@ class OnNetConnectionReadOnlyTests(unittest.TestCase):
         self.assertEqual(r["status"],"list_exceeds_32")
         self.assertEqual(r["players_scanned"],32)
         self.assertFalse(r["single_connection_match"])
+
+
+class NativeGamerInfoReadOnlyTests(unittest.TestCase):
+    def test_valid_layout_returns_only_presence(self):
+        ptr=0x1000; vtab=0x3000; info=0x5000; expected=0x8000
+        mem={ptr:vtab,vtab+0x38:expected,ptr+0xa0:info,
+             info+0x1f0:0x123456789}
+        result=observer.scan_selected_peer_identity(lambda a:mem[a],ptr,expected)
+        self.assertEqual(result["status"],"netplayer_peer_id_candidate_only")
+        self.assertTrue(result["peer_id_present"])
+        self.assertFalse(result["authenticated_rp_sender_verified"])
+        self.assertFalse(result["session_membership_verified"])
+        self.assertNotIn("peer_id",result)
+        self.assertNotIn("gamer_info_address",result)
+
+    def test_vtable_layout_mismatch_rejected(self):
+        ptr=0x1000;mem={ptr:0x2000,0x2000+0x38:0x4000,
+                        ptr+0xa0:0x3000,0x3000+0x1f0:456}
+        read=lambda a:mem[a]
+        self.assertEqual(observer.scan_selected_peer_identity(read,ptr,0x4001)["status"],
+                         "unexpected_gamer_info_vtable")
+        mem[0x2000+0x38]=0x4001;mem[ptr+0xa0]=0
+        self.assertEqual(observer.scan_selected_peer_identity(read,ptr,0x4001)["status"],
+                         "missing_player_info")
+        mem[ptr+0xa0]=0x3000
+        for bad in (0,0xffffffffffffffff):
+            mem[0x3000+0x1f0]=bad
+            self.assertEqual(observer.scan_selected_peer_identity(read,ptr,0x4001)["status"],
+                             "invalid_peer_id")
+        del mem[0x3000+0x1f0]
+        self.assertEqual(observer.scan_selected_peer_identity(read,ptr,0x4001)["status"],
+                         "read_failed")
+
+    def test_pinned_peer_getter_matches_exact_original(self):
+        import json
+        baseline=json.loads(observer.BASELINE.read_text())
+        p=baseline["peer_info_static"]
+        self.assertEqual(p["getter_va"],"0x1018d92e8")
+        self.assertEqual(p["getter_instruction"],"0xf9405008")
+        self.assertEqual(p["getter_next_instruction"],"0x91008100")
+        self.assertEqual(p["peer_getter_instruction"],"0xf940e800")

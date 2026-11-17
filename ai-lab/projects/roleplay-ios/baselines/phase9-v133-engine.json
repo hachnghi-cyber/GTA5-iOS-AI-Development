@@ -899,5 +899,14 @@
   "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
   "internal_sites": {
     "on_net_event_pre_dispatch": "0x1020249a8"
+  },
+  "peer_info_static": {
+    "getter_va": "0x1018d92e8",
+    "getter_instruction": "0xf9405008",
+    "getter_next_va": "0x1018d92ec",
+    "getter_next_instruction": "0x91008100",
+    "peer_getter_va": "0x101d64b9c",
+    "peer_getter_instruction": "0xf940e800",
+    "description": "CNetGamePlayer::GetGamerInfo x0+0xa0 then +0x20; rlGamerInfo::GetPeerInfo returns this; rlPeerInfo::GetPeerId +0x1d0; diagnostic only"
   }
 }
