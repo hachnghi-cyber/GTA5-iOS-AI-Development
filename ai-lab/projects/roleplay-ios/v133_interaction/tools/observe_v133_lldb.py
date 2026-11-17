@@ -300,6 +300,47 @@ def capture(debugger, command, result, _):
                     "peer_id_present":False,
                     "authenticated_rp_sender_verified":False,
                     "session_membership_verified":False}
+        if site == "on_connection_peer_verify":
+            # In this branch x19=CNetworkSession, x21=event,
+            # x22=snSession from [x19+0x20], x24=selected netPlayer,
+            # x1=peer ID returned by netPlayer::GetRlPeerId.
+            frame=thread.GetFrameAtIndex(0)
+            info=json.loads(BASELINE.read_text(encoding="utf-8"))["peer_info_static"]
+            module=target.GetModuleAtIndex(0)
+            try:
+                for key,opcode in (("getter_va","getter_instruction"),
+                                   ("getter_next_va","getter_next_instruction"),
+                                   ("peer_getter_va","peer_getter_instruction")):
+                    addr=module.ResolveFileAddress(int(info[key],16)).GetLoadAddress(target)
+                    error=lldb.SBError()
+                    expected=struct.pack("<I",int(info[opcode],16))
+                    if addr==lldb.LLDB_INVALID_ADDRESS or (
+                        process.ReadMemory(addr,4,error)!=expected or error.Fail()):
+                        raise ValueError("gamer info getter opcode mismatch")
+                from importlib.util import spec_from_file_location, module_from_spec
+                script=Path(__file__).with_name("check_v133_peer_session_map.py")
+                spec=spec_from_file_location("v133_peer_map",script)
+                checker=module_from_spec(spec)
+                spec.loader.exec_module(checker)
+                event=frame.FindRegister("x21").GetValueAsUnsigned()
+                conn=read_stopped_u(process,event+0x3c,4)
+                getter=module.ResolveFileAddress(
+                    int(info["getter_va"],16)).GetLoadAddress(target)
+                report["same_event_peer_session"]=checker.check_peer_session_map(
+                    lambda a:read_stopped_u(process,a,4),
+                    lambda a:read_stopped_u(process,a,8),
+                    frame.FindRegister("x24").GetValueAsUnsigned(),
+                    frame.FindRegister("x22").GetValueAsUnsigned(),
+                    conn,getter,
+                    frame.FindRegister("x1").GetValueAsUnsigned())
+            except (AttributeError,KeyError,ValueError,RuntimeError,
+                    OverflowError,OSError,TypeError):
+                report["same_event_peer_session"]={
+                    "status":"read_failed_or_unknown_native_build",
+                    "peer_map_consistent":False,
+                    "authenticated_rage_sender_verified":False,
+                    "session_membership_verified":False,
+                    "session_generation_verified":False}
         result.AppendMessage(json.dumps(report))
         _active = None
     except (AttributeError, OSError, ValueError) as exc:

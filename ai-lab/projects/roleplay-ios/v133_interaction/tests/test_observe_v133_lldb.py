@@ -123,3 +123,10 @@ class NativeGamerInfoReadOnlyTests(unittest.TestCase):
         self.assertEqual(p["getter_instruction"],"0xf9405008")
         self.assertEqual(p["getter_next_instruction"],"0x91008100")
         self.assertEqual(p["peer_getter_instruction"],"0xf940e800")
+
+    def test_connection_peer_verify_site_is_internal_not_symbol(self):
+        import json
+        b=json.loads(observer.BASELINE.read_text())
+        self.assertEqual(b["internal_sites"]["on_connection_peer_verify"],"0x1017dfa48")
+        self.assertEqual(b["trace_sites"]["on_connection_peer_verify"],"0x9407da23")
+        self.assertNotIn("on_connection_peer_verify",b["symbols"])

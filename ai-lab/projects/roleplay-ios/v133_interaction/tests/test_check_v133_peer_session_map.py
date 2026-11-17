@@ -82,3 +82,12 @@ class PeerMappingTests(unittest.TestCase):
         self.assertFalse(self.probe(mem,args)["peer_map_consistent"])
         self.assertFalse(self.probe(mem,args)["authenticated_rage_sender_verified"])
 if __name__=="__main__":unittest.main()
+
+    def test_same_event_register_peer_must_match(self):
+        mem,args=self.fixture()
+        read=lambda a:mem[a]
+        good=mod.check_peer_session_map(read,read,*args,expected_peer_id=222)
+        self.assertTrue(good["peer_map_consistent"])
+        bad=mod.check_peer_session_map(read,read,*args,expected_peer_id=123)
+        self.assertEqual(bad["status"],"same_callback_peer_register_mismatch")
+        self.assertFalse(bad["authenticated_rage_sender_verified"])

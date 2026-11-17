@@ -7,7 +7,7 @@ An internally consistent mapping is NOT an authenticated RAGE sender.
 MAX_PEERS=32
 U64MAX=(1<<64)-1
 
-def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter):
+def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,expected_peer_id=None):
     r={"schema":"v133-peer-session-map-v1","status":"invalid_input",
        "peer_map_consistent":False,"remote_entries_seen":0,
        "authenticated_rage_sender_verified":False,
@@ -30,6 +30,10 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter)
         peer=read64(pinfo+0x1f0) # +0x20 rlGamerInfo, +0x1d0 rlPeerInfo
         if peer==0 or peer==U64MAX:
             r["status"]="invalid_netplayer_peer";return r
+        # At verified OnConnectionEvent+0x1654 x1 contains the result of
+        # netPlayer::GetRlPeerId from the SAME native callback.
+        if expected_peer_id is not None and peer!=expected_peer_id:
+            r["status"]="same_callback_peer_register_mismatch";return r
         count=read32(session+0xba30)
         if not 1<=count<=MAX_PEERS:
             r["status"]="session_peer_count_out_of_bounds";return r
