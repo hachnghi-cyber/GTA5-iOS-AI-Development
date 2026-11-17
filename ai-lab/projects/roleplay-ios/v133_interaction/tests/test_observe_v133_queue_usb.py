@@ -13,7 +13,8 @@ usb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(usb)
 
 BASE = 0x100000000
-ENQUEUE = 0x101cd70bc
+ENQUEUE = 0x101cc684c
+BUFFERED = 0x101cc5cec
 DISPATCH = 0x101cdbe50
 RETURN = 0x101cd9ec4
 PREDISPATCH = 0x1020249a8
@@ -85,13 +86,21 @@ class QueueUSBTests(unittest.TestCase):
     def fixture(self, caller=RETURN):
         manager, event = 0x160120000, 0x170340000
         player_manager, chosen, local = 0x180004000, 0x188800000, 0x190000000
-        fp, parent = 0x150000000, 0x150000060
+        fp = 0x150000000
+        connection_fp, manager_fp, parent = fp+0x150, fp+0x700, fp+0x760
+        connection = 0x164000000
         memory = {manager+0x2c0: manager+0x238, player_manager+0x128: chosen,
                   chosen+0x18: 71, chosen+0x38: 0, event+0x3c: 71,
-                  fp: struct.pack('<QQ', parent, 0x101cd77ac),
-                  fp-0x18: manager, parent-0x35: 1}
+                  event: 0x1028446b8, 0x1028446d0: 0x101d42a24, 0x10332b674: 4,
+                  connection+0xb8: manager+0x238, connection+0x10: 71,
+                  fp: struct.pack('<QQ', connection_fp, 0x101cc576c),
+                  connection_fp: struct.pack('<QQ', manager_fp, 0x101cd6b14),
+                  manager_fp: struct.pack('<QQ', parent, 0x101cd77ac),
+                  fp-0x10: connection, connection_fp-0x20: connection,
+                  manager_fp-0x18: manager, parent-0x35: 1}
         stages = [
-            ({32: ENQUEUE, 0: manager+0x238, 1: event, 29: fp, 31: fp-0x5a0}, b'aaaa'),
+            ({32: ENQUEUE, 0: manager+0x238, 1: event, 20: connection,
+              29: fp, 31: fp-0x60}, b'aaaa'),
             ({32: DISPATCH, 30: caller, 0: manager, 1: event, 21: manager+0x2c0,
               27: manager, 28: event}, b'bbbb'),
             ({32: PREDISPATCH, 19: player_manager, 20: event, 9: chosen, 10: local}, b'bbbb'),
@@ -128,7 +137,8 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertEqual(
                     [c for c in remote.commands if c.startswith((b'Z1,', b'z1,'))],
                     [f'{op}1,{addr:x},4'.encode() for op, addr in (
-                        ('Z', ENQUEUE), ('z', ENQUEUE), ('Z', DISPATCH), ('z', DISPATCH),
+                        ('Z', ENQUEUE), ('Z', BUFFERED), ('z', BUFFERED), ('z', ENQUEUE),
+                        ('Z', DISPATCH), ('z', DISPATCH),
                         ('Z', PREDISPATCH), ('Z', caller), ('z', caller), ('z', PREDISPATCH))])
 
     def test_session_swap_requires_the_adjacent_store_in_the_same_invocation(self):
@@ -259,22 +269,66 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertEqual(remote.reads[-1], (stages[1][0][21], 8))
 
     def test_indicator_is_never_read_from_an_unrelated_caller_or_manager(self):
-        for reason in ('frame_offset', 'return_address', 'manager'):
+        for reason in ('frame_offset', 'return_address', 'manager', 'saved_connection'):
             with self.subTest(reason=reason):
                 stages, memory = self.fixture()
                 fp = stages[0][0][29]
                 if reason == 'frame_offset':
                     stages[0][0][31] -= 16
                 elif reason == 'return_address':
-                    memory[fp] = struct.pack('<QQ', fp+0x60, 0x101cd77b0)
+                    memory[fp] = struct.pack('<QQ', fp+0x150, 0x101cc5770)
+                elif reason == 'saved_connection':
+                    memory[fp-0x10] += 8
                 else:
-                    memory[fp-0x18] += 8
+                    memory[fp+0x700-0x18] += 8
                 remote = Remote(stages, memory)
                 report = self.capture(remote)
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertEqual(report['enqueue_transport'],
                                  {'caller_observed': False, 'decrypt_indicator': 'unobserved'})
-                self.assertNotIn((fp+0x2b, 1), remote.reads)
+                self.assertNotIn((fp+0x760-0x35, 1), remote.reads)
+
+    def test_buffered_frame_never_inherits_the_current_packet_indicator(self):
+        stages, memory = self.fixture()
+        stages[0][0][32] = BUFFERED
+        # No valid current packet frames are supplied for this buffered event.
+        stages[0][0][29] = 0
+        remote = Remote(stages, memory)
+        report = self.capture(remote)
+        self.assertTrue(report['queue_object_link_observed'])
+        self.assertEqual(report['enqueue_origin'], 'buffered_frame')
+        self.assertEqual(report['enqueue_transport'],
+                         {'caller_observed': False, 'decrypt_indicator': 'unobserved'})
+        self.assertNotIn((0x150000000+0x760-0x35, 1), remote.reads)
+
+    def test_wrong_event_class_type_or_connection_never_arms_dispatch(self):
+        for reason in ('connection_error', 'getter', 'type', 'connection', 'queue'):
+            with self.subTest(reason=reason):
+                stages, memory = self.fixture()
+                if reason == 'connection_error':
+                    memory[stages[0][0][1]] = 0x1028448d0
+                elif reason == 'getter':
+                    memory[0x1028446d0] = 0x101d43098
+                elif reason == 'type':
+                    memory[0x10332b674] = 5
+                elif reason == 'connection':
+                    memory[stages[0][0][20]+0x10] += 1
+                else:
+                    memory[stages[0][0][20]+0xb8] += 8
+                remote = Remote(stages[:1], memory)
+                report = self.capture(remote)
+                self.assertFalse(report['queue_object_link_observed'])
+                self.assertEqual(report['queue_context_status'],
+                                 'enqueue_connection_mismatch' if reason in ('connection', 'queue')
+                                 else 'enqueue_event_type_mismatch')
+                self.assertNotIn(f'Z1,{DISPATCH:x},4'.encode(), remote.commands)
+
+    def test_obsolete_phase19_profile_is_rejected_before_breakpoints(self):
+        old = dict(self.profile, version=1, enqueue_va='0x101cd70bc')
+        remote = Remote([], {})
+        with self.assertRaisesRegex(usb.DebugProtocolError, 'obsolete queue profile'):
+            usb.capture_queue_context(remote, BASE, self.meta, old, 30)
+        self.assertEqual(remote.commands, [])
 
     def test_timeout_interrupt_clears_both_final_breakpoints(self):
         stages, memory = self.fixture()

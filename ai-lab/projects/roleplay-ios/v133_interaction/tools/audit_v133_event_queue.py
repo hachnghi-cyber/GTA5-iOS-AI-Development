@@ -12,11 +12,12 @@ import uuid
 from pathlib import Path
 from audit_v133_connection_chain import AuditError, SHA256, UUID, load, macho_uuid
 from audit_v133_event_route import decode_bl_target
-from inspect_v133_engine import parse_image
+from inspect_v133_engine import chained_rebase, parse_image
 
 # Opcode and call checks imported from the supplied Phase 19 source archive.
 PINS = {
-    # Unpack constructs the netEvent. These are 32-bit connection metadata, not identity.
+    # Historical Phase 19 site: this constructs netEventConnectionError, NOT a
+    # received frame. Keep its pins to make the rejected producer reproducible.
     0x101cd7064: 0x2907e67a,  # stp w26,w25,[x19,#0x3c]
     0x101cd7068: 0xb9005276,  # str w22,[x19,#0x50]
     0x101cd706c: 0xf9002673,  # str x19,[x19,#0x48]
@@ -89,7 +90,13 @@ PINS = {
     0x102024a10: 0x94000a93,
 }
 CALLS = {
-    0x101cd70bc: 0x101cc7be0,  # Unpack -> QueueEvent
+    0x101cd70bc: 0x101cc7be0,  # manager Unpack -> QueueEvent (connection error)
+    0x101cd6b10: 0x101cc5020,  # manager Unpack -> connection Unpack
+    0x101cc5768: 0x101cc67b0,  # connection Unpack -> QueueFrameEvent
+    0x101cc682c: 0x101cc7d28,  # QueueFrameEvent -> AllocInFrame
+    0x101cc7ea4: 0x101d42768,  # AllocInFrame -> InFrame constructor
+    0x101cc684c: 0x101cc7be0,  # newly allocated frame -> queue
+    0x101cc5cec: 0x101cc7be0,  # buffered frame -> queue
     0x101cd9008: 0x101cd9810,  # Update -> Dispatch
     0x101cd986c: 0x101a3801c,  # Dispatch -> NextEvent
     0x101cd9ec0: 0x101cdbe50,  # Dispatch -> DispatchEvent
@@ -114,6 +121,43 @@ USB_PINS = {
     0x1020249a8: 0xa9012be9,  # OnNetEvent still has x20 event and x9 sender
 }
 
+# Follow the actual received-frame producer and the vtable installed by its
+# constructor; a matching QueueEvent call alone does not establish event type.
+FRAME_PINS = {
+    0x101cd7070: 0xb0005b69,  # rejected producer's connection-error vtable page
+    0x101cd7074: 0x91234129,  # address point 0x1028448d0
+    0x101cc5020: 0xd10543ff,  # connection Unpack allocates 0x150
+    0x101cc5038: 0xa9147bfd,  # saves FP/LR
+    0x101cc503c: 0x910503fd,  # FP = SP+0x140
+    0x101cc5044: 0xaa0003f4,  # x20 = connection
+    0x101cc5768: 0x94000412,
+    0x101cc5cd8: 0xf9405e9a,  # buffered queue = connection+0xb8
+    0x101cc5ce4: 0xaa1a03e0,
+    0x101cc5ce8: 0xaa1c03e1,  # buffered event = x28
+    0x101cc5cec: 0x940007bd,
+    0x101cc67b0: 0xd101c3ff,  # QueueFrameEvent allocates 0x70
+    0x101cc67c0: 0xa9067bfd,
+    0x101cc67c4: 0x910183fd,  # FP = SP+0x60
+    0x101cc67d0: 0xaa0003f4,  # x20 = connection
+    0x101cc682c: 0x9400053f,
+    0x101cc6834: 0xaa0003f5,  # x21 = newly allocated event
+    0x101cc6838: 0xf9405e93,  # queue = connection+0xb8
+    0x101cc6844: 0xaa1303e0,
+    0x101cc6848: 0xaa1503e1,
+    0x101cc684c: 0x940004e5,
+    0x101cc7ea4: 0x9401ea31,
+    0x101d427a8: 0xfd400828,  # constructor copies connection metadata +0x10
+    0x101d4280c: 0xfc03c268,  # into event+0x3c
+    0x101d428ec: 0xd0005808,  # InFrame derived vtable page
+    0x101d428f0: 0x911ae108,  # address point 0x1028446b8
+    0x101d428f4: 0xf9000268,
+    0x101d42a24: 0xb000af48,  # frame GetId reads native AutoId storage
+    0x101d42a28: 0xb9467500,  # global 0x10332b674
+    0x101d42a2c: 0xd65f03c0,
+    0x101d43098: 0x9000af48,  # distinct connection-error GetId storage
+    0x101d4309c: 0xb945f500,
+}
+
 TRANSPORT_PINS = {
     0x101cd6230: 0x6db923e9,  # save registers and allocate 0x70
     0x101cd6240: 0xa90457f6,  # save caller x21 at Unpack FP-0x18
@@ -133,6 +177,11 @@ TRANSPORT_PINS = {
 # Guard the complete functions used to interpret the stopped frames. The
 # Unpack range is split to stay within the observer's code read limits.
 USB_GUARDS = (
+    ('connection_unpack', 0x101cc5020, 0xe08),
+    ('queue_frame_event', 0x101cc67b0, 0x190),
+    ('alloc_in_frame', 0x101cc7d28, 0x19c),
+    ('in_frame_constructor', 0x101d42768, 0x200),
+    ('frame_get_id', 0x101d42a24, 0xc),
     ('unpack_head', 0x101cd6230, 0x1000),
     ('unpack_tail', 0x101cd7230, 0x130),
     ('handle_received_packet', 0x101cd7690, 0x160),
@@ -163,7 +212,7 @@ def audit(data):
     def word(pc):
         return struct.unpack('<I', code(pc, 4))[0]
 
-    for pc, expected in (PINS | USB_PINS | TRANSPORT_PINS).items():
+    for pc, expected in (PINS | USB_PINS | TRANSPORT_PINS | FRAME_PINS).items():
         if word(pc) != expected:
             raise AuditError(f'opcode mismatch at {pc:#x}')
     for pc, expected in CALLS.items():
@@ -172,6 +221,10 @@ def audit(data):
     unpack_call = 0x101cd77a8
     if decode_bl_target(unpack_call, word(unpack_call)) != 0x101cd6230:
         raise AuditError('Unpack caller target mismatch')
+    for slot, target in ((0x1028446d0, 0x101d42a24), (0x102844738, 0x101d42a24),
+                         (0x1028448e8, 0x101d43098)):
+        if chained_rebase(data, slot) != target:
+            raise AuditError('event vtable GetId target mismatch')
 
     return {
         'status':'PASS_STATIC_EXACT_BUILD',
@@ -181,6 +234,12 @@ def audit(data):
         'verified_direct_call_targets':len(CALLS),
         'verified_usb_additional_opcode_pins':len(USB_PINS),
         'verified_transport_frame_opcode_pins':len(TRANSPORT_PINS),
+        'verified_received_frame_opcode_pins':len(FRAME_PINS),
+        'verified_event_vtable_targets': 3,
+        'rejected_old_enqueue': {
+            'va': '0x101cd70bc', 'event_class': 'netEventConnectionError',
+            'reason': 'constructor installs the connection-error vtable, not the frame-received vtable',
+        },
         'unpack_uses_event_queue':True,
         'consumer_iteration_uses_next_event':True,
         'manager_update_calls_dispatch': True,
@@ -192,7 +251,12 @@ def audit(data):
         'rage_membership_generation_verified':False,
         'rp_actions_enabled':False,
         'usb_profile': {
-            'enqueue_va': '0x101cd70bc',
+            'version': 2,
+            'enqueue_sites': {'immediate_frame': '0x101cc684c', 'buffered_frame': '0x101cc5cec'},
+            'frame_vtable_va': '0x1028446b8',
+            'frame_get_id_va': '0x101d42a24',
+            'frame_type_id_va': '0x10332b674',
+            'immediate_parent_returns': ['0x101cc576c', '0x101cd6b14'],
             'dispatch_event_va': '0x101cdbe50',
             'dispatch_caller_returns': ['0x101cd9ec4', '0x101cd9fa0'],
             'on_net_event_pre_dispatch_va': '0x1020249a8',

@@ -4,6 +4,27 @@ Scope: static disassembly of SHA `f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce
 UUID `EB122C35-96F4-307F-91C3-A2255DD9C685`. No Winstom/PC offsets reused.
 The machine-readable assertions are in `baselines/phase9-v133-engine.json`.
 
+The Phase 19 producer selection was corrected after checking constructor
+vtables, including their on-disk chained rebases. `0x101cd70bc` queues a
+`netEventConnectionError`; it is not the received-frame producer. Passing its
+opcode audit did not justify expecting that object at scripted receive.
+
+Actual frame paths established on the exact binary:
+
+| Queue call site | Producer | Object |
+| --- | --- | --- |
+| `0x101cc684c` | `netConnection::QueueFrameEvent -> AllocInFrame` | New `InFrame`, deriving from `netEventFrameReceived` |
+| `0x101cc5cec` | `netConnection::Unpack`, after removing a buffered frame | Previously allocated `InFrame` |
+
+The constructor copies connection metadata from connection+0x10 into
+event+0x3c. Its final vtable at `0x1028446b8` resolves GetId to
+`netEventFrameReceived::GetId`; the rejected error vtable resolves a different
+method. USB profile v2 checks the live vtable, GetId target, expected type 4,
+connection ID and owning queue before tracing the same event to Dispatch.
+For a buffered frame it deliberately leaves the packet decrypt indicator
+unobserved: the current packet cannot attest the origin of previously queued
+bytes. The new profile has no device capture yet and does not authenticate peers.
+
 ```text
 OnNetEvent: netEvent connection ID == engine-list player connection ID
   -> stack ReceivedMessageData {source, destination}

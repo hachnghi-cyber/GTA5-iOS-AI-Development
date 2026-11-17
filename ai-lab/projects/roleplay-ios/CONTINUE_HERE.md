@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Ưu tiên checkpoint sửa producer Phase 19 trong `ROLEPLAY_CONTINUE.md`:
+điểm enqueue cũ tạo connection-error event. Profile v2 dùng hai producer
+received-frame đã đối chiếu vtable trên binary, có 124 test Python đạt;
+chưa có preflight hay mẫu iPhone cho profile mới.
+
 Mốc mới: sửa lỗi giữ dữ liệu phiên cũ khi `rp_rage_scope_begin` thất bại;
 kiểm thử đối chứng C11 và 121 test Python đạt. Xem `ROLEPLAY_CONTINUE.md` và
 `state.json:last_work.scope_renewal_fail_closed`. Hiện chưa có USB để lấy mẫu

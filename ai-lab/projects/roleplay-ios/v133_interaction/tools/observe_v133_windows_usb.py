@@ -498,19 +498,35 @@ def capture_session_swap(remote, base, metadata, wait_seconds):
     return sample
 
 
-def read_enqueue_transport(remote, base, profile, queue, queue_offset):
-    """Read only the indicator passed to Unpack by this event's live caller."""
+def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
+    """A buffered event must never inherit the current packet's decrypt indicator."""
     result = {'caller_observed': False, 'decrypt_indicator': 'unobserved'}
+    if producer != 'immediate_frame':
+        return result
     fp = remote.read_register(29)
     sp = remote.read_register(31)
-    if not 0 < sp < fp < (1 << 48) - 0x70 or sp % 16 or fp - sp != 0x5a0:
+    if not 0 < sp < fp < (1 << 48) - 0x800 or sp % 16 or fp - sp != 0x60:
         return result
     expected_return = base + int(profile['unpack_caller_return_va'], 16) - IMAGE_VMADDR
     try:
-        caller_fp, caller_lr = struct.unpack('<QQ', remote.memory(fp, 16))
-        if caller_fp != fp + 0x60 or caller_lr != expected_return:
+        connection_fp, frame_return = struct.unpack('<QQ', remote.memory(fp, 16))
+        frame_expected, connection_expected = (
+            base + int(va, 16) - IMAGE_VMADDR for va in profile['immediate_parent_returns'])
+        if connection_fp != fp + 0x150 or frame_return != frame_expected:
             return result
-        caller_manager, = struct.unpack('<Q', remote.memory(fp - 0x18, 8))
+        manager_fp, connection_return = struct.unpack('<QQ', remote.memory(connection_fp, 16))
+        if manager_fp != connection_fp + 0x5b0 or connection_return != connection_expected:
+            return result
+        # Both callers must retain the same connection, not just a known LR.
+        connection = remote.read_register(20)
+        for saved in (fp - 0x10, connection_fp - 0x20):
+            saved_connection, = struct.unpack('<Q', remote.memory(saved, 8))
+            if saved_connection != connection:
+                return result
+        caller_fp, caller_lr = struct.unpack('<QQ', remote.memory(manager_fp, 16))
+        if caller_fp != manager_fp + 0x60 or caller_lr != expected_return:
+            return result
+        caller_manager, = struct.unpack('<Q', remote.memory(manager_fp - 0x18, 8))
         if not caller_manager or caller_manager + queue_offset != queue:
             return result
         indicator = remote.memory(caller_fp - 0x35, 1)[0]
@@ -534,7 +550,9 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     def live(va):
         return base + int(va, 16) - IMAGE_VMADDR
 
-    enqueue = live(profile['enqueue_va'])
+    if profile.get('version') != 2:
+        raise DebugProtocolError('obsolete queue profile selects a connection-error producer')
+    enqueue = {live(va): name for name, va in profile['enqueue_sites'].items()}
     dispatch = live(profile['dispatch_event_va'])
     returns = {live(va) for va in profile['dispatch_caller_returns']}
     pre_dispatch = live(profile['on_net_event_pre_dispatch_va'])
@@ -567,7 +585,7 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
         'custom_rp_event_received': False,
     }
     deadline = time.monotonic() + wait_seconds
-    pc, _, status = queue_stage_stop(remote, (enqueue,), deadline)
+    pc, _, status = queue_stage_stop(remote, tuple(enqueue), deadline)
     if pc is None:
         sample['queue_context_status'] = status
         return sample
@@ -576,8 +594,31 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     if correlation.observe_unpacked(queue, event) != 'QUEUED_CANDIDATE':
         sample['queue_context_status'] = 'invalid_enqueue_registers'
         return sample
+    producer = enqueue[pc]
+    sample['enqueue_origin'] = producer
+    connection = remote.read_register(20)
+    if not 0 < connection < (1 << 48) - 0x140 or connection % 8:
+        sample['queue_context_status'] = 'invalid_enqueue_connection'
+        return sample
+    # InFrame's constructor inherits FrameReceived::GetId, then installs its
+    # derived vtable. Verify this exact event class and the live type expected
+    # by OnNetEvent before attempting to correlate the object across the queue.
+    vtable, = struct.unpack('<Q', remote.memory(event, 8))
+    expected_vtable = live(profile['frame_vtable_va'])
+    if (vtable != expected_vtable or
+            struct.unpack('<Q', remote.memory(expected_vtable + 0x18, 8))[0] != live(profile['frame_get_id_va']) or
+            struct.unpack('<I', remote.memory(live(profile['frame_type_id_va']), 4))[0] != 4):
+        sample['queue_context_status'] = 'enqueue_event_type_mismatch'
+        return sample
+    connection_queue, = struct.unpack('<Q', remote.memory(connection + 0xb8, 8))
+    connection_id, = struct.unpack('<I', remote.memory(connection + 0x10, 4))
+    event_connection, = struct.unpack('<I', remote.memory(event + 0x3c, 4))
+    if connection_queue != queue or connection_id >= 0x80000000 or connection_id != event_connection:
+        sample['queue_context_status'] = 'enqueue_connection_mismatch'
+        return sample
+    sample['enqueue_frame_connection_observed'] = True
     sample['enqueue_transport'] = read_enqueue_transport(
-        remote, base, profile, queue, module.MANAGER_QUEUE_OFFSET)
+        remote, base, profile, queue, module.MANAGER_QUEUE_OFFSET, producer)
 
     sample['last_stage'] = 'dispatch_event'
     pc, dispatch_thread, status = queue_stage_stop(remote, (dispatch,), deadline)

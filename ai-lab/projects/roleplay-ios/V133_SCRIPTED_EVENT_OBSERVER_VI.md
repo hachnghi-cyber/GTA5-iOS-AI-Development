@@ -195,8 +195,15 @@ và dùng mục có `ConnectionType: USB`.
 uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --queue-context --wait-seconds 30
 ```
 
-Trong một lần attach, observer lấy mẫu lúc `Unpack` chuẩn bị đưa event vào
-queue, xác nhận queue mà `Dispatch` đã đọc cùng event ở `DispatchEvent`, rồi
+Profile v2 sửa điểm enqueue của Phase 19: `0x101cd70bc` thực tế tạo
+`netEventConnectionError`, không phải received frame. Observer hiện đặt hai
+điểm ở `QueueFrameEvent` (`0x101cc684c`) và nhánh lấy frame đang chờ của
+`netConnection::Unpack` (`0x101cc5cec`). Nó kiểm tra vtable `InFrame`, hàm
+GetId, type 4, connection ID và queue trước khi theo tiếp. Profile cũ bị từ chối.
+Preflight iPhone trước đây chỉ áp dụng cho profile cũ; v2 chưa thử trên thiết bị.
+
+Trong một lần attach, observer lấy mẫu frame chuẩn bị đưa vào queue,
+xác nhận queue mà `Dispatch` đã đọc cùng event ở `DispatchEvent`, rồi
 kiểm tra event tại điểm `OnNetEvent` chọn sender. Hai điểm cuối phải cùng luồng.
 Nếu `DispatchEvent` trả về trước, observer ghi `returned_before_predispatch`
 và dừng. Nếu trúng event khác, bộ đo trả trạng thái mismatch. Mỗi lần attach
@@ -237,9 +244,12 @@ python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_
 cùng thread và frame. Dữ liệu xuất chỉ gồm trạng thái và cờ so sánh.
 Timeout chỉ cho biết observer không bắt được lần hoán đổi trong cửa sổ đo.
 
+`enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
-`unobserved`. Công cụ kiểm tra thân hàm, frame `HandleReceivedPacket → Unpack`
-và connection manager trước khi đọc byte, khi cả hai frame vẫn còn sống.
+`unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame
+`HandleReceivedPacket → manager Unpack → connection Unpack → QueueFrameEvent`,
+connection và manager trước khi đọc byte. Với frame đang chờ, byte luôn là
+`unobserved`; packet hiện tại không chứng minh nguồn gốc frame đã lưu từ trước.
 Giá trị chỉ áp dụng cho event ở mốc enqueue. Để gắn nó với mốc nhận, mẫu còn
 phải qua kiểm tra queue và `OnNetEvent`. Xác thực transport và ràng buộc phiên
 cần bằng chứng riêng.

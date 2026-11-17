@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "On the development-signed iPhone, obtain a jobs_update --session-context control sample. In controlled Sandbox with a cooperating peer, run --queue-context --receive-context for a same-event scripted receive and session-table candidate. Prove transport identity, session generation/migration and two-device gameplay separately.",
+  "next_action": "When USB is available, verify the corrected received-frame queue profile v2 on the development-signed iPhone. Capture --queue-context --receive-context in controlled Sandbox with a cooperating peer; the old connection-error enqueue profile is obsolete. Prove transport identity, session generation/migration and two-device gameplay separately.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -677,19 +677,7 @@
       "observability": "LLDB one-shot hardware OnNetEvent capture offers bounded, redacted connection-ID list matching, without raw pointers or player IDs",
       "authority_status": "STATIC CANDIDATE ONLY: no verified remote sender/session owner; no authenticated RP delivery; no RAGE event hook; no PoliceRP gameplay enabled",
       "device_runtime_provenance_tested": false,
-      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independent CNetworkSession GamerInfo IsMember/GetPeerCxn/GetPeerEndpointId and actual RAGE authenticated receive path, with join/leave generation invalidation; then only consider game-thread police native calls after two-device validation."
-    },
-    "native_v133_sender_provenance_phase17": {
-      "pr": 16,
-      "branch": "feature/winstom-rp-ipa-audit-20261116",
-      "latest_code_commits": [
-        "53136d4143208a56612625625a1933077f1a44d2",
-        "ee95b03050c989d935881b93817bfde06779346a",
-        "4255b25d783aacc07bc6fb9a7f59e8982be2eaf5",
-        "8961d0789cdf54e4173c3dd88c778ab42789e947",
-        "92eced46a54b4cb6d483382e5717f7167654c77a",
-        "b96afec8e6a6add586d6c069b593e30c570b7e28",
-        "16936c5121252fddedc442d07b8f69f3d0f5b071",
+      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independe…195 tokens truncated…3d0f5b071",
         "78633541ee05c7f9727af1f1e0b1a07b7dd7f7f1"
       ],
       "original_private_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
@@ -741,15 +729,29 @@
       "ci": "PR16 55f164dacaaa6e4ee040ce037e2648eb5e3256ce Actions 44011485557 Python and C11 jobs passed"
     },
     "native_event_queue_phase19": {
-      "status": "DEVICE_DEBUGGER_PREFLIGHT_PASSED_EVENT_PENDING",
+      "status": "CORRECTED_FRAME_PRODUCERS_SOURCE_VERIFIED_DEVICE_PENDING",
+      "producer_correction": {
+        "base_commit": "5605e8e779ee7c3b3333e79d7d4c9d9e572d3ec7",
+        "rejected_site": "0x101cd70bc constructs netEventConnectionError, not a received frame. Earlier opcode checks did not validate the event-class interpretation.",
+        "immediate_frame_site": "0x101cc684c",
+        "buffered_frame_site": "0x101cc5cec",
+        "evidence": "32 new exact opcode checks, 3 chained-vtable targets, 18 total call targets on the original executable; see baselines/phase19-v133-event-queue.json.",
+        "runtime_guards": "Profile v2 checks InFrame vtable, FrameReceived GetId target, native type 4, owning queue and connection ID before correlation.",
+        "buffered_frame_rule": "Never associate the current packet's decrypt indicator with a previously buffered frame.",
+        "local_python_tests_passed": 124,
+        "live_code_guard_ranges": 13,
+        "device_preflight": false,
+        "device_capture": false,
+        "authenticated_sender_verified": false
+      },
       "source_archive_sha256": "1a39b62a4b68782d53da3efcb3646bf5f3f9951f9f66c0700ec1803683ea9b3d",
       "archive_manifest_entries_verified": 18,
       "exact_ipa_audit": "65 Phase 19 opcode pins and 12 direct calls independently passed; 7 additional Windows trace pins",
       "original_python_tests_passed": 21,
       "original_c_test_limit": "Archive has the C guard source but omits tests/test_guard_v2.c. The 29 guard assertions in the supplied log were not independently rerun.",
-      "integrated_host_python_tests_passed": 117,
+      "integrated_host_python_tests_passed": 124,
       "audit_profile": "baselines/phase19-v133-event-queue.json",
-      "usb_mode": "--queue-context (one event per attach; two hardware sites only during last stage)",
+      "usb_mode": "--queue-context profile v2 (one event per attach; at most two simultaneous hardware sites)",
       "observed_association": "Compare enqueue queue/event with the real Dispatch consumer and OnNetEvent pre-dispatch. Same dispatcher thread and pre-return fence required.",
       "usb_runtime_match_observed": false,
       "authenticated_transport_verified": false,
@@ -780,7 +782,7 @@
         "live_queue_event_observed": false
       },
       "queue_to_scripted_usb": {
-        "status": "DEVICE_DEBUGGER_PREFLIGHT_PASSED_EVENT_PENDING",
+        "status": "PREVIOUS_PROFILE_PREFLIGHT_ONLY_CORRECTED_PROFILE_PENDING",
         "mode": "--queue-context --receive-context",
         "scope": "One attach through pre-dispatch and into the scripted handler. Requires exact frame, event, sender, receiver, thread and delegate lifetime.",
         "local_python_tests_passed": 120,

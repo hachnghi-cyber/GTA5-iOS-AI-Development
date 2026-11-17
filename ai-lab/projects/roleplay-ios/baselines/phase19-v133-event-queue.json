@@ -3,9 +3,16 @@
   "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
   "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
   "verified_opcode_pins": 65,
-  "verified_direct_call_targets": 12,
+  "verified_direct_call_targets": 18,
   "verified_usb_additional_opcode_pins": 7,
   "verified_transport_frame_opcode_pins": 13,
+  "verified_received_frame_opcode_pins": 32,
+  "verified_event_vtable_targets": 3,
+  "rejected_old_enqueue": {
+    "va": "0x101cd70bc",
+    "event_class": "netEventConnectionError",
+    "reason": "constructor installs the connection-error vtable, not the frame-received vtable"
+  },
   "unpack_uses_event_queue": true,
   "consumer_iteration_uses_next_event": true,
   "manager_update_calls_dispatch": true,
@@ -17,7 +24,18 @@
   "rage_membership_generation_verified": false,
   "rp_actions_enabled": false,
   "usb_profile": {
-    "enqueue_va": "0x101cd70bc",
+    "version": 2,
+    "enqueue_sites": {
+      "immediate_frame": "0x101cc684c",
+      "buffered_frame": "0x101cc5cec"
+    },
+    "frame_vtable_va": "0x1028446b8",
+    "frame_get_id_va": "0x101d42a24",
+    "frame_type_id_va": "0x10332b674",
+    "immediate_parent_returns": [
+      "0x101cc576c",
+      "0x101cd6b14"
+    ],
     "dispatch_event_va": "0x101cdbe50",
     "dispatch_caller_returns": [
       "0x101cd9ec4",
@@ -26,6 +44,36 @@
     "on_net_event_pre_dispatch_va": "0x1020249a8",
     "unpack_caller_return_va": "0x101cd77ac",
     "code_guards": [
+      {
+        "function": "connection_unpack",
+        "va": "0x101cc5020",
+        "size": 3592,
+        "sha256": "3aabbcd35ef5d59f42d28e546fde43058a773cb9badbcd37344270e607fa85c3"
+      },
+      {
+        "function": "queue_frame_event",
+        "va": "0x101cc67b0",
+        "size": 400,
+        "sha256": "7f4bf8a1f39b6d05acbecb8deb099c08a899460b3938492a2c71822df00031c1"
+      },
+      {
+        "function": "alloc_in_frame",
+        "va": "0x101cc7d28",
+        "size": 412,
+        "sha256": "21055793f078973bad010c8b9b138f20c752e60965bf68ac99ece0e297f12c8d"
+      },
+      {
+        "function": "in_frame_constructor",
+        "va": "0x101d42768",
+        "size": 512,
+        "sha256": "d6bfc664be0885f9f87915ef6f8a1b296738118b30bce21167b8b7ce8df9ff31"
+      },
+      {
+        "function": "frame_get_id",
+        "va": "0x101d42a24",
+        "size": 12,
+        "sha256": "d71176d81aa497849083f32bcc3d682fbbced0b0b5826ccd5fc20e8eaecbeb1b"
+      },
       {
         "function": "unpack_head",
         "va": "0x101cd6230",

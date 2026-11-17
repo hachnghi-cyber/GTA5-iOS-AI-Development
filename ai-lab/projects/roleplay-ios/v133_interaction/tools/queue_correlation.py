@@ -79,7 +79,7 @@ class QueueCorrelation:
         return 'NEXT_CANDIDATE'
 
     def observe_on_event(self,manager_ptr,event_ptr):
-        # Must refer to the same connectionManager whose Unpack called QueueEvent.
+        # Must refer to the manager owning the connection's captured queue.
         if self.disabled:
             return 'DISABLED'
         if not self._ptr(manager_ptr) or not self._ptr(event_ptr):

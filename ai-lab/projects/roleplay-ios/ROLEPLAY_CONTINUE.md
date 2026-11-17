@@ -1,5 +1,22 @@
 # Continue — native receive provenance
 
+Current P0 correction (parent `5605e8e779ee7c3b3333e79d7d4c9d9e572d3ec7`):
+the Phase 19 enqueue site was a `netEventConnectionError` producer. Exact
+constructor/vtable analysis identifies received `InFrame` producers at
+`0x101cc684c` (new frame) and `0x101cc5cec` (buffered frame). USB profile v2
+now traces these sites and verifies the live event class, type, connection
+and queue before proceeding. Buffered frames never inherit the current
+packet's decrypt indicator. The original Phase 19 opcode checks remain
+historical evidence only; their claimed received-frame interpretation was wrong.
+
+Validation: 32 additional exact opcodes, three chained-vtable targets and
+18 total direct-call targets passed on the original executable; 124 Python
+tests passed locally. New tests reject the error event, wrong type/getter,
+connection/queue mismatch and the obsolete profile, and cover buffered frames.
+No device observation is claimed. The old preflight does not validate the new
+13 code guards or the new enqueue sites. After USB returns, verify profile v2
+and capture one controlled same-event trace before any adapter implementation.
+
 Latest source correction (parent `b57346d83f1770afb5e81d1b34c59341d770580d`):
 `rp_rage_scope_begin` now revokes the old scope before admitting a new one.
 Previously a missing session ID or exhausted counter could leave old candidates
@@ -55,7 +72,8 @@ Use `git log -1` for the subsequent documentation/CI checkpoint commit.
   archive. All 21 original Python tests, 65 pins and 12 direct targets passed
   locally against the exact binary. The archive omitted `tests/test_guard_v2.c`.
   Use the repository's existing C11 guards for the RP source tests.
-- Windows `--queue-context` checks seven dispatch instructions and 13
+- Historical profile v1 (producer interpretation superseded above):
+  Windows `--queue-context` checks seven dispatch instructions and 13
   transport-frame instructions, then verifies eight code ranges on attach.
   It reads the native Unpack caller indicator only when frame layout,
   return PC and manager all match on the enqueue stop.
