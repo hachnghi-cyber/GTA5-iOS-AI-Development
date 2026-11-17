@@ -138,6 +138,11 @@
       "scope": "65 original and seven additional opcode checks, 12 call targets and 116 local test cases in repository. No on-device Phase 19 trace or authenticated sender yet.",
       "claim": "Phase 19 user archive event queue audit reproduced on exact GTA v13.3; Windows USB mode is integrated and host tested.",
       "evidence": "baselines/phase19-v133-event-queue.json"
+    },
+    {
+      "evidence": "baselines/v133-phase19-usb-preflight-20261117.json",
+      "claim": "The v13.3 Phase 19 observer passed live code checks and a two-hardware-breakpoint setup and teardown on the iPhone.",
+      "scope": "Debugger setup only. No queued RAGE event, authenticated peer, session generation or RP action was observed."
     }
   ],
   "unknowns": [
@@ -722,7 +727,7 @@
       "ci": "PR16 55f164dacaaa6e4ee040ce037e2648eb5e3256ce Actions 44011485557 Python and C11 jobs passed"
     },
     "native_event_queue_phase19": {
-      "status": "STATIC_AND_HOST_VERIFIED",
+      "status": "DEVICE_DEBUGGER_PREFLIGHT_PASSED_EVENT_PENDING",
       "source_archive_sha256": "1a39b62a4b68782d53da3efcb3646bf5f3f9951f9f66c0700ec1803683ea9b3d",
       "archive_manifest_entries_verified": 18,
       "exact_ipa_audit": "65 Phase 19 opcode pins and 12 direct calls independently passed; 7 additional Windows trace pins",
@@ -746,7 +751,10 @@
         "caller": "HandleReceivedPacket -> Unpack",
         "device_runtime_sample": false
       },
-      "current_device_readiness": "One iPhone (USB and network entries refer to the same device). GTA running. The user reported public room or not in Sandbox; controlled remote test pending."
+      "current_device_readiness": "One iPhone on iOS 18.6, live UUID/code and two simultaneous hardware sites verified. Both sites removed and debugger detached. User reported public room or not in Sandbox. Measured a stopped preflight only.",
+      "transport_commit": "162e584740e503f0fbf7937e48142bb4cfafffec",
+      "transport_ci": "44014313853 SUCCESS Python and C11 ASan/UBSan jobs",
+      "device_preflight_evidence": "baselines/v133-phase19-usb-preflight-20261117.json"
     }
   }
 }

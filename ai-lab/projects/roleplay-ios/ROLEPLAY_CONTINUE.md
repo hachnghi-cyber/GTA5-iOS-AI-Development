@@ -47,6 +47,11 @@ Use `git log -1` for the subsequent documentation/CI checkpoint commit.
   It checks the actual consumer queue, matching event addresses and thread,
   and ends the sample if the selected dispatch call returns first.
   See `baselines/phase19-v133-event-queue.json` and the observer runbook.
+- Real iPhone debugger preflight at 11:03 UTC+07:00 on 2026-11-17 checked
+  all eight code ranges and got acknowledgments for arming and removing two
+  hardware breakpoints and detaching. GTA was running at the follow-up.
+  See `baselines/v133-phase19-usb-preflight-20261117.json`. The next capture
+  requires a controlled Sandbox session with a cooperating peer.
 - Risks: limited supported call chain, debugger pause, unverified authenticated
   session/membership lifetime; read failure or unexpected chain rejects sample.
 

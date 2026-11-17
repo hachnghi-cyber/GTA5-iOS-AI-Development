@@ -20,6 +20,8 @@ tiếp tục cùng hai điểm đo Phase 17 trong phiên có peer thử nghiệm
 Windows có thêm `--queue-context`, dùng bộ tương quan từ gói Phase 19 để theo
 một event qua enqueue, dispatcher và điểm chọn sender trong `OnNetEvent`.
 Lệnh và tiêu chí đọc kết quả nằm trong `V133_SCRIPTED_EVENT_OBSERVER_VI.md`.
+iPhone đã qua bước kiểm tra 8 vùng mã và đặt/gỡ hai hardware breakpoint.
+Mẫu hàng đợi thật còn chờ phòng Sandbox thử riêng.
 
 Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng
