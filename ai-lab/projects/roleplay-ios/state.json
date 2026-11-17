@@ -743,8 +743,10 @@
       "two_iphone_e3_verified": false,
       "native_rage_sender_session_verified": false,
       "roleplay_gameplay_enabled": false,
-      "next_gate": "E0 and E1 user device evidence obtained. Next E3 two-device controlled LAN diagnostic ping with signed copies and fresh RBPProbe.cfg. RAGE authoritative sender/session binding still required before PoliceRP player actions.",
-      "iphone_e0_e1_evidence": "User-uploaded RBPProbe(2).log (contains stage0 completed and stage1 complete); E1 visible HUD user-confirmed on 2026-11-17. No original raw log committed."
+      "next_gate": "Correlated single-iPhone PC UDP E3 PASS; next: native RAGE sender/player/session authority in PR16 and two-phone police gameplay test. Latest run truncated before callback complete. Do not enable remote police actions based solely on UDP HMAC identity.",
+      "iphone_e0_e1_evidence": "User-uploaded RBPProbe(2).log (contains stage0 completed and stage1 complete); E1 visible HUD user-confirmed on 2026-11-17. No original raw log committed.",
+      "one_iphone_pc_e3_verified": true,
+      "iphone_e3_native_report_verified": true
     },
     "experimental_e3_device_e1_user_report": {
       "observation_date": "2026-11-17",
@@ -792,6 +794,23 @@
       "rage_online_replication_verified": false,
       "police_rp_gameplay_enabled": false,
       "next_gate": "After user has laptop, use signed unchanged E3 IPA on one iPhone with Documents/RBPProbe.cfg and run tools/pc_sender.py --iphone-config ... --ready on PC. Collect same-run phone RBPProbe.log and desktop result; do not claim RAGE networking from UDP receipt."
+    },
+    "experimental_e3_one_iphone_pc_verified": {
+      "observed_date": "2026-11-17",
+      "equipment": "Laptop Windows (192.168.1.10) and one iPhone (192.168.1.11), local Wi-Fi/LAN",
+      "evidence": "User-supplied screenshot of PC pc_sender.py status + RBPProbe(3).log from actual iPhone. Raw log and secrets NOT committed.",
+      "pc_receiver_status": "ACK_VERIFIED seq=1; NATIVE_INVOCATION_REPORT_VERIFIED seq=1; ACK=1 NATIVE_RECEIPT=1 sends=1 in successful attempt; preceding attempt ACK=0.",
+      "iphone_run_2660": "Stage3 network receiver UDP 47881; PACKET_ACCEPTED seq=1 ack_sent=1; REMOTE_E3_GAME_ACTION_INVOKED=1 seq=1 tick=606; report queued and sent=1; SCRIPT_CALLBACK_COMPLETE=1 ticks=901",
+      "iphone_run_2683": "Stage3 network receiver UDP 47881; PACKET_ACCEPTED seq=1 ack_sent=1; REMOTE_E3_GAME_ACTION_INVOKED=1 seq=1 tick=481; native report queued and sent=1; latest uploaded log ends at tick600, does not prove callback completion for that run",
+      "user_visible_hud": "User confirms a notification appeared; diagnostic E3 also runs LOCAL_E1_GAME_ACTION_INVOKED=1 at tick120 in both runs, so exact origin of visible notification was not isolated or video-attributed",
+      "evidence_scope": "Real PC-to-iPhone UDP authenticated packet, replay-protected queue, game-thread native API invocation, return ACK/report path; no verified in-game player synchronization or authoritative RAGE session ownership.",
+      "status": "E3 one-iPhone PC diagnostic PASS for protocol and native call based on correlated screenshot and iPhone logs, not full authoritative multiplayer",
+      "tests_pending": [
+        "Second iPhone to iPhone end-to-end visual cross-replication",
+        "PR16 authenticated native RAGE sender/player/session mapping",
+        "Controlled police action lifecycle with per-player authority and game-thread dispatch"
+      ],
+      "police_rp_enabled": false
     }
   }
 }
