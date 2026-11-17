@@ -2,6 +2,9 @@
 
 import json
 import struct
+import hmac
+import hashlib
+import secrets
 from pathlib import Path
 
 BASELINE = Path(__file__).resolve().parents[2] / "baselines" / "phase9-v133-engine.json"
@@ -9,6 +12,28 @@ EXPECTED_UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 MAX_FRAMES = 32
 _active = None
 _thread_labels = {}
+_conn_tag_uid = None
+_conn_tag_secret = None
+
+
+def ephemeral_connection_tag(process_uid, conn):
+    """Per-debuggee-process opaque HMAC label. No IDs or secret in output.
+
+    This correlates connection lifetimes, NOT individual packets,
+    session generations, encryption status or police permissions.
+    """
+    global _conn_tag_uid, _conn_tag_secret
+    if not isinstance(process_uid,int) or process_uid<=0 or (
+        not isinstance(conn,int) or not 0<conn<0x80000000
+    ):
+        return None
+    if process_uid != _conn_tag_uid or _conn_tag_secret is None:
+        _conn_tag_secret = secrets.token_bytes(32)
+        _conn_tag_uid = process_uid
+    digest=hmac.new(_conn_tag_secret,b"RAGE-CXN:\\0"+struct.pack(">I",conn),
+                    hashlib.sha256).hexdigest()
+    return digest[:24] # truncated 96-bit HMAC; key lives in LLDB process only
+
 
 
 def describe_stack(site, frames, thread_label):
@@ -267,6 +292,15 @@ def capture(debugger, command, result, _):
                 frame.FindRegister("x10").GetValueAsUnsigned())
         if site == "on_net_event_pre_dispatch":
             if report["pre_dispatch"]["selected_sender_in_player_list"]:
+                try:
+                    event=thread.GetFrameAtIndex(0).FindRegister("x20").GetValueAsUnsigned()
+                    conn=read_stopped_u(process,event+0x3c,4)
+                    opaque=ephemeral_connection_tag(uid,conn)
+                    if opaque:report["opaque_connection_tag"]=opaque
+                except (ValueError,RuntimeError,OverflowError):
+                    pass
+        if site == "on_net_event_pre_dispatch":
+            if report["pre_dispatch"]["selected_sender_in_player_list"]:
                 pin=json.loads(BASELINE.read_text(encoding="utf-8"))["peer_info_static"]
                 module=target.GetModuleAtIndex(0)
                 try:
@@ -341,6 +375,14 @@ def capture(debugger, command, result, _):
                     "authenticated_rage_sender_verified":False,
                     "session_membership_verified":False,
                     "session_generation_verified":False}
+            if report["same_event_peer_session"]["peer_map_consistent"]:
+                try:
+                    event=frame.FindRegister("x21").GetValueAsUnsigned()
+                    conn=read_stopped_u(process,event+0x3c,4)
+                    opaque=ephemeral_connection_tag(uid,conn)
+                    if opaque:report["opaque_connection_tag"]=opaque
+                except (ValueError,RuntimeError,OverflowError):
+                    pass
         result.AppendMessage(json.dumps(report))
         _active = None
     except (AttributeError, OSError, ValueError) as exc:

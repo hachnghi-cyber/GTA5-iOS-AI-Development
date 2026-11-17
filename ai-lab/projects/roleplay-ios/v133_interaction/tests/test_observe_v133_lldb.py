@@ -130,3 +130,23 @@ class NativeGamerInfoReadOnlyTests(unittest.TestCase):
         self.assertEqual(b["internal_sites"]["on_connection_peer_verify"],"0x1017dfa48")
         self.assertEqual(b["trace_sites"]["on_connection_peer_verify"],"0x9407da23")
         self.assertNotIn("on_connection_peer_verify",b["symbols"])
+
+
+class OpaqueConnectionTagTests(unittest.TestCase):
+    def test_correlates_same_process_without_raw_id(self):
+        a=observer.ephemeral_connection_tag(10001,77)
+        b=observer.ephemeral_connection_tag(10001,77)
+        c=observer.ephemeral_connection_tag(10001,78)
+        self.assertEqual(a,b)
+        self.assertNotEqual(a,c)
+        self.assertIsInstance(a,str)
+        self.assertEqual(len(a),24)
+        self.assertNotIn(str(77),a)
+
+    def test_rotates_on_new_process_and_rejects_invalid_id(self):
+        a=observer.ephemeral_connection_tag(10001,77)
+        b=observer.ephemeral_connection_tag(10002,77)
+        self.assertNotEqual(a,b)
+        self.assertIsNone(observer.ephemeral_connection_tag(0,77))
+        self.assertIsNone(observer.ephemeral_connection_tag(10002,-1))
+        self.assertIsNone(observer.ephemeral_connection_tag(10002,0x80000000))
