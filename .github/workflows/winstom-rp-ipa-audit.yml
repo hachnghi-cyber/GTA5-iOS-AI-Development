@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
       - name: Validate debugger stack classification
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
+      - name: Validate netPlayer ↔ snSession peer mapping (synthetic memory only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_check_v133_peer_session_map.py' -v
       - name: Verify exact-build connection-chain static contract (synthetic; no IPA)
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_audit_v133_connection_chain.py' -v
       - name: Test direct PRP3 pairing over real TLS sockets

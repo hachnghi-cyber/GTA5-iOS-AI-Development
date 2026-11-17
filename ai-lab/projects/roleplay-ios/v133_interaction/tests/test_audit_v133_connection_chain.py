@@ -16,7 +16,7 @@ def header():
 class TestConnectionChainContract(unittest.TestCase):
     def test_pins_expected(self):
         audit.verify_pins(audit.PINS.__getitem__)
-        self.assertEqual(len(audit.PINS),84)
+        self.assertEqual(len(audit.PINS),104)
     def test_opcode_tampering_fails(self):
         pins=dict(audit.PINS);first=next(iter(pins));pins[first]^=1
         with self.assertRaisesRegex(audit.AuditError,"opcode mismatch"):
@@ -54,6 +54,13 @@ class TestConnectionChainContract(unittest.TestCase):
         self.assertEqual(audit.PINS[0x102024984],0xd000a80a)
         self.assertEqual(audit.PINS[0x1020249a8],0xa9012be9)
         self.assertNotIn("authenticated_sender_verified",audit.PINS)
+
+    def test_selected_player_and_session_peer_map_opcodes(self):
+        self.assertEqual(audit.PINS[0x1018d92e8],0xf9405008)
+        self.assertEqual(audit.PINS[0x101d64b9c],0xf940e800)
+        self.assertEqual(audit.PINS[0x1019dc878],0xb94a3128)
+        self.assertEqual(audit.PINS[0x1019dc888],0xf840852a)
+        self.assertEqual(audit.PINS[0x1019dc8b0],0x92800000)
 
     def test_original_hash_is_required(self):
         with self.assertRaisesRegex(audit.AuditError,"wrong GTA5 SHA256"):

@@ -97,6 +97,26 @@ PINS={
     0x10202497c:0xb5ffff89, # loop while netPlayer exists
     0x102024984:0xd000a80a, # branch reached after player ID match
     0x102024990:0xb400042a, # reject unavailable local player
+    0x1018d92e8:0xf9405008, # CNetGamePlayer GetGamerInfo load pinfo+0xa0
+    0x1018d92ec:0x91008100, # CNetGamePlayer add rlGamerInfo+0x20
+    0x1018d92f0:0xd65f03c0, # CNetGamePlayer GetGamerInfo ret
+    0x101d63220:0xd65f03c0, # rlGamerInfo GetPeerInfo returns self
+    0x101d64b9c:0xf940e800, # rlPeerInfo peer ID +0x1d0
+    0x102012418:0xf9400008, # netPlayer peer getter loads vtable
+    0x10201241c:0xf9401d08, # netPlayer virtual GetGamerInfo +0x38
+    0x102012420:0xd63f0100, # netPlayer invokes GetGamerInfo
+    0x102012424:0x97f5437f, # netPlayer calls rlGamerInfo GetPeerInfo
+    0x10201242c:0x17f549dc, # netPlayer returns rlPeerInfo peer ID
+    0x1019dc870:0x37f80201, # snSession GetPeerIdByCxn rejects negative
+    0x1019dc878:0xb94a3128, # snSession reads remote peer count +0xba30
+    0x1019dc884:0x9124c129, # snSession base remote array +0xb930
+    0x1019dc888:0xf840852a, # snSession reads pointer to remote peer
+    0x1019dc88c:0xb940014b, # snSession peer connection at +0
+    0x1019dc890:0x6b01017f, # snSession compare requested cxn
+    0x1019dc894:0x54000080, # snSession branch on same cxn
+    0x1019dc8a8:0x91002140, # snSession rlPeerInfo at peer+8
+    0x1019dc8ac:0x140e20bc, # snSession jump rlPeerInfo GetPeerId
+    0x1019dc8b0:0x92800000, # snSession missing returns -1
 }
 class AuditError(ValueError):pass
 
