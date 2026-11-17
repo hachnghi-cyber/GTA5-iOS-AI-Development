@@ -728,7 +728,7 @@
       "exact_ipa_audit": "65 Phase 19 opcode pins and 12 direct calls independently passed; 7 additional Windows trace pins",
       "original_python_tests_passed": 21,
       "original_c_test_limit": "Archive has the C guard source but omits tests/test_guard_v2.c. The 29 guard assertions in the supplied log were not independently rerun.",
-      "integrated_host_python_tests_passed": 116,
+      "integrated_host_python_tests_passed": 117,
       "audit_profile": "baselines/phase19-v133-event-queue.json",
       "usb_mode": "--queue-context (one event per attach; two hardware sites only during last stage)",
       "observed_association": "Compare enqueue queue/event with the real Dispatch consumer and OnNetEvent pre-dispatch. Same dispatcher thread and pre-return fence required.",
@@ -736,7 +736,17 @@
       "authenticated_transport_verified": false,
       "current_session_bound": false,
       "two_iphone_verified": false,
-      "next": "Run this trace on the development-signed device in controlled Sandbox. Correlate a genuine stop with a cooperating peer and current session."
+      "next": "Run this trace on the development-signed device in controlled Sandbox. Correlate a genuine stop with a cooperating peer and current session.",
+      "first_integration_commit": "ef18c7ecedcb12062345c6bd25476fa7d0b5d022",
+      "first_integration_ci": "44013266765 Python queue fixtures and C11 host jobs passed",
+      "transport_indicator": {
+        "exact_opcode_pins": 13,
+        "additional_direct_call_target_verified": true,
+        "scope": "One boolean-sized local recorded as set, clear or unobserved at the enqueue stop after matching the caller, FP and manager; no equivalent sender authentication assertion.",
+        "caller": "HandleReceivedPacket -> Unpack",
+        "device_runtime_sample": false
+      },
+      "current_device_readiness": "One iPhone (USB and network entries refer to the same device). GTA running. The user reported public room or not in Sandbox; controlled remote test pending."
     }
   }
 }

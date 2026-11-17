@@ -114,10 +114,28 @@ USB_PINS = {
     0x1020249a8: 0xa9012be9,  # OnNetEvent still has x20 event and x9 sender
 }
 
-# Guard the complete functions used to interpret the dispatch stops and the
-# audited span around the enqueue call before any breakpoint is armed.
+TRANSPORT_PINS = {
+    0x101cd6230: 0x6db923e9,  # save registers and allocate 0x70
+    0x101cd6240: 0xa90457f6,  # save caller x21 at Unpack FP-0x18
+    0x101cd6248: 0xa9067bfd,  # save parent FP and LR
+    0x101cd624c: 0x910183fd,  # set Unpack FP
+    0x101cd6250: 0xd11503ff,  # Unpack FP is 0x5a0 above working SP
+    0x101cd7690: 0xd10183ff,  # HandleReceivedPacket frame size
+    0x101cd769c: 0xa9057bfd,  # save parent FP and LR
+    0x101cd76a0: 0x910143fd,  # caller FP is 0x50 above its SP
+    0x101cd76a8: 0xaa0003f5,  # caller keeps manager in x21
+    0x101cd76e0: 0x39006fff,  # initialize the caller's local indicator
+    0x101cd7700: 0x91006fe4,  # pass the indicator by reference
+    0x101cd7794: 0x39406fe4,  # forward it to Unpack in w4
+    0x101cd77a8: 0x97fffaa2,  # call Unpack with that indicator
+}
+
+# Guard the complete functions used to interpret the stopped frames. The
+# Unpack range is split to stay within the observer's code read limits.
 USB_GUARDS = (
-    ('unpack_enqueue', 0x101cd7064, 0x60),
+    ('unpack_head', 0x101cd6230, 0x1000),
+    ('unpack_tail', 0x101cd7230, 0x130),
+    ('handle_received_packet', 0x101cd7690, 0x160),
     ('next_event', 0x101a3801c, 0x110),
     ('dispatch', 0x101cd9810, 0x934),
     ('dispatch_event', 0x101cdbe50, 0x320),
@@ -145,12 +163,15 @@ def audit(data):
     def word(pc):
         return struct.unpack('<I', code(pc, 4))[0]
 
-    for pc, expected in (PINS | USB_PINS).items():
+    for pc, expected in (PINS | USB_PINS | TRANSPORT_PINS).items():
         if word(pc) != expected:
             raise AuditError(f'opcode mismatch at {pc:#x}')
     for pc, expected in CALLS.items():
         if decode_bl_target(pc, word(pc)) != expected:
             raise AuditError(f'call-target mismatch at {pc:#x}')
+    unpack_call = 0x101cd77a8
+    if decode_bl_target(unpack_call, word(unpack_call)) != 0x101cd6230:
+        raise AuditError('Unpack caller target mismatch')
 
     return {
         'status':'PASS_STATIC_EXACT_BUILD',
@@ -159,6 +180,7 @@ def audit(data):
         'verified_opcode_pins':len(PINS),
         'verified_direct_call_targets':len(CALLS),
         'verified_usb_additional_opcode_pins':len(USB_PINS),
+        'verified_transport_frame_opcode_pins':len(TRANSPORT_PINS),
         'unpack_uses_event_queue':True,
         'consumer_iteration_uses_next_event':True,
         'manager_update_calls_dispatch': True,
@@ -174,6 +196,7 @@ def audit(data):
             'dispatch_event_va': '0x101cdbe50',
             'dispatch_caller_returns': ['0x101cd9ec4', '0x101cd9fa0'],
             'on_net_event_pre_dispatch_va': '0x1020249a8',
+            'unpack_caller_return_va': hex(unpack_call + 4),
             'code_guards': [
                 {'function': name, 'va': hex(va), 'size': length,
                  'sha256': hashlib.sha256(code(va, length)).hexdigest()}

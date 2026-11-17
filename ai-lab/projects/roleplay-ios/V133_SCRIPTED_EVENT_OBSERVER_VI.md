@@ -202,3 +202,10 @@ chỉ theo một event và gỡ các hardware breakpoint trước khi detach.
 trong một lần đo. `native_candidate` ghi kết quả đối chiếu connection với
 netPlayer đã chọn. Các trường xác thực sender, thế hệ phiên và quyền RP
 vẫn tắt. Timeout hoặc mismatch giới hạn phạm vi của mẫu đo.
+
+`enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
+`unobserved`. Công cụ kiểm tra thân hàm, frame `HandleReceivedPacket → Unpack`
+và connection manager trước khi đọc byte, khi cả hai frame vẫn còn sống.
+Giá trị chỉ áp dụng cho event ở mốc enqueue. Để gắn nó với mốc nhận, mẫu còn
+phải qua kiểm tra queue và `OnNetEvent`. Xác thực transport và ràng buộc phiên
+cần bằng chứng riêng.

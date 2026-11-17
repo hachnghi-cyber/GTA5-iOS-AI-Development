@@ -39,8 +39,11 @@ Use `git log -1` for the subsequent documentation/CI checkpoint commit.
   archive. All 21 original Python tests, 65 pins and 12 direct targets passed
   locally against the exact binary. The archive omitted `tests/test_guard_v2.c`.
   Use the repository's existing C11 guards for the RP source tests.
-- Windows `--queue-context` checks seven additional instructions and hashes
-  six code ranges, then attempts one queue-to-predispatch trace per attach.
+- Windows `--queue-context` checks seven dispatch instructions and 13
+  transport-frame instructions, then verifies eight code ranges on attach.
+  It reads the native Unpack caller indicator only when frame layout,
+  return PC and manager all match on the enqueue stop.
+  It attempts one queue-to-predispatch trace per attach.
   It checks the actual consumer queue, matching event addresses and thread,
   and ends the sample if the selected dispatch call returns first.
   See `baselines/phase19-v133-event-queue.json` and the observer runbook.

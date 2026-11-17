@@ -5,6 +5,7 @@
   "verified_opcode_pins": 65,
   "verified_direct_call_targets": 12,
   "verified_usb_additional_opcode_pins": 7,
+  "verified_transport_frame_opcode_pins": 13,
   "unpack_uses_event_queue": true,
   "consumer_iteration_uses_next_event": true,
   "manager_update_calls_dispatch": true,
@@ -23,12 +24,25 @@
       "0x101cd9fa0"
     ],
     "on_net_event_pre_dispatch_va": "0x1020249a8",
+    "unpack_caller_return_va": "0x101cd77ac",
     "code_guards": [
       {
-        "function": "unpack_enqueue",
-        "va": "0x101cd7064",
-        "size": 96,
-        "sha256": "b784badb8eaa72613bbec16d9dbddf634619cef0387b1ce77e914bf6e6349bc7"
+        "function": "unpack_head",
+        "va": "0x101cd6230",
+        "size": 4096,
+        "sha256": "d146bff23e3fdc17a9136e3485b1eb515d086c46d59d9f17f2d6ebf1f14ac6e9"
+      },
+      {
+        "function": "unpack_tail",
+        "va": "0x101cd7230",
+        "size": 304,
+        "sha256": "f4e36e7884ece3b4b0ff75e0e4d694b29613602e037931ca6ec1164e18f622a5"
+      },
+      {
+        "function": "handle_received_packet",
+        "va": "0x101cd7690",
+        "size": 352,
+        "sha256": "9798727160ed98a59700b9ff95316e60c4648ef07a18cf9b01eb46eb519a1a7c"
       },
       {
         "function": "next_event",

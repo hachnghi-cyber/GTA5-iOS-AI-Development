@@ -1,6 +1,7 @@
 """Debugger and memory fixtures only. Hardware behavior needs an iPhone."""
 import importlib.util
 import json
+import struct
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -44,7 +45,7 @@ class Remote:
         self.commands.append(wire)
         if wire.startswith(b'qRegisterInfo'):
             reg = int(wire.removeprefix(b'qRegisterInfo'), 16)
-            name = {30: 'lr', 32: 'pc'}.get(reg, f'x{reg}')
+            name = {29: 'fp', 30: 'lr', 31: 'sp', 32: 'pc'}.get(reg, f'x{reg}')
             return f'name:{name};bitsize:64;'.encode()
         if wire.startswith((b'Z1,', b'z1,')):
             address = int(wire.split(b',')[1], 16)
@@ -84,10 +85,13 @@ class QueueUSBTests(unittest.TestCase):
     def fixture(self, caller=RETURN):
         manager, event = 0x160120000, 0x170340000
         player_manager, chosen, local = 0x180004000, 0x188800000, 0x190000000
+        fp, parent = 0x150000000, 0x150000060
         memory = {manager+0x2c0: manager+0x238, player_manager+0x128: chosen,
-                  chosen+0x18: 71, chosen+0x38: 0, event+0x3c: 71}
+                  chosen+0x18: 71, chosen+0x38: 0, event+0x3c: 71,
+                  fp: struct.pack('<QQ', parent, 0x101cd77ac),
+                  fp-0x18: manager, parent-0x35: 1}
         stages = [
-            ({32: ENQUEUE, 0: manager+0x238, 1: event}, b'aaaa'),
+            ({32: ENQUEUE, 0: manager+0x238, 1: event, 29: fp, 31: fp-0x5a0}, b'aaaa'),
             ({32: DISPATCH, 30: caller, 0: manager, 1: event, 21: manager+0x2c0,
               27: manager, 28: event}, b'bbbb'),
             ({32: PREDISPATCH, 19: player_manager, 20: event, 9: chosen, 10: local}, b'bbbb'),
@@ -110,6 +114,8 @@ class QueueUSBTests(unittest.TestCase):
                 report = self.capture(remote)
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertTrue(report['dispatch_and_predispatch_same_thread'])
+                self.assertEqual(report['enqueue_transport'],
+                                 {'caller_observed': True, 'decrypt_indicator': 'set'})
                 self.assertEqual(report['native_candidate']['status'], 'connection_candidate_only')
                 for flag in ('authenticated_rp_sender_verified', 'session_generation_verified',
                              'game_thread_affinity_verified', 'custom_rp_event_received'):
@@ -160,7 +166,25 @@ class QueueUSBTests(unittest.TestCase):
                                  reason if reason.startswith('returned')
                                  else 'predispatch_event_or_thread_mismatch')
                 self.assertNotIn('native_candidate', report)
-                self.assertEqual(remote.reads, [(stages[1][0][21], 8)])
+                self.assertEqual(remote.reads[-1], (stages[1][0][21], 8))
+
+    def test_indicator_is_never_read_from_an_unrelated_caller_or_manager(self):
+        for reason in ('frame_offset', 'return_address', 'manager'):
+            with self.subTest(reason=reason):
+                stages, memory = self.fixture()
+                fp = stages[0][0][29]
+                if reason == 'frame_offset':
+                    stages[0][0][31] -= 16
+                elif reason == 'return_address':
+                    memory[fp] = struct.pack('<QQ', fp+0x60, 0x101cd77b0)
+                else:
+                    memory[fp-0x18] += 8
+                remote = Remote(stages, memory)
+                report = self.capture(remote)
+                self.assertTrue(report['queue_object_link_observed'])
+                self.assertEqual(report['enqueue_transport'],
+                                 {'caller_observed': False, 'decrypt_indicator': 'unobserved'})
+                self.assertNotIn((fp+0x2b, 1), remote.reads)
 
     def test_timeout_interrupt_clears_both_final_breakpoints(self):
         stages, memory = self.fixture()
@@ -182,7 +206,10 @@ class QueueUSBTests(unittest.TestCase):
 
     def test_modified_guard_refuses_before_any_breakpoint(self):
         guard = self.profile['code_guards'][0]
-        remote = Remote([], {int(guard['va'], 16): bytes(guard['size'])})
+        start = int(guard['va'], 16)
+        memory = {start+offset: bytes(min(1024, guard['size']-offset))
+                  for offset in range(0, guard['size'], 1024)}
+        remote = Remote([], memory)
         with self.assertRaisesRegex(usb.DebugProtocolError, 'queue-context live code mismatch'):
             usb.capture_queue_context(remote, BASE, self.meta, self.profile, 30)
         self.assertFalse(any(cmd.startswith(b'Z1,') for cmd in remote.commands))

@@ -391,6 +391,30 @@ def queue_stage_stop(remote, addresses, deadline):
         return pc, thread, 'hit'
 
 
+def read_enqueue_transport(remote, base, profile, queue, queue_offset):
+    """Read only the indicator passed to Unpack by this event's live caller."""
+    result = {'caller_observed': False, 'decrypt_indicator': 'unobserved'}
+    fp = remote.read_register(29)
+    sp = remote.read_register(31)
+    if not 0 < sp < fp < (1 << 48) - 0x70 or sp % 16 or fp - sp != 0x5a0:
+        return result
+    expected_return = base + int(profile['unpack_caller_return_va'], 16) - IMAGE_VMADDR
+    try:
+        caller_fp, caller_lr = struct.unpack('<QQ', remote.memory(fp, 16))
+        if caller_fp != fp + 0x60 or caller_lr != expected_return:
+            return result
+        caller_manager, = struct.unpack('<Q', remote.memory(fp - 0x18, 8))
+        if not caller_manager or caller_manager + queue_offset != queue:
+            return result
+        indicator = remote.memory(caller_fp - 0x35, 1)[0]
+    except (DebugProtocolError, OSError):
+        return result
+    result['caller_observed'] = True
+    if indicator in (0, 1):
+        result['decrypt_indicator'] = 'set' if indicator else 'clear'
+    return result
+
+
 def capture_queue_context(remote, base, metadata, profile, wait_seconds):
     """Trace one queued event within a single attach, as a candidate association."""
     if not 1 <= wait_seconds <= 60:
@@ -411,7 +435,8 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds):
         raise DebugProtocolError('queue profile disagrees with pre-dispatch baseline')
     for reg, names in ((0, (b'x0',)), (1, (b'x1',)), (9, (b'x9',)), (10, (b'x10',)),
                        (19, (b'x19',)), (20, (b'x20',)), (21, (b'x21',)), (27, (b'x27',)),
-                       (28, (b'x28',)), (30, (b'lr', b'x30')), (32, (b'pc',))):
+                       (28, (b'x28',)), (29, (b'fp', b'x29')), (30, (b'lr', b'x30')),
+                       (31, (b'sp',)), (32, (b'pc',))):
         register = remote.request(f'qRegisterInfo{reg:x}'.encode()).partition(b';')[0]
         if register not in tuple(b'name:' + name for name in names):
             raise DebugProtocolError('queue-context register layout mismatch')
@@ -438,6 +463,8 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds):
     if correlation.observe_unpacked(queue, event) != 'QUEUED_CANDIDATE':
         sample['queue_context_status'] = 'invalid_enqueue_registers'
         return sample
+    sample['enqueue_transport'] = read_enqueue_transport(
+        remote, base, profile, queue, module.MANAGER_QUEUE_OFFSET)
 
     sample['last_stage'] = 'dispatch_event'
     pc, dispatch_thread, status = queue_stage_stop(remote, (dispatch,), deadline)
