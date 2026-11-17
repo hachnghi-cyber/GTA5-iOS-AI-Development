@@ -117,6 +117,30 @@ PINS={
     0x1019dc8a8:0x91002140, # snSession rlPeerInfo at peer+8
     0x1019dc8ac:0x140e20bc, # snSession jump rlPeerInfo GetPeerId
     0x1019dc8b0:0x92800000, # snSession missing returns -1
+    0x1017df87c:0x9407f3fd, # OnConnectionEvent current session GetPeerIdByCxn
+    0x1017df898:0x9407f3f6, # fallback transition session GetPeerIdByCxn
+    0x1017df8ac:0xb9403ea1, # event connection ID reused after session choice
+    0x1017df8b4:0x9407f3ef, # chosen snSession GetPeerIdByCxn
+    0x1017df8b8:0xaa0003f7, # selected peer ID kept in x23
+    0x1017df8bc:0xb100041f, # missing peer ID guard
+    0x1017df9b4:0xb9403ea0, # connection ID from current event
+    0x1017df9b8:0x97fca16b, # NetworkInterface GetPlayerFromConnectionId
+    0x1017df9bc:0xb4000a60, # reject null selected player
+    0x1017df9c0:0xaa0003f8, # retain selected netPlayer in x24
+    0x1017df9c4:0x9420d070, # netPlayer IsValid
+    0x1017df9c8:0x34000a00, # reject invalid netPlayer
+    0x1017dfa24:0xaa1803e0, # move selected player as peer getter receiver
+    0x1017dfa28:0x9420ca7a, # netPlayer GetRlPeerId first
+    0x1017dfa2c:0xaa0003f7, # peer result x23
+    0x1017dfa30:0xf9401276, # snSession from CNetworkSession+0x20
+    0x1017dfa34:0x36001a5c, # conditional event branch
+    0x1017dfa38:0xaa1803e0, # selected player for second getter
+    0x1017dfa3c:0x9420ca75, # netPlayer GetRlPeerId same callback
+    0x1017dfa40:0xaa0003e1, # x1 peerID argument for session lookup
+    0x1017dfa44:0xaa1603e0, # x0 snSession argument
+    0x1017dfa48:0x9407da23, # snSession GetPeerCxn dispatch one-shot site
+    0x1017dfa4c:0x3100041f, # reject connection lookup -1
+    0x1017dfa50:0x540033c0, # branch on missing connection
 }
 class AuditError(ValueError):pass
 

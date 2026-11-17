@@ -16,7 +16,7 @@ def header():
 class TestConnectionChainContract(unittest.TestCase):
     def test_pins_expected(self):
         audit.verify_pins(audit.PINS.__getitem__)
-        self.assertEqual(len(audit.PINS),104)
+        self.assertEqual(len(audit.PINS),128)
     def test_opcode_tampering_fails(self):
         pins=dict(audit.PINS);first=next(iter(pins));pins[first]^=1
         with self.assertRaisesRegex(audit.AuditError,"opcode mismatch"):
@@ -61,6 +61,16 @@ class TestConnectionChainContract(unittest.TestCase):
         self.assertEqual(audit.PINS[0x1019dc878],0xb94a3128)
         self.assertEqual(audit.PINS[0x1019dc888],0xf840852a)
         self.assertEqual(audit.PINS[0x1019dc8b0],0x92800000)
+
+    def test_onconnection_same_native_callback_pins(self):
+        self.assertEqual(audit.PINS[0x1017df9b8],0x97fca16b)
+        self.assertEqual(audit.PINS[0x1017df9c4],0x9420d070)
+        self.assertEqual(audit.PINS[0x1017dfa30],0xf9401276)
+        self.assertEqual(audit.PINS[0x1017dfa3c],0x9420ca75)
+        self.assertEqual(audit.PINS[0x1017dfa40],0xaa0003e1)
+        self.assertEqual(audit.PINS[0x1017dfa44],0xaa1603e0)
+        self.assertEqual(audit.PINS[0x1017dfa48],0x9407da23)
+        self.assertEqual(audit.PINS[0x1017dfa50],0x540033c0)
 
     def test_original_hash_is_required(self):
         with self.assertRaisesRegex(audit.AuditError,"wrong GTA5 SHA256"):
