@@ -501,7 +501,7 @@ def capture_session_swap(remote, base, metadata, wait_seconds):
 def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
     """A buffered event must never inherit the current packet's decrypt indicator."""
     result = {'caller_observed': False, 'endpoint_connection_observed': False,
-              'decrypt_indicator': 'unobserved'}
+              'decrypt_indicator': 'unobserved', 'integrity_path_inferred': 'unobserved'}
     if producer != 'immediate_frame':
         return result
     fp = remote.read_register(29)
@@ -547,6 +547,11 @@ def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer)
         return result
     if indicator in (0, 1):
         result['decrypt_indicator'] = 'set' if indicator else 'clear'
+        # Only the guarded normal P2pDecrypt path sets 1 after the HMAC/AES
+        # routine succeeds. This infers a path; it cannot bind its key to a
+        # game player or prove key-exchange authenticity/replay protection.
+        result['integrity_path_inferred'] = (
+            'address_key_hmac_candidate' if indicator else 'tunnel_or_bypass_unresolved')
     return result
 
 
@@ -562,8 +567,17 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     def live(va):
         return base + int(va, 16) - IMAGE_VMADDR
 
-    if profile.get('version') != 2:
-        raise DebugProtocolError('obsolete queue profile selects a connection-error producer')
+    if profile.get('version') != 3:
+        raise DebugProtocolError('obsolete queue profile lacks received-frame or integrity guards')
+    integrity_guards = {
+        ('p2p_decrypt', '0x101cd5ea4', 0x38c),
+        ('p2p_crypt_decrypt', '0x101cdfee4', 0x428),
+        ('generate_hmac', '0x101ce8810', 0xf8),
+        ('get_p2p_key', '0x101cfbe9c', 0x130),
+    }
+    supplied_guards = {(g['function'], g['va'], g['size']) for g in profile['code_guards']}
+    if not integrity_guards <= supplied_guards:
+        raise DebugProtocolError('missing exact integrity code guards')
     enqueue = {live(va): name for name, va in profile['enqueue_sites'].items()}
     dispatch = live(profile['dispatch_event_va'])
     returns = {live(va) for va in profile['dispatch_caller_returns']}

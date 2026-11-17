@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
       - name: Validate Phase 19 USB queue capture (synthetic only)
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_queue_usb.py' -v
+      - name: Reject packet-integrity control-flow bypasses (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_packet_integrity_audit.py' -v
       - name: Validate debugger stack classification
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
       - name: Validate Windows USB internal native connection candidate (synthetic only)

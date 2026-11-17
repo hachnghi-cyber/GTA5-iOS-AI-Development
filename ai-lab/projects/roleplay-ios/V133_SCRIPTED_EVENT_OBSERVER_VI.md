@@ -195,12 +195,13 @@ và dùng mục có `ConnectionType: USB`.
 uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --queue-context --wait-seconds 30
 ```
 
-Profile v2 sửa điểm enqueue của Phase 19: `0x101cd70bc` thực tế tạo
+Profile hiện tại v3 giữ sửa điểm enqueue của v2: `0x101cd70bc` thực tế tạo
 `netEventConnectionError`, không phải received frame. Observer hiện đặt hai
 điểm ở `QueueFrameEvent` (`0x101cc684c`) và nhánh lấy frame đang chờ của
 `netConnection::Unpack` (`0x101cc5cec`). Nó kiểm tra vtable `InFrame`, hàm
 GetId, type 4, connection ID và queue trước khi theo tiếp. Profile cũ bị từ chối.
-Preflight iPhone trước đây chỉ áp dụng cho profile cũ; v2 chưa thử trên thiết bị.
+V3 bổ sung bốn hash cho key lookup/HMAC/decrypt, tổng 17 vùng mã queue.
+Preflight iPhone trước đây chỉ áp dụng cho profile cũ; v3 chưa thử trên thiết bị.
 
 Trong một lần attach, observer lấy mẫu frame chuẩn bị đưa vào queue,
 xác nhận queue mà `Dispatch` đã đọc cùng event ở `DispatchEvent`, rồi
@@ -257,3 +258,10 @@ cờ false và byte `unobserved`. Với frame đang chờ, byte luôn là
 Giá trị chỉ áp dụng cho event ở mốc enqueue. Để gắn nó với mốc nhận, mẫu còn
 phải qua kiểm tra queue và `OnNetEvent`. Xác thực transport và ràng buộc phiên
 cần bằng chứng riêng.
+
+`integrity_path_inferred=address_key_hmac_candidate` là suy luận từ byte set
+và đường mã đã kiểm tra, chỉ cho frame mới có đủ caller/endpoint context.
+Byte clear cho `tunnel_or_bypass_unresolved`; byte lạ, frame đang chờ hoặc
+context thiếu cho `unobserved`. Các nhãn này không cấp quyền RP, không xác
+thực danh tính game player và không thay thế bằng chứng chống replay.
+Observer không đọc khóa, HMAC thực tế hay payload để tạo nhãn này.

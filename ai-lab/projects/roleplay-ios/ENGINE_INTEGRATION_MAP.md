@@ -87,6 +87,22 @@ actual offsets and calls above come from local disassembly, not Apple or FiveM.
 
 ## What still blocks the runtime adapter
 
+The exact `netP2pCrypt::Decrypt` routine at `0x101cdfee4` calls
+`GenerateHmac`, compares an eight-byte received tag with the computed prefix,
+and rejects mismatch before AES-CBC. Its HMAC-success block `0x101ce0090`
+dominates the AES call `0x101ce0224` and success literal `0x101ce02cc` in the
+conservative intraprocedural CFG. Forty-seven pins and nine call-target checks
+cover the lookup, wrapper and crypto path; this is static evidence only.
+The normal P2pDecrypt branch selects a key via `netKeyExchange::GetP2pKey`
+using transport-address metadata, and sets its output byte to one only after
+that routine succeeds. The tunnel branch sets zero; the outer bypass leaves
+zero. Profile v3 therefore adds four full-function guards and labels only a
+guarded immediate frame's set byte as `address_key_hmac_candidate`. It leaves
+zero unresolved, and never reads a key. This does not identify the owner of
+the key, prove the key exchange authentic, establish freshness, or bind it to
+the game session/player. The imported crypto primitive implementations are
+not emulated by the CFG check. Native lookup identity and lifetime remain P0.
+
 Connection equality and a receive stack do not prove cryptographic sender
 authentication, membership lifetime, session generation or game-thread affinity.
 The decrypt output boolean is already known to be zero on a successful tunnel

@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "When USB is available, preflight received-frame profile v2 and capture --queue-context --receive-context in controlled Sandbox with a cooperating peer. Require endpoint_connection_observed for immediate-frame transport association; buffered-frame current-packet metadata remains unobserved. Establish cryptographic peer binding, session lifetime and game-thread context before enabling the runtime adapter; two-iPhone gameplay remains unverified.",
+  "next_action": "Continue host-side binary tracing from netKeyExchange transport peer metadata to rlPeerInfo/netPlayer, keeping those identity domains distinct until proven. Separately, when USB is available, preflight profile v3 and capture a controlled same-event queue/scripted trace; establish key/player binding, session lifetime and game-thread affinity before any gameplay adapter.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -839,6 +839,25 @@
         "device_capture": false,
         "authenticated_sender_verified": false,
         "session_generation_verified": false,
+        "two_device_tested": false
+      },
+      "packet_integrity_observer": {
+        "base_commit": "66961ca8ab49b82f42f9de592d6a6c1b987966f0",
+        "status": "STATIC_AND_HOST_TESTED_DEVICE_PENDING",
+        "evidence": "47 exact opcodes, 9 call targets, eight-byte HMAC tag comparison before AES; HMAC-success block dominates AES call and success literal in a conservative intraprocedural CFG. See ENGINE_INTEGRATION_MAP.md.",
+        "profile_version": 3,
+        "queue_code_guard_ranges": 17,
+        "local_python_tests_passed": 133,
+        "interpretation": "Set indicator on a guarded immediate frame implies address_key_hmac_candidate only; clear is tunnel_or_bypass_unresolved; buffered frames stay unobserved. No key/packet reads.",
+        "parent_ci": {
+          "source": 44124651444,
+          "ai_lab": 44124651572,
+          "source_watch": 44124651628,
+          "conclusion": "success"
+        },
+        "device_capture": false,
+        "authenticated_sender_verified": false,
+        "key_peer_bound_to_game_player": false,
         "two_device_tested": false
       }
     }

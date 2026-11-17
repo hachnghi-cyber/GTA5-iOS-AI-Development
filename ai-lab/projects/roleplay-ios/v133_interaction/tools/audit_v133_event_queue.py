@@ -191,9 +191,123 @@ TRANSPORT_PINS = {
     0x101cd77a8: 0x97fffaa2,  # call Unpack with that indicator
 }
 
+# These are control/metadata instructions only; no key bytes are collected.
+INTEGRITY_PINS = {
+    0x101cd5f34: 0x940097da,  # address-selected key lookup
+    0x101cd5f88: 0x360007d5,  # reject missing key
+    0x101cd5f98: 0x940027d3,  # decrypt with that key
+    0x101cd5f9c: 0x36000ce0,  # reject failed decrypt
+    0x101cd5fa0: 0x52800028,  # normal path writes indicator 1
+    0x101cd5fa4: 0x14000062,
+    0x101cd6128: 0x52800008,  # tunnel path writes indicator 0
+    0x101cd612c: 0x390002c8,
+    0x101cd6130: 0x52800020,
+    0x101cdff2c: 0x394082a9,  # key-valid bit (NOT peer authentication)
+    0x101cdff30: 0x360007a9,
+    0x101cdffa8: 0x51002101,  # HMAC input excludes trailing 8-byte tag
+    0x101cdffc0: 0x94002214,
+    0x101cdffc4: 0x36000560,  # HMAC computation failure
+    0x101cdffd8: 0xf85f8129,  # received 64-bit tag
+    0x101cdffdc: 0xf85883aa,  # computed 64-bit tag prefix
+    0x101cdffe0: 0xeb0a013f,
+    0x101cdffe4: 0x54000560,  # only equality enters decryption path
+    0x101cdfffc: 0x14000098,  # mismatch -> false return
+    0x101ce01f0: 0x941629c7,  # AES key setup
+    0x101ce0224: 0x941631de,  # AES CBC decrypt
+    0x101ce0228: 0x34000360,
+    0x101ce025c: 0x52800000,  # failure returns 0
+    0x101ce0260: 0xb900027f,  # failure clears output length
+    0x101ce02c8: 0xb9000269,
+    0x101ce02cc: 0x52800020,  # success after padding checks
+    0x101ce02d0: 0x17ffffe5,
+    0x101ce8844: 0x94166e56,  # HmacSetKey
+    0x101ce8848: 0x340000e0,
+    0x101ce8870: 0x94166f21,  # HmacUpdate over packet
+    0x101ce8874: 0x350000c0,
+    0x101ce8884: 0x94166f1c,  # HmacUpdate over additional data
+    0x101ce8888: 0x34000280,
+    0x101ce88e0: 0x94166f65,  # HmacFinal
+    0x101ce88e4: 0x340000e0,
+    0x101ce88bc: 0x52800000,
+    0x101ce8900: 0x52800020,
+    0x101cfbef8: 0xf9400aaf,  # type-3 address compares entry peer metadata
+    0x101cfbefc: 0xeb0901ff,
+    0x101cfbf00: 0x54000440,
+    0x101cfbf0c: 0x71000d1f,
+    0x101cfbf10: 0x54ffff40,
+    0x101cfbf90: 0xad4782a1,  # key copy: never read by debugger observer
+    0x101cfbf94: 0x394442a8,
+    0x101cfbf98: 0x39008268,
+    0x101cfbf9c: 0xad000261,
+    0x101cfbfb8: 0x12000260,
+}
+INTEGRITY_CALLS = {
+    0x101cd5f34: 0x101cfbe9c,
+    0x101cd5f98: 0x101cdfee4,
+    0x101cdffc0: 0x101ce8810,
+    0x101ce01f0: 0x10226a90c,
+    0x101ce0224: 0x10226c99c,
+    0x101ce8844: 0x10228419c,
+    0x101ce8870: 0x1022844f4,
+    0x101ce8884: 0x1022844f4,
+    0x101ce88e0: 0x102284674,
+}
+
+
+def require_dominating_gate(words, entry, gate, targets):
+    """Conservative intraprocedural CFG; both conditional edges are possible.
+
+    Calls are modeled as returning, not as proof of their implementations.
+    Unsupported indirect transfers and external jumps reject the audit.
+    """
+    edges = {}
+    end = max(words) + 4
+
+    def displacement(opcode, bits, shift):
+        value = (opcode >> shift) & ((1 << bits) - 1)
+        return (value - (1 << bits) if value & (1 << (bits - 1)) else value) * 4
+
+    for pc, op in words.items():
+        if op == 0xd65f03c0:  # ret x30
+            successors = ()
+        elif op & 0xfc000000 == 0x14000000:  # direct B, not BL
+            successors = (pc + displacement(op, 26, 0),)
+        elif op & 0xff000010 == 0x54000000 or op & 0x7e000000 == 0x34000000:
+            successors = (pc + 4, pc + displacement(op, 19, 5))
+        elif op & 0x7e000000 == 0x36000000:  # TBZ / TBNZ
+            successors = (pc + 4, pc + displacement(op, 14, 5))
+        elif op & 0xfe000000 == 0xd6000000:
+            raise AuditError('unsupported indirect control flow')
+        else:
+            successors = (pc + 4,) if pc + 4 != end else ()
+        if any(dest not in words for dest in successors):
+            raise AuditError('control flow leaves guarded function')
+        edges[pc] = successors
+
+    def reachable(blocked):
+        seen, pending = set(), [entry]
+        while pending:
+            pc = pending.pop()
+            if pc == blocked or pc in seen:
+                continue
+            if pc not in edges:
+                raise AuditError('missing control-flow node')
+            seen.add(pc)
+            pending.extend(edges[pc])
+        return seen
+
+    reached, bypass = reachable(None), reachable(gate)
+    if gate not in reached or any(target not in reached or target in bypass for target in targets):
+        raise AuditError('required integrity gate does not dominate target')
+
+
 # Guard the complete functions used to interpret the stopped frames. The
 # Unpack range is split to stay within the observer's code read limits.
 USB_GUARDS = (
+    ('p2p_decrypt', 0x101cd5ea4, 0x38c),
+    ('p2p_crypt_decrypt', 0x101cdfee4, 0x428),
+    ('generate_hmac', 0x101ce8810, 0xf8),
+    ('get_p2p_key', 0x101cfbe9c, 0x130),
     ('connection_unpack', 0x101cc5020, 0xe08),
     ('queue_frame_event', 0x101cc67b0, 0x190),
     ('alloc_in_frame', 0x101cc7d28, 0x19c),
@@ -229,10 +343,10 @@ def audit(data):
     def word(pc):
         return struct.unpack('<I', code(pc, 4))[0]
 
-    for pc, expected in (PINS | USB_PINS | TRANSPORT_PINS | FRAME_PINS).items():
+    for pc, expected in (PINS | USB_PINS | TRANSPORT_PINS | FRAME_PINS | INTEGRITY_PINS).items():
         if word(pc) != expected:
             raise AuditError(f'opcode mismatch at {pc:#x}')
-    for pc, expected in CALLS.items():
+    for pc, expected in (CALLS | INTEGRITY_CALLS).items():
         if decode_bl_target(pc, word(pc)) != expected:
             raise AuditError(f'call-target mismatch at {pc:#x}')
     unpack_call = 0x101cd77a8
@@ -242,6 +356,10 @@ def audit(data):
                          (0x1028448e8, 0x101d43098)):
         if chained_rebase(data, slot) != target:
             raise AuditError('event vtable GetId target mismatch')
+
+    require_dominating_gate(
+        {pc: word(pc) for pc in range(0x101cdfee4, 0x101ce030c, 4)},
+        0x101cdfee4, 0x101ce0090, (0x101ce0224, 0x101ce02cc))
 
     return {
         'status':'PASS_STATIC_EXACT_BUILD',
@@ -253,6 +371,15 @@ def audit(data):
         'verified_transport_frame_opcode_pins':len(TRANSPORT_PINS),
         'verified_received_frame_opcode_pins':len(FRAME_PINS),
         'verified_event_vtable_targets': 3,
+        'packet_integrity': {
+            'verified_opcode_pins': len(INTEGRITY_PINS),
+            'verified_call_targets': len(INTEGRITY_CALLS),
+            'received_tag_bytes_compared': 8,
+            'hmac_success_block_dominates_aes_and_success_literal': True,
+            'key_source': 'address-selected netKeyExchange entry',
+            'key_entry_bound_to_game_player': False,
+            'runtime_packet_integrity_verified': False,
+        },
         'rejected_old_enqueue': {
             'va': '0x101cd70bc', 'event_class': 'netEventConnectionError',
             'reason': 'constructor installs the connection-error vtable, not the frame-received vtable',
@@ -268,7 +395,7 @@ def audit(data):
         'rage_membership_generation_verified':False,
         'rp_actions_enabled':False,
         'usb_profile': {
-            'version': 2,
+            'version': 3,
             'enqueue_sites': {'immediate_frame': '0x101cc684c', 'buffered_frame': '0x101cc5cec'},
             'frame_vtable_va': '0x1028446b8',
             'frame_get_id_va': '0x101d42a24',

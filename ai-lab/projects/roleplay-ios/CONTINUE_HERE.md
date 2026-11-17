@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Checkpoint toàn vẹn packet (parent `66961ca`): profile v3 thêm bốn code guard
+cho key lookup/HMAC/decrypt. Audit xác minh 47 opcode, 9 call target và nhánh
+HMAC bắt buộc trước AES/điểm trả thành công. 133 test Python đạt. Đây là
+phân loại đường packet, chưa xác thực game player. Tiếp tục truy vết metadata
+key-exchange/peer bằng binary trên host; phép thử USB là một gate riêng.
+
 Checkpoint endpoint/channel (parent `35bbb15`): probe received-frame đối chiếu
 connection với bảng channel của endpoint trong cùng lần dừng. Thêm 17 opcode
 đã kiểm tra trên binary gốc; 126 test Python đạt. Chưa có mẫu iPhone cho phép

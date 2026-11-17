@@ -1,5 +1,20 @@
 # Continue — native receive provenance
 
+Latest packet-integrity checkpoint (parent `66961ca8ab49b82f42f9de592d6a6c1b987966f0`):
+47 exact instructions and nine call targets establish the address-selected
+key lookup, HMAC tag comparison and AES path. An intraprocedural CFG check
+confirms the HMAC-success block dominates the AES call and success literal;
+calls are modeled as returning, not emulated. Profile v3 hashes four additional
+functions before inferring `address_key_hmac_candidate` from a normal immediate
+frame. Zero remains `tunnel_or_bypass_unresolved`; buffered events stay unobserved.
+133 host Python tests pass, including branch-bypass and guard-removal cases.
+No key, packet payload or address is read/exported by the added observer logic.
+Authentication, replay, key-to-game-player binding and lifetime remain unverified.
+No new device capture or ARM64 build. Continue static key/peer metadata analysis
+on the available host; do not wait for USB to investigate that independent edge.
+Parent CI source `44124651444`, AI Lab `44124651572`, Source Watch `44124651628`
+all passed. Profile v2 preflight cannot validate the new 17 function guards.
+
 Latest endpoint/channel checkpoint (parent `35bbb15ba5a68130ab3f92d869915bab457c68e4`):
 the immediate received-frame observer now checks the connection selected by
 manager Unpack in the endpoint's bounded channel table, using caller registers

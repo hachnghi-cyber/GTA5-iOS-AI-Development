@@ -127,7 +127,8 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertTrue(report['dispatch_and_predispatch_same_thread'])
                 self.assertEqual(report['enqueue_transport'],
                                  {'caller_observed': True, 'endpoint_connection_observed': True,
-                                  'decrypt_indicator': 'set'})
+                                  'decrypt_indicator': 'set',
+                                  'integrity_path_inferred': 'address_key_hmac_candidate'})
                 self.assertEqual(report['native_candidate']['status'], 'connection_candidate_only')
                 for flag in ('authenticated_rp_sender_verified', 'session_generation_verified',
                              'game_thread_affinity_verified', 'custom_rp_event_received'):
@@ -289,7 +290,8 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertEqual(report['enqueue_transport'],
                                  {'caller_observed': False, 'endpoint_connection_observed': False,
-                                  'decrypt_indicator': 'unobserved'})
+                                  'decrypt_indicator': 'unobserved',
+                                  'integrity_path_inferred': 'unobserved'})
                 self.assertNotIn((fp+0x760-0x35, 1), remote.reads)
 
     def test_buffered_frame_never_inherits_the_current_packet_indicator(self):
@@ -303,7 +305,8 @@ class QueueUSBTests(unittest.TestCase):
         self.assertEqual(report['enqueue_origin'], 'buffered_frame')
         self.assertEqual(report['enqueue_transport'],
                          {'caller_observed': False, 'endpoint_connection_observed': False,
-                          'decrypt_indicator': 'unobserved'})
+                          'decrypt_indicator': 'unobserved',
+                          'integrity_path_inferred': 'unobserved'})
         self.assertNotIn((0x150000000+0x760-0x35, 1), remote.reads)
 
     def test_endpoint_channel_bounds_and_missing_connection_do_not_attest_transport(self):
@@ -333,7 +336,8 @@ class QueueUSBTests(unittest.TestCase):
                 report = self.capture(remote)
                 self.assertEqual(report['enqueue_transport'], {
                     'caller_observed': True, 'endpoint_connection_observed': False,
-                    'decrypt_indicator': 'unobserved'})
+                    'decrypt_indicator': 'unobserved',
+                    'integrity_path_inferred': 'unobserved'})
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertFalse(report['authenticated_rp_sender_verified'])
                 self.assertNotIn((fp+0x760-0x35, 1), remote.reads)
@@ -385,11 +389,35 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertNotIn(f'Z1,{DISPATCH:x},4'.encode(), remote.commands)
 
     def test_obsolete_phase19_profile_is_rejected_before_breakpoints(self):
-        old = dict(self.profile, version=1, enqueue_va='0x101cd70bc')
-        remote = Remote([], {})
-        with self.assertRaisesRegex(usb.DebugProtocolError, 'obsolete queue profile'):
-            usb.capture_queue_context(remote, BASE, self.meta, old, 30)
-        self.assertEqual(remote.commands, [])
+        for version in (1, 2):
+            old = dict(self.profile, version=version, enqueue_va='0x101cd70bc')
+            remote = Remote([], {})
+            with self.assertRaisesRegex(usb.DebugProtocolError, 'obsolete queue profile'):
+                usb.capture_queue_context(remote, BASE, self.meta, old, 30)
+            self.assertEqual(remote.commands, [])
+
+    def test_missing_integrity_guard_never_allows_path_inference(self):
+        for name in ('p2p_decrypt', 'p2p_crypt_decrypt', 'generate_hmac', 'get_p2p_key'):
+            with self.subTest(name=name):
+                incomplete = dict(self.profile, code_guards=[
+                    g for g in self.profile['code_guards'] if g['function'] != name])
+                remote = Remote([], {})
+                with self.assertRaisesRegex(usb.DebugProtocolError, 'missing exact integrity'):
+                    usb.capture_queue_context(remote, BASE, self.meta, incomplete, 30)
+                self.assertEqual(remote.commands, [])
+
+    def test_integrity_branch_inference_never_authenticates_a_player(self):
+        for indicator in (0, 1, 2, 255):
+            with self.subTest(indicator=indicator):
+                stages, memory = self.fixture()
+                memory[stages[0][0][29]+0x760-0x35] = indicator
+                result = self.capture(Remote(stages, memory))
+                self.assertEqual(result['enqueue_transport']['integrity_path_inferred'], {
+                    0: 'tunnel_or_bypass_unresolved', 1: 'address_key_hmac_candidate'
+                }.get(indicator, 'unobserved'))
+                self.assertFalse(result['authenticated_rp_sender_verified'])
+                self.assertFalse(result['session_generation_verified'])
+                self.assertFalse(result['custom_rp_event_received'])
 
     def test_timeout_interrupt_clears_both_final_breakpoints(self):
         stages, memory = self.fixture()
