@@ -500,7 +500,8 @@ def capture_session_swap(remote, base, metadata, wait_seconds):
 
 def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
     """A buffered event must never inherit the current packet's decrypt indicator."""
-    result = {'caller_observed': False, 'decrypt_indicator': 'unobserved'}
+    result = {'caller_observed': False, 'endpoint_connection_observed': False,
+              'decrypt_indicator': 'unobserved'}
     if producer != 'immediate_frame':
         return result
     fp = remote.read_register(29)
@@ -529,10 +530,21 @@ def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer)
         caller_manager, = struct.unpack('<Q', remote.memory(manager_fp - 0x18, 8))
         if not caller_manager or caller_manager + queue_offset != queue:
             return result
+        result['caller_observed'] = True
+        # Manager Unpack selects x22 from endpoint[x25] into connection Unpack.
+        # That callee saves caller x23 (endpoint) and x25 (channel) before
+        # reusing them. This is a same-stop table association, not peer auth.
+        endpoint, = struct.unpack('<Q', remote.memory(connection_fp - 0x28, 8))
+        channel, = struct.unpack('<Q', remote.memory(connection_fp - 0x38, 8))
+        if not 0 < endpoint < (1 << 48) - 0x80 or endpoint % 8 or channel >= 16:
+            return result
+        selected_connection, = struct.unpack('<Q', remote.memory(endpoint + channel * 8, 8))
+        if selected_connection != connection:
+            return result
+        result['endpoint_connection_observed'] = True
         indicator = remote.memory(caller_fp - 0x35, 1)[0]
     except (DebugProtocolError, OSError):
         return result
-    result['caller_observed'] = True
     if indicator in (0, 1):
         result['decrypt_indicator'] = 'set' if indicator else 'clear'
     return result

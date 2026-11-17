@@ -25,6 +25,20 @@ For a buffered frame it deliberately leaves the packet decrypt indicator
 unobserved: the current packet cannot attest the origin of previously queued
 bytes. The new profile has no device capture yet and does not authenticate peers.
 
+The immediate-frame stop also exposes the endpoint/channel selection made by
+manager `Unpack`. At `0x101cd6874`, x22 is loaded from `[x23 + x25*8]`, after
+the channel is checked against 16; x22 is passed to connection `Unpack` at
+`0x101cd6b10`. That callee saves the endpoint x23 at FP-0x28 and channel x25
+at FP-0x38 before reusing the registers. Seventeen additional exact opcode
+checks establish these locations. The existing full-function guards cover them.
+The USB reader now compares this same-stop table entry with the connection
+retained by the enqueue caller. It emits only `endpoint_connection_observed`,
+never endpoint/connection values or the packet address. Invalid pointers,
+out-of-range channels, empty/mismatched entries or read failures leave that
+flag false and the packet indicator unobserved. This links another native
+lookup edge; it does not establish the endpoint's cryptographic identity,
+continuous object lifetime or session membership. Buffered frames remain excluded.
+
 ```text
 OnNetEvent: netEvent connection ID == engine-list player connection ID
   -> stack ReceivedMessageData {source, destination}

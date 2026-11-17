@@ -1,5 +1,17 @@
 # Continue — native receive provenance
 
+Latest endpoint/channel checkpoint (parent `35bbb15ba5a68130ab3f92d869915bab457c68e4`):
+the immediate received-frame observer now checks the connection selected by
+manager Unpack in the endpoint's bounded channel table, using caller registers
+saved by connection Unpack. Seventeen additional exact opcode pins passed on
+the original executable. All 126 Python tests passed, including null, unaligned,
+overflow, missing/mismatched connection, read failure, channel bounds and ASLR.
+No pointers/IDs are exported. A matching table entry is not authenticated
+transport, session generation or continuous object lifetime. Buffered events
+never borrow this current-packet evidence. No new iPhone capture or IPA build.
+CI for parent `35bbb15`: source `44074391157`, AI Lab `44074391084`, Source Watch
+`44074391197` succeeded. Check Actions for this checkpoint's own commit.
+
 Current P0 correction (parent `5605e8e779ee7c3b3333e79d7d4c9d9e572d3ec7`):
 the Phase 19 enqueue site was a `netEventConnectionError` producer. Exact
 constructor/vtable analysis identifies received `InFrame` producers at

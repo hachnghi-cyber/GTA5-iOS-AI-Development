@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "When USB is available, verify the corrected received-frame queue profile v2 on the development-signed iPhone. Capture --queue-context --receive-context in controlled Sandbox with a cooperating peer; the old connection-error enqueue profile is obsolete. Prove transport identity, session generation/migration and two-device gameplay separately.",
+  "next_action": "When USB is available, preflight received-frame profile v2 and capture --queue-context --receive-context in controlled Sandbox with a cooperating peer. Require endpoint_connection_observed for immediate-frame transport association; buffered-frame current-packet metadata remains unobserved. Establish cryptographic peer binding, session lifetime and game-thread context before enabling the runtime adapter; two-iPhone gameplay remains unverified.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -821,6 +821,25 @@
         "local_python_tests_passed": 121,
         "device_sample": false,
         "session_generation_verified": false
+      },
+      "endpoint_channel_observer": {
+        "base_commit": "35bbb15ba5a68130ab3f92d869915bab457c68e4",
+        "status": "STATIC_AND_HOST_TESTED_DEVICE_PENDING",
+        "evidence": "Manager Unpack selects x22 from endpoint x23 indexed by channel x25 at 0x101cd6874; connection Unpack saves x23 at FP-0x28 and x25 at FP-0x38. 17 new exact opcode checks passed; see ENGINE_INTEGRATION_MAP.md.",
+        "implementation": "Immediate-frame transport reader checks bounded endpoint[channel] equals enqueue connection before observing the packet indicator. Buffered frames remain unobserved.",
+        "local_python_tests_passed": 126,
+        "negative_cases": "null/unaligned/overflow endpoint, channel >=16 or high register bits, empty/mismatched channel, unreadable entry; boundary channels and ASLR covered",
+        "parent_ci": {
+          "source": 44074391157,
+          "ai_lab": 44074391084,
+          "source_watch": 44074391197,
+          "conclusion": "success"
+        },
+        "current_ci": "Check Actions for the commit containing this checkpoint; source changes do not require rebuilding the unchanged ARM64 dylib.",
+        "device_capture": false,
+        "authenticated_sender_verified": false,
+        "session_generation_verified": false,
+        "two_device_tested": false
       }
     }
   }

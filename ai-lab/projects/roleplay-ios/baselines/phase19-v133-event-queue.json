@@ -5,7 +5,7 @@
   "verified_opcode_pins": 65,
   "verified_direct_call_targets": 18,
   "verified_usb_additional_opcode_pins": 7,
-  "verified_transport_frame_opcode_pins": 13,
+  "verified_transport_frame_opcode_pins": 30,
   "verified_received_frame_opcode_pins": 32,
   "verified_event_vtable_targets": 3,
   "rejected_old_enqueue": {

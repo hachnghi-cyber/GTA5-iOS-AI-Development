@@ -159,6 +159,23 @@ FRAME_PINS = {
 }
 
 TRANSPORT_PINS = {
+    0x101cc5028: 0xa91067fa,  # connection Unpack saves caller channel x25 at FP-0x38
+    0x101cc502c: 0xa9115ff8,  # saves caller endpoint x23 at FP-0x28
+    0x101cc5030: 0xa91257f6,  # saves caller connection x22 at FP-0x20
+    0x101cd6718: 0xf94047f7,  # manager Unpack loads selected endpoint in x23
+    0x101cd67f0: 0x52800082,  # read four channel bits
+    0x101cd67f4: 0x528001c3,  # from bit offset 14
+    0x101cd67f8: 0x978cd754,  # datBitBuffer::ReadUnsigned
+    0x101cd67fc: 0xb940c7f9,  # channel in w25
+    0x101cd6800: 0x7100433f,  # channel must be below 16
+    0x101cd6804: 0x54004b02,  # reject out-of-range channel
+    0x101cd6870: 0xb4000937,  # no endpoint -> no established-connection dispatch
+    0x101cd6874: 0xf8797af6,  # x22 = endpoint[channel]
+    0x101cd6878: 0xb40008f6,  # no connection -> other frame path
+    0x101cd687c: 0xb94022c8,  # inspect connection state
+    0x101cd6880: 0x7100111f,  # state 4 takes the drop path
+    0x101cd6884: 0x54001321,  # other states continue parsing
+    0x101cd6b04: 0xaa1603e0,  # pass selected connection to connection Unpack
     0x101cd6230: 0x6db923e9,  # save registers and allocate 0x70
     0x101cd6240: 0xa90457f6,  # save caller x21 at Unpack FP-0x18
     0x101cd6248: 0xa9067bfd,  # save parent FP and LR

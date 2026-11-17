@@ -88,7 +88,7 @@ class QueueUSBTests(unittest.TestCase):
         player_manager, chosen, local = 0x180004000, 0x188800000, 0x190000000
         fp = 0x150000000
         connection_fp, manager_fp, parent = fp+0x150, fp+0x700, fp+0x760
-        connection = 0x164000000
+        connection, endpoint, channel = 0x164000000, 0x165000000, 7
         memory = {manager+0x2c0: manager+0x238, player_manager+0x128: chosen,
                   chosen+0x18: 71, chosen+0x38: 0, event+0x3c: 71,
                   event: 0x1028446b8, 0x1028446d0: 0x101d42a24, 0x10332b674: 4,
@@ -97,6 +97,8 @@ class QueueUSBTests(unittest.TestCase):
                   connection_fp: struct.pack('<QQ', manager_fp, 0x101cd6b14),
                   manager_fp: struct.pack('<QQ', parent, 0x101cd77ac),
                   fp-0x10: connection, connection_fp-0x20: connection,
+                  connection_fp-0x28: endpoint, connection_fp-0x38: channel,
+                  endpoint+8*channel: connection,
                   manager_fp-0x18: manager, parent-0x35: 1}
         stages = [
             ({32: ENQUEUE, 0: manager+0x238, 1: event, 20: connection,
@@ -124,7 +126,8 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertTrue(report['dispatch_and_predispatch_same_thread'])
                 self.assertEqual(report['enqueue_transport'],
-                                 {'caller_observed': True, 'decrypt_indicator': 'set'})
+                                 {'caller_observed': True, 'endpoint_connection_observed': True,
+                                  'decrypt_indicator': 'set'})
                 self.assertEqual(report['native_candidate']['status'], 'connection_candidate_only')
                 for flag in ('authenticated_rp_sender_verified', 'session_generation_verified',
                              'game_thread_affinity_verified', 'custom_rp_event_received'):
@@ -285,7 +288,8 @@ class QueueUSBTests(unittest.TestCase):
                 report = self.capture(remote)
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertEqual(report['enqueue_transport'],
-                                 {'caller_observed': False, 'decrypt_indicator': 'unobserved'})
+                                 {'caller_observed': False, 'endpoint_connection_observed': False,
+                                  'decrypt_indicator': 'unobserved'})
                 self.assertNotIn((fp+0x760-0x35, 1), remote.reads)
 
     def test_buffered_frame_never_inherits_the_current_packet_indicator(self):
@@ -298,8 +302,65 @@ class QueueUSBTests(unittest.TestCase):
         self.assertTrue(report['queue_object_link_observed'])
         self.assertEqual(report['enqueue_origin'], 'buffered_frame')
         self.assertEqual(report['enqueue_transport'],
-                         {'caller_observed': False, 'decrypt_indicator': 'unobserved'})
+                         {'caller_observed': False, 'endpoint_connection_observed': False,
+                          'decrypt_indicator': 'unobserved'})
         self.assertNotIn((0x150000000+0x760-0x35, 1), remote.reads)
+
+    def test_endpoint_channel_bounds_and_missing_connection_do_not_attest_transport(self):
+        for reason in ('null', 'unaligned', 'overflow', 'channel_16', 'channel_64bit',
+                       'empty_channel', 'wrong_connection', 'read_failed'):
+            with self.subTest(reason=reason):
+                stages, memory = self.fixture()
+                fp = stages[0][0][29]
+                connection_fp = fp+0x150
+                endpoint = memory[connection_fp-0x28]
+                channel = memory[connection_fp-0x38]
+                if reason in ('null', 'unaligned', 'overflow'):
+                    memory[connection_fp-0x28] = {
+                        'null': 0, 'unaligned': endpoint+1, 'overflow': (1 << 48)-8}[reason]
+                elif reason.startswith('channel_'):
+                    memory[connection_fp-0x38] = 16 if reason == 'channel_16' else (1 << 32)+channel
+                elif reason != 'read_failed':
+                    memory[endpoint+8*channel] = 0 if reason == 'empty_channel' else 0x166000000
+
+                class FailingRemote(Remote):
+                    def memory(self, address, size):
+                        if reason == 'read_failed' and address == endpoint+8*channel:
+                            raise usb.DebugProtocolError('unreadable endpoint')
+                        return super().memory(address, size)
+
+                remote = FailingRemote(stages, memory)
+                report = self.capture(remote)
+                self.assertEqual(report['enqueue_transport'], {
+                    'caller_observed': True, 'endpoint_connection_observed': False,
+                    'decrypt_indicator': 'unobserved'})
+                self.assertTrue(report['queue_object_link_observed'])
+                self.assertFalse(report['authenticated_rp_sender_verified'])
+                self.assertNotIn((fp+0x760-0x35, 1), remote.reads)
+                if reason in ('null', 'unaligned', 'overflow', 'channel_16', 'channel_64bit'):
+                    self.assertNotIn((endpoint+8*channel, 8), remote.reads)
+
+    def test_endpoint_channel_edges_and_aslr_are_read_without_emitting_identifiers(self):
+        for channel in (0, 15):
+            with self.subTest(channel=channel):
+                stages, memory = self.fixture()
+                fp = stages[0][0][29]
+                endpoint = memory[fp+0x150-0x28]
+                memory[fp+0x150-0x38] = channel
+                memory[endpoint+8*channel] = stages[0][0][20]
+                # Exercise the transport reader's return-PC checks with ASLR.
+                slide = 0x12340000
+                for frame in (fp, fp+0x150, fp+0x700):
+                    parent, lr = struct.unpack('<QQ', memory[frame])
+                    memory[frame] = struct.pack('<QQ', parent, lr+slide)
+                remote = Remote(stages, memory)
+                remote.snapshot = stages[0][0]
+                result = usb.read_enqueue_transport(remote, BASE+slide, self.profile,
+                                                    stages[0][0][0], 0x238, 'immediate_frame')
+                self.assertTrue(result['endpoint_connection_observed'])
+                self.assertEqual(result['decrypt_indicator'], 'set')
+                for private_value in (endpoint, stages[0][0][20]):
+                    self.assertNotIn(str(private_value), json.dumps(result))
 
     def test_wrong_event_class_type_or_connection_never_arms_dispatch(self):
         for reason in ('connection_error', 'getter', 'type', 'connection', 'queue'):

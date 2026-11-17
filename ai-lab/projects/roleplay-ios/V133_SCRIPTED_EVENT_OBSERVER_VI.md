@@ -248,7 +248,11 @@ Timeout chỉ cho biết observer không bắt được lần hoán đổi trong
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame
 `HandleReceivedPacket → manager Unpack → connection Unpack → QueueFrameEvent`,
-connection và manager trước khi đọc byte. Với frame đang chờ, byte luôn là
+connection, manager và mục connection trong bảng channel của endpoint trước
+khi đọc byte. `endpoint_connection_observed=true` chỉ ghi nhận phép đối chiếu
+bảng này tại cùng lần dừng; không xác thực endpoint hay danh tính peer.
+Con trỏ lỗi, channel ngoài 0..15, mục rỗng/khác connection hoặc lỗi đọc giữ
+cờ false và byte `unobserved`. Với frame đang chờ, byte luôn là
 `unobserved`; packet hiện tại không chứng minh nguồn gốc frame đã lưu từ trước.
 Giá trị chỉ áp dụng cho event ở mốc enqueue. Để gắn nó với mốc nhận, mẫu còn
 phải qua kiểm tra queue và `OnNetEvent`. Xác thực transport và ràng buộc phiên

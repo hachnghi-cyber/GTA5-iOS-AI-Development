@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Checkpoint endpoint/channel (parent `35bbb15`): probe received-frame đối chiếu
+connection với bảng channel của endpoint trong cùng lần dừng. Thêm 17 opcode
+đã kiểm tra trên binary gốc; 126 test Python đạt. Chưa có mẫu iPhone cho phép
+đối chiếu mới. Xem `ROLEPLAY_CONTINUE.md`; chưa bật adapter hay quyền RP.
+
 Ưu tiên checkpoint sửa producer Phase 19 trong `ROLEPLAY_CONTINUE.md`:
 điểm enqueue cũ tạo connection-error event. Profile v2 dùng hai producer
 received-frame đã đối chiếu vtable trên binary, có 124 test Python đạt;
