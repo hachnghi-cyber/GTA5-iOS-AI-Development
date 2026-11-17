@@ -677,7 +677,19 @@
       "observability": "LLDB one-shot hardware OnNetEvent capture offers bounded, redacted connection-ID list matching, without raw pointers or player IDs",
       "authority_status": "STATIC CANDIDATE ONLY: no verified remote sender/session owner; no authenticated RP delivery; no RAGE event hook; no PoliceRP gameplay enabled",
       "device_runtime_provenance_tested": false,
-      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independe…195 tokens truncated…3d0f5b071",
+      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independent CNetworkSession GamerInfo IsMember/GetPeerCxn/GetPeerEndpointId and actual RAGE authenticated receive path, with join/leave generation invalidation; then only consider game-thread police native calls after two-device validation."
+    },
+    "native_v133_sender_provenance_phase17": {
+      "pr": 16,
+      "branch": "feature/winstom-rp-ipa-audit-20261116",
+      "latest_code_commits": [
+        "53136d4143208a56612625625a1933077f1a44d2",
+        "ee95b03050c989d935881b93817bfde06779346a",
+        "4255b25d783aacc07bc6fb9a7f59e8982be2eaf5",
+        "8961d0789cdf54e4173c3dd88c778ab42789e947",
+        "92eced46a54b4cb6d483382e5717f7167654c77a",
+        "b96afec8e6a6add586d6c069b593e30c570b7e28",
+        "16936c5121252fddedc442d07b8f69f3d0f5b071",
         "78633541ee05c7f9727af1f1e0b1a07b7dd7f7f1"
       ],
       "original_private_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
