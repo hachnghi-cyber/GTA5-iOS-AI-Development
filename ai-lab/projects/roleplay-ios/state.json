@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "On the development-signed iPhone in controlled Sandbox, run --queue-context --receive-context with a cooperating peer. A same-event match reaches the scripted handler; transport identity, live snSession generation, migration and two-device gameplay remain separate gates.",
+  "next_action": "On the development-signed iPhone, obtain a jobs_update --session-context control sample. In controlled Sandbox with a cooperating peer, run --queue-context --receive-context for a same-event scripted receive and session-table candidate. Prove transport identity, session generation/migration and two-device gameplay separately.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -774,6 +774,17 @@
         "two_scripted_stage_hardware_sites_installed_removed_and_detach_acknowledged": true,
         "queue_to_scripted_runtime_match": false,
         "authenticated_sender_verified": false
+      },
+      "scripted_session_slot_candidate": {
+        "status": "EXACT_BINARY_AND_SYNTHETIC_TESTS_PASSED",
+        "fixture": "Same scripted stop with unique transition slot and consistent peer table; ambiguous slots refuse the table scan.",
+        "guard_functions": 7,
+        "python_tests_passed": 120,
+        "device_attempt": "USB inventory had no connected iPhone at capture time.",
+        "device_session_slot_sample": false,
+        "device_peer_table_match": false,
+        "authenticated_sender_verified": false,
+        "session_generation_verified": false
       }
     }
   }

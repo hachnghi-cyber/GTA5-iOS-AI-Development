@@ -214,6 +214,14 @@ delegate trả về, trên cùng luồng, và khớp frame, event, sender và re
 của lần dừng trước. Nếu delegate trả về trước, observer ghi
 `returned_before_scripted_handler` và giữ kết quả đã quan sát ở hàng đợi.
 
+Khi sự kiện khớp tại script handler, `scripted_session_candidate` phân biệt
+hai slot phiên theo đúng điều kiện của `snSession::Exists` trên v13.3. Nếu chỉ
+một slot đã thiết lập, observer đối chiếu connection và peer của cùng event
+với bảng peer của slot đó. Hai slot cùng thiết lập cho kết quả `ambiguous`.
+Lệnh `--site jobs_update --session-context` đọc riêng trạng thái hai slot
+để làm mẫu đối chứng trên một iPhone. Các cờ xác thực sender, membership
+và thế hệ phiên vẫn giữ nguyên.
+
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Công cụ kiểm tra thân hàm, frame `HandleReceivedPacket → Unpack`
 và connection manager trước khi đọc byte, khi cả hai frame vẫn còn sống.

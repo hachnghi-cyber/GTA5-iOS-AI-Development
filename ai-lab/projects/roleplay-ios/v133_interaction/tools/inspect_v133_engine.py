@@ -70,6 +70,10 @@ SYMBOLS = {
     'on_connection_event': '__ZN15CNetworkSession17OnConnectionEventEPN4rage20netConnectionManagerEPKNS0_8netEventE',
     'gamer_info_getter': '__ZNK14CNetGamePlayer12GetGamerInfoEv',
     'peer_id_getter': '__ZNK4rage10rlPeerInfo9GetPeerIdEv',
+    'get_current_session': '__ZN15CNetworkSession17GetCurrentSessionEb',
+    'session_exists': '__ZNK4rage9snSession6ExistsEv',
+    'session_is_established': '__ZNK4rage9rlSession13IsEstablishedEv',
+    'peer_id_by_connection': '__ZNK4rage9snSession14GetPeerIdByCxnEi',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
@@ -254,6 +258,10 @@ def inspect(data):
         ('register_events', 0x2ec, 'register_event', 'BL'),
         ('script_read', 0xb0, 'read_bits', 'BL'),
         ('clear_session', 0x104, 'session_id', 'BL'),
+        ('get_current_session', 0x1c, 'session_exists', 'BL'),
+        ('get_current_session', 0x3c, 'session_exists', 'BL'),
+        ('session_exists', 0x4, 'session_is_established', 'B'),
+        ('peer_id_by_connection', 0x3c, 'peer_id_getter', 'B'),
         ('session_endpoint', 0x38, 'session_member', 'BL'),
         ('session_endpoint', 0x58, 'session_peer_connection', 'BL'),
         ('session_endpoint', 0x78, 'session_peer_endpoint', 'BL'),
@@ -332,6 +340,15 @@ def inspect(data):
         ('gamer_info_getter', 0, 0xf9405008, 'load CPlayerInfo at netPlayer+0xa0'),
         ('gamer_info_getter', 4, 0x91008100, 'derive rlGamerInfo at CPlayerInfo+0x20'),
         ('peer_id_getter', 0, 0xf940e800, 'load peer ID at rlPeerInfo+0x1d0'),
+        ('get_current_session', 0x18, 0xf9401400, 'transition slot load at manager+0x28'),
+        ('get_current_session', 0x38, 0xf8420ea0, 'main slot load at manager+0x20'),
+        ('session_exists', 0, 0x9102a000, 'inline rlSession base at snSession+0xa8'),
+        ('session_is_established', 0, 0xb9400808, 'read inline rlSession state at +8'),
+        ('session_is_established', 4, 0x121f7908, 'clear bit 0 for the established check'),
+        ('session_is_established', 8, 0x7100091f, 'compare masked state with 2'),
+        ('peer_id_by_connection', 8, 0xb94a3128, 'remote peer count'),
+        ('peer_id_by_connection', 0x14, 0x9124c129, 'first remote peer slot'),
+        ('peer_id_by_connection', 0x1c, 0xb940014b, 'read peer connection field'),
         ('main_session_progress_native', 0x10, 0xb0012788, 'ADRP x8 session global page 0x1031ef000'),
         ('main_session_progress_native', 0x14, 0x91138108, 'ADD x8 storage offset 0x4e0'),
         ('main_session_progress_native', 0x18, 0xf9400100, 'load session object pointer into x0'),
@@ -407,6 +424,22 @@ def inspect(data):
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites=trace_words,
                 receive_context=context,
+                session_slots={
+                    'global_pointer_va': hex(session_global),
+                    'code_guards': [
+                        {'function': name, 'va': hex(sites[name]), 'size': length,
+                         'sha256': hashlib.sha256(data[off+sites[name]-va:
+                                                      off+sites[name]-va+length]).hexdigest()}
+                        for name, length in (('main_session_progress_native', 0x38),
+                                             ('get_current_session', 0x9c),
+                                             ('session_exists', 0x8),
+                                             ('session_is_established', 0x14),
+                                             ('peer_id_by_connection', 0x48),
+                                             ('gamer_info_getter', 0xc),
+                                             ('peer_id_getter', 0x8))
+                    ],
+                    'scope': 'established slot/peer-table candidate only; no proof of routing, membership lifetime or identity',
+                },
                 session_context={
                     'global_pointer_va': hex(session_global),
                     'main_in_progress_offset': 0x180d6,

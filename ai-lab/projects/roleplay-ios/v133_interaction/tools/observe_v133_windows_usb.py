@@ -200,6 +200,59 @@ def read_session_context(remote, base, profile):
     return result
 
 
+def read_session_slots(remote, base, profile):
+    """Read both established predicates. The selected pointer is local to this stop."""
+    status = {'status': 'unobserved'}
+
+    def pointer_ok(value):
+        return 0 < value < (1 << 48) - 0xba38 and value % 8 == 0
+
+    at = base + int(profile['global_pointer_va'], 16) - IMAGE_VMADDR
+    try:
+        manager, = struct.unpack('<Q', remote.memory(at, 8))
+        if not pointer_ok(manager):
+            return {'status': 'session_manager_unavailable'}, None
+        main, transition = struct.unpack('<QQ', remote.memory(manager + 0x20, 16))
+        slots = {'main': main, 'transition': transition}
+        if (main and main == transition) or any(ptr and not pointer_ok(ptr) for ptr in slots.values()):
+            return {'status': 'invalid_or_aliased_session_slots'}, None
+        established = {
+            name: bool(ptr and (struct.unpack('<I', remote.memory(ptr + 0xb0, 4))[0] & ~1) == 2)
+            for name, ptr in slots.items()
+        }
+    except (DebugProtocolError, OSError):
+        return status, None
+    status = {'status': 'observed', 'main_slot_established': established['main'],
+              'transition_slot_established': established['transition']}
+    names = [name for name, active in established.items() if active]
+    status['candidate_slot'] = names[0] if len(names) == 1 else ('ambiguous' if names else 'none')
+    return status, slots[names[0]] if len(names) == 1 else None
+
+
+def read_same_event_session_candidate(remote, base, metadata, source, event):
+    status, candidate = read_session_slots(remote, base, metadata['session_slots'])
+    if candidate is not None:
+        path = Path(__file__).with_name('check_v133_peer_session_map.py')
+        spec = spec_from_file_location('usb_scripted_peer_map', path)
+        checker = module_from_spec(spec)
+        spec.loader.exec_module(checker)
+
+        def read_word(addr, width):
+            if not 0 < addr <= (1 << 48) - width or addr % width:
+                raise DebugProtocolError('peer table address outside observer bounds')
+            return int.from_bytes(remote.memory(addr, width), 'little')
+
+        try:
+            connection = read_word(event + metadata['receive_context']['event_connection_offset'], 4)
+            getter = base + int(metadata['peer_info_static']['getter_va'], 16) - IMAGE_VMADDR
+            status['peer_table'] = checker.check_peer_session_map(
+                lambda addr: read_word(addr, 4), lambda addr: read_word(addr, 8),
+                source, candidate, connection, getter)
+        except (DebugProtocolError, OSError):
+            status['peer_table'] = {'status': 'bounded_read_failed'}
+    return status
+
+
 def read_receive_context(remote, base, profile, expected_receive=None):
     """Follow only the disassembled chain at handler ENTRY, before its prologue.
 
@@ -450,6 +503,7 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     if follow_scripted:
         receive_profile = metadata['receive_context']
         verify_context_code(remote, base, receive_profile)
+        verify_context_code(remote, base, metadata['session_slots'], label='session-slots')
         handler = live(metadata['symbols']['script_event_handler']['va'])
         delegate_return = live(receive_profile['origins']['engine_receive_dispatch']['return_va'])
 
@@ -536,6 +590,9 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
             sample['scripted_receive'] = context
             sample['scripted_receive_status'] = context['context_status']
             sample['same_queued_event_at_scripted_handler'] = context['network_receive_stack_confirmed']
+            if sample['same_queued_event_at_scripted_handler']:
+                sample['scripted_session_candidate'] = read_same_event_session_candidate(
+                    remote, base, metadata, receive_frame[2], event)
     return sample
 
 
@@ -567,6 +624,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         verify_context_code(remote, base, metadata['receive_context'])
     if session_context:
         verify_context_code(remote, base, metadata['session_context'], label='session-context')
+        if 'session_slots' in metadata:
+            verify_context_code(remote, base, metadata['session_slots'], label='session-slots')
     hardware = f"{address:x},4".encode()
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
@@ -603,6 +662,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         if session_context and callsite_matches:
             remote.conn.settimeout(3)
             sample.update(read_session_context(remote, base, metadata['session_context']))
+            if 'session_slots' in metadata:
+                sample['session_slots'], _ = read_session_slots(remote, base, metadata['session_slots'])
         if receive_context and hit and not timed_out:
             remote.conn.settimeout(3)
             sample.update(read_receive_context(remote, base, metadata['receive_context']))

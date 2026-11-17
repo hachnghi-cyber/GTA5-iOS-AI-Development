@@ -222,6 +222,22 @@
     "peer_id_getter": {
       "name": "__ZNK4rage10rlPeerInfo9GetPeerIdEv",
       "va": "0x101d64b9c"
+    },
+    "get_current_session": {
+      "name": "__ZN15CNetworkSession17GetCurrentSessionEb",
+      "va": "0x10180bc5c"
+    },
+    "session_exists": {
+      "name": "__ZNK4rage9snSession6ExistsEv",
+      "va": "0x1019d1984"
+    },
+    "session_is_established": {
+      "name": "__ZNK4rage9rlSession13IsEstablishedEv",
+      "va": "0x101d74600"
+    },
+    "peer_id_by_connection": {
+      "name": "__ZNK4rage9snSession14GetPeerIdByCxnEi",
+      "va": "0x1019dc870"
     }
   },
   "branches": [
@@ -392,6 +408,30 @@
       "source": "clear_session",
       "target": "session_id",
       "kind": "BL"
+    },
+    {
+      "at": "0x10180bc78",
+      "source": "get_current_session",
+      "target": "session_exists",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10180bc98",
+      "source": "get_current_session",
+      "target": "session_exists",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019d1988",
+      "source": "session_exists",
+      "target": "session_is_established",
+      "kind": "B"
+    },
+    {
+      "at": "0x1019dc8ac",
+      "source": "peer_id_by_connection",
+      "target": "peer_id_getter",
+      "kind": "B"
     },
     {
       "at": "0x101804720",
@@ -810,6 +850,60 @@
       "observation": "load peer ID at rlPeerInfo+0x1d0"
     },
     {
+      "at": "0x10180bc74",
+      "function": "get_current_session",
+      "word": "0xf9401400",
+      "observation": "transition slot load at manager+0x28"
+    },
+    {
+      "at": "0x10180bc94",
+      "function": "get_current_session",
+      "word": "0xf8420ea0",
+      "observation": "main slot load at manager+0x20"
+    },
+    {
+      "at": "0x1019d1984",
+      "function": "session_exists",
+      "word": "0x9102a000",
+      "observation": "inline rlSession base at snSession+0xa8"
+    },
+    {
+      "at": "0x101d74600",
+      "function": "session_is_established",
+      "word": "0xb9400808",
+      "observation": "read inline rlSession state at +8"
+    },
+    {
+      "at": "0x101d74604",
+      "function": "session_is_established",
+      "word": "0x121f7908",
+      "observation": "clear bit 0 for the established check"
+    },
+    {
+      "at": "0x101d74608",
+      "function": "session_is_established",
+      "word": "0x7100091f",
+      "observation": "compare masked state with 2"
+    },
+    {
+      "at": "0x1019dc878",
+      "function": "peer_id_by_connection",
+      "word": "0xb94a3128",
+      "observation": "remote peer count"
+    },
+    {
+      "at": "0x1019dc884",
+      "function": "peer_id_by_connection",
+      "word": "0x9124c129",
+      "observation": "first remote peer slot"
+    },
+    {
+      "at": "0x1019dc88c",
+      "function": "peer_id_by_connection",
+      "word": "0xb940014b",
+      "observation": "read peer connection field"
+    },
+    {
       "at": "0x100cfe324",
       "function": "main_session_progress_native",
       "word": "0xb0012788",
@@ -998,6 +1092,54 @@
       }
     ],
     "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "session_slots": {
+    "global_pointer_va": "0x1031ef4e0",
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "get_current_session",
+        "va": "0x10180bc5c",
+        "size": 156,
+        "sha256": "9d65453518c11386e09cd81d6a0e5e15f95b5787c41a81edf122cfc8d96eff4c"
+      },
+      {
+        "function": "session_exists",
+        "va": "0x1019d1984",
+        "size": 8,
+        "sha256": "ec6d705e7f87f7cfae3f1e4ce74945e1e9728601dbb72ef637a392b71075825a"
+      },
+      {
+        "function": "session_is_established",
+        "va": "0x101d74600",
+        "size": 20,
+        "sha256": "9b7c75c2a3977934d7b2131a0907cd5b7442c17429ba83bde7cffe20f1f8e50b"
+      },
+      {
+        "function": "peer_id_by_connection",
+        "va": "0x1019dc870",
+        "size": 72,
+        "sha256": "50ae6dc32dc1ee59fa1f12d1edaea30ce53106ed2a4b5c00256063067d974ac7"
+      },
+      {
+        "function": "gamer_info_getter",
+        "va": "0x1018d92e8",
+        "size": 12,
+        "sha256": "d28b457198ca411e2770bce93fd9c9d6ea3f7b670dccf3550ce469bbf72c14f3"
+      },
+      {
+        "function": "peer_id_getter",
+        "va": "0x101d64b9c",
+        "size": 8,
+        "sha256": "e5d4d981e65a59a917e0e348a6fd7d18413350479677c7505e3343c7674998bd"
+      }
+    ],
+    "scope": "established slot/peer-table candidate only; no proof of routing, membership lifetime or identity"
   },
   "session_context": {
     "global_pointer_va": "0x1031ef4e0",

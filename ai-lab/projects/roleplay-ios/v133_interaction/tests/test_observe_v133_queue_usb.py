@@ -150,7 +150,7 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertNotIn(f'Z1,{PREDISPATCH:x},4'.encode(), remote.commands)
 
     def test_scripted_followup_requires_same_frame_event_and_players(self):
-        for mismatch in ('none', 'frame', 'event', 'source', 'destination', 'return'):
+        for mismatch in ('none', 'frame', 'event', 'source', 'destination', 'return', 'ambiguous_session'):
             with self.subTest(mismatch=mismatch):
                 stages, memory = self.fixture()
                 event = stages[0][0][1]
@@ -167,6 +167,18 @@ class QueueUSBTests(unittest.TestCase):
                 memory[message+0x10] = source + (8 if mismatch == 'source' else 0)
                 memory[message+0x18] = destination + (8 if mismatch == 'destination' else 0)
                 memory[fp+0x300-0x10] = event + (8 if mismatch == 'event' else 0)
+                # Separate from progress bits. Use the two established predicates
+                # and a peer table for the transition slot.
+                manager, main, transition = 0x130000000, 0x140000000, 0x141000000
+                global_pointer = 0x1031ef4e0
+                vtable, info, peer = 0x142000000, 0x143000000, 0x144000000
+                memory.update({
+                    global_pointer: manager, manager+0x20: struct.pack('<QQ', main, transition),
+                    main+0xb0: 2 if mismatch == 'ambiguous_session' else 0,
+                    transition+0xb0: 3, source: vtable, vtable+0x38: 0x1018d92e8,
+                    source+0xa0: info, info+0x1f0: 131, transition+0xba30: 1,
+                    transition+0xb930: peer, peer: 71, peer+0x1d8: 131,
+                })
                 stages.append(({32: delegate_return if mismatch == 'return' else handler,
                                 29: fp, 30: refs[0], 31: fp-0x180,
                                 1: memory[message+0x10], 2: memory[message+0x18]}, b'bbbb'))
@@ -177,12 +189,24 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertEqual(remote.breakpoints, set())
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertFalse(report['authenticated_rp_sender_verified'])
-                self.assertEqual(report.get('same_queued_event_at_scripted_handler', False),
-                                 mismatch == 'none')
+                same_event = mismatch in ('none', 'ambiguous_session')
+                self.assertEqual(report.get('same_queued_event_at_scripted_handler', False), same_event)
+                if same_event:
+                    candidate = report['scripted_session_candidate']
+                    self.assertEqual(candidate['candidate_slot'],
+                                     'ambiguous' if mismatch == 'ambiguous_session' else 'transition')
+                    if mismatch == 'ambiguous_session':
+                        self.assertNotIn('peer_table', candidate)
+                        self.assertNotIn((transition+0xba30, 4), remote.reads)
+                    else:
+                        self.assertTrue(candidate['peer_table']['peer_map_consistent'])
+                        self.assertFalse(candidate['peer_table']['authenticated_rage_sender_verified'])
+                        self.assertFalse(candidate['peer_table']['session_generation_verified'])
                 if mismatch == 'return':
                     self.assertEqual(report['scripted_receive_status'], 'returned_before_scripted_handler')
-                elif mismatch != 'none':
+                elif not same_event:
                     self.assertFalse(report['scripted_receive']['network_receive_stack_confirmed'])
+                    self.assertNotIn((global_pointer, 8), remote.reads)
 
     def test_dispatch_return_other_event_and_other_thread_do_not_link(self):
         for reason in ('returned_before_predispatch', 'event', 'thread'):
