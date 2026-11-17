@@ -94,7 +94,7 @@ static void test_full_capacity_and_wrap(void) {
     }
     assert(o.candidate_count==32 && !o.quarantined);
     /* A colliding peer/slot fails closed even when capacity reached. */
-    rp_rage_sample collision=sample(o.generation,9099,20,5,300,4000);
+    rp_rage_sample collision=sample(o.generation,9099,20,5,300,3000);
     assert(rp_rage_observe(&o,&collision,4000)==R);/* stale first */
     collision.observed_at_ms=4000;
     assert(rp_rage_observe(&o,&collision,4000)==Q);
