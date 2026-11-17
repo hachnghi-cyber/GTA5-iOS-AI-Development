@@ -153,17 +153,46 @@ def read_stock_job(remote, base, sample):
     }
 
 
-def verify_context_code(remote, base, profile):
+def verify_context_code(remote, base, profile, label='receive-context'):
     """Guard full functions, including every prologue and tail-call path."""
     for guard in profile['code_guards']:
         size = guard['size']
         if not 4 <= size <= 4096 or size % 4:
-            raise DebugProtocolError('invalid receive-context code bounds')
+            raise DebugProtocolError('invalid ' + label + ' code bounds')
         address = base + int(guard['va'], 16) - IMAGE_VMADDR
         code = b''.join(remote.memory(address + start, min(1024, size - start))
                         for start in range(0, size, 1024))
         if hashlib.sha256(code).hexdigest() != guard['sha256']:
-            raise DebugProtocolError('receive-context live code mismatch')
+            raise DebugProtocolError(label + ' live code mismatch')
+
+
+def read_session_context(remote, base, profile):
+    """Copy only the two native progress bits while stopped. Never call a getter.
+
+    The global is established by both native wrappers and an exact data symbol.
+    A non-null pointer or progress bit does not attest membership/authentication.
+    No session ID, player identity, pointer or arbitrary memory is emitted.
+    """
+    result = {'session_context_status': 'incomplete',
+              'session_identity_verified': False, 'session_generation_verified': False}
+    address = base + int(profile['global_pointer_va'], 16) - IMAGE_VMADDR
+    pointer, = struct.unpack('<Q', remote.memory(address, 8))
+    if pointer == 0:
+        result['session_context_status'] = 'no_session_object'
+        return result
+    offsets = (profile['main_in_progress_offset'], profile['transition_in_progress_offset'])
+    # These are exact getter offsets, not arbitrary offsets supplied by a caller.
+    if offsets != (0x180d6, 0x1821e):
+        raise DebugProtocolError('session-context offset profile mismatch')
+    if pointer % 8 or not 0 < pointer < (1 << 48) - max(offsets):
+        result['session_context_status'] = 'invalid_session_pointer'
+        return result
+    main = remote.memory(pointer + offsets[0], 1)[0]
+    transition = remote.memory(pointer + offsets[1], 1)[0]
+    result.update(session_context_status='observed',
+                  native_main_session_in_progress=bool(main & 1),
+                  native_transition_session_in_progress=bool(transition & 1))
+    return result
 
 
 def read_receive_context(remote, base, profile):
@@ -288,7 +317,7 @@ def read_internal_candidate(remote, base, metadata, site):
                 read32,read64,remote.read_register(19),remote.read_register(20),
                 remote.read_register(9),remote.read_register(10))
         else:
-            # Exact OnConnectionEvent+0x1654: x21=event, x22=current
+            # Exact OnConnectionEvent+0x654: x21=event, x22=current
             # snSession, x24=selected netPlayer, x1=peerID from native getter.
             session=remote.read_register(22)
             manager=remote.read_register(19)
@@ -320,7 +349,7 @@ def read_internal_candidate(remote, base, metadata, site):
 
 
 def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-            receive_context=False):
+            receive_context=False, session_context=False):
     """Capture exactly one guarded PC stop. A breakpoint hit is NOT sender proof."""
     if site not in OBSERVABLE_SITES:
         raise ValueError("unsupported observation site")
@@ -328,6 +357,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         raise ValueError("--stock-job is only valid at jobs_update")
     if receive_context and site != 'script_event_handler':
         raise ValueError('--receive-context is only valid at script_event_handler')
+    if session_context and site != 'jobs_update':
+        raise ValueError('--session-context is only valid at jobs_update')
     if not 1 <= wait_seconds <= 60:
         raise ValueError("wait_seconds outside bounded range")
     va = internal_site_va(metadata, site)
@@ -343,6 +374,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
             if name not in tuple(b'name:' + n for n in names):
                 raise DebugProtocolError('receive-context register layout mismatch')
         verify_context_code(remote, base, metadata['receive_context'])
+    if session_context:
+        verify_context_code(remote, base, metadata['session_context'], label='session-context')
     hardware = f"{address:x},4".encode()
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
@@ -384,6 +417,9 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         }
         if stock_job and callsite_matches:
             sample["stock_job_candidate"] = read_stock_job(remote, base, metadata["stock_job_sample"])
+        if session_context and callsite_matches:
+            remote.conn.settimeout(3)
+            sample.update(read_session_context(remote, base, metadata['session_context']))
         if receive_context and hit and not timed_out:
             remote.conn.settimeout(3)
             sample.update(read_receive_context(remote, base, metadata['receive_context']))
@@ -398,7 +434,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
 
 
 def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-                receive_context=False):
+                receive_context=False, session_context=False):
     metadata = json.loads(BASELINE.read_text(encoding="utf-8"))
     if metadata["uuid"] != UUID:
         raise DebugProtocolError("static baseline UUID mismatch")
@@ -426,13 +462,14 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                 if remote.memory(address, 4) != struct.pack("<I", int(guard["word"], 16)):
                     raise DebugProtocolError("local job metadata instruction guard mismatch")
         return capture(remote, base, metadata, stock_job=stock_job, site=site,
-                       wait_seconds=wait_seconds, receive_context=receive_context)
+                       wait_seconds=wait_seconds, receive_context=receive_context,
+                       session_context=session_context)
     finally:
         require_ok(remote, b"D", "detach")
 
 
 def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
-            receive_context=False):
+            receive_context=False, session_context=False):
     pmd = [sys.executable, "-m", "pymobiledevice3"]
     result = subprocess.run(pmd + ["developer", "dvt", "process-id-for-bundle-id", bundle],
                             capture_output=True, text=True, timeout=20, check=True)
@@ -457,7 +494,8 @@ def collect(bundle, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                 with conn:
                     conn.settimeout(5)
                     return run_capture(conn, pid, stock_job=stock_job, site=site,
-                                       wait_seconds=wait_seconds, receive_context=receive_context)
+                                       wait_seconds=wait_seconds, receive_context=receive_context,
+                                       session_context=session_context)
         raise DebugProtocolError("loopback debugproxy connect deadline elapsed")
     finally:
         if proxy.poll() is None:
@@ -476,6 +514,8 @@ def main():
                         help="Bounded time (1-60 seconds) to observe one stop; no polling loop.")
     parser.add_argument('--receive-context', action='store_true',
                         help='At script_event_handler entry, compare exact guarded receive/local frame chains and sender references. Does not authenticate a peer.')
+    parser.add_argument('--session-context', action='store_true',
+                        help='At the verified jobs_update caller, read guarded native main/transition progress bits only. No session identity or authority.')
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
@@ -485,13 +525,16 @@ def main():
         parser.error("--wait-seconds must be between 1 and 60")
     if args.receive_context and args.site != 'script_event_handler':
         parser.error('--receive-context requires --site script_event_handler')
+    if args.session_context and args.site != 'jobs_update':
+        parser.error('--session-context requires --site jobs_update')
     try:
         sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds,
-                         args.receive_context)
+                         args.receive_context, args.session_context)
     except (OSError, ValueError, subprocess.SubprocessError, DebugProtocolError) as exc:
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
     complete = not args.receive_context or sample.get('context_status') == 'observed'
+    complete = complete and (not args.session_context or sample.get('session_context_status') == 'observed')
     return 0 if sample["hardware_stop_at_expected_pc"] and complete else 1
 
 

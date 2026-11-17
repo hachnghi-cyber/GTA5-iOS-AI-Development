@@ -198,6 +198,30 @@
     "active_script": {
       "name": "__ZN4rage9scrThread15GetActiveThreadEv",
       "va": "0x101faa42c"
+    },
+    "main_session_progress_native": {
+      "name": "__ZZN16network_commands19SetupScriptCommandsEvEN39scrWrapped_NETWORK_MAIN_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE",
+      "va": "0x100cfe314"
+    },
+    "transition_session_progress_native": {
+      "name": "__ZZN16network_commands19SetupScriptCommandsEvEN45scrWrapped_NETWORK_TRANSITION_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE",
+      "va": "0x100cfe370"
+    },
+    "session_in_progress": {
+      "name": "__ZN15CNetworkSession20GetSessionInProgressE11SessionType",
+      "va": "0x101803134"
+    },
+    "on_connection_event": {
+      "name": "__ZN15CNetworkSession17OnConnectionEventEPN4rage20netConnectionManagerEPKNS0_8netEventE",
+      "va": "0x1017df3f4"
+    },
+    "gamer_info_getter": {
+      "name": "__ZNK14CNetGamePlayer12GetGamerInfoEv",
+      "va": "0x1018d92e8"
+    },
+    "peer_id_getter": {
+      "name": "__ZNK4rage10rlPeerInfo9GetPeerIdEv",
+      "va": "0x101d64b9c"
     }
   },
   "branches": [
@@ -385,6 +409,18 @@
       "at": "0x101804760",
       "source": "session_endpoint",
       "target": "session_peer_endpoint",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100cfe334",
+      "source": "main_session_progress_native",
+      "target": "session_in_progress",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100cfe390",
+      "source": "transition_session_progress_native",
+      "target": "session_in_progress",
       "kind": "BL"
     }
   ],
@@ -748,6 +784,114 @@
       "function": "script_read",
       "word": "0x54fffd68",
       "observation": "skip payload read outside 1..432 bytes"
+    },
+    {
+      "at": "0x1017dfa48",
+      "function": "on_connection_event",
+      "word": "0x9407da23",
+      "observation": "call GetPeerCxn with the selected session and peer"
+    },
+    {
+      "at": "0x1018d92e8",
+      "function": "gamer_info_getter",
+      "word": "0xf9405008",
+      "observation": "load CPlayerInfo at netPlayer+0xa0"
+    },
+    {
+      "at": "0x1018d92ec",
+      "function": "gamer_info_getter",
+      "word": "0x91008100",
+      "observation": "derive rlGamerInfo at CPlayerInfo+0x20"
+    },
+    {
+      "at": "0x101d64b9c",
+      "function": "peer_id_getter",
+      "word": "0xf940e800",
+      "observation": "load peer ID at rlPeerInfo+0x1d0"
+    },
+    {
+      "at": "0x100cfe324",
+      "function": "main_session_progress_native",
+      "word": "0xb0012788",
+      "observation": "ADRP x8 session global page 0x1031ef000"
+    },
+    {
+      "at": "0x100cfe328",
+      "function": "main_session_progress_native",
+      "word": "0x91138108",
+      "observation": "ADD x8 storage offset 0x4e0"
+    },
+    {
+      "at": "0x100cfe32c",
+      "function": "main_session_progress_native",
+      "word": "0xf9400100",
+      "observation": "load session object pointer into x0"
+    },
+    {
+      "at": "0x100cfe330",
+      "function": "main_session_progress_native",
+      "word": "0x52800001",
+      "observation": "w1=0 selects main session"
+    },
+    {
+      "at": "0x100cfe380",
+      "function": "transition_session_progress_native",
+      "word": "0xb0012788",
+      "observation": "ADRP same session global page"
+    },
+    {
+      "at": "0x100cfe384",
+      "function": "transition_session_progress_native",
+      "word": "0x91138108",
+      "observation": "ADD same storage offset 0x4e0"
+    },
+    {
+      "at": "0x100cfe388",
+      "function": "transition_session_progress_native",
+      "word": "0xf9400100",
+      "observation": "load same session object into x0"
+    },
+    {
+      "at": "0x100cfe38c",
+      "function": "transition_session_progress_native",
+      "word": "0x52800021",
+      "observation": "w1=1 selects transition session"
+    },
+    {
+      "at": "0x101803134",
+      "function": "session_in_progress",
+      "word": "0x52802908",
+      "observation": "per-session-type stride is 0x148"
+    },
+    {
+      "at": "0x101803138",
+      "function": "session_in_progress",
+      "word": "0x9b280028",
+      "observation": "x8=this+signed(session_type)*0x148"
+    },
+    {
+      "at": "0x10180313c",
+      "function": "session_in_progress",
+      "word": "0x91406109",
+      "observation": "add 0x18000 to per-type address"
+    },
+    {
+      "at": "0x101803140",
+      "function": "session_in_progress",
+      "word": "0x39435928",
+      "observation": "read byte at per-type address+0x180d6"
+    },
+    {
+      "at": "0x101803144",
+      "function": "session_in_progress",
+      "word": "0x12000100",
+      "observation": "return bit zero only, not authority or generation"
+    },
+    {
+      "at": "0x101803148",
+      "function": "session_in_progress",
+      "word": "0xd65f03c0",
+      "observation": "leaf getter returns without calling game functions"
     }
   ],
   "scripted_event": {
@@ -854,6 +998,32 @@
       }
     ],
     "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "session_context": {
+    "global_pointer_va": "0x1031ef4e0",
+    "main_in_progress_offset": 98518,
+    "transition_in_progress_offset": 98846,
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "transition_session_progress_native",
+        "va": "0x100cfe370",
+        "size": 56,
+        "sha256": "5f7cef2312951f04d32320fb757f0056fb9463e41f93bd7abb257379a404d9b4"
+      },
+      {
+        "function": "session_in_progress",
+        "va": "0x101803134",
+        "size": 24,
+        "sha256": "c16557f15ff178cc65b358c0daebb868a471bdb7c815a7176d9f7399889a2bb8"
+      }
+    ],
+    "scope": "read-only main/transition in-progress bits at guarded jobs callback; no identity, authentication or generation"
   },
   "stock_job_sample": {
     "id_va": "0x10363fd98",

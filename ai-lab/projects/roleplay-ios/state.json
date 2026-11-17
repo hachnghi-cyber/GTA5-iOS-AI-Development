@@ -128,6 +128,11 @@
       "claim": "v13.3 original GTA5 provides static instruction-proven OnNetEvent connection matching plus CNetworkSession member/peer-connection/endpoint validation. New read-only provenance diagnostic code and one-shot LLDB scanner are in source CI; NO authenticated RAGE sender or police gameplay has been device verified.",
       "evidence": "Local 67/67 exact IPA ARM64 instruction check and https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43997074421 ; source 832c206f70dd986fde7c344b709a4959ca2dd32f",
       "scope": "Read-only static analysis of proprietary original binary + simulated host tests, not on-device sender/session authority."
+    },
+    {
+      "scope": "One game-loop USB sample. Runtime session identity, generation and authenticated receive remain unverified.",
+      "evidence": "baselines/v133-usb-session-context-20261117.json",
+      "claim": "A real iPhone stop at the guarded jobs_update caller read native main progress false and transition progress true."
     }
   ],
   "unknowns": [
@@ -267,7 +272,7 @@
       ]
     }
   ],
-  "next_action": "Reconnect the development-signed iPhone in controlled Sandbox and run script_event_handler --receive-context with a cooperating peer. Check exact receive/local frame chain and engine source association, then trace authenticated membership, session incarnation and thread/lifetime before enabling PRP3 or native cuff/release. A second iPhone is required for final A/B gameplay validation.",
+  "next_action": "Use a development-signed iPhone and a cooperating peer in a controlled Sandbox session. Collect Phase 17 internal-site observations and a scripted receive-context hit, then link one queued event to its transport and live snSession. Check reconnect and migration before enabling RP. Two iPhones are required to verify cuff/release.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -609,7 +614,7 @@
       "iphone_e3_verified": false,
       "rage_sender_session_authenticated": false,
       "online_police_rp_enabled": false,
-      "next_gate": "E0 loader/tick device test requires a correctly signed build. Native receive-context/authenticated sender/session evidence remains required before any RP action. E3 host HMAC diagnostic is not a RAGE identity binding.",
+      "next_gate": "Keep the existing one-iPhone E3 diagnostic as separate evidence; verify native RAGE sender+session (PR16) and controlled two-device gameplay.",
       "followup_run": 43969424836,
       "followup_commit": "1e910d4205ba0c2c3050c230d91b14604fb3bedd",
       "artifact_id": 14278505355,
@@ -620,7 +625,8 @@
         "a029c52: lipo input ordering",
         "25ab79f: Darwin header extension; successful SDK build 43968789184",
         "1e910d4: latest concurrent PR19 Security RNG and Bash 3.2 array correction; SDK build 43969424836 successful"
-      ]
+      ],
+      "followup_device_evidence": "PR19 checkpoint 844ea9c3c2b9cacd5db6355bd45c812cbb364571 records one-iPhone E3 UDP with Windows and a native invocation receipt. Separate from RAGE sender binding."
     },
     "native_v133_sender_provenance_phase16": {
       "pr": 16,
@@ -692,6 +698,22 @@
       "actual_local_full_audit": "128/128 unique pin instructions MATCH original GTA5 executable directly (local python struct unpack), SHA256 exactly f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc, no duplicate VA and zero mismatches",
       "last_code_commit": "3077ee9798d87277130180b12d99fa035aca7d5e",
       "remaining_proof": "Windows USB internal hardware site(s) not captured on device; must observe real RAGE OnNetEvent and OnConnectionEvent with controlled peer and bind decrypt provenance + session generation before enabling any PoliceRP effects."
+    },
+    "native_session_context_usb": {
+      "status": "DEVICE_OBSERVED_TWO_PROGRESS_BITS",
+      "evidence": "baselines/v133-usb-session-context-20261117.json",
+      "local_source_parent": "b1a01e5ef275ee4a3daecfb20fd47c4b561f2ca6",
+      "integrated_on": "d09dabfcc212798276c1c1aae8ab23998098d71b",
+      "local_python_tests_passed": 110,
+      "exact_ipa_manifest_reproduced": true,
+      "sample_site": "jobs_update",
+      "matched_stock_caller": true,
+      "native_main_session_in_progress": false,
+      "native_transition_session_in_progress": true,
+      "session_identity_verified": false,
+      "session_generation_verified": false,
+      "sender_authenticated": false,
+      "next_gate": "Correlate normal traffic from a cooperating peer with a receive hit and the current snSession. Keep capture scope and stop lifetimes separate."
     }
   }
 }

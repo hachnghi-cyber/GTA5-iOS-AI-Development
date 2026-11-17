@@ -64,7 +64,14 @@ SYMBOLS = {
     'session_peer_connection': '__ZNK4rage9snSession10GetPeerCxnEm',
     'session_peer_endpoint': '__ZNK4rage9snSession17GetPeerEndpointIdEm',
     'active_script': '__ZN4rage9scrThread15GetActiveThreadEv',
+    'main_session_progress_native': '__ZZN16network_commands19SetupScriptCommandsEvEN39scrWrapped_NETWORK_MAIN_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE',
+    'transition_session_progress_native': '__ZZN16network_commands19SetupScriptCommandsEvEN45scrWrapped_NETWORK_TRANSITION_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE',
+    'session_in_progress': '__ZN15CNetworkSession20GetSessionInProgressE11SessionType',
+    'on_connection_event': '__ZN15CNetworkSession17OnConnectionEventEPN4rage20netConnectionManagerEPKNS0_8netEventE',
+    'gamer_info_getter': '__ZNK14CNetGamePlayer12GetGamerInfoEv',
+    'peer_id_getter': '__ZNK4rage10rlPeerInfo9GetPeerIdEv',
 }
+DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
 
 def parse_image(data):
@@ -114,7 +121,7 @@ def parse_image(data):
     so, ns, st, ss = symtab
     if ns > 1_000_000 or so+16*ns > len(data) or st+ss > len(data):
         raise ValueError('symbol table out of bounds')
-    wanted = set(SYMBOLS.values())
+    wanted = set(SYMBOLS.values()) | set(DATA_SYMBOLS.values())
     found = {}
     for i in range(ns):
         ix, ty, se, _, value = struct.unpack_from('<IBBHQ', data, so+16*i)
@@ -126,7 +133,14 @@ def parse_image(data):
         name = data[st+ix:stop].decode('utf-8', 'replace')
         if name not in wanted or ty & 0xe0 or ty & 0xe != 0xe:
             continue
-        if not 0 < se <= len(sections) or not va <= value < va+sz or value % 4:
+        if not 0 < se <= len(sections):
+            raise ValueError('selected symbol has invalid section')
+        if name in DATA_SYMBOLS.values():
+            section = sections[se-1]
+            if (section[:2] != (b'__common', b'__DATA') or value % 8 or
+                    not section[2] <= value <= section[2]+section[3]-8):
+                raise ValueError('selected data symbol outside expected storage')
+        elif not va <= value < va+sz or value % 4:
             raise ValueError('selected symbol outside code')
         if name in found:
             raise ValueError('ambiguous selected symbol')
@@ -199,9 +213,13 @@ def inspect(data):
     if hashlib.sha256(data).hexdigest() != SHA256:
         raise ValueError('SHA-256 mismatch: no v12/Winstom offset reuse')
     image_uuid, (va, size, off), found = parse_image(data)
-    if image_uuid != UUID or set(found) != set(SYMBOLS.values()):
+    required = set(SYMBOLS.values()) | set(DATA_SYMBOLS.values())
+    if image_uuid != UUID or set(found) != required:
         raise ValueError('UUID or required symbols mismatch')
     sites = {k: found[n] for k, n in SYMBOLS.items()}
+    session_global = found[DATA_SYMBOLS['network_session_global']]
+    if session_global != 0x1031ef4e0:
+        raise ValueError('network session storage disagrees with native wrappers')
     def word(pc):
         if not va <= pc <= va+size-4 or pc % 4:
             raise ValueError('instruction outside code')
@@ -239,6 +257,8 @@ def inspect(data):
         ('session_endpoint', 0x38, 'session_member', 'BL'),
         ('session_endpoint', 0x58, 'session_peer_connection', 'BL'),
         ('session_endpoint', 0x78, 'session_peer_endpoint', 'BL'),
+        ('main_session_progress_native', 0x20, 'session_in_progress', 'BL'),
+        ('transition_session_progress_native', 0x20, 'session_in_progress', 'BL'),
     ):
         pc = sites[src]+delta
         w = word(pc)
@@ -308,6 +328,24 @@ def inspect(data):
         ('script_read', 0x7c, 0xb9022668, 'store declared native event byte count'),
         ('script_read', 0x98, 0x7106bd3f, 'compare length minus one with 431'),
         ('script_read', 0x9c, 0x54fffd68, 'skip payload read outside 1..432 bytes'),
+        ('on_connection_event', 0x654, 0x9407da23, 'call GetPeerCxn with the selected session and peer'),
+        ('gamer_info_getter', 0, 0xf9405008, 'load CPlayerInfo at netPlayer+0xa0'),
+        ('gamer_info_getter', 4, 0x91008100, 'derive rlGamerInfo at CPlayerInfo+0x20'),
+        ('peer_id_getter', 0, 0xf940e800, 'load peer ID at rlPeerInfo+0x1d0'),
+        ('main_session_progress_native', 0x10, 0xb0012788, 'ADRP x8 session global page 0x1031ef000'),
+        ('main_session_progress_native', 0x14, 0x91138108, 'ADD x8 storage offset 0x4e0'),
+        ('main_session_progress_native', 0x18, 0xf9400100, 'load session object pointer into x0'),
+        ('main_session_progress_native', 0x1c, 0x52800001, 'w1=0 selects main session'),
+        ('transition_session_progress_native', 0x10, 0xb0012788, 'ADRP same session global page'),
+        ('transition_session_progress_native', 0x14, 0x91138108, 'ADD same storage offset 0x4e0'),
+        ('transition_session_progress_native', 0x18, 0xf9400100, 'load same session object into x0'),
+        ('transition_session_progress_native', 0x1c, 0x52800021, 'w1=1 selects transition session'),
+        ('session_in_progress', 0, 0x52802908, 'per-session-type stride is 0x148'),
+        ('session_in_progress', 4, 0x9b280028, 'x8=this+signed(session_type)*0x148'),
+        ('session_in_progress', 8, 0x91406109, 'add 0x18000 to per-type address'),
+        ('session_in_progress', 0xc, 0x39435928, 'read byte at per-type address+0x180d6'),
+        ('session_in_progress', 0x10, 0x12000100, 'return bit zero only, not authority or generation'),
+        ('session_in_progress', 0x14, 0xd65f03c0, 'leaf getter returns without calling game functions'),
     )
     observations = []
     for src, delta, expected, note in checks:
@@ -324,6 +362,12 @@ def inspect(data):
             raise ValueError('event vtable assertion failed: ' + target)
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
+    internal_sites = {
+        'on_net_event_pre_dispatch': sites['on_net_event'] + 0x94,
+        'on_connection_peer_verify': sites['on_connection_event'] + 0x654,
+    }
+    trace_words = {key: hex(word(sites[key])) for key in trace_sites}
+    trace_words.update({key: hex(word(address)) for key, address in internal_sites.items()})
     # Exact function boundaries and frame layouts were independently disassembled.
     # ProcessEventData tail-branches into the handler without creating a frame.
     # Hash the entire functions used by the optional USB observation, so a live
@@ -361,8 +405,22 @@ def inspect(data):
                 branches=branches, observations=observations,
                 scripted_event={'registered_type': 0x1c, 'payload_max_bytes': 432,
                                 'primary_vtable_slots': virtual_slots},
-                trace_sites={key: hex(word(sites[key])) for key in trace_sites},
+                trace_sites=trace_words,
                 receive_context=context,
+                session_context={
+                    'global_pointer_va': hex(session_global),
+                    'main_in_progress_offset': 0x180d6,
+                    'transition_in_progress_offset': 0x180d6 + 0x148,
+                    'code_guards': [
+                        {'function': name, 'va': hex(sites[name]), 'size': length,
+                         'sha256': hashlib.sha256(data[off+sites[name]-va:
+                                                      off+sites[name]-va+length]).hexdigest()}
+                        for name, length in (('main_session_progress_native', 0x38),
+                                             ('transition_session_progress_native', 0x38),
+                                             ('session_in_progress', 0x18))
+                    ],
+                    'scope': 'read-only main/transition in-progress bits at guarded jobs callback; no identity, authentication or generation',
+                },
                 stock_job_sample={
                     'id_va': '0x10363fd98', 'kind_va': '0x10363f8d8', 'state_va': '0x10362c240',
                     'guard_sites': [
@@ -374,7 +432,17 @@ def inspect(data):
                 engine_owned_sender_path_static=True, cryptographic_authentication_verified=False,
                 runtime_thread_verified=False, hook_installed=False,
                 transport_connected=False, two_device_verified=False,
-                warning='Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.')
+                warning='Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.',
+                internal_sites={key: hex(address) for key, address in internal_sites.items()},
+                peer_info_static={
+                    'getter_va': hex(sites['gamer_info_getter']),
+                    'getter_instruction': hex(word(sites['gamer_info_getter'])),
+                    'getter_next_va': hex(sites['gamer_info_getter'] + 4),
+                    'getter_next_instruction': hex(word(sites['gamer_info_getter'] + 4)),
+                    'peer_getter_va': hex(sites['peer_id_getter']),
+                    'peer_getter_instruction': hex(word(sites['peer_id_getter'])),
+                    'description': 'CNetGamePlayer::GetGamerInfo x0+0xa0 then +0x20; rlGamerInfo::GetPeerInfo returns this; rlPeerInfo::GetPeerId +0x1d0; diagnostic only',
+                })
 
 
 def main():

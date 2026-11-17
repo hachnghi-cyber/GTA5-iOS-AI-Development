@@ -10,11 +10,13 @@ Checkpoint tiếp nối yêu cầu **Operation RAGE Breakthrough** nằm ở
 Mốc 2026-11-17: đã thu hai mẫu timeout 30s (`script_event_handler`,
 `on_net_event`) và mẫu `jobs_update` trúng đúng caller sau khi mount DDI.
 Xem `baselines/v133-usb-receive-attempts-20261117.json`; chưa có receive hit.
-Build E0/E1/E3 ở PR #19 đã qua iPhoneOS ARM64 và host sanitizer:
-commit `1e910d4`, Actions `43969424836`; xem baseline build tương ứng.
-Đây là dylib chưa ký, chưa phải kết quả gameplay trên iPhone.
+Mẫu `--session-context` trên iPhone cùng ngày ghi phiên chính `false`,
+phiên chuyển tiếp `true` tại `jobs_update`. Xem
+`baselines/v133-usb-session-context-20261117.json`.
+PR #19 đã qua build iPhoneOS ARM64 và ghi nhận thử nghiệm E3 PC → iPhone
+với ACK và phản hồi gọi native. Xem checkpoint `844ea9c` của PR #19.
 Observer USB có `--receive-context` để kiểm tra call chain và liên hệ sender;
-phần mở rộng này chưa có mẫu iPhone thật, không cấp quyền gameplay.
+tiếp tục cùng hai điểm đo Phase 17 trong phiên có peer thử nghiệm.
 
 Tiếp tục trên PR #16, nhánh `feature/winstom-rp-ipa-audit-20261116`.
 Đọc `state.json` và `WINSTOM_V133_PHASE9_SENDER_CARRIER.md` để dùng lại bằng chứng

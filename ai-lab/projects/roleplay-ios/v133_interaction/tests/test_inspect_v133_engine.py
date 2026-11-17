@@ -26,6 +26,31 @@ def fixture():
 
 
 class EngineTests(unittest.TestCase):
+    def test_session_data_symbol_must_be_aligned_inside_common_storage(self):
+        b = bytearray(2048)
+        struct.pack_into('<IiiIIIII', b, 0, 0xfeedfacf, 0x100000c, 0, 2, 3, 280, 0, 0)
+        struct.pack_into('<II', b, 32, 0x1b, 24)
+        b[40:56] = bytes(range(16))
+        struct.pack_into('<II', b, 56, 0x19, 232)
+        struct.pack_into('<I', b, 120, 2)
+        struct.pack_into('<16s16sQQI', b, 128, b'__text', b'__TEXT', 0x100001000, 16, 512)
+        struct.pack_into('<16s16sQQI', b, 208, b'__common', b'__DATA', 0x1031ef4e0, 16, 0)
+        struct.pack_into('<IIIIII', b, 288, 2, 24, 640, 1, 740, 200)
+        struct.pack_into('<IBBHQ', b, 640, 1, 0xe, 2, 0, 0x1031ef4e0)
+        name = m.DATA_SYMBOLS['network_session_global'].encode()+b'\0'
+        b[741:741+len(name)] = name
+        _, _, symbols = m.parse_image(bytes(b))
+        self.assertEqual(symbols[m.DATA_SYMBOLS['network_session_global']], 0x1031ef4e0)
+        for value in (0x1031ef4df, 0x1031ef4e4, 0x1031ef4f0):
+            changed = bytearray(b)
+            struct.pack_into('<Q', changed, 648, value)
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                m.parse_image(bytes(changed))
+        changed = bytearray(b)
+        changed[224:240] = b'__TEXT'.ljust(16, b'\0')
+        with self.assertRaisesRegex(ValueError, 'expected storage'):
+            m.parse_image(bytes(changed))
+
     def test_symbol_mapping_uses_section_vmaddr(self):
         u, text, syms = m.parse_image(fixture())
         self.assertEqual(text, (0x100001000,16,512))

@@ -27,20 +27,24 @@ Use `git log -1` for the subsequent documentation/CI checkpoint commit.
   Hardware removal/detach succeeded; GTA was still running after both network
   observations. See `baselines/v133-usb-receive-attempts-20261117.json`.
   Timeout does not establish absence of peers or lack of transport support.
-- PR #19 now has a successful real iPhoneOS SDK build: commit `1e910d4`,
-  Actions `43969424836`. E0/E1/E3 metadata was independently verified in the
-  downloaded artifact; `baselines/e3-iphoneos-build-1e910d4.json` records it.
-  Source tests and linked dylibs do not establish ScriptHook/device gameplay.
+- `--session-context` sampled main=false, transition=true at the guarded
+  `jobs_update` callback on iPhone at 05:31 UTC+07:00 on 2026-11-17.
+  See `baselines/v133-usb-session-context-20261117.json`. The sample reports
+  the two native progress bits at one stop. A session identity, its lifetime
+  and the cause of the earlier receive timeouts remain unknown.
+- PR #19 iPhoneOS build at `1e910d4` passed Actions `43969424836`.
+  The later PR #19 checkpoint `844ea9c` records E3 PC-to-iPhone UDP ACK
+  and the native call receipt, with RAGE player binding still pending.
 - Risks: limited supported call chain, debugger pause, unverified authenticated
   session/membership lifetime; read failure or unexpected chain rejects sample.
 
-Next highest-value action: verify native session context in the existing
-read-only observer, then use a controlled Sandbox session with a cooperating
-peer and run the command in
-`V133_SCRIPTED_EVENT_OBSERVER_VI.md` under **Receive context**. Preserve the
-sanitized JSON and the triggering action. A receive-source comparison is only
-the next evidence gate; authentication/session/reconnect must be traced before
-connecting PRP3 or testing remote cuff/release. Only one iPhone is known here.
+Next action: reconnect the development-signed iPhone, then use a controlled
+Sandbox session with a cooperating peer. Follow
+`V133_RAGE_PROVENANCE_PHASE16.md` for the Phase 17 internal sites and
+`V133_SCRIPTED_EVENT_OBSERVER_VI.md` for the receive and session contexts.
+Preserve sanitized JSON and the triggering action. Establish one-event
+transport provenance, session lifetime and thread affinity before wiring
+PRP3 to gameplay. Final cuff/release validation requires two iPhones.
 
 Do not repeat the IPA inventory, TLS diagnostic or Phase 5–9 source work.
 Do not publish raw device logs, game payloads/assets, identities or keys.

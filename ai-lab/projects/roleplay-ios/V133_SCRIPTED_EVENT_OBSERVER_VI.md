@@ -165,3 +165,19 @@ và đối chiếu call path khác trước khi sửa profile.
 Mọi cờ authenticated sender, session generation, custom RP event vẫn false.
 Exit code 1 nếu không trúng breakpoint hoặc context không đầy đủ. Lỗi đọc
 vẫn đi qua gỡ breakpoint và detach; không đổi sang software breakpoint.
+
+## Session context
+
+Tùy chọn `--session-context` dùng tại `jobs_update`. Công cụ kiểm tra hash
+của hai wrapper `NETWORK_*_GET_IN_PROGRESS` và getter chung trước khi đặt
+breakpoint. Khi PC và caller khớp, nó chỉ đọc bit 0 ở hai vị trí mà getter
+dùng cho phiên chính và phiên chuyển tiếp. Dữ liệu xuất gồm hai cờ boolean.
+
+```powershell
+uv run --python 3.13 --with pymobiledevice3==11.56.0 python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id-GTA-da-cai> --site jobs_update --session-context --wait-seconds 10
+```
+
+Mẫu thật ngày 2026-11-17 ghi `main=false`, `transition=true`. Dùng phép đo
+để phân biệt trạng thái lúc vào phòng và lúc chơi trong phiên thử có peer.
+Phiên quan sát này chưa có mẫu từ `script_event_handler`, vì vậy chưa thể
+gắn hai cờ trạng thái với một scripted event cụ thể.

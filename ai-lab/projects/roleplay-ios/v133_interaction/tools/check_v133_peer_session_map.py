@@ -30,7 +30,7 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
         peer=read64(pinfo+0x1f0) # +0x20 rlGamerInfo, +0x1d0 rlPeerInfo
         if peer==0 or peer==U64MAX:
             r["status"]="invalid_netplayer_peer";return r
-        # At verified OnConnectionEvent+0x1654 x1 contains the result of
+        # At verified OnConnectionEvent+0x654 x1 contains the result of
         # netPlayer::GetRlPeerId from the SAME native callback.
         if expected_peer_id is not None and peer!=expected_peer_id:
             r["status"]="same_callback_peer_register_mismatch";return r

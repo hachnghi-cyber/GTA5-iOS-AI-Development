@@ -203,6 +203,98 @@ class ScriptEventObserverTests(unittest.TestCase):
             self.assertFalse(sample['network_receive_stack_confirmed'])
 
 
+class SessionContextTests(unittest.TestCase):
+    def setUp(self):
+        self.base = 0x100000000
+        self.profile = {'global_pointer_va': '0x1031ef4e0',
+                        'main_in_progress_offset': 0x180d6,
+                        'transition_in_progress_offset': 0x1821e}
+
+    def memory(self, pointer=0x170000000, main=0x81, transition=0x80):
+        class Memory:
+            def __init__(inner):
+                inner.reads = []
+
+            def memory(inner, address, size):
+                inner.reads.append((address, size))
+                # Independent fixed layout from disassembly, not generated from profile.
+                if (address, size) == (0x1031ef4e0, 8):
+                    return struct.pack('<Q', pointer)
+                return {(0x1700180d6, 1): bytes([main]),
+                        (0x17001821e, 1): bytes([transition])}[(address, size)]
+        return Memory()
+
+    def test_observation_masks_native_bit_without_emitting_pointer_or_authority(self):
+        remote = self.memory()
+        sample = observer.read_session_context(remote, self.base, self.profile)
+        self.assertEqual(sample['session_context_status'], 'observed')
+        self.assertTrue(sample['native_main_session_in_progress'])
+        self.assertFalse(sample['native_transition_session_in_progress'])
+        self.assertFalse(sample['session_identity_verified'])
+        self.assertFalse(sample['session_generation_verified'])
+        self.assertEqual(remote.reads, [(0x1031ef4e0, 8), (0x1700180d6, 1), (0x17001821e, 1)])
+        self.assertTrue(all(isinstance(v, bool) for k, v in sample.items() if k != 'session_context_status'))
+
+    def test_transition_and_main_are_distinct(self):
+        sample = observer.read_session_context(self.memory(main=2, transition=3), self.base, self.profile)
+        self.assertFalse(sample['native_main_session_in_progress'])
+        self.assertTrue(sample['native_transition_session_in_progress'])
+
+    def test_null_misaligned_pac_or_overflow_pointer_is_never_dereferenced(self):
+        for pointer in (0, 0x170000001, 1 << 60, (1 << 48)-8):
+            with self.subTest(pointer=pointer):
+                remote = self.memory(pointer=pointer)
+                sample = observer.read_session_context(remote, self.base, self.profile)
+                self.assertNotEqual(sample['session_context_status'], 'observed')
+                self.assertEqual(remote.reads, [(0x1031ef4e0, 8)])
+                self.assertNotIn('native_main_session_in_progress', sample)
+
+    def test_unknown_offsets_fail_before_object_read(self):
+        self.profile['main_in_progress_offset'] = 8
+        remote = self.memory()
+        with self.assertRaisesRegex(observer.DebugProtocolError, 'offset profile mismatch'):
+            observer.read_session_context(remote, self.base, self.profile)
+        self.assertEqual(len(remote.reads), 1)
+
+    def metadata(self):
+        return {'symbols': {'jobs_update': {'va': '0x1000eb57c'}},
+                'branches': [{'source': 'online_update', 'target': 'jobs_update', 'at': '0x1000e66e0'}],
+                'session_context': self.profile}
+
+    def test_session_read_requires_hit_and_exact_game_loop_caller(self):
+        for remote in (_BreakRemote(0x1000eb57c, lr=0),
+                       _BreakRemote(0x1000eb580, lr=0x1000e66e4),
+                       _BreakRemote(0x1000eb57c, lr=0x1000e66e4, time_out=True)):
+            with patch.object(observer, 'verify_context_code'), \
+                    patch.object(observer, 'read_session_context') as read:
+                observer.capture(remote, self.base, self.metadata(), session_context=True)
+                read.assert_not_called()
+            self.assertTrue(remote.requests[-1].startswith(b'z1,'))
+
+    def test_live_code_mismatch_prevents_breakpoint_and_data_read(self):
+        remote = _BreakRemote(0x1000eb57c, lr=0x1000e66e4)
+        with patch.object(observer, 'verify_context_code', side_effect=observer.DebugProtocolError('mismatch')), \
+                patch.object(observer, 'read_session_context') as read:
+            with self.assertRaises(observer.DebugProtocolError):
+                observer.capture(remote, self.base, self.metadata(), session_context=True)
+            read.assert_not_called()
+        self.assertFalse(any(p.startswith((b'Z', b'z')) for p in remote.requests))
+
+    def test_session_memory_failure_still_clears_hardware_breakpoint(self):
+        remote = _BreakRemote(0x1000eb57c, lr=0x1000e66e4)
+        with patch.object(observer, 'verify_context_code'), \
+                patch.object(observer, 'read_session_context', side_effect=observer.DebugProtocolError('read failed')):
+            with self.assertRaisesRegex(observer.DebugProtocolError, 'read failed'):
+                observer.capture(remote, self.base, self.metadata(), session_context=True)
+        self.assertTrue(remote.requests[-1].startswith(b'z1,'))
+
+    def test_non_game_loop_site_rejects_session_mode_before_any_io(self):
+        remote = _BreakRemote(0)
+        with self.assertRaises(ValueError):
+            observer.capture(remote, self.base, {}, site='on_net_event', session_context=True)
+        self.assertEqual(remote.requests, [])
+
+
 class _ContextMemory:
     """Golden synthetic stack from independently disassembled call/frame sites.
 
