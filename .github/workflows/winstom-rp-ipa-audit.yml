@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
       - name: Validate debugger stack classification
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
+      - name: Validate Windows USB internal native connection candidate (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_internal.py' -v
       - name: Validate internal pre-dispatch sender selection (synthetic only)
         run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_pre_dispatch.py' -v
       - name: Validate netPlayer ↔ snSession peer mapping (synthetic memory only)

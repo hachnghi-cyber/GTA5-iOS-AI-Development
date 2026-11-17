@@ -20,7 +20,8 @@ BASELINE = Path(__file__).resolve().parents[2] / "baselines" / "phase9-v133-engi
 UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
-OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event")
+OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
+                    "on_net_event_pre_dispatch", "on_connection_peer_verify")
 MAX_REPLY = 16384
 
 
@@ -256,6 +257,68 @@ def read_receive_context(remote, base, profile):
     return result
 
 
+
+def internal_site_va(metadata, site):
+    """Internal breakpoint VA only from fingerprinted baseline, never guessed."""
+    if site in metadata.get("internal_sites", {}):
+        return int(metadata["internal_sites"][site],16)
+    return int(metadata["symbols"][site]["va"],16)
+
+
+def read_internal_candidate(remote, base, metadata, site):
+    """Pure bounded stopped-process reads; no RAGE API invocation or writes."""
+    report={"schema":"v133-usb-internal-candidate-v1",
+            "status":"unsupported_site","authenticated_rp_sender_verified":False,
+            "session_membership_verified":False,
+            "session_generation_verified":False}
+    def read32(addr):
+        return struct.unpack("<I",remote.memory(addr,4))[0]
+    def read64(addr):
+        return struct.unpack("<Q",remote.memory(addr,8))[0]
+    if site not in ("on_net_event_pre_dispatch","on_connection_peer_verify"):
+        return report
+    try:
+        from importlib.util import spec_from_file_location,module_from_spec
+        if site=="on_net_event_pre_dispatch":
+            name="usb_pre_dispatch"
+            path=Path(__file__).with_name("observe_v133_lldb.py")
+            spec=spec_from_file_location(name,path)
+            mod=module_from_spec(spec);spec.loader.exec_module(mod)
+            report=mod.scan_pre_dispatch(
+                read32,read64,remote.read_register(19),remote.read_register(20),
+                remote.read_register(9),remote.read_register(10))
+        else:
+            # Exact OnConnectionEvent+0x1654: x21=event, x22=current
+            # snSession, x24=selected netPlayer, x1=peerID from native getter.
+            session=remote.read_register(22)
+            manager=remote.read_register(19)
+            event=remote.read_register(21)
+            if (not session or not manager or not event or
+                read64(manager+0x20)!=session or read32(event+0x40)!=7):
+                report["status"]="session_or_event_frame_mismatch"
+                return report
+            static=metadata["peer_info_static"]
+            for va,word in (("getter_va","getter_instruction"),
+                             ("getter_next_va","getter_next_instruction"),
+                             ("peer_getter_va","peer_getter_instruction")):
+                at=base+int(static[va],16)-IMAGE_VMADDR
+                if remote.memory(at,4)!=struct.pack("<I",int(static[word],16)):
+                    report["status"]="unknown_gamer_getter_build"
+                    return report
+            path=Path(__file__).with_name("check_v133_peer_session_map.py")
+            spec=spec_from_file_location("usb_peer_map",path)
+            checker=module_from_spec(spec);spec.loader.exec_module(checker)
+            connection=read32(event+0x3c)
+            getter=base+int(static["getter_va"],16)-IMAGE_VMADDR
+            report=checker.check_peer_session_map(
+                read32,read64,remote.read_register(24),session,
+                connection,getter,remote.read_register(1))
+    except (DebugProtocolError,KeyError,ValueError,TypeError,RuntimeError,
+            OverflowError,IndexError,OSError):
+        report["status"]="bounded_read_failed"
+    return report
+
+
 def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             receive_context=False):
     """Capture exactly one guarded PC stop. A breakpoint hit is NOT sender proof."""
@@ -267,7 +330,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         raise ValueError('--receive-context is only valid at script_event_handler')
     if not 1 <= wait_seconds <= 60:
         raise ValueError("wait_seconds outside bounded range")
-    va = int(metadata["symbols"][site]["va"], 16)
+    va = internal_site_va(metadata, site)
     address = base + va - IMAGE_VMADDR
     if remote.request(b"qRegisterInfo20").partition(b";")[0] != b"name:pc":
         raise DebugProtocolError("ARM64 PC register layout mismatch")
@@ -324,6 +387,11 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         if receive_context and hit and not timed_out:
             remote.conn.settimeout(3)
             sample.update(read_receive_context(remote, base, metadata['receive_context']))
+        if site in ("on_net_event_pre_dispatch","on_connection_peer_verify") and (
+            hit and not timed_out):
+            # All reads happen only when the verified one-shot PC actually hit.
+            remote.conn.settimeout(3)
+            sample["native_candidate"]=read_internal_candidate(remote,base,metadata,site)
         return sample
     finally:
         require_ok(remote, b"z1," + hardware, "hardware breakpoint removal")
@@ -348,7 +416,7 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             raise DebugProtocolError("attached PID mismatch")
         base = main_image(remote)
         for guarded_site in OBSERVABLE_SITES:
-            va = int(metadata["symbols"][guarded_site]["va"], 16)
+            va = internal_site_va(metadata, guarded_site)
             expected = struct.pack("<I", int(metadata["trace_sites"][guarded_site], 16))
             if remote.memory(base + va - IMAGE_VMADDR, 4) != expected:
                 raise DebugProtocolError("live instruction mismatch at " + guarded_site)
