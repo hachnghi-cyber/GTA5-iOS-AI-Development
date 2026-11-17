@@ -207,6 +207,13 @@ trong một lần đo. `native_candidate` ghi kết quả đối chiếu connect
 netPlayer đã chọn. Các trường xác thực sender, thế hệ phiên và quyền RP
 vẫn tắt. Timeout hoặc mismatch giới hạn phạm vi của mẫu đo.
 
+Thêm `--receive-context` vào lệnh `--queue-context` để theo cùng event đến
+`script_event_handler` mà không cần attach lần hai. Observer chỉ ghi
+`same_queued_event_at_scripted_handler=true` khi callback chạy trước khi
+delegate trả về, trên cùng luồng, và khớp frame, event, sender và receiver
+của lần dừng trước. Nếu delegate trả về trước, observer ghi
+`returned_before_scripted_handler` và giữ kết quả đã quan sát ở hàng đợi.
+
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Công cụ kiểm tra thân hàm, frame `HandleReceivedPacket → Unpack`
 và connection manager trước khi đọc byte, khi cả hai frame vẫn còn sống.

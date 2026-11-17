@@ -149,6 +149,41 @@ class QueueUSBTests(unittest.TestCase):
                                  else 'dispatch_event_mismatch')
                 self.assertNotIn(f'Z1,{PREDISPATCH:x},4'.encode(), remote.commands)
 
+    def test_scripted_followup_requires_same_frame_event_and_players(self):
+        for mismatch in ('none', 'frame', 'event', 'source', 'destination', 'return'):
+            with self.subTest(mismatch=mismatch):
+                stages, memory = self.fixture()
+                event = stages[0][0][1]
+                source, destination = stages[2][0][9], stages[2][0][10]
+                handler = int(self.meta['symbols']['script_event_handler']['va'], 16)
+                delegate_return = 0x1020249bc
+                fp = 0x150001000
+                origin_fp = fp + 0x400
+                stages[2][0][29] = origin_fp + (16 if mismatch == 'frame' else 0)
+                refs = [0x10200c23c, 0x10200bf44, 0x10200a808, 0x102026194, delegate_return]
+                for i, return_pc in enumerate(refs[1:]):
+                    memory[fp + i*0x100] = struct.pack('<QQ', fp + (i+1)*0x100, return_pc)
+                message = origin_fp - 0x60
+                memory[message+0x10] = source + (8 if mismatch == 'source' else 0)
+                memory[message+0x18] = destination + (8 if mismatch == 'destination' else 0)
+                memory[fp+0x300-0x10] = event + (8 if mismatch == 'event' else 0)
+                stages.append(({32: delegate_return if mismatch == 'return' else handler,
+                                29: fp, 30: refs[0], 31: fp-0x180,
+                                1: memory[message+0x10], 2: memory[message+0x18]}, b'bbbb'))
+                remote = Remote(stages, memory)
+                with patch.object(usb, 'verify_context_code'):
+                    report = usb.capture_queue_context(remote, BASE, self.meta,
+                                                       self.profile, 30, follow_scripted=True)
+                self.assertEqual(remote.breakpoints, set())
+                self.assertTrue(report['queue_object_link_observed'])
+                self.assertFalse(report['authenticated_rp_sender_verified'])
+                self.assertEqual(report.get('same_queued_event_at_scripted_handler', False),
+                                 mismatch == 'none')
+                if mismatch == 'return':
+                    self.assertEqual(report['scripted_receive_status'], 'returned_before_scripted_handler')
+                elif mismatch != 'none':
+                    self.assertFalse(report['scripted_receive']['network_receive_stack_confirmed'])
+
     def test_dispatch_return_other_event_and_other_thread_do_not_link(self):
         for reason in ('returned_before_predispatch', 'event', 'thread'):
             with self.subTest(reason=reason):

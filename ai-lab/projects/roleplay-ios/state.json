@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect --queue-context on the development-signed iPhone in controlled Sandbox, then use cooperating peer traffic for the Phase 17 peer and scripted receive observations. Link the same event to authenticated transport and a live snSession across reconnect/migration before enabling RP.",
+  "next_action": "On the development-signed iPhone in controlled Sandbox, run --queue-context --receive-context with a cooperating peer. A same-event match reaches the scripted handler; transport identity, live snSession generation, migration and two-device gameplay remain separate gates.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -764,6 +764,16 @@
         "two_hardware_sites_removed_and_detach_acknowledged": true,
         "local_python_tests_passed": 119,
         "live_queue_event_observed": false
+      },
+      "queue_to_scripted_usb": {
+        "status": "DEVICE_DEBUGGER_PREFLIGHT_PASSED_EVENT_PENDING",
+        "mode": "--queue-context --receive-context",
+        "scope": "One attach through pre-dispatch and into the scripted handler. Requires exact frame, event, sender, receiver, thread and delegate lifetime.",
+        "local_python_tests_passed": 120,
+        "live_code_guard_checks": 16,
+        "two_scripted_stage_hardware_sites_installed_removed_and_detach_acknowledged": true,
+        "queue_to_scripted_runtime_match": false,
+        "authenticated_sender_verified": false
       }
     }
   }

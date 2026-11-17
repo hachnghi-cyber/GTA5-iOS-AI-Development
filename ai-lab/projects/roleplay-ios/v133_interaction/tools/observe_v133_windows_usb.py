@@ -200,7 +200,7 @@ def read_session_context(remote, base, profile):
     return result
 
 
-def read_receive_context(remote, base, profile):
+def read_receive_context(remote, base, profile, expected_receive=None):
     """Follow only the disassembled chain at handler ENTRY, before its prologue.
 
     No general unwinding, stack scanning, PAC stripping, packet/key/name dumps,
@@ -253,6 +253,9 @@ def read_receive_context(remote, base, profile):
     # yet an event/source association. Never mark the combined receive gate
     # until references and connection IDs of this SAME stopped event agree.
     result['network_receive_call_chain_observed'] = origin == 'engine_receive_dispatch'
+    if expected_receive is not None and (origin != 'engine_receive_dispatch' or fp != expected_receive[0]):
+        result['context_status'] = 'different_receive_frame'
+        return result
 
     message = fp + profile['origins'][origin]['message_fp_offset']
     if message < sp or message + 0x20 > fp:
@@ -274,6 +277,9 @@ def read_receive_context(remote, base, profile):
             dispatch_fp + profile['dispatch_saved_event_fp_offset'], 8))
         if not pointer(event):
             result['context_status'] = 'invalid_event_pointer'
+            return result
+        if expected_receive is not None and (fp, event, source, destination) != expected_receive:
+            result['context_status'] = 'queued_event_or_players_mismatch'
             return result
         event_connection, = struct.unpack('<i', remote.memory(
             event + profile['event_connection_offset'], 4))
@@ -415,7 +421,7 @@ def read_enqueue_transport(remote, base, profile, queue, queue_offset):
     return result
 
 
-def capture_queue_context(remote, base, metadata, profile, wait_seconds):
+def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_scripted=False):
     """Trace one queued event within a single attach, as a candidate association."""
     if not 1 <= wait_seconds <= 60:
         raise ValueError("wait_seconds outside bounded range")
@@ -441,6 +447,11 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds):
         if register not in tuple(b'name:' + name for name in names):
             raise DebugProtocolError('queue-context register layout mismatch')
     verify_context_code(remote, base, profile, label='queue-context')
+    if follow_scripted:
+        receive_profile = metadata['receive_context']
+        verify_context_code(remote, base, receive_profile)
+        handler = live(metadata['symbols']['script_event_handler']['va'])
+        delegate_return = live(receive_profile['origins']['engine_receive_dispatch']['return_va'])
 
     sample = {
         'site': 'phase19_queue_context',
@@ -509,6 +520,22 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds):
     sample['dispatch_and_predispatch_same_thread'] = True
     sample['native_candidate'] = read_internal_candidate(
         remote, base, metadata, 'on_net_event_pre_dispatch')
+    if follow_scripted:
+        receive_frame = (remote.read_register(29), event, remote.read_register(9),
+                         remote.read_register(10))
+        sample['last_stage'] = 'script_event_handler'
+        pc, handler_thread, status = queue_stage_stop(remote, (handler, delegate_return), deadline)
+        if pc is None:
+            sample['scripted_receive_status'] = status
+        elif pc == delegate_return:
+            sample['scripted_receive_status'] = 'returned_before_scripted_handler'
+        elif handler_thread != dispatch_thread:
+            sample['scripted_receive_status'] = 'scripted_thread_mismatch'
+        else:
+            context = read_receive_context(remote, base, receive_profile, expected_receive=receive_frame)
+            sample['scripted_receive'] = context
+            sample['scripted_receive_status'] = context['context_status']
+            sample['same_queued_event_at_scripted_handler'] = context['network_receive_stack_confirmed']
     return sample
 
 
@@ -616,7 +643,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             queue = json.loads(QUEUE_BASELINE.read_text(encoding="utf-8"))
             if queue['uuid'] != UUID or queue['executable_sha256'] != metadata['executable_sha256']:
                 raise DebugProtocolError("queue baseline fingerprint mismatch")
-            return capture_queue_context(remote, base, metadata, queue['usb_profile'], wait_seconds)
+            return capture_queue_context(remote, base, metadata, queue['usb_profile'], wait_seconds,
+                                         follow_scripted=receive_context)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -714,7 +742,7 @@ def main():
     parser.add_argument('--session-context', action='store_true',
                         help='At the verified jobs_update caller, read guarded native main/transition progress bits only. No session identity or authority.')
     parser.add_argument('--queue-context', action='store_true',
-                        help='Trace one Phase 19 queue event through the guarded dispatcher within one attach. Use by itself.')
+                        help='Trace one queue event through the guarded dispatcher. Add --receive-context to follow its scripted handler.')
     args = parser.parse_args()
     if not re.fullmatch(r"com\.macport\.gtav(?:\.[A-Za-z0-9]{5,24})?", args.bundle):
         parser.error("expected GTA v13.3 bundle identifier")
@@ -722,13 +750,13 @@ def main():
         parser.error("--stock-job is valid only with --site jobs_update")
     if not 1 <= args.wait_seconds <= 60:
         parser.error("--wait-seconds must be between 1 and 60")
-    if args.receive_context and args.site != 'script_event_handler':
+    if args.receive_context and not args.queue_context and args.site != 'script_event_handler':
         parser.error('--receive-context requires --site script_event_handler')
     if args.session_context and args.site != 'jobs_update':
         parser.error('--session-context requires --site jobs_update')
     if args.queue_context and (args.site != DEFAULT_SITE or args.stock_job
-                               or args.receive_context or args.session_context):
-        parser.error('--queue-context cannot be combined with other observation modes')
+                               or args.session_context):
+        parser.error('--queue-context supports only --receive-context as a second observation mode')
     try:
         sample = collect(args.bundle, args.stock_job, args.site, args.wait_seconds,
                          args.receive_context, args.session_context, args.queue_context, args.udid)
@@ -736,7 +764,9 @@ def main():
         parser.exit(1, f"Observer failed: {exc}\n")
     print(json.dumps(sample, sort_keys=True))
     if args.queue_context:
-        return 0 if sample['queue_object_link_observed'] else 1
+        matched = (sample.get('same_queued_event_at_scripted_handler') if args.receive_context
+                   else sample['queue_object_link_observed'])
+        return 0 if matched else 1
     complete = not args.receive_context or sample.get('context_status') == 'observed'
     complete = complete and (not args.session_context or sample.get('session_context_status') == 'observed')
     return 0 if sample["hardware_stop_at_expected_pc"] and complete else 1
