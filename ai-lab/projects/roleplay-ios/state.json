@@ -123,6 +123,11 @@
     {
       "claim": "PR19 E0/E1/E3 unsigned dylibs linked for iPhoneOS ARM64; DllMain, UUIDs, rpath, platform, dependencies and SHA256 independently inspected after download. No iPhone E0/E1/E3 or RP claim.",
       "evidence": "PR19 commit 1e910d4205ba0c2c3050c230d91b14604fb3bedd, Actions 43969424836, baselines/e3-iphoneos-build-1e910d4.json"
+    },
+    {
+      "claim": "v13.3 original GTA5 provides static instruction-proven OnNetEvent connection matching plus CNetworkSession member/peer-connection/endpoint validation. New read-only provenance diagnostic code and one-shot LLDB scanner are in source CI; NO authenticated RAGE sender or police gameplay has been device verified.",
+      "evidence": "Local 67/67 exact IPA ARM64 instruction check and https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43997074421 ; source 832c206f70dd986fde7c344b709a4959ca2dd32f",
+      "scope": "Read-only static analysis of proprietary original binary + simulated host tests, not on-device sender/session authority."
     }
   ],
   "unknowns": [
@@ -549,8 +554,8 @@
       "real_ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
       "gta5_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
       "macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
-      "static_opcode_pins": 26,
-      "local_binary_audit": "PASS on original GTA5, pinned SHA256/UUID",
+      "static_opcode_pins": 67,
+      "local_binary_audit": "PASS: independent direct static check of 67/67 ARM64 instructions in exact user-supplied GTA5 IPA; SHA and UUID pinned",
       "local_python_tests": "PASS 6/6; original plus mutation negatives",
       "github_runner_binary_audit": "NO: original private IPA intentionally absent",
       "source_ci": "CHECK_PENDING",
@@ -561,10 +566,10 @@
       "roleplay_enabled": false,
       "next_gate": "Controlled developer-signed iPhone stock Sandbox: capture script_event_handler --receive-context with cooperative peer. Require separate call-chain and same-event source association, then trace sender authorization, session incarnation and reconnect/migration. No hook or gameplay enabled.",
       "github_workflow_test_commit": "82fe44cb0848217def1543853a475ec8e63d5125",
-      "github_synthetic_run": 43906364389,
-      "github_synthetic_test_result": "PASS: 7/7 synthetic Python tests; C11 source-only tests PASS",
-      "github_actual_binary_test_result": "NOT RUN in CI; user IPA not available on public runner; local exact binary audit PASS 26/26",
-      "remaining_blocker": "Device proof of same-event sender mapping + transport authentication + authoritative session incarnation, then real E1/E3 game actions."
+      "github_synthetic_run": 43997074421,
+      "github_synthetic_test_result": "SUCCESS: Python parser/LLDB synthetic tests and C11 GCC+Clang ASan/UBSan source-only 11 binaries",
+      "github_actual_binary_test_result": "NOT RUN in public CI (proprietary GTA5 IPA excluded); local original executable static verification PASS 67/67",
+      "remaining_blocker": "On-device read-only OnNetEvent breakpoint and peer connection mapping; reconcile same sender with authenticated RAGE transport, snSession GamerInfo/peer and locally minted generation across disconnect/migration. A candidate match must never authorize PoliceRP."
     },
     "experimental_e3_hardened_phase9": {
       "baseline": "Phase4 E0/E1/E3 source; GTA v13.3 IPA baseline unchanged",
@@ -616,6 +621,33 @@
         "25ab79f: Darwin header extension; successful SDK build 43968789184",
         "1e910d4: latest concurrent PR19 Security RNG and Bash 3.2 array correction; SDK build 43969424836 successful"
       ]
+    },
+    "native_v133_sender_provenance_phase16": {
+      "pr": 16,
+      "branch": "feature/winstom-rp-ipa-audit-20261116",
+      "initial_module_commit": "0573b6a9d4b6943f73a5d9c7c33c27f4affb7a41",
+      "corrected_sanitizer_test_commit": "d41295ec4fa8867740636683756c0ced52f7318e",
+      "session_peer_disasm_pin_commit": "afa1e26011647ae2cb236fb05fe5d9f123efb272",
+      "read_only_lldb_observer_commit": "1700c10ea0cefdeada79a8656ca4f7e816720fb2",
+      "membership_endpoint_chain_commit": "832c206f70dd986fde7c344b709a4959ca2dd32f",
+      "documentation": "ai-lab/projects/roleplay-ios/V133_RAGE_PROVENANCE_PHASE16.md",
+      "source_files": [
+        "v133_interaction/include/rp_v133_rage_provenance.h",
+        "v133_interaction/src/rp_v133_rage_provenance.c",
+        "v133_interaction/tests/test_v133_rage_provenance.c",
+        "v133_interaction/tools/observe_v133_lldb.py",
+        "v133_interaction/tools/audit_v133_connection_chain.py"
+      ],
+      "exact_game_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "exact_game_macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "actual_local_static_instruction_verification": "67/67 PASS from original user IPA; 26 pre-existing + 25 peer/session + 16 membership/endpoint",
+      "github_ci_run": 43997074421,
+      "github_ci_status": "SUCCESS (Synthetic-only Python and C11 GCC/Clang with ASan/UBSan)",
+      "guard_protections": "Reject local SendBuffer path, mismatched netPlayer/event/session connection, invalid membership, stale/future timestamps, alias peer mapping, reused generation, monotonic clock rollback; quarantine on conflict",
+      "observability": "LLDB one-shot hardware OnNetEvent capture offers bounded, redacted connection-ID list matching, without raw pointers or player IDs",
+      "authority_status": "STATIC CANDIDATE ONLY: no verified remote sender/session owner; no authenticated RP delivery; no RAGE event hook; no PoliceRP gameplay enabled",
+      "device_runtime_provenance_tested": false,
+      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independent CNetworkSession GamerInfo IsMember/GetPeerCxn/GetPeerEndpointId and actual RAGE authenticated receive path, with join/leave generation invalidation; then only consider game-thread police native calls after two-device validation."
     }
   }
 }
