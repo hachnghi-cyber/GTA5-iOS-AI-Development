@@ -74,3 +74,18 @@ private executable, not published in GitHub.
 ## One-shot external LLDB connection-candidate scanner
 
 The source-only LLDB observer `observe_v133_lldb.py` now performs an optional bounded read when a hardware breakpoint hits OnNetEvent ENTRY on the exact iPhone build. From the stopped x0 and x2 registers, it scans event+0x3c, manager+0x128, netPlayer+0x18 and linked-list next+0x38, maximum 32 nodes. It reports only match/ambiguity/count/status, never raw addresses, gamer IDs or connection IDs. A match is **CANDIDATE ONLY**, not cryptographic authentication, RAGE membership, or session generation. The same script still refuses incorrect Mach-O UUID/opcode, and only takes a one-shot hardware breakpoint. No hardware run has yet validated this new memory scanner. The existing user device data belongs to E0/E1/E3 direct UDP, not RAGE provenance.
+
+## A stronger engine-internal member/endpoint validation chain (STATIC)
+
+CNetworkSession::GetSessionNetEndpointId at unslid VA 0x1018046e8 first
+initializes the output to -1, obtains the active snSession pointer at
+CNetworkSession+0x20, calls rlGamerInfo::GetGamerId and snSession::IsMember,
+and rejects a non-member. For a member it obtains the peer ID via
+GetPeerInfo/GetPeerId, calls snSession::GetPeerCxn and GetPeerEndpointId,
+rejects a negative connection and invalid endpoint conditions, writes
+the endpoint output and returns true. Sixteen additional machine
+instructions from the exact supplied GTA5 executable are pinned.
+This internal member check is NOT proof that rlGamerInfo corresponds
+to the actual network packet sender. The missing link remains the
+authenticated connection -> gamer info -> current session generation
+association; no PoliceRP action is enabled.

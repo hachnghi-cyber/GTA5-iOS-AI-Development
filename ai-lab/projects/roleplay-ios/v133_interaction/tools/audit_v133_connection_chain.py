@@ -64,6 +64,22 @@ PINS={
     0x1020249b8:0x940005d7, # remote OnNetEvent dispatch
     0x101ffeecc:0x94009c92, # LOCAL SendBuffer dispatch same delegate
     0x1019d2ee8:0x940e3fb5, # snSession::IsMember compares gamer IDs
+    0x101804704:0x12800008, # CNetworkSession: default endpoint -1
+    0x101804708:0xb9000048, # store rejected endpoint before checks
+    0x10180470c:0xf9401016, # CNetworkSession holds snSession ptr at +0x20
+    0x101804714:0x94157ac4, # rlGamerInfo GetGamerId
+    0x101804720:0x940739e1, # snSession IsMember
+    0x101804724:0x34000300, # reject missing membership
+    0x101804730:0x94157abc, # rlGamerInfo GetPeerInfo
+    0x101804734:0x9415811a, # rlPeerInfo GetPeerId
+    0x101804740:0x940746e5, # snSession GetPeerCxn
+    0x101804754:0x94158112, # second rlPeerInfo GetPeerId
+    0x101804760:0x94073a5d, # snSession GetPeerEndpointId
+    0x10180476c:0x37f800d6, # reject negative connection
+    0x101804774:0x31000d3f, # validate endpoint predicate
+    0x101804778:0x54000068, # reject endpoint on condition
+    0x10180477c:0xb9000268, # store selected endpoint
+    0x101804780:0x52800020, # return success (only checked path)
 }
 class AuditError(ValueError):pass
 
@@ -113,6 +129,7 @@ def audit(binary):
         "decrypt_success_may_have_zero_out_flag":True,
         "authenticated_sender_verified":False,
         "session_id_read_is_64bit_static":True,
+        "gamer_info_membership_peer_connection_endpoint_path_static":True,
         "peer_connection_and_endpoint_are_distinct_fields":True,
         "peer_lookup_not_found_returns_minus_one":True,
         "local_send_buffer_reaches_same_delegate":True,
