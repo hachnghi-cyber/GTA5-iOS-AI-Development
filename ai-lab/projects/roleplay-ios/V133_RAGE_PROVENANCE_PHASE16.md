@@ -70,3 +70,7 @@ Passing a synthetic sample in a unit test does not verify native callbacks.
 Host CI: compile with GCC and Clang, ASan/UBSan, source-only fixtures. Exact
 ARM64 disassembly above is read-only local evidence from the fingerprinted
 private executable, not published in GitHub.
+
+## One-shot external LLDB connection-candidate scanner
+
+The source-only LLDB observer `observe_v133_lldb.py` now performs an optional bounded read when a hardware breakpoint hits OnNetEvent ENTRY on the exact iPhone build. From the stopped x0 and x2 registers, it scans event+0x3c, manager+0x128, netPlayer+0x18 and linked-list next+0x38, maximum 32 nodes. It reports only match/ambiguity/count/status, never raw addresses, gamer IDs or connection IDs. A match is **CANDIDATE ONLY**, not cryptographic authentication, RAGE membership, or session generation. The same script still refuses incorrect Mach-O UUID/opcode, and only takes a one-shot hardware breakpoint. No hardware run has yet validated this new memory scanner. The existing user device data belongs to E0/E1/E3 direct UDP, not RAGE provenance.

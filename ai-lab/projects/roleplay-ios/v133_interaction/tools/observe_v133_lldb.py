@@ -84,6 +84,66 @@ def arm(debugger, command, result, _):
         result.SetError(str(exc))
 
 
+
+def scan_remote_connection(read_u32, read_u64, manager_ptr, event_ptr):
+    """Read at exact-UUID OnNetEvent entry. Bounded; emits no identities."""
+    report = {
+        "schema": "v133-onnet-connection-scan-v1",
+        "status": "invalid_entry",
+        "players_scanned": 0,
+        "single_connection_match": False,
+        "session_membership_verified": False,
+        "authenticated_rp_sender_verified": False,
+        "session_generation_verified": False,
+    }
+    if not isinstance(manager_ptr, int) or not isinstance(event_ptr, int) or (
+        manager_ptr <= 0 or event_ptr <= 0
+    ):
+        return report
+    try:
+        event_conn = read_u32(event_ptr + 0x3c)
+        if event_conn & 0x80000000:
+            report["status"] = "invalid_event_connection"
+            return report
+        node = read_u64(manager_ptr + 0x128)
+        visited = set()
+        matched = 0
+        for _ in range(32):
+            if not node:
+                break
+            if node in visited:
+                report["status"] = "cyclic_player_list"
+                return report
+            visited.add(node)
+            player_conn = read_u32(node + 0x18)
+            next_node = read_u64(node + 0x38)
+            report["players_scanned"] += 1
+            if player_conn == event_conn:
+                matched += 1
+            node = next_node
+        if node:
+            report["status"] = "list_exceeds_32"
+        elif matched > 1:
+            report["status"] = "ambiguous_duplicate_connection"
+        elif matched == 1:
+            report["status"] = "connection_candidate_only"
+            report["single_connection_match"] = True
+        else:
+            report["status"] = "no_matching_player"
+    except (KeyError, ValueError, RuntimeError, TypeError, OverflowError):
+        report["status"] = "read_failed"
+    return report
+
+
+def read_stopped_u(process, address, n):
+    import lldb
+    err = lldb.SBError()
+    data = process.ReadMemory(address, n, err)
+    if err.Fail() or not isinstance(data, (bytes, bytearray)) or len(data) != n:
+        raise ValueError("bounded read failed")
+    return int.from_bytes(data, "little", signed=False)
+
+
 def capture(debugger, command, result, _):
     import lldb
 
@@ -113,7 +173,17 @@ def capture(debugger, command, result, _):
                 frames.append(keys[start])
         label_key = uid, thread.GetThreadID()
         label = _thread_labels.setdefault(label_key, f"T{len(_thread_labels) + 1}")
-        result.AppendMessage(json.dumps(describe_stack(site, frames, label)))
+        report = describe_stack(site, frames, label)
+        if site == "on_net_event":
+            frame = thread.GetFrameAtIndex(0)
+            mgr = frame.FindRegister("x0").GetValueAsUnsigned()
+            evt = frame.FindRegister("x2").GetValueAsUnsigned()
+            report["connection_scan"] = scan_remote_connection(
+                lambda address: read_stopped_u(process, address, 4),
+                lambda address: read_stopped_u(process, address, 8),
+                mgr, evt
+            )
+        result.AppendMessage(json.dumps(report))
         _active = None
     except (AttributeError, OSError, ValueError) as exc:
         result.SetError(str(exc))
