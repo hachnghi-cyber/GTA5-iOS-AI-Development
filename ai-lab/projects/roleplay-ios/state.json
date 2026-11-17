@@ -738,12 +738,31 @@
       "local_source_zip_sha256": "7b65702015b930ff77b5e0dee5fa4daf817213778930f806e843fdce06eb0ec8",
       "apple_development_cert_available_in_session": false,
       "signed_ipa_produced": false,
-      "iphone_e0_runtime_verified": false,
-      "iphone_e1_hud_verified": false,
+      "iphone_e0_runtime_verified": true,
+      "iphone_e1_hud_verified": true,
       "two_iphone_e3_verified": false,
       "native_rage_sender_session_verified": false,
       "roleplay_gameplay_enabled": false,
-      "next_gate": "On user-controlled Mac with Apple Development cert and matching profile: sign the E0 prepacked IPA with ios/sign_prepackaged_probe_macos.sh, install on provisioned iPhone, capture same-run posthook.log and Documents/RBPProbe.log (including SOURCE_CHECKPOINT, 900 ticks and completed callback) and iOS crash log if any. Do not advance to E1/E3 or bind remote Police RP before E0 and PR16 native sender/session authorization verified."
+      "next_gate": "E0 and E1 user device evidence obtained. Next E3 two-device controlled LAN diagnostic ping with signed copies and fresh RBPProbe.cfg. RAGE authoritative sender/session binding still required before PoliceRP player actions.",
+      "iphone_e0_e1_evidence": "User-uploaded RBPProbe(2).log (contains stage0 completed and stage1 complete); E1 visible HUD user-confirmed on 2026-11-17. No original raw log committed."
+    },
+    "experimental_e3_device_e1_user_report": {
+      "observation_date": "2026-11-17",
+      "source": "User-supplied local RBPProbe(2).log plus independent user statement: HUD notification appeared on screen",
+      "device_e1_log_stage": 1,
+      "source_checkpoint": "phase12-e3-receipt-retry",
+      "uuid_match": true,
+      "game_native_called": "LOCAL_E1_GAME_ACTION_INVOKED=1 tick=120",
+      "callback_complete": "SCRIPT_TICK tick=900 ; SCRIPT_CALLBACK_COMPLETE=1 ticks=901",
+      "fail_closed_markers_in_last_stage1_run": 0,
+      "manually_reported_hud_visible": true,
+      "classified": "DEVICE_LOG_PLUS_USER_VISUAL_REPORT; NOT independent screen recording or cryptographic device attestation",
+      "also_observed_e0_in_history": "stage0 complete 900-tick run in preceding section of appended log",
+      "network_tested": false,
+      "e3_two_device_tested": false,
+      "rage_sender_session_authenticated": false,
+      "police_rp_enabled": false,
+      "next": "Sign/install exact E3 plugin on two authorized physical iPhones, one A sender and one B receiver. Generate fresh paired config with tools/make_two_phone_configs.py and put each at Documents/RBPProbe.cfg. Run both devices simultaneously and collect their LAST RUN logs and B HUD observation. This is ONLY diagnostic direct UDP LAN, not RAGE network transport."
     }
   }
 }
