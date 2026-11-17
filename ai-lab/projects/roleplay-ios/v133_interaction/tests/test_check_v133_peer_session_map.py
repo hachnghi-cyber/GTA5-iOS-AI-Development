@@ -51,8 +51,9 @@ class PeerMappingTests(unittest.TestCase):
         self.assertEqual(self.probe(mem,args)["status"],
                          "no_unique_session_connection")
         mem,args=self.fixture();mem[0x9000]=22
+        # Same peer ID moved to a different connection; reject alias explicitly.
         self.assertEqual(self.probe(mem,args)["status"],
-                         "no_unique_session_connection")
+                         "peer_alias_different_connection")
     def test_session_count_and_invalid_peer(self):
         mem,args=self.fixture()
         for count in (0,33,999,0xffffffff):
