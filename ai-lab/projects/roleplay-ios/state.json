@@ -300,6 +300,20 @@
   ],
   "research_branch": "feature/winstom-rp-ipa-audit-20261116",
   "last_work": {
+    "scope_renewal_fail_closed": {
+      "base_commit": "b57346d83f1770afb5e81d1b34c59341d770580d",
+      "status": "HOST_REGRESSION_VERIFIED",
+      "failure": "rp_rage_scope_begin returned false before clearing the previous active scope when the new ID was zero or its generation was exhausted.",
+      "fix": "Every non-null renewal attempt clears the previous candidates and active scope before validation. The counter advances without wrapping; failure leaves the observer inactive.",
+      "local_c11": "Windows x86_64, Zig 0.13.0 clang with -UNDEBUG and warnings as errors. New regression fails against the original source at stale-sample rejection and passes against the fixed source.",
+      "coverage": "Missing new session ID, exhausted generation with an active old scope, rejection of old samples, candidate erasure, same-ID recovery with a new generation and saturation.",
+      "local_python_tests_passed": 121,
+      "ci_location": "GitHub Actions on the commit containing this checkpoint; source and iPhoneOS workflows are required, not device evidence.",
+      "device_validation": "Not run. usbmux reported one Network connection and no USB device; user confirmed that reconnecting is not possible now.",
+      "engine_lifecycle_callback_verified": false,
+      "authenticated_sender_verified": false,
+      "two_iphone_gameplay_verified": false
+    },
     "base_commit": "59d46193fd71dc995e283ea1fafebc7485e451de",
     "phase9_ci": {
       "source_checks": {
@@ -751,7 +765,7 @@
         "caller": "HandleReceivedPacket -> Unpack",
         "device_runtime_sample": false
       },
-      "current_device_readiness": "One iPhone on iOS 18.6, live UUID/code and two simultaneous hardware sites verified. Both sites removed and debugger detached. User reported public room or not in Sandbox. Measured a stopped preflight only.",
+      "current_device_readiness": "Earlier one-iPhone iOS 18.6 preflight verified live code and two hardware sites, then removed them and detached. Current usbmux inventory has only a Network connection and no USB device; user cannot reconnect now. No live queue sample.",
       "transport_commit": "162e584740e503f0fbf7937e48142bb4cfafffec",
       "transport_ci": "44014313853 SUCCESS Python and C11 ASan/UBSan jobs",
       "device_preflight_evidence": "baselines/v133-phase19-usb-preflight-20261117.json",

@@ -1,5 +1,21 @@
 # Continue — native receive provenance
 
+Latest source correction (parent `b57346d83f1770afb5e81d1b34c59341d770580d`):
+`rp_rage_scope_begin` now revokes the old scope before admitting a new one.
+Previously a missing session ID or exhausted counter could leave old candidates
+active after a failed renewal. The regression fails against the original C
+source and passes after the fix on Windows x86_64 (Zig 0.13.0 clang, assertions
+enabled). It covers stale rejection, same-ID recovery and counter saturation.
+All 121 Python tests passed locally. Check the source and iPhoneOS Actions for
+the commit containing this checkpoint; these are not device tests.
+
+Current capture blocker: usbmux sees a Network connection but no USB device;
+the user confirmed they cannot reconnect now. No live queue/scripted/session
+sample was collected. Resume at `jobs_update --session-context` after USB is
+available, then the existing same-event trace with a cooperating peer.
+This source correction does not identify the engine lifecycle callback or
+authenticate a RAGE sender. Do not enable gameplay from these candidate records.
+
 Branch: `feature/winstom-rp-ipa-audit-20261116`; PR #16 remains unmerged.
 Base checkpoint: `64e450ef7616fd35b32e0646241be0f8a08bc7d2`.
 Implementation commit: `63cfdf33c34ffbe5c50163048830e050a618da82`.

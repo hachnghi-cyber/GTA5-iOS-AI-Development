@@ -54,7 +54,9 @@ typedef enum {
 } rp_rage_observation_status;
 void rp_rage_observer_init(rp_rage_observer *observer);
 /* Session-owner callback ONLY, NEVER from network payload. Bump generation
- * on EVERY join or migration, including reuse of identical session ID. */
+ * on EVERY join or migration, including reuse of identical session ID.
+ * Every attempt revokes the old scope first. A missing ID or exhausted
+ * generation leaves the observer inactive, with no previous candidates. */
 bool rp_rage_scope_begin(rp_rage_observer *observer, uint64_t session_id);
 /* Session-owner disconnect/migration signal. Never retain netPlayer pointers. */
 void rp_rage_scope_invalidate(rp_rage_observer *observer);

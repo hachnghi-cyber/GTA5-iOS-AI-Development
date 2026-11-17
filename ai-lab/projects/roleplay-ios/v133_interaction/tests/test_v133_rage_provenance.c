@@ -103,11 +103,43 @@ static void test_full_capacity_and_wrap(void) {
     rp_rage_scope_invalidate(&o);
     assert(o.generation==UINT64_MAX && !o.active);
 }
+static void test_failed_scope_begin_revokes_previous_session(void) {
+    for(unsigned exhausted=0;exhausted<2;exhausted++) {
+        rp_rage_observer o;rp_rage_observer_init(&o);
+        if(exhausted)o.generation=UINT64_MAX-1;
+        assert(rp_rage_scope_begin(&o,345));
+        rp_rage_sample old=sample(o.generation,781,77,2,101,1000);
+        assert(rp_rage_observe(&o,&old,1000)==C);
+
+        /* A new session-owner callback is an invalidation boundary even if
+         * its ID is not ready or the incarnation counter cannot advance. */
+        assert(!rp_rage_scope_begin(&o,exhausted ? 345 : 0));
+        assert(rp_rage_observe(&o,&old,1001)==R);
+        assert(!o.active && !o.session_id && !o.candidate_count && !o.last_now_ms);
+        for(unsigned i=0;i<RP_RAGE_OBSERVER_MAX_PEERS;i++)
+            assert(!o.candidates[i].peer_id && !o.candidates[i].observations);
+
+        if(exhausted) {
+            assert(o.generation==UINT64_MAX);
+            assert(!rp_rage_scope_begin(&o,345));
+            rp_rage_scope_invalidate(&o);
+            assert(o.generation==UINT64_MAX && !o.active);
+        } else {
+            assert(o.generation>old.generation);
+            assert(rp_rage_scope_begin(&o,345)); /* same ID, new incarnation */
+            assert(rp_rage_observe(&o,&old,1001)==R);
+            rp_rage_sample fresh=sample(o.generation,781,77,2,101,1002);
+            assert(rp_rage_observe(&o,&fresh,1002)==C);
+        }
+    }
+    assert(!rp_rage_scope_begin(NULL,345));
+}
 int main(void) {
     test_consistency_does_not_authorize();
     test_bad_connection_and_stale();
     test_remap_and_alias_quarantine();
     test_migration_rejects_previous_generation();
     test_full_capacity_and_wrap();
-    puts("PASS: RAGE provenance candidates only; local, stale, alias, migration and clock faults denied");
+    test_failed_scope_begin_revokes_previous_session();
+    puts("PASS: RAGE provenance candidates only; failed scope renewal, stale, alias, migration and clock faults denied");
 }

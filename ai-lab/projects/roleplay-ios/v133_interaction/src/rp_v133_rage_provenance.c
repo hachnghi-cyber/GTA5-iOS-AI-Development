@@ -10,9 +10,13 @@ void rp_rage_observer_init(rp_rage_observer *o) {
     if(o)memset(o,0,sizeof *o);
 }
 bool rp_rage_scope_begin(rp_rage_observer *o,uint64_t sid) {
-    if(!o || !sid || o->generation==UINT64_MAX) return false;
+    if(!o) return false;
+    /* A renewal attempt ends the previous scope even when the new one
+     * cannot be admitted. Never keep old candidates live on this failure. */
     clear_observations(o);
+    if(o->generation==UINT64_MAX) return false;
     ++o->generation; /* local owner minted, NOT wire-controlled */
+    if(!sid) return false;
     o->session_id=sid; o->active=true;
     return true;
 }

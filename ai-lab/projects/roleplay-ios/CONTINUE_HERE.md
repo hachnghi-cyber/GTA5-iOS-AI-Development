@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Mốc mới: sửa lỗi giữ dữ liệu phiên cũ khi `rp_rage_scope_begin` thất bại;
+kiểm thử đối chứng C11 và 121 test Python đạt. Xem `ROLEPLAY_CONTINUE.md` và
+`state.json:last_work.scope_renewal_fail_closed`. Hiện chưa có USB để lấy mẫu
+callback thật; người dùng xác nhận chưa thể kết nối lại.
+
 Checkpoint tiếp nối yêu cầu **Operation RAGE Breakthrough** nằm ở
 `ROLEPLAY_CONTINUE.md`; sơ đồ receive/local ở `ENGINE_INTEGRATION_MAP.md`.
 Ưu tiên native multiplayer, không yêu cầu người dùng vận hành server RP riêng.
