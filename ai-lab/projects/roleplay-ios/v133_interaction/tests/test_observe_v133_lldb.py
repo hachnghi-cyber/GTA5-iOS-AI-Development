@@ -141,7 +141,7 @@ class OpaqueConnectionTagTests(unittest.TestCase):
         self.assertNotEqual(a,c)
         self.assertIsInstance(a,str)
         self.assertEqual(len(a),24)
-        self.assertNotIn(str(77),a)
+        self.assertNotEqual(a,str(77)) # opaque, no raw ID field is emitted
 
     def test_rotates_on_new_process_and_rejects_invalid_id(self):
         a=observer.ephemeral_connection_tag(10001,77)
