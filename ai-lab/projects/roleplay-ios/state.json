@@ -679,7 +679,8 @@
         "run_44000373924": "SUCCESS: Python synthetic, C11 source-only GCC/Clang ASan/UBSan",
         "run_44000700884": "SUCCESS: Python & C11 for opaque LLDB tag",
         "run_44000965904": "SUCCESS: Python Windows USB internal observer and C11 source tests",
-        "latest_windows_stop_tests": "new hardware-stop synthetic fixture added, CI pending"
+        "latest_windows_stop_tests": "new hardware-stop synthetic fixture added, CI pending",
+        "run_44001170666": "SUCCESS: Synthetic-only Python including hardware-stop cleanup tests; C11 GCC/Clang with ASan/UBSan"
       },
       "actual_windows_usb_internal_site_hit": false,
       "actual_rage_packet_authenticated": false,
@@ -687,7 +688,10 @@
       "actual_session_generation_verified": false,
       "actual_two_iphone_roleplay": false,
       "police_gameplay_enabled": false,
-      "next_gate": "Run the developer-signed single-iPhone Windows USB read-only hardware observer with actual controlled remote RAGE peer. Require verified internal OnConnectionEvent and OnNetEvent pre-dispatch samples; still must prove same packet's decrypt provenance and session generation across reconnect before allowing police action."
+      "next_gate": "Run the developer-signed single-iPhone Windows USB read-only hardware observer with actual controlled remote RAGE peer. Require verified internal OnConnectionEvent and OnNetEvent pre-dispatch samples; still must prove same packet's decrypt provenance and session generation across reconnect before allowing police action.",
+      "actual_local_full_audit": "128/128 unique pin instructions MATCH original GTA5 executable directly (local python struct unpack), SHA256 exactly f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc, no duplicate VA and zero mismatches",
+      "last_code_commit": "3077ee9798d87277130180b12d99fa035aca7d5e",
+      "remaining_proof": "Windows USB internal hardware site(s) not captured on device; must observe real RAGE OnNetEvent and OnConnectionEvent with controlled peer and bind decrypt provenance + session generation before enabling any PoliceRP effects."
     }
   }
 }
