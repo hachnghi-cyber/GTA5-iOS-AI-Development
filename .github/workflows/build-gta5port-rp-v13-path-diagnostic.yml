@@ -5,7 +5,7 @@ on:
       - feature/gta5port-rp-v10-build-20261118
     paths:
       - 'ai-lab/projects/roleplay-ios/native-probe-v13/**'
-      - '.github/workflows/build-gta5port-rp-v13-probe.yml'
+      - '.github/workflows/build-gta5port-rp-v13-path-diagnostic.yml'
   workflow_dispatch:
 permissions:
   contents: read
