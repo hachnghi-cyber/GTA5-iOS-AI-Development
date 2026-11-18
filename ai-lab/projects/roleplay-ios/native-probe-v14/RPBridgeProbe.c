@@ -43,7 +43,14 @@ static void logevent(const char *event, const char *detail) {
     gmtime_r(&now,&t);
     int n=snprintf(line,sizeof(line),"%04d-%02d-%02dT%02d:%02d:%02dZ [RP_V14] %s %s\n",
         t.tm_year+1900,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec,event,detail?detail:"");
-    if(n>0&&(size_t)n<sizeof(line)) (void)write(fd,line,(size_t)n);
+    if(n>0&&(size_t)n<sizeof(line)){
+        size_t sent=0;
+        while(sent<(size_t)n){
+            ssize_t wrote=write(fd,line+sent,(size_t)n-sent);
+            if(wrote<=0)break;
+            sent+=(size_t)wrote;
+        }
+    }
     close(fd);
 }
 static int checkframe(const char *path,uint32_t *seq) {
