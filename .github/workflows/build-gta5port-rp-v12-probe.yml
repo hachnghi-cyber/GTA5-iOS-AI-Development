@@ -31,7 +31,7 @@ jobs:
           file outputs/RPBridgeProbe.dylib | tee outputs/format.txt
           xcrun otool -hv outputs/RPBridgeProbe.dylib | tee outputs/macho-header.txt
           xcrun otool -l outputs/RPBridgeProbe.dylib > outputs/load-commands.txt
-          grep -q 'MH_DYLIB' outputs/macho-header.txt
+          grep -Eq '[[:space:]]DYLIB[[:space:]]' outputs/macho-header.txt
           grep -q 'ARM64' outputs/macho-header.txt
           grep -q 'platform IOS' outputs/load-commands.txt
           shasum -a 256 outputs/RPBridgeProbe.dylib | tee outputs/sha256.txt
