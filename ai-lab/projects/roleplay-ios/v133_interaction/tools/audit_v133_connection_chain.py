@@ -141,6 +141,22 @@ PINS={
     0x1017dfa48:0x9407da23, # snSession GetPeerCxn dispatch one-shot site
     0x1017dfa4c:0x3100041f, # reject connection lookup -1
     0x1017dfa50:0x540033c0, # branch on missing connection
+    # Transport netPeerId at rlPeerInfo+0 differs from its rl peer ID at +0x1d0.
+    0x101ce0a5c:0xaa0103f3, # local netPeerAddress destination
+    0x101ce0ae4:0xaa1303e0,
+    0x101ce0ae8:0x940008b9, # netPeerId::GetLocalPeerId writes first qword
+    0x101ce2df0:0xd0006415, # transport peer cache page
+    0x101ce2df4:0xf9473aa8, # transport cache 0x102964e70
+    0x101d64a20:0x90006014, # distinct rl peer cache page
+    0x101d64a24:0xf947f688, # rl peer cache 0x102964fe8
+    0x101d64a90:0x97fdefeb, # rlPeerInfo fills embedded netPeerAddress
+    0x101d64aa0:0x90006014,
+    0x101d64aa4:0xf947f688,
+    0x101d64ac0:0xf900ea68, # rl ID stored separately at +0x1d0
+    0x101d64af8:0xf900e801, # Init's explicit rl ID argument
+    0x101d64afc:0xad400440, # copy the independent address/transport metadata
+    0x101d64b10:0x3c83c400,
+    0x101d64ba4:0xd65f03c0, # GetPeerAddress returns this (embedded offset zero)
 }
 class AuditError(ValueError):pass
 
@@ -193,6 +209,9 @@ def audit(binary):
         "gamer_info_membership_peer_connection_endpoint_path_static":True,
         "peer_connection_and_endpoint_are_distinct_fields":True,
         "peer_lookup_not_found_returns_minus_one":True,
+        "transport_and_rl_peer_ids_are_distinct_fields":True,
+        "rl_peer_info_transport_id_offset":0,
+        "rl_peer_info_rl_id_offset":0x1d0,
         "local_send_buffer_reaches_same_delegate":True,
         "connection_session_identity_is_static_candidate_only":True,
         "connection_lifetime_on_iphone_verified":False,

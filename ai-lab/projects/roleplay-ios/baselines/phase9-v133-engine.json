@@ -223,6 +223,18 @@
       "name": "__ZNK4rage10rlPeerInfo9GetPeerIdEv",
       "va": "0x101d64b9c"
     },
+    "peer_info_init": {
+      "name": "__ZN4rage10rlPeerInfo4InitEmRKNS_14netPeerAddressE",
+      "va": "0x101d64ae4"
+    },
+    "local_net_peer_address": {
+      "name": "__ZN4rage14netPeerAddress19GetLocalPeerAddressEiPS0_",
+      "va": "0x101ce0a3c"
+    },
+    "peer_address_getter": {
+      "name": "__ZNK4rage10rlPeerInfo14GetPeerAddressEv",
+      "va": "0x101d64ba4"
+    },
     "get_current_session": {
       "name": "__ZN15CNetworkSession17GetCurrentSessionEb",
       "va": "0x10180bc5c"
@@ -1203,6 +1215,24 @@
         "va": "0x101d64b9c",
         "size": 8,
         "sha256": "e5d4d981e65a59a917e0e348a6fd7d18413350479677c7505e3343c7674998bd"
+      },
+      {
+        "function": "peer_info_init",
+        "va": "0x101d64ae4",
+        "size": 184,
+        "sha256": "e441e8801ed6af5fa11a0202c74a4353ab67c57ca6fd2b10373f2f1b87dca264"
+      },
+      {
+        "function": "local_net_peer_address",
+        "va": "0x101ce0a3c",
+        "size": 856,
+        "sha256": "a2bd8092d1596ddeed67bab65e9cbb00c54c35c84464bab175ab7e80f67c1f90"
+      },
+      {
+        "function": "peer_address_getter",
+        "va": "0x101d64ba4",
+        "size": 4,
+        "sha256": "110f46b5b35c069160560c6ad6786f647dd44e8760a52a46fc22dbbcd7630b91"
       }
     ],
     "scope": "established slot/peer-table candidate only; no proof of routing, membership lifetime or identity"

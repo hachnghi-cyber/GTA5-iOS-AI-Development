@@ -70,6 +70,9 @@ SYMBOLS = {
     'on_connection_event': '__ZN15CNetworkSession17OnConnectionEventEPN4rage20netConnectionManagerEPKNS0_8netEventE',
     'gamer_info_getter': '__ZNK14CNetGamePlayer12GetGamerInfoEv',
     'peer_id_getter': '__ZNK4rage10rlPeerInfo9GetPeerIdEv',
+    'peer_info_init': '__ZN4rage10rlPeerInfo4InitEmRKNS_14netPeerAddressE',
+    'local_net_peer_address': '__ZN4rage14netPeerAddress19GetLocalPeerAddressEiPS0_',
+    'peer_address_getter': '__ZNK4rage10rlPeerInfo14GetPeerAddressEv',
     'get_current_session': '__ZN15CNetworkSession17GetCurrentSessionEb',
     'session_exists': '__ZNK4rage9snSession6ExistsEv',
     'session_is_established': '__ZNK4rage9rlSession13IsEstablishedEv',
@@ -457,7 +460,10 @@ def inspect(data):
                                              ('session_is_established', 0x14),
                                              ('peer_id_by_connection', 0x48),
                                              ('gamer_info_getter', 0xc),
-                                             ('peer_id_getter', 0x8))
+                                             ('peer_id_getter', 0x8),
+                                             ('peer_info_init', 0xb8),
+                                             ('local_net_peer_address', 0x358),
+                                             ('peer_address_getter', 0x4))
                     ],
                     'scope': 'established slot/peer-table candidate only; no proof of routing, membership lifetime or identity',
                 },

@@ -1,5 +1,18 @@
 # Continue — native receive provenance
 
+Current direction (2026-11-18): the user now requests a private RP server for
+v13.3. Reuse mTLS, PRPC/PRPA and the C Police authority. First verify a real
+host server with two clients; TLS principals do not identify GTA characters.
+
+Peer-domain checkpoint (parent `874980490ea0b0c3b645775b88726f82e2ce21d3`):
+15 additional exact opcode pins pass (143 connection-chain pins total).
+`netPeerAddress` begins with transport netPeerId; `rlPeerInfo` separately stores
+its ID at +0x1d0, with distinct local caches. Scripted queue capture compares
+each domain separately between player info and the unique session/connection
+entry. Three additional full-function guards are required before capture.
+137 host Python tests pass. No new device sample, sender trust or ABI activation.
+Parent CI source 44128501576, AI Lab 44128501608, Watch 44128501617 all passed.
+
 Latest packet-integrity checkpoint (parent `66961ca8ab49b82f42f9de592d6a6c1b987966f0`):
 47 exact instructions and nine call targets establish the address-selected
 key lookup, HMAC tag comparison and AES path. An intraprocedural CFG check

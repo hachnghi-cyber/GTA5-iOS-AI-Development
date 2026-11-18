@@ -195,7 +195,8 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertNotIn(f'Z1,{PREDISPATCH:x},4'.encode(), remote.commands)
 
     def test_scripted_followup_requires_same_frame_event_and_players(self):
-        for mismatch in ('none', 'frame', 'event', 'source', 'destination', 'return', 'ambiguous_session'):
+        for mismatch in ('none', 'frame', 'event', 'source', 'destination', 'return',
+                         'ambiguous_session', 'transport'):
             with self.subTest(mismatch=mismatch):
                 stages, memory = self.fixture()
                 event = stages[0][0][1]
@@ -223,6 +224,7 @@ class QueueUSBTests(unittest.TestCase):
                     transition+0xb0: 3, source: vtable, vtable+0x38: 0x1018d92e8,
                     source+0xa0: info, info+0x1f0: 131, transition+0xba30: 1,
                     transition+0xb930: peer, peer: 71, peer+0x1d8: 131,
+                    info+0x20: 88776655, peer+8: 131 if mismatch == 'transport' else 88776655,
                 })
                 stages.append(({32: delegate_return if mismatch == 'return' else handler,
                                 29: fp, 30: refs[0], 31: fp-0x180,
@@ -234,7 +236,7 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertEqual(remote.breakpoints, set())
                 self.assertTrue(report['queue_object_link_observed'])
                 self.assertFalse(report['authenticated_rp_sender_verified'])
-                same_event = mismatch in ('none', 'ambiguous_session')
+                same_event = mismatch in ('none', 'ambiguous_session', 'transport')
                 self.assertEqual(report.get('same_queued_event_at_scripted_handler', False), same_event)
                 if same_event:
                     candidate = report['scripted_session_candidate']
@@ -244,7 +246,10 @@ class QueueUSBTests(unittest.TestCase):
                         self.assertNotIn('peer_table', candidate)
                         self.assertNotIn((transition+0xba30, 4), remote.reads)
                     else:
-                        self.assertTrue(candidate['peer_table']['peer_map_consistent'])
+                        self.assertEqual(candidate['peer_table']['peer_map_consistent'], mismatch != 'transport')
+                        self.assertEqual(candidate['peer_table']['transport_peer_map_consistent'], mismatch != 'transport')
+                        if mismatch == 'transport':
+                            self.assertEqual(candidate['peer_table']['status'], 'transport_peer_metadata_mismatch')
                         self.assertFalse(candidate['peer_table']['authenticated_rage_sender_verified'])
                         self.assertFalse(candidate['peer_table']['session_generation_verified'])
                 if mismatch == 'return':
@@ -418,6 +423,17 @@ class QueueUSBTests(unittest.TestCase):
                 self.assertFalse(result['authenticated_rp_sender_verified'])
                 self.assertFalse(result['session_generation_verified'])
                 self.assertFalse(result['custom_rp_event_received'])
+
+    def test_missing_peer_domain_guard_never_arms_enqueue(self):
+        for name in ('peer_info_init', 'local_net_peer_address', 'peer_address_getter'):
+            with self.subTest(name=name):
+                meta = dict(self.meta, session_slots=dict(self.meta['session_slots'], code_guards=[
+                    g for g in self.meta['session_slots']['code_guards'] if g['function'] != name]))
+                remote = Remote([], {})
+                with patch.object(usb, 'verify_context_code'), self.assertRaisesRegex(
+                        usb.DebugProtocolError, 'missing exact peer-domain'):
+                    usb.capture_queue_context(remote, BASE, meta, self.profile, 30, follow_scripted=True)
+                self.assertFalse(any(cmd.startswith(b'Z1,') for cmd in remote.commands))
 
     def test_timeout_interrupt_clears_both_final_breakpoints(self):
         stages, memory = self.fixture()

@@ -4,8 +4,8 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "v13.3-native-receive-provenance-discovery",
-  "target": "Native multiplayer Police Roleplay on verified GTA V iOS v13.3; preserve stock modes, prefer existing multiplayer, and do not require a user-operated RP server",
+  "phase": "v13.3-private-server-and-engine-binding",
+  "target": "Police Roleplay on verified GTA V iOS v13.3 using a private authenticated RP server requested by the user on 2026-11-18; preserve stock modes and require verified game-player binding before native actions",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
   "last_known_github_pr": 16,
@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Continue host-side binary tracing from netKeyExchange transport peer metadata to rlPeerInfo/netPlayer, keeping those identity domains distinct until proven. Separately, when USB is available, preflight profile v3 and capture a controlled same-event queue/scripted trace; establish key/player binding, session lifetime and game-thread affinity before any gameplay adapter.",
+  "next_action": "Implement and test a private mTLS authority server using existing PRPC/PRPA and C Police rules. Verify two host clients, consent, replay, disconnect and snapshots. Keep GTA player binding and game-thread integration disabled until independently verified.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -859,7 +859,40 @@
         "authenticated_sender_verified": false,
         "key_peer_bound_to_game_player": false,
         "two_device_tested": false
+      },
+      "peer_identity_domains": {
+        "parent_commit": "874980490ea0b0c3b645775b88726f82e2ce21d3",
+        "additional_exact_opcode_pins": 15,
+        "total_connection_chain_pins": 143,
+        "local_python_tests_passed": 137,
+        "transport_id_offset": 0,
+        "rl_id_offset": 464,
+        "new_session_code_guards": [
+          "peer_info_init",
+          "local_net_peer_address",
+          "peer_address_getter"
+        ],
+        "result": "Scripted observer separately compares transport and rl domains; wrong/missing transport ID fails closed. Legacy optional probes do not claim transport consistency.",
+        "authenticated_sender": false,
+        "new_device_capture": false,
+        "parent_ci": {
+          "source": 44128501576,
+          "ai_lab": 44128501608,
+          "watch": 44128501617,
+          "conclusion": "success"
+        }
       }
+    },
+    "private_server_direction": {
+      "requested": "2026-11-18",
+      "status": "implementation next",
+      "supersedes": "Earlier preference not to require a user-operated RP server",
+      "reuse": [
+        "prp3_direct_tls.py",
+        "rp_v133_police.c",
+        "rp_v133_police_tx.c"
+      ],
+      "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     }
   }
 }

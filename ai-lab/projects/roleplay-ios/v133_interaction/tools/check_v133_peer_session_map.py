@@ -7,9 +7,11 @@ An internally consistent mapping is NOT an authenticated RAGE sender.
 MAX_PEERS=32
 U64MAX=(1<<64)-1
 
-def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,expected_peer_id=None):
+def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,expected_peer_id=None,
+                           *,check_transport_domain=False):
     r={"schema":"v133-peer-session-map-v1","status":"invalid_input",
        "peer_map_consistent":False,"remote_entries_seen":0,
+       "transport_peer_map_consistent":False,
        "authenticated_rage_sender_verified":False,
        "session_membership_verified":False,
        "session_generation_verified":False}
@@ -38,6 +40,7 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
         if not 1<=count<=MAX_PEERS:
             r["status"]="session_peer_count_out_of_bounds";return r
         matched=0
+        matched_entry=None
         for i in range(count):
             p=read64(session+0xb930+8*i)
             if not p:
@@ -49,12 +52,24 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
                 r["status"]="invalid_session_entry";return r
             if cxn==conn:
                 matched+=1
+                matched_entry=p
                 if pid!=peer:
                     r["status"]="connection_to_peer_mismatch";return r
             elif pid==peer:
                 r["status"]="peer_alias_different_connection";return r
         if matched!=1:
             r["status"]="no_unique_session_connection";return r
+        if check_transport_domain:
+            # rlGamerInfo starts at CPlayerInfo+0x20. Its embedded netPeerAddress
+            # starts at offset zero; rlPeerInfo::GetPeerId instead reads +0x1d0.
+            # Compare each identity within its own domain, never across them.
+            transport_peer=read64(pinfo+0x20)
+            session_transport_peer=read64(matched_entry+8)
+            if not 0 < transport_peer < U64MAX or not 0 < session_transport_peer < U64MAX:
+                r["status"]="invalid_transport_peer_metadata";return r
+            if transport_peer!=session_transport_peer:
+                r["status"]="transport_peer_metadata_mismatch";return r
+            r["transport_peer_map_consistent"]=True
         r["status"]="session_connection_peer_candidate_only"
         r["peer_map_consistent"]=True
     except (KeyError,TypeError,ValueError,RuntimeError,OverflowError,IndexError):

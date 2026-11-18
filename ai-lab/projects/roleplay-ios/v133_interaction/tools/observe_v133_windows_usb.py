@@ -247,7 +247,7 @@ def read_same_event_session_candidate(remote, base, metadata, source, event):
             getter = base + int(metadata['peer_info_static']['getter_va'], 16) - IMAGE_VMADDR
             status['peer_table'] = checker.check_peer_session_map(
                 lambda addr: read_word(addr, 4), lambda addr: read_word(addr, 8),
-                source, candidate, connection, getter)
+                source, candidate, connection, getter, check_transport_domain=True)
         except (DebugProtocolError, OSError):
             status['peer_table'] = {'status': 'bounded_read_failed'}
     return status
@@ -594,6 +594,14 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     verify_context_code(remote, base, profile, label='queue-context')
     if follow_scripted:
         receive_profile = metadata['receive_context']
+        peer_guards = {
+            ('peer_info_init', '0x101d64ae4', 0xb8),
+            ('local_net_peer_address', '0x101ce0a3c', 0x358),
+            ('peer_address_getter', '0x101d64ba4', 0x4),
+        }
+        supplied = {(g['function'], g['va'], g['size']) for g in metadata['session_slots']['code_guards']}
+        if not peer_guards <= supplied:
+            raise DebugProtocolError('missing exact peer-domain code guards')
         verify_context_code(remote, base, receive_profile)
         verify_context_code(remote, base, metadata['session_slots'], label='session-slots')
         handler = live(metadata['symbols']['script_event_handler']['va'])

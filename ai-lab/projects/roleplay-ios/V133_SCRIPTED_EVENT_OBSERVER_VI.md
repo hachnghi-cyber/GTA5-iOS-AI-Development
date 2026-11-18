@@ -265,3 +265,11 @@ Byte clear cho `tunnel_or_bypass_unresolved`; byte lạ, frame đang chờ hoặ
 context thiếu cho `unobserved`. Các nhãn này không cấp quyền RP, không xác
 thực danh tính game player và không thay thế bằng chứng chống replay.
 Observer không đọc khóa, HMAC thực tế hay payload để tạo nhãn này.
+
+## Peer ID domains (2026-11-18)
+
+Scripted queue follow now requires three additional session-slot code guards
+(`peer_info_init`, `local_net_peer_address`, `peer_address_getter`). The player
+and matched session entry must agree separately on transport netPeerId and rl
+peer ID. These fields may differ from each other. 137 host Python tests pass;
+this does not establish key-to-player trust or a new device observation.

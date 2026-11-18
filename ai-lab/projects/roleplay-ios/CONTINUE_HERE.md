@@ -4,6 +4,16 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Yêu cầu mới ngày 2026-11-18: dùng **server RP riêng cho v13.3**. Hướng này
+thay thế ưu tiên không vận hành server riêng trước đây. Tiếp tục từ mTLS và
+lõi Police RP đã có; kiểm thử hai client host trước khi nối nhân vật/game thread.
+
+Checkpoint miền định danh (parent `8749804`): thêm 15 opcode trên binary gốc,
+143 kiểm tra connection-chain và 137 test Python đạt. Transport `netPeerId`
+ở đầu `netPeerAddress` khác `rlPeerInfo` ID ở +0x1d0. Observer scripted yêu cầu
+cả hai phép đối chiếu đúng miền, cùng ba code guard bổ sung. Chưa xác thực
+game player, chưa có mẫu thiết bị mới. CI parent: 44128501576/44128501608/44128501617 đạt.
+
 Checkpoint toàn vẹn packet (parent `66961ca`): profile v3 thêm bốn code guard
 cho key lookup/HMAC/decrypt. Audit xác minh 47 opcode, 9 call target và nhánh
 HMAC bắt buộc trước AES/điểm trả thành công. 133 test Python đạt. Đây là
@@ -27,7 +37,7 @@ callback thật; người dùng xác nhận chưa thể kết nối lại.
 
 Checkpoint tiếp nối yêu cầu **Operation RAGE Breakthrough** nằm ở
 `ROLEPLAY_CONTINUE.md`; sơ đồ receive/local ở `ENGINE_INTEGRATION_MAP.md`.
-Ưu tiên native multiplayer, không yêu cầu người dùng vận hành server RP riêng.
+Ưu tiên cũ về native multiplayer đã được thay bằng yêu cầu server riêng ở trên.
 Mốc 2026-11-17: đã thu hai mẫu timeout 30s (`script_event_handler`,
 `on_net_event`) và mẫu `jobs_update` trúng đúng caller sau khi mount DDI.
 Xem `baselines/v133-usb-receive-attempts-20261117.json`; chưa có receive hit.

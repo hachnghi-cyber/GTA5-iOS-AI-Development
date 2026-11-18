@@ -16,7 +16,7 @@ def header():
 class TestConnectionChainContract(unittest.TestCase):
     def test_pins_expected(self):
         audit.verify_pins(audit.PINS.__getitem__)
-        self.assertEqual(len(audit.PINS),128)
+        self.assertEqual(len(audit.PINS),143)
     def test_opcode_tampering_fails(self):
         pins=dict(audit.PINS);first=next(iter(pins));pins[first]^=1
         with self.assertRaisesRegex(audit.AuditError,"opcode mismatch"):

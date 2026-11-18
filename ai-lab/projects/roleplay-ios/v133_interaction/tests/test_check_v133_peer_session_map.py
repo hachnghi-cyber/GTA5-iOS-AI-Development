@@ -91,4 +91,40 @@ class PeerMappingTests(unittest.TestCase):
         self.assertEqual(bad["status"],"same_callback_peer_register_mismatch")
         self.assertFalse(bad["authenticated_rage_sender_verified"])
 
+    def test_distinct_transport_and_rl_ids_match_only_within_their_domains(self):
+        mem,args=self.fixture()
+        mem[0x3020]=987654321
+        mem[0x9008]=987654321
+        read=lambda addr:mem[addr]
+        result=mod.check_peer_session_map(read,read,*args,check_transport_domain=True)
+        self.assertTrue(result['peer_map_consistent'])
+        self.assertTrue(result['transport_peer_map_consistent'])
+        self.assertFalse(result['authenticated_rage_sender_verified'])
+        self.assertNotIn('987654321',str(result))
+        # Numerically equal to the rl ID is not a transport-domain match.
+        mem[0x9008]=222
+        result=mod.check_peer_session_map(read,read,*args,check_transport_domain=True)
+        self.assertEqual(result['status'],'transport_peer_metadata_mismatch')
+        self.assertFalse(result['peer_map_consistent'])
+        self.assertFalse(result['transport_peer_map_consistent'])
+
+    def test_transport_domain_unknown_or_invalid_fails_closed(self):
+        for value in (None,0,mod.U64MAX,mod.U64MAX+1):
+            with self.subTest(value=value):
+                mem,args=self.fixture()
+                mem[0x3020]=777
+                if value is not None:mem[0x9008]=value
+                read=lambda addr:mem[addr]
+                result=mod.check_peer_session_map(read,read,*args,check_transport_domain=True)
+                self.assertEqual(result['status'], 'read_failed' if value is None
+                                 else 'invalid_transport_peer_metadata')
+                self.assertFalse(result['peer_map_consistent'])
+                self.assertFalse(result['authenticated_rage_sender_verified'])
+
+    def test_legacy_rl_only_reader_never_claims_transport_binding(self):
+        mem,args=self.fixture()
+        result=self.probe(mem,args)
+        self.assertTrue(result['peer_map_consistent'])
+        self.assertFalse(result['transport_peer_map_consistent'])
+
 if __name__=="__main__":unittest.main()

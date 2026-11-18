@@ -4,6 +4,15 @@ Scope: static disassembly of SHA `f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce
 UUID `EB122C35-96F4-307F-91C3-A2255DD9C685`. No Winstom/PC offsets reused.
 The machine-readable assertions are in `baselines/phase9-v133-engine.json`.
 
+Identity domains: `netPeerAddress::GetLocalPeerAddress` calls transport
+`netPeerId::GetLocalPeerId` at 0x101ce0ae8. Its cache (0x102964e70) differs
+from `rlPeerInfo::GetLocalPeerId` (0x102964fe8). `rlPeerInfo::Init` copies the
+embedded address and independently stores rl ID at +0x1d0. Player info thus
+has transport ID at +0x20 and rl ID at +0x1f0; session remote entries have
+transport ID at +8 and rl ID at +0x1d8. Each comparison must stay in its own
+domain. Equality within both domains still does not prove key ownership,
+continuous object lifetime, session generation or authenticated game identity.
+
 The Phase 19 producer selection was corrected after checking constructor
 vtables, including their on-disk chained rebases. `0x101cd70bc` queues a
 `netEventConnectionError`; it is not the received-frame producer. Passing its
