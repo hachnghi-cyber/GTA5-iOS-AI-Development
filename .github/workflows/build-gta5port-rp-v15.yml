@@ -1,0 +1,91 @@
+name: GTA5Port RP v1.5 - Opt-in LAN host bridge
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/native-bridge-v15/**'
+      - '.github/workflows/build-gta5port-rp-v15.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  linux-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and verify reproducible C source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/native-bridge-v15
+          python3 - <<'PY'
+          import base64,gzip,hashlib,pathlib
+          source=pathlib.Path('src/RPBridgeNetworkV15.c')
+          packed=pathlib.Path('src/RPBridgeNetworkV15.c.gz.b64').read_text().strip()
+          raw=gzip.decompress(base64.b64decode(packed,validate=True))
+          sha=hashlib.sha256(raw).hexdigest()
+          expected='45c90ea3b21aa81e84f2fb897ea3e04175301229377916c208d16995d99d1bd3'
+          if sha!=expected: raise SystemExit('SHA256 MISMATCH: '+sha)
+          source.write_bytes(raw)
+          print('source sha256=',sha,'bytes=',len(raw))
+          PY
+      - name: Compile bridge and run real loopback smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/native-bridge-v15
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pthread -fPIC -shared \
+             -DRP_BRIDGE_NO_CONSTRUCTOR -DRP_BRIDGE_TEST_API \
+             src/RPBridgeNetworkV15.c -o libRPBridgeNetworkV15-test.so -lm
+          python3 -m unittest discover -s tests -v
+
+  iphoneos-arm64:
+    runs-on: macos-15
+    needs: linux-test
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct and verify source with SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/native-bridge-v15
+          python3 - <<'PY'
+          import base64,gzip,hashlib,pathlib
+          source=pathlib.Path('src/RPBridgeNetworkV15.c')
+          raw=gzip.decompress(base64.b64decode(pathlib.Path('src/RPBridgeNetworkV15.c.gz.b64').read_text().strip(),validate=True))
+          assert hashlib.sha256(raw).hexdigest()=='45c90ea3b21aa81e84f2fb897ea3e04175301229377916c208d16995d99d1bd3'
+          source.write_bytes(raw)
+          PY
+      - name: Build unsigned iPhoneOS arm64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          SOURCE=ai-lab/projects/roleplay-ios/native-bridge-v15/src/RPBridgeNetworkV15.c
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -std=c11 -Wall -Wextra -Werror -target arm64-apple-ios16.0 \
+             -isysroot "$SDK" -fsyntax-only "$SOURCE"
+          xcrun clang -std=c11 -O2 -Wall -Wextra -Werror -target arm64-apple-ios16.0 \
+             -isysroot "$SDK" -fvisibility=hidden -dynamiclib \
+             -Wl,-install_name,@executable_path/Frameworks/RPBridgeNetworkV15.dylib \
+             -o output/RPBridgeNetworkV15.dylib "$SOURCE"
+          file output/RPBridgeNetworkV15.dylib | tee output/format.txt
+          xcrun otool -hv output/RPBridgeNetworkV15.dylib | tee output/macho-header.txt
+          xcrun otool -L output/RPBridgeNetworkV15.dylib | tee output/dependencies.txt
+          xcrun otool -l output/RPBridgeNetworkV15.dylib > output/load-commands.txt
+          grep -q 'Mach-O 64-bit dynamically linked shared library arm64' output/format.txt
+          grep -Eq '[[:space:]]DYLIB[[:space:]]' output/macho-header.txt
+          grep -q LC_BUILD_VERSION output/load-commands.txt
+          shasum -a 256 output/RPBridgeNetworkV15.dylib | tee output/sha256.txt
+          cp "$SOURCE" output/RPBridgeNetworkV15.c
+      - name: Upload diagnostic dylib and readable C source (not IPA)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v15-lan-bridge-arm64-unsigned
+          path: output/
+          if-no-files-found: error
+          retention-days: 7
