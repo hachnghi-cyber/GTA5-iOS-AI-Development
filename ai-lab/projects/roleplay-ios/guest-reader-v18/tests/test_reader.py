@@ -44,7 +44,7 @@ class MailboxV18Tests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):cls.tmp.cleanup()
     def decode(self,raw):
-        buf=ctypes.create_string_buffer(raw)
+        buf=ctypes.create_string_buffer(bytes(raw))
         summary=Summary()
         rc=self.dll.rp18_decode(buf,len(raw),ctypes.byref(summary))
         return rc,summary
