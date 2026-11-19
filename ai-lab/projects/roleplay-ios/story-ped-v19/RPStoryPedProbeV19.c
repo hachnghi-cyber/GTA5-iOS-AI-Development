@@ -17,10 +17,11 @@
 typedef struct {uint32_t generation,epoch;unsigned count;} rp18_mailbox_summary;
 extern int rp18_decode(const unsigned char *,unsigned,rp18_mailbox_summary *);
 
+#define RP19_TICK_MS 50u
 #define RP19_REMOTE_BYTES 764u
 #define RP19_LOCAL_BYTES 48u
-#define RP19_MAX_TICKS_STALE 16u
-#define RP19_MAX_MODEL_TICKS 16u
+#define RP19_MAX_TICKS_STALE 80u
+#define RP19_MAX_MODEL_TICKS 80u
 #define RP19_MODEL_NAME "a_m_m_business_01"
 
 typedef struct {float x,y,z,heading;uint32_t sequence;} rp19_pose;
@@ -196,7 +197,7 @@ static void rp19_script(void) {
             if(pending){(void)rp19_call1(H_MODEL_RELEASE,model);pending=0;}
             stale=0;model_ticks=0;peer_frame=0;peer_epoch=0;peer_id=0;
             if(opt&&armed&&!offline&&!had_error){rp19_log("ONLINE_GUARD_BLOCK");had_error=1;}
-            scriptWait(250);
+            scriptWait(RP19_TICK_MS);
             continue;
         }
         had_error=0;
@@ -215,14 +216,14 @@ static void rp19_script(void) {
         if(!rp19_gate(opt,armed,offline,lv,rv,stale<=RP19_MAX_TICKS_STALE)){
             rp19_delete(&ped);
             if(pending){(void)rp19_call1(H_MODEL_RELEASE,model);pending=0;}
-            scriptWait(250);
+            scriptWait(RP19_TICK_MS);
             continue;
         }
         if(!ped){
             if(!pending){
                 if(!rp19_call1(H_IS_MODEL_VALID,model)||!rp19_call1(H_IS_PED_MODEL,model)){
                     rp19_log("MODEL_NOT_SUPPORTED");
-                    armed=0;scriptWait(250);continue;
+                    armed=0;scriptWait(RP19_TICK_MS);continue;
                 }
                 (void)rp19_call1(H_REQUEST_MODEL,model);
                 pending=1;model_ticks=0;
@@ -233,7 +234,7 @@ static void rp19_script(void) {
                     rp19_log("MODEL_TIMEOUT");
                     (void)rp19_call1(H_MODEL_RELEASE,model);pending=0;armed=0;
                 }
-                scriptWait(250);continue;
+                scriptWait(RP19_TICK_MS);continue;
             }
             /* Spawn harmless one non-networked local PED near the player's local RPF8 pose.
                Remote coordinates are deliberately NOT applied in this prototype. */
@@ -248,7 +249,7 @@ static void rp19_script(void) {
                 rp19_log("PED_CREATED_SINGLE_LOCAL_PROTOTYPE");
             }else{ped=0;armed=0;rp19_log("CREATE_PED_FAILED");}
         }
-        scriptWait(250);
+        scriptWait(RP19_TICK_MS);
     }
 }
 int __stdcall DllMainCRTStartup(void *module,unsigned reason,void *reserved) {
