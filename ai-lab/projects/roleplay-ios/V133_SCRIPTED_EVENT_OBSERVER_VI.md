@@ -166,6 +166,17 @@ Mọi cờ authenticated sender, session generation, custom RP event vẫn false
 Exit code 1 nếu không trúng breakpoint hoặc context không đầy đủ. Lỗi đọc
 vẫn đi qua gỡ breakpoint và detach; không đổi sang software breakpoint.
 
+Trên cùng một iPhone, người thử đã cho bản cài riêng và bản trong
+LiveContainer vào một phòng chỉ mời và xác nhận hai nhân vật tương tác
+được. Điểm đo `script_event_handler --receive-context` trên bản cài riêng
+đã bắt đường engine receive và xác nhận connection ID khớp netPlayer.
+Khi kết quả nhận khớp, observer đọc bảng phiên tại cùng lần dừng sau khi
+kiểm tra mã của các getter. Mẫu thật ghi `peer_alias_different_connection`
+trong slot chính. Trường `alias_transport_peer_status` mới so sánh
+metadata truyền tải riêng cho trường hợp này. Cần lấy mẫu thật cho trường
+này và xác minh vì sao hai connection ID khác nhau trước khi cấp quyền.
+Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
+
 ## Session context
 
 Tùy chọn `--session-context` dùng tại `jobs_update`. Công cụ kiểm tra hash

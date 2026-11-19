@@ -121,6 +121,23 @@ class PeerMappingTests(unittest.TestCase):
                 self.assertFalse(result['peer_map_consistent'])
                 self.assertFalse(result['authenticated_rage_sender_verified'])
 
+    def test_alias_compares_transport_metadata_but_remains_inconsistent(self):
+        for value, expected in ((777, 'match'), (778, 'transport_peer_metadata_mismatch'),
+                                (None, 'read_failed')):
+            with self.subTest(value=value):
+                mem, args = self.fixture()
+                mem[0x9000] = 88
+                mem[0x3020] = 777
+                if value is not None:
+                    mem[0x9008] = value
+                read = mem.__getitem__
+                result = mod.check_peer_session_map(read, read, *args, check_transport_domain=True)
+                self.assertEqual(result['status'], 'peer_alias_different_connection')
+                self.assertEqual(result['alias_transport_peer_status'], expected)
+                for key in ('peer_map_consistent', 'transport_peer_map_consistent',
+                            'session_membership_verified', 'authenticated_rage_sender_verified'):
+                    self.assertFalse(result[key])
+
     def test_legacy_rl_only_reader_never_claims_transport_binding(self):
         mem,args=self.fixture()
         result=self.probe(mem,args)

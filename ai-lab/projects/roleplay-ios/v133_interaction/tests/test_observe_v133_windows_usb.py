@@ -614,9 +614,14 @@ class ReceiveContextTests(unittest.TestCase):
         remote = _BreakRemote(pc)
         remote.memory = memory.memory
         remote.read_register = memory.read_register
-        with patch.object(observer, 'verify_context_code'):
+        candidate = {'status': 'observed', 'candidate_slot': 'main'}
+        with patch.object(observer, 'verify_context_code') as guard, \
+                patch.object(observer, 'read_same_event_session_candidate', return_value=candidate) as peer:
             sample = observer.capture(remote, memory.base, metadata,
                                       site='script_event_handler', receive_context=True)
+        self.assertEqual(guard.call_count, 2)
+        peer.assert_called_once_with(remote, memory.base, metadata, memory.source, memory.event)
+        self.assertEqual(sample['scripted_session_candidate'], candidate)
         self.assertTrue(sample['engine_source_association_observed'])
         for field in ('authenticated_rp_sender_verified', 'session_generation_verified',
                       'custom_rp_event_received'):
@@ -625,7 +630,9 @@ class ReceiveContextTests(unittest.TestCase):
 
     def test_local_dispatch_cannot_claim_network_receive(self):
         memory = _ContextMemory(local=True)
-        sample = self.sample(memory)
+        with patch.object(observer, 'read_same_event_session_candidate') as peer:
+            sample = observer.read_receive_context(memory, memory.base, self.profile, session_metadata={})
+        peer.assert_not_called()
         self.assertEqual(sample['context_status'], 'observed')
         self.assertEqual(sample['observed_path'], 'local_sendbuffer_dispatch')
         self.assertFalse(sample['network_receive_call_chain_observed'])

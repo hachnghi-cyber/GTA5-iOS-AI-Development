@@ -244,6 +244,18 @@ def read_session_slots(remote, base, profile, *, expected_manager=None):
     return status, slots[names[0]] if len(names) == 1 else None
 
 
+def verify_peer_session_profile(remote, base, profile):
+    required = {
+        ('peer_info_init', '0x101d64ae4', 0xb8),
+        ('local_net_peer_address', '0x101ce0a3c', 0x358),
+        ('peer_address_getter', '0x101d64ba4', 0x4),
+    }
+    supplied = {(guard['function'], guard['va'], guard['size']) for guard in profile['code_guards']}
+    if not required <= supplied:
+        raise DebugProtocolError('missing exact peer-domain code guards')
+    verify_context_code(remote, base, profile, label='session-slots')
+
+
 def read_same_event_session_candidate(remote, base, metadata, source, event):
     status, candidate = read_session_slots(remote, base, metadata['session_slots'])
     if candidate is not None:
@@ -268,7 +280,7 @@ def read_same_event_session_candidate(remote, base, metadata, source, event):
     return status
 
 
-def read_receive_context(remote, base, profile, expected_receive=None):
+def read_receive_context(remote, base, profile, expected_receive=None, session_metadata=None):
     """Follow only the disassembled chain at handler ENTRY, before its prologue.
 
     No general unwinding, stack scanning, PAC stripping, packet/key/name dumps,
@@ -361,6 +373,9 @@ def read_receive_context(remote, base, profile, expected_receive=None):
         # This proves only pointer/connection equality at the stopped PC.
         # It is NOT cryptographic authentication or durable session membership.
         result['network_receive_stack_confirmed'] = True
+        if session_metadata is not None:
+            result['scripted_session_candidate'] = read_same_event_session_candidate(
+                remote, base, session_metadata, source, event)
     result['context_status'] = 'observed'
     return result
 
@@ -801,16 +816,8 @@ def capture_queue_context(remote, base, metadata, profile, wait_seconds, follow_
     verify_context_code(remote, base, profile, label='queue-context')
     if follow_scripted:
         receive_profile = metadata['receive_context']
-        peer_guards = {
-            ('peer_info_init', '0x101d64ae4', 0xb8),
-            ('local_net_peer_address', '0x101ce0a3c', 0x358),
-            ('peer_address_getter', '0x101d64ba4', 0x4),
-        }
-        supplied = {(g['function'], g['va'], g['size']) for g in metadata['session_slots']['code_guards']}
-        if not peer_guards <= supplied:
-            raise DebugProtocolError('missing exact peer-domain code guards')
         verify_context_code(remote, base, receive_profile)
-        verify_context_code(remote, base, metadata['session_slots'], label='session-slots')
+        verify_peer_session_profile(remote, base, metadata['session_slots'])
         handler = live(metadata['symbols']['script_event_handler']['va'])
         delegate_return = live(receive_profile['origins']['engine_receive_dispatch']['return_va'])
 
@@ -945,6 +952,7 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         raise DebugProtocolError("ARM64 PC register layout mismatch")
     if remote.request(b"qRegisterInfo1e").partition(b";")[0] not in (b"name:lr", b"name:x30"):
         raise DebugProtocolError("ARM64 LR register layout mismatch")
+    session_metadata = None
     if receive_context:
         for number, names in ((29, (b'fp', b'x29')), (31, (b'sp',)),
                               (1, (b'x1',)), (2, (b'x2',))):
@@ -952,6 +960,9 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
             if name not in tuple(b'name:' + n for n in names):
                 raise DebugProtocolError('receive-context register layout mismatch')
         verify_context_code(remote, base, metadata['receive_context'])
+        if 'session_slots' in metadata and 'peer_info_static' in metadata:
+            verify_peer_session_profile(remote, base, metadata['session_slots'])
+            session_metadata = metadata
     if session_context:
         verify_context_code(remote, base, metadata['session_context'], label='session-context')
         if 'session_slots' in metadata:
@@ -1000,7 +1011,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
                 sample['session_slots'], _ = read_session_slots(remote, base, metadata['session_slots'])
         if receive_context and hit and not timed_out:
             remote.conn.settimeout(3)
-            sample.update(read_receive_context(remote, base, metadata['receive_context']))
+            sample.update(read_receive_context(remote, base, metadata['receive_context'],
+                                               session_metadata=session_metadata))
         if site == 'clear_session' and hit and not timed_out:
             return_pc = remote.read_register(30)
             sample['clear_session_caller'] = next(

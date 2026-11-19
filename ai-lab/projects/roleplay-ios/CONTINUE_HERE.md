@@ -4,6 +4,15 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Người thử xác nhận hai GTA trên một iPhone, một cài riêng và một trong
+LiveContainer, vào cùng phòng chỉ mời và tương tác được trong game.
+USB trên bản cài riêng bắt đường nhận `engine_receive_dispatch` và cùng
+connection ID ở event và netPlayer. Tại lần dừng có đọc bảng phiên, slot
+chính đã thiết lập nhưng mục trùng rl peer ID có connection ID khác.
+Bộ đo đã bổ sung so sánh metadata truyền tải tại mục đó. 183 bài kiểm thử
+host đã qua. Cần kết nối USB lại để lấy mẫu tiếp.
+Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
+
 Một iPhone có tiến trình GTA cài riêng và LiveProcess cùng tồn tại.
 Trong cửa sổ Sysmon 8 giây, GTA5 báo CPU 0 ở 16/16 mẫu, còn LiveProcess
 báo CPU trên 0 ở 16/16 mẫu. Cần kiểm tra hai cửa sổ cùng hoạt động và

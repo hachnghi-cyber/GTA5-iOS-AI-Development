@@ -1,0 +1,113 @@
+{
+  "schema": "v133-one-iphone-two-clients-native-receive-v1",
+  "date": "2026-11-19",
+  "parent_commit": "96be0918ff2c69d48f150f6446ef2a2a647e5bff",
+  "standalone_source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+  "receiver_executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "scope": "User reported an invite-only GTA room with one standalone client and one LiveContainer guest on one iPhone. The user confirmed seeing and interacting with the two in-game characters. Only the standalone receiver was attached over USB.",
+  "samples": {
+    "queue_ingress": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "dispatch_and_predispatch_same_thread": false,
+        "enqueue_frame_connection_observed": true,
+        "enqueue_origin": "immediate_frame",
+        "enqueue_transport": {
+          "caller_observed": true,
+          "decrypt_indicator": "set",
+          "endpoint_connection_observed": true,
+          "integrity_path_inferred": "address_key_hmac_candidate"
+        },
+        "game_thread_affinity_verified": false,
+        "last_stage": "dispatch_event",
+        "queue_context_status": "dispatch_event_mismatch",
+        "queue_object_link_observed": false,
+        "session_generation_verified": false,
+        "site": "phase19_queue_context"
+      },
+      "raw_log_sha256": "a1f23d1ba71cb69e2b6651f6bfd6a04bcc8f38373c99ff52b158cd841414f185"
+    },
+    "scripted_receive": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "connection_id_matches_source": true,
+        "context_status": "observed",
+        "custom_rp_event_received": false,
+        "engine_source_association_observed": true,
+        "game_thread_affinity_verified": false,
+        "handler_destination_matches_message": true,
+        "handler_source_matches_message": true,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": false,
+        "matched_frames": [
+          "process_events",
+          "packed_events",
+          "on_message",
+          "dispatch"
+        ],
+        "network_receive_call_chain_observed": true,
+        "network_receive_stack_confirmed": true,
+        "observed_path": "engine_receive_dispatch",
+        "session_generation_verified": false,
+        "site": "script_event_handler",
+        "source_destination_distinct": true,
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "9cf1409b09f1101c351134391a414b2fd0e2911a68777589f0b3837688bbefa5"
+    },
+    "same_stop_session_map": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "connection_id_matches_source": true,
+        "context_status": "observed",
+        "custom_rp_event_received": false,
+        "engine_source_association_observed": true,
+        "game_thread_affinity_verified": false,
+        "handler_destination_matches_message": true,
+        "handler_source_matches_message": true,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": false,
+        "matched_frames": [
+          "process_events",
+          "packed_events",
+          "on_message",
+          "dispatch"
+        ],
+        "network_receive_call_chain_observed": true,
+        "network_receive_stack_confirmed": true,
+        "observed_path": "engine_receive_dispatch",
+        "scripted_session_candidate": {
+          "candidate_slot": "main",
+          "main_slot_established": true,
+          "peer_table": {
+            "authenticated_rage_sender_verified": false,
+            "peer_map_consistent": false,
+            "remote_entries_seen": 1,
+            "schema": "v133-peer-session-map-v1",
+            "session_generation_verified": false,
+            "session_membership_verified": false,
+            "status": "peer_alias_different_connection",
+            "transport_peer_map_consistent": false
+          },
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "session_generation_verified": false,
+        "site": "script_event_handler",
+        "source_destination_distinct": true,
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "6918a4fbbae537433b6626d702b337ec88ba94352a8b8528b43cd459a33edda7"
+    }
+  },
+  "interpretation": "A guarded immediate frame reached enqueue with a connection and a set integrity-path indicator. Separate stops validated the engine scripted receive stack and event-to-netPlayer connection equality. In the membership stop, the established main session row had the same rl peer identity with a different connection value.",
+  "diagnostic_retry": "The transport-domain comparison on the conflicting row was added after the sample. A follow-up could not start because the USB device was no longer present.",
+  "authenticated_rp_sender_verified": false,
+  "native_game_binding_verified": false,
+  "native_gameplay_rp_verified": false
+}

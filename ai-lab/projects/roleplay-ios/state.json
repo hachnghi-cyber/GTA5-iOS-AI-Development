@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Observe the guarded LeaveSession call to snSession::Leave in an invite-only GTA room and correlate the selected main slot with the live game admission and its subsequent loss of establishment. Separately collect a guarded queue/receive sample with a cooperating second GTA participant to verify authenticated sender and generation before wiring lifecycle notifications or enabling gameplay.",
+  "next_action": "Reconnect USB and reproduce the same-room standalone and LiveContainer test. Record the conflicting session row's transport metadata and trace the distinct connection IDs to their native lookup domains before establishing sender authority. Observe the earlier LeaveSession call and correlate the slot ID and generation before wiring lifecycle notifications or enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,19 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "single_iphone_native_receive": {
+      "parent_commit": "96be0918ff2c69d48f150f6446ef2a2a647e5bff",
+      "evidence": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "scope": "One standalone GTA client and one LiveContainer GTA client on an iPhone. The tester reported both in one invite-only room and stock player interaction. USB samples on the standalone receiver validated the native receive stack and event to netPlayer connection equality.",
+      "main_session_sample": "Established main slot; one remote entry with an equal rl peer ID and a different connection value.",
+      "queue_sample": "Immediate ingress frame with connection and guarded integrity-path evidence; dispatch stage did not match.",
+      "next_diagnostic": "Compare the conflicting entry's transport metadata with the sender at one guarded stop. The additional device sample could not start after USB disconnected.",
+      "host_python_tests_passed": 183,
+      "host_test_log_sha256": "be48aa4d017c53973e0426681467ee928074f41754de9f653d50e0d84aa23a26",
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false,
+      "native_gameplay_rp_verified": false
     },
     "single_iphone_livecontainer_feasibility": {
       "parent_commit": "c262c3c173aef7870292b44b23fbc62a863edab9",
