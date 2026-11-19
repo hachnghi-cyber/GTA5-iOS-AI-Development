@@ -900,6 +900,19 @@
       "config": "prepare_private_rp.py --panel",
       "safety": "No game identifiers, game state changes or custody requests. Controls require the existing RP server state and consent. No UI for default config.",
       "private_server_host_tests_passed": 27,
+      "build": {
+        "source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+        "source_ci_run": 44514592006,
+        "iphone_arm64_run": 44514579411,
+        "artifact_id": 14524956332,
+        "artifact_scope": "Compiled probe and helper scripts only. The IPA was built and remains local.",
+        "local_unsigned_ipa": "GTAV-v13.3-Private-RP-Panel-103c23b-UNSIGNED.ipa",
+        "ipa_sha256": "729e928146e5ef5221f63e62f61f4e86a6551556a1e309e9308483ecb7f2f18a",
+        "dylib_sha256": "7f38538c09c567192e93288cee2ce97d0a774d725b319530aa15c4ef9b3f9416",
+        "dylib_uuid": "2BC69080-1D4C-354B-A739-9F327EA03BEA",
+        "validation": "ZIP CRC and exact entry comparison passed. Only the GTA5 dylib load command and the additional probe changed. UIKit linked as an iOS system dependency. C static analyzer reported no diagnostics.",
+        "device_tested": false
+      },
       "manual_ui_verified_on_iphone": false,
       "native_game_binding_verified": false
     },
