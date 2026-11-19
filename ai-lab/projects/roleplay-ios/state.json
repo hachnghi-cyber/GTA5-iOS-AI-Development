@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Trace both distinct connection IDs through the guarded GetEndpointId lookup and endpoint channel table at the same receive stop. An iPhone sample confirmed equal endpoint metadata, one manager and configured channels 7/13. Verify live connection objects, sender authority and join or leave generation before enabling gameplay.",
+  "next_action": "Correlate one guarded ingress frame through the native event queue to the same scripted receive and verified endpoint/channel mapping. Trace integrity provenance for that event, verify its sender and private-room admission generation, and observe leave before enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -894,6 +894,19 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "native_live_connection_objects": {
+      "parent_commit": "112d5bb8f8b353aeae545fe6f769c67e41065594",
+      "scope": "At a guarded iPhone receive stop, both full connection IDs resolved to open native records under one transport manager and one endpoint. Endpoint slots 7 and 13 held the respective records. The session table reported eight remote peers.",
+      "evidence": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "player_channel": 7,
+      "session_channel": 13,
+      "host_python_tests_passed": 187,
+      "host_test_log_sha256": "98155cab3a49feab4829618db296009e5df74525979cb0a5f52635e4db41df97",
+      "live_connection_objects_verified": true,
+      "specific_test_peer_attributed": false,
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false
+    },
     "native_channel_configuration_observer": {
       "parent_commit": "113184892cd7f969b97a38f724fca1abd4bdbb13",
       "scope": "After an endpoint match, recover the player manager from the guarded Dispatch frame, corroborate its delegate, and compare configured channels only if the player manager and session use the same transport manager.",
@@ -903,7 +916,7 @@
       "live_channel_comparison_verified": true,
       "iphone_sample": "baselines/v133-single-iphone-native-receive-20261119.json",
       "observed_configured_channels": {"player_manager": 7, "main_session": 13},
-      "live_connection_objects_verified": false,
+      "live_connection_objects_verified": true,
       "authenticated_sender_verified": false
     },
     "native_connection_assignment_domains": {

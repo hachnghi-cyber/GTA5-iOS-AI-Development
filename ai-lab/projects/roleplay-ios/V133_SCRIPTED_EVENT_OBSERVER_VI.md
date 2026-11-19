@@ -196,8 +196,12 @@ Khi `alias_endpoint_status=match`, điểm đo trực tiếp đọc thêm
 trong frame `Dispatch`, đối chiếu delegate và chỉ đọc hai kênh nếu hai bên
 dùng cùng transport manager. Mẫu iPhone trong phòng chỉ mời xác nhận
 endpoint khớp, kênh cấu hình của người chơi bằng 7 và của phiên chính bằng 13.
-Cần đối chiếu hai đối tượng kết nối đang hoạt động trước khi dùng liên kết
-này cho quyền RP. Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
+Mẫu iPhone tiếp theo đọc hai bản ghi bằng layout `GetEndpointId`, so sánh
+toàn bộ ID, rồi kiểm tra bảng kênh và trạng thái `IsOpen`. Kết quả
+`live_connections` xác nhận hai bản ghi mở ở đúng hai ô 7 và 13 của
+cùng endpoint. Bảng phiên lúc đo báo 8 peer từ xa. Cần đối chiếu cùng một
+event từ ingress tới session và xác minh danh tính trước khi cấp quyền RP.
+Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
 
 ## Session context
 

@@ -666,6 +666,42 @@ class ReceiveContextTests(unittest.TestCase):
                 for pointer in (frame, manager, session, transport):
                     self.assertNotIn(str(pointer), json.dumps(result))
 
+    def test_live_connection_objects_require_full_ids_and_exact_channel_slots(self):
+        manager, table, page_a, page_b, endpoint = 0x180000000, 0x181000000, 0x182000000, 0x183000000, 0x190000000
+        first, second = page_a + 0x1b8, page_b
+        player_connection, session_connection = 0x10001, 0x20002
+        for change, expected in (
+                ({}, 'observed'),
+                ({(first + 0x1b0, 1): 1, (second + 0x20, 4): 2}, 'observed'),
+                ({(first + 0x10, 4): 0x30001}, 'connection_slot_reused'),
+                ({(second + 8, 8): endpoint + 8}, 'different_endpoint_objects'),
+                ({(endpoint + 13 * 8, 8): first}, 'endpoint_channel_slot_mismatch'),
+                ({(manager + 0xf0, 4): 7}, 'invalid_connection_table')):
+            with self.subTest(expected=expected, changed_fields=len(change)):
+                values = {
+                    (manager + 0xd8, 8): table, (manager + 0xe0, 4): 4,
+                    (manager + 0xec, 4): 1, (manager + 0xf0, 4): 1,
+                    (table, 8): page_a, (table + 8, 8): page_b,
+                    (first + 0x10, 4): player_connection, (second + 0x10, 4): session_connection,
+                    (first + 8, 8): endpoint, (second + 8, 8): endpoint,
+                    (endpoint + 0x4d0, 4): 998877,
+                    (endpoint + 7 * 8, 8): first, (endpoint + 13 * 8, 8): second,
+                    (first + 0x1b0, 1): 0, (second + 0x1b0, 1): 0,
+                    (first + 0x20, 4): 3, (second + 0x20, 4): 3,
+                }
+                values.update(change)
+                result = observer.read_live_connection_objects(
+                    lambda addr, width: values[addr, width], manager,
+                    (player_connection, session_connection), 998877, (7, 13))
+                self.assertEqual(result['status'], expected)
+                if expected == 'observed':
+                    self.assertTrue(result['same_endpoint_object'])
+                    self.assertTrue(result['channel_slots_match'])
+                    self.assertEqual(result['player_connection_open'], not change)
+                    self.assertEqual(result['session_connection_open'], not change)
+                for value in (manager, first, second, endpoint, player_connection, session_connection, 998877):
+                    self.assertNotIn(str(value), json.dumps(result))
+
     def test_source_or_destination_mismatch_rejects_association_before_dereference(self):
         for reg in (1, 2):
             memory = _ContextMemory()

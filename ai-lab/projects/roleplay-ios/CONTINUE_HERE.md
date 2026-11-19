@@ -4,6 +4,14 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Mẫu iPhone trong phòng riêng xác nhận hai connection ID đầy đủ trỏ tới
+hai bản ghi đang mở trên cùng endpoint, đúng ô kênh 7 và 13. Bộ đo theo
+cách `GetEndpointId` tra bảng, kiểm tra ID đầy đủ, trạng thái mở và ô
+kênh. Bảng phiên lúc đo báo 8 peer từ xa. Cần nối cùng một event qua hàng
+đợi, đường kiểm tra tính toàn vẹn và phiên để xác thực người gửi.
+187 bài kiểm thử host đã qua. Xem
+`baselines/v133-single-iphone-native-receive-20261119.json`.
+
 Observer đọc kênh cấu hình trong cùng lần dừng khi peer và endpoint khớp
 nhưng connection ID khác. Nó khôi phục player manager từ frame Dispatch,
 đối chiếu delegate và yêu cầu player manager với snSession cùng dùng một

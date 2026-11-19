@@ -95,6 +95,9 @@ SYMBOLS = {
     'player_add_remote': '__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE',
     'player_manager_init': '__ZN4rage16netPlayerMgrBase4InitEPNS_20netConnectionManagerEjNS_10atDelegateIFbjRNS_9netPlayerEEEE',
     'establish_connection': '__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE',
+    'transport_get_endpoint_id': '__ZNK4rage20netConnectionManager13GetEndpointIdEi',
+    'transport_is_open': '__ZNK4rage20netConnectionManager6IsOpenEi',
+    'transport_create_connection': '__ZN4rage20netConnectionManager16CreateConnectionEPNS_11netEndpointEj',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
@@ -326,6 +329,20 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('transport_get_endpoint_id', 0x20, 0x12003e88, 'use the low 16 bits as the connection table index'),
+        ('transport_get_endpoint_id', 0x24, 0xb940e269, 'read the paged connection table count'),
+        ('transport_get_endpoint_id', 0x30, 0xf9406e69, 'read the connection page table pointer'),
+        ('transport_get_endpoint_id', 0x34, 0x295dae6a, 'read the page shift and mask'),
+        ('transport_get_endpoint_id', 0x44, 0x5280370a, 'use the 0x1b8-byte connection record stride'),
+        ('transport_get_endpoint_id', 0x50, 0xb9401109, 'read the full connection ID from the record'),
+        ('transport_get_endpoint_id', 0x54, 0x6b14013f, 'reject recycled slots with a different full connection ID'),
+        ('transport_get_endpoint_id', 0x5c, 0xf9400508, 'read the endpoint pointer in the connection record'),
+        ('transport_get_endpoint_id', 0x64, 0xb944d114, 'read the native endpoint ID'),
+        ('transport_is_open', 0x5c, 0x3946c109, 'read the connection flags'),
+        ('transport_is_open', 0x60, 0x36000109, 'skip the open test when flag bit zero is set'),
+        ('transport_is_open', 0x80, 0xb9402108, 'read the connection state'),
+        ('transport_is_open', 0x84, 0x71000d1f, 'the open state is 3'),
+        ('transport_create_connection', 0x38c, 0xf8345ab6, 'store the connection record in the endpoint channel slot'),
         ('on_net_event', 0x1c, 0xaa0003f3, 'retain the player manager in x19'),
         ('on_net_event', 0x9c, 0x9122e260, 'pass the player manager delegate at +0x8b8 into Dispatch'),
         ('dispatch', 0x1c, 0xf90013e0, 'save the delegate at dispatch frame pointer -0x20'),
@@ -602,7 +619,10 @@ def inspect(data):
                                              ('session_init', 0x2f4),
                                              ('session_channel_id', 0x8),
                                              ('session_add_peer', 0x250),
-                                             ('session_peer_endpoint', 0x9c))
+                                             ('session_peer_endpoint', 0x9c),
+                                             ('transport_get_endpoint_id', 0x88),
+                                             ('transport_is_open', 0x90),
+                                             ('transport_create_connection', 0x4cc))
                     ],
                     'scope': 'established slot/peer-table candidate only; no proof of routing, membership lifetime or identity',
                 },

@@ -255,6 +255,9 @@ def verify_peer_session_profile(remote, base, profile):
         ('session_channel_id', '0x1019d6370', 0x8),
         ('session_add_peer', '0x1019dcb40', 0x250),
         ('session_peer_endpoint', '0x1019d30d4', 0x9c),
+        ('transport_get_endpoint_id', '0x101cdf4b8', 0x88),
+        ('transport_is_open', '0x101cdf540', 0x90),
+        ('transport_create_connection', '0x101cd0608', 0x4cc),
     }
     supplied = {(guard['function'], guard['va'], guard['size']) for guard in profile['code_guards']}
     if not required <= supplied:
@@ -262,7 +265,54 @@ def verify_peer_session_profile(remote, base, profile):
     verify_context_code(remote, base, profile, label='session-slots')
 
 
-def read_alias_channel_configuration(read_word, dispatch_frame, profile, session):
+def read_live_connection_objects(read_word, manager, connection_ids, endpoint_id, channels):
+    """Read only the two guarded native connection slots."""
+    if connection_ids[0] == connection_ids[1] or channels[0] == channels[1]:
+        return {'status': 'expected_distinct_connections_and_channels'}
+    try:
+        table = read_word(manager + 0xd8, 8)
+        count = read_word(manager + 0xe0, 4)
+        shift = read_word(manager + 0xec, 4)
+        mask = read_word(manager + 0xf0, 4)
+        if not 0 < table < (1 << 48) or table % 8 or not 0 < count <= 65536 or (
+                not 0 <= shift <= 16 or mask != (1 << shift) - 1):
+            return {'status': 'invalid_connection_table'}
+
+        records, endpoints = [], []
+        for connection in connection_ids:
+            index = connection & 0xffff
+            if not 0 <= connection <= 0x7fffffff or index >= count:
+                return {'status': 'connection_index_outside_table'}
+            page = read_word(table + 8 * (index >> shift), 8)
+            if not 0 < page < (1 << 48) or page % 8:
+                return {'status': 'invalid_connection_page'}
+            record = page + 0x1b8 * (index & mask)
+            if read_word(record + 0x10, 4) != connection:
+                return {'status': 'connection_slot_reused'}
+            endpoint = read_word(record + 8, 8)
+            if not 0 < endpoint < (1 << 48) or endpoint % 8:
+                return {'status': 'invalid_connection_endpoint'}
+            records.append(record)
+            endpoints.append(endpoint)
+
+        if endpoints[0] != endpoints[1]:
+            return {'status': 'different_endpoint_objects'}
+        endpoint = endpoints[0]
+        if read_word(endpoint + 0x4d0, 4) != endpoint_id:
+            return {'status': 'endpoint_id_mismatch'}
+        if any(read_word(endpoint + 8 * channel, 8) != record
+               for channel, record in zip(channels, records)):
+            return {'status': 'endpoint_channel_slot_mismatch'}
+        open_states = [not (read_word(record + 0x1b0, 1) & 1) and read_word(record + 0x20, 4) == 3
+                       for record in records]
+    except (DebugProtocolError, OSError):
+        return {'status': 'bounded_read_failed'}
+    return {'status': 'observed', 'same_endpoint_object': True, 'channel_slots_match': True,
+            'player_connection_open': open_states[0], 'session_connection_open': open_states[1]}
+
+
+def read_alias_channel_configuration(read_word, dispatch_frame, profile, session, *,
+                                     connection_ids=None, endpoint_id=None):
     """Compare configured channels only after matching the native dispatch owner."""
     manager_offset = profile['dispatch_saved_manager_fp_offset']
     delegate_offset = profile['dispatch_delegate_fp_offset']
@@ -285,8 +335,12 @@ def read_alias_channel_configuration(read_word, dispatch_frame, profile, session
             return {'status': 'invalid_channel'}
     except (DebugProtocolError, OSError):
         return {'status': 'bounded_read_failed'}
-    return {'status': 'observed', 'player_channel': player_channel, 'session_channel': session_channel,
-            'channels_differ': player_channel != session_channel}
+    result = {'status': 'observed', 'player_channel': player_channel, 'session_channel': session_channel,
+              'channels_differ': player_channel != session_channel}
+    if connection_ids is not None:
+        result['live_connections'] = read_live_connection_objects(
+            read_word, player_transport, connection_ids, endpoint_id, (player_channel, session_channel))
+    return result
 
 
 def read_same_event_session_candidate(remote, base, metadata, source, event, *, dispatch_frame=None):
@@ -302,15 +356,18 @@ def read_same_event_session_candidate(remote, base, metadata, source, event, *, 
                 raise DebugProtocolError('peer table address outside observer bounds')
             return int.from_bytes(remote.memory(addr, width), 'little')
 
+        def observe_alias(event_connection, session_connection, endpoint):
+            status['alias_channel_configuration'] = read_alias_channel_configuration(
+                read_word, dispatch_frame, metadata['receive_context'], candidate,
+                connection_ids=(event_connection, session_connection), endpoint_id=endpoint)
+
         try:
             connection = read_word(event + metadata['receive_context']['event_connection_offset'], 4)
             getter = base + int(metadata['peer_info_static']['getter_va'], 16) - IMAGE_VMADDR
             status['peer_table'] = checker.check_peer_session_map(
                 lambda addr: read_word(addr, 4), lambda addr: read_word(addr, 8),
-                source, candidate, connection, getter, check_transport_domain=True)
-            if dispatch_frame is not None and status['peer_table'].get('alias_endpoint_status') == 'match':
-                status['alias_channel_configuration'] = read_alias_channel_configuration(
-                    read_word, dispatch_frame, metadata['receive_context'], candidate)
+                source, candidate, connection, getter, check_transport_domain=True,
+                on_matching_alias=observe_alias if dispatch_frame is not None else None)
         except (DebugProtocolError, OSError):
             status['peer_table'] = {'status': 'bounded_read_failed'}
     return status

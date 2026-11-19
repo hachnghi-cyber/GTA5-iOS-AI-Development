@@ -322,6 +322,18 @@
     "establish_connection": {
       "name": "__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE",
       "va": "0x101cdeaf8"
+    },
+    "transport_get_endpoint_id": {
+      "name": "__ZNK4rage20netConnectionManager13GetEndpointIdEi",
+      "va": "0x101cdf4b8"
+    },
+    "transport_is_open": {
+      "name": "__ZNK4rage20netConnectionManager6IsOpenEi",
+      "va": "0x101cdf540"
+    },
+    "transport_create_connection": {
+      "name": "__ZN4rage20netConnectionManager16CreateConnectionEPNS_11netEndpointEj",
+      "va": "0x101cd0608"
     }
   },
   "branches": [
@@ -627,6 +639,90 @@
     }
   ],
   "observations": [
+    {
+      "at": "0x101cdf4d8",
+      "function": "transport_get_endpoint_id",
+      "word": "0x12003e88",
+      "observation": "use the low 16 bits as the connection table index"
+    },
+    {
+      "at": "0x101cdf4dc",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb940e269",
+      "observation": "read the paged connection table count"
+    },
+    {
+      "at": "0x101cdf4e8",
+      "function": "transport_get_endpoint_id",
+      "word": "0xf9406e69",
+      "observation": "read the connection page table pointer"
+    },
+    {
+      "at": "0x101cdf4ec",
+      "function": "transport_get_endpoint_id",
+      "word": "0x295dae6a",
+      "observation": "read the page shift and mask"
+    },
+    {
+      "at": "0x101cdf4fc",
+      "function": "transport_get_endpoint_id",
+      "word": "0x5280370a",
+      "observation": "use the 0x1b8-byte connection record stride"
+    },
+    {
+      "at": "0x101cdf508",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb9401109",
+      "observation": "read the full connection ID from the record"
+    },
+    {
+      "at": "0x101cdf50c",
+      "function": "transport_get_endpoint_id",
+      "word": "0x6b14013f",
+      "observation": "reject recycled slots with a different full connection ID"
+    },
+    {
+      "at": "0x101cdf514",
+      "function": "transport_get_endpoint_id",
+      "word": "0xf9400508",
+      "observation": "read the endpoint pointer in the connection record"
+    },
+    {
+      "at": "0x101cdf51c",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb944d114",
+      "observation": "read the native endpoint ID"
+    },
+    {
+      "at": "0x101cdf59c",
+      "function": "transport_is_open",
+      "word": "0x3946c109",
+      "observation": "read the connection flags"
+    },
+    {
+      "at": "0x101cdf5a0",
+      "function": "transport_is_open",
+      "word": "0x36000109",
+      "observation": "skip the open test when flag bit zero is set"
+    },
+    {
+      "at": "0x101cdf5c0",
+      "function": "transport_is_open",
+      "word": "0xb9402108",
+      "observation": "read the connection state"
+    },
+    {
+      "at": "0x101cdf5c4",
+      "function": "transport_is_open",
+      "word": "0x71000d1f",
+      "observation": "the open state is 3"
+    },
+    {
+      "at": "0x101cd0994",
+      "function": "transport_create_connection",
+      "word": "0xf8345ab6",
+      "observation": "store the connection record in the endpoint channel slot"
+    },
     {
       "at": "0x102024930",
       "function": "on_net_event",
@@ -1731,6 +1827,24 @@
         "va": "0x1019d30d4",
         "size": 156,
         "sha256": "8a41121903ad538c7c7f9f8a88ec6f6c79bf9855aef961f26248a0af45ad38c8"
+      },
+      {
+        "function": "transport_get_endpoint_id",
+        "va": "0x101cdf4b8",
+        "size": 136,
+        "sha256": "79cedf1fcbbe5e3ec795bd27591b624cedb3c5f316d0a936143967bb45d175ae"
+      },
+      {
+        "function": "transport_is_open",
+        "va": "0x101cdf540",
+        "size": 144,
+        "sha256": "1f336483aa54f7bc0166870e3f132fc270e05e63ab079b1af76efbcb697fe0fa"
+      },
+      {
+        "function": "transport_create_connection",
+        "va": "0x101cd0608",
+        "size": 1228,
+        "sha256": "25c90ad4409cd3a3f66622d6c876344c8198b8f5213be20777eec236ab7fec92"
       }
     ],
     "scope": "established slot/peer-table candidate only; no proof of routing, membership lifetime or identity"

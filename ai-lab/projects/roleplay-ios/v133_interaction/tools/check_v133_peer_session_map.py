@@ -26,13 +26,15 @@ def endpoint_status(read32, player, session_peer):
         player_endpoint = read32(player + 0x1c)
         session_endpoint = read32(session_peer + 0x1e0)
         if not 0 < player_endpoint < 0xffffffff or not 0 < session_endpoint < 0xffffffff:
-            return "invalid_endpoint_metadata"
+            return "invalid_endpoint_metadata", None
     except (KeyError, TypeError, ValueError, RuntimeError, OverflowError, IndexError):
-        return "read_failed"
-    return "match" if player_endpoint == session_endpoint else "mismatch"
+        return "read_failed", None
+    if player_endpoint != session_endpoint:
+        return "mismatch", None
+    return "match", player_endpoint
 
 def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,expected_peer_id=None,
-                           *,check_transport_domain=False):
+                           *,check_transport_domain=False,on_matching_alias=None):
     r={"schema":"v133-peer-session-map-v1","status":"invalid_input",
        "peer_map_consistent":False,"remote_entries_seen":0,
        "transport_peer_map_consistent":False,
@@ -85,7 +87,9 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
                 if check_transport_domain:
                     r["alias_transport_peer_status"] = transport_peer_status(read64, pinfo, p)
                     if r["alias_transport_peer_status"] == "match":
-                        r["alias_endpoint_status"] = endpoint_status(read32, netplayer, p)
+                        r["alias_endpoint_status"], endpoint = endpoint_status(read32, netplayer, p)
+                        if endpoint is not None and on_matching_alias is not None:
+                            on_matching_alias(conn, cxn, endpoint)
                 return r
         if matched!=1:
             r["status"]="no_unique_session_connection";return r

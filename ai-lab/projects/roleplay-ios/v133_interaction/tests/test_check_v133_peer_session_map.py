@@ -152,9 +152,13 @@ class PeerMappingTests(unittest.TestCase):
                 if endpoint is not None:
                     mem[0x9000 + 0x1e0] = endpoint
                 read = mem.__getitem__
-                result = mod.check_peer_session_map(read, read, *args, check_transport_domain=True)
+                observations = []
+                result = mod.check_peer_session_map(
+                    read, read, *args, check_transport_domain=True,
+                    on_matching_alias=lambda *values: observations.append(values))
                 self.assertEqual(result['status'], 'peer_alias_different_connection')
                 self.assertEqual(result['alias_endpoint_status'], expected)
+                self.assertEqual(observations, [(args[2], 88, 771122)] if expected == 'match' else [])
                 self.assertFalse(result['peer_map_consistent'])
                 self.assertFalse(result['session_membership_verified'])
                 self.assertFalse(result['authenticated_rage_sender_verified'])
