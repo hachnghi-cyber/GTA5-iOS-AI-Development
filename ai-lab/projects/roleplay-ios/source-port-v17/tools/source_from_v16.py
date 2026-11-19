@@ -11,6 +11,7 @@ NEW_C_SHA='80c1e6e42b43617570e07a55548be6f98400f4163a7fc00d9b0dd99802b5e7af'
 BACKUP='.rp-source-bridge-v17-backup'
 SWIFT='app/App/NativePortViewController.swift'
 HEADER='app/Source/Native-Bridging-Header.h'
+INFO='app/App/Info.plist'
 WORLD='        if line == "WORLD_READY" { PGSetTargetingMode(Int32(GameSettings.shared.targetingMode)); PGSetSelfRadioMode(Int32(GameSettings.shared.selfRadioMode)); if worldReadyAt == nil { worldReadyAt = CACurrentMediaTime() } }\n'
 LEAVE='        leftAppHandled = true\n        RunEnd.playing(false)\n'
 
@@ -71,6 +72,7 @@ def install(root,payload,check=False):
     native=materialize(payload)
     swift=(root/SWIFT).read_text()
     header=(root/HEADER).read_text()
+    info=(root/INFO).read_text()
     if 'GTA5PORT_RP_SOURCE_V17' in swift or 'NativeRPBridge.h' in header:
         if (swift.count('PGRPBridgeStart(')==1 and swift.count('PGRPBridgeStop()')==1 and
             'NativeRPBridge.h' in header and all((root/k).is_file() and (root/k).read_bytes()==v for k,v in native.items())):
@@ -90,6 +92,10 @@ def install(root,payload,check=False):
         RunEnd.playing(false)
 ''')
     changes={SWIFT:swift.encode(),HEADER:(header.rstrip()+'\n\n#include "NativeRPBridge.h"\n').encode(),**native}
+    if '<key>NSLocalNetworkUsageDescription</key>' not in info:
+        anchor='\t<key>NSAppTransportSecurity</key>'
+        if info.count(anchor)!=1:raise ValueError('Info.plist anchor mismatch')
+        changes[INFO]=info.replace(anchor,'\t<key>NSLocalNetworkUsageDescription</key>\n\t<string>Connect to your own private RP server on the local network only when enabled.</string>\n'+anchor,1).encode()
     if check:return list(changes)
     backup=root/BACKUP
     if backup.exists():raise ValueError('existing backup; refusing to overwrite')
