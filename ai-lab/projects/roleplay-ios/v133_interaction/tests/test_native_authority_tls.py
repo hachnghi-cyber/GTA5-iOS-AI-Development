@@ -13,6 +13,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import rp_private_server as rp
 import test_rp_private_server as hosttests
+from run_private_rp_iphone_check import STEPS, watch
 
 COP, CITIZEN = hosttests.COP, hosttests.CITIZEN
 
@@ -156,6 +157,34 @@ class NativeAuthorityTLSTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(phone_codec.row(COP), host.row(COP))
             await phone_codec.close()
             await self.wait_row(host, COP, lambda row: row is None)
+
+    async def test_lan_witness_requires_full_sequence_before_reporting_pass(self):
+        async with self.running() as (_, address):
+            witness = await hosttests.PrivateServerTests.connect(self, address, 'citizen')
+            stages = []
+            async with asyncio.TaskGroup() as tasks:
+                tasks.create_task(asyncio.wait_for(watch(witness, COP, stages.append), 5))
+                phone = await self.connect(address, 'cop', COP)
+                self.assertEqual(await phone.request(1), 2)
+                self.assertEqual(await phone.request(2), 2)
+                await phone.close()
+            self.assertEqual(stages, list(STEPS))
+
+    async def test_lan_witness_rejects_disconnect_after_only_opt_in(self):
+        async with self.running() as (_, address):
+            witness = await hosttests.PrivateServerTests.connect(self, address, 'citizen')
+            stages = []
+            observation = asyncio.create_task(watch(witness, COP, stages.append))
+            try:
+                phone = await self.connect(address, 'cop', COP)
+                self.assertEqual(await phone.request(1), 2)
+                await phone.close()
+                with self.assertRaisesRegex(rp.ProtocolError, 'disconnected before completing'):
+                    await asyncio.wait_for(observation, 5)
+            finally:
+                observation.cancel()
+                await asyncio.gather(observation, return_exceptions=True)
+            self.assertEqual(stages, list(STEPS[:2]))
 
 
 if __name__ == '__main__':

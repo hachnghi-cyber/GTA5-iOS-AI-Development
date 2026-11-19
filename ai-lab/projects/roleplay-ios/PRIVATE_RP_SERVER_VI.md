@@ -117,5 +117,19 @@ thành viên xuất hiện và trạng thái trả về như cũ. Log iPhone ch�
 `connected=0` là trạng thái dự kiến sau khi phép thử hoàn tất. Khi bỏ tùy
 chọn, probe duy trì kết nối như trên và không gửi lệnh tham gia.
 
+Để chạy phép thử có đối chứng, thay các bước tạo kit, bật server và mở CLI
+Windows bằng một lệnh. `--folder` phải là thư mục mới ngoài Git:
+
+```powershell
+python MODULE/tools/run_private_rp_iphone_check.py --ip IP_WIFI_CUA_PC --library C:/private/rp/rp_authority.dll --folder C:/private/rp/iphone-check
+```
+
+Khi terminal hiện `ready`, chép đúng file `PoliceRP-Authority-PRIVATE.json`
+được báo vào Documents của GTA đã ký, rồi mở lại app. Terminal Windows
+xác nhận lần lượt kết nối, tham gia, rời RP và ngắt kết nối. Phiên tự dừng
+khi đủ bốn bước hoặc hết thời gian. Đối chiếu `host_witness_passed` với log
+`consent_round_trip_passed` trên iPhone trong cùng khoảng thời gian. Một
+dòng báo đạt trên PC riêng lẻ chưa chứng minh peer là iPhone thật.
+
 Chưa có hai iPhone, log gameplay, kiểm thử native effects hay regression của
 Story/GTA Online. Không phát hành IPA gameplay hoặc bật runtime adapter lúc này.

@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Sign and install the verified consent-round-trip diagnostic on an iPhone, then collect its private authority log with a host peer on the private LAN. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
+  "next_action": "Sign and install the verified consent-round-trip diagnostic on an iPhone, and compare its local authority log with the bounded Windows LAN witness. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,12 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_iphone_lan_witness": {
+      "scope": "One command generates a temporary private kit, binds the diagnostic server, and observes join / opt-in / opt-out / disconnect through a distinct host mTLS identity",
+      "host_tests_passed": 157,
+      "host_checks": "Positive test ran the native codec over real loopback mTLS. Negative test rejected disconnect after opt-in. The PC Wi-Fi listener and host witness reached ready on Windows.",
+      "device_runtime": "waiting for signed iPhone and matching device log"
     },
     "private_authority_consent_probe": {
       "mode": "Explicit local kit opt-in; self opt-in and opt-out with ACK and nonce-matched snapshots, then disconnect",

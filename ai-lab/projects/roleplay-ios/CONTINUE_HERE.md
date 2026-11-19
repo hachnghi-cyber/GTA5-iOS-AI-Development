@@ -13,7 +13,7 @@ trong `PRIVATE_RP_SERVER_VI.md`. Build `2455bc3` đã đạt CI và tạo IPA ch
 iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật
 trên Windows. Tổng 154 test Python đạt. Build iPhoneOS ARM64 và source CI
 của `99ed120` đã đạt. IPA chẩn đoán chưa ký đã tạo và đối chiếu từng mục ZIP.
-Bước kế tiếp là ký, cài và lấy log transport trên iPhone theo
+Bước kế tiếp là ký, cài và so log iPhone với phép thử Windows tự động theo
 `PRIVATE_RP_SERVER_VI.md`. Chưa có xác nhận hành động trong game.
 
 Server riêng đã có mã chạy được trên Windows/Linux: xem `PRIVATE_RP_SERVER_VI.md`.
