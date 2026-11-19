@@ -71,15 +71,6 @@ bool rp_police_bridge_leave(rp_police_bridge *bridge, uint64_t rp_id,
     if (!binding->active || !same_peer(binding->game, peer) ||
         !rp_police_leave(&bridge->world, rp_id)) return false;
     binding->active = false;
-    // Preserve replay counters, but an ACK involving the old participant
-    // cannot stand in for a decision after a different incarnation joins.
-    for (unsigned i = 0; i < RP_V133_POLICE_CAPACITY; ++i) {
-        rp_police_member *member = &bridge->world.members[i];
-        if (member->id != rp_id && member->last_target != rp_id) continue;
-        member->last_target = 0;
-        member->last_operation = (rp_police_operation)0;
-        member->last_applied = false;
-    }
     return true;
 }
 

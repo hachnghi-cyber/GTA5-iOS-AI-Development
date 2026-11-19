@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server riêng đã có mã chạy được trên Windows/Linux: xem `PRIVATE_RP_SERVER_VI.md`.
+152 test Python đạt, gồm 15 test server mTLS thật với hai client host và lõi C.
+Game observations trong test là mô phỏng; cấu hình mặc định chưa cấp duty/custody.
+Đã sửa client xóa snapshot cũ khi disconnect/hủy transaction. Bước tiếp theo:
+codec/client iOS cho ALPN authority mới, rồi xác minh binding game và callback.
+
 Yêu cầu mới ngày 2026-11-18: dùng **server RP riêng cho v13.3**. Hướng này
 thay thế ưu tiên không vận hành server riêng trước đây. Tiếp tục từ mTLS và
 lõi Police RP đã có; kiểm thử hai client host trước khi nối nhân vật/game thread.

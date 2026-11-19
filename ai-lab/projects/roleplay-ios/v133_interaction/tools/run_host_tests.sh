@@ -14,4 +14,7 @@ for target in test_v133_interact_gate test_v133_wire test_v133_two_peers test_v1
 done
 "$compiler" "${flags[@]}" -DRP_TEST_CARRIER "${sources[@]}" tests/test_v133_two_peers.c -o "$work/test_carrier_two_peers"
 ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 "$work/test_carrier_two_peers"
-echo "P16 host tests: PASS (11 source test binaries; no game or device)"
+"$compiler" "${flags[@]}" src/rp_v133_police.c src/rp_v133_police_tx.c \
+  server/rp_authority_ffi.c tests/test_v133_server_ffi.c -o "$work/test_v133_server_ffi"
+ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 "$work/test_v133_server_ffi"
+echo "Host tests: PASS (12 source test binaries; no game or device)"

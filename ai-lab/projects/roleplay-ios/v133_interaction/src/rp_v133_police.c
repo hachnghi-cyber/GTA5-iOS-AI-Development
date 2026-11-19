@@ -71,6 +71,15 @@ bool rp_police_leave(rp_police_world *world, uint64_t id) {
     if (!member) return false;
     revoke_consent(world, member);
     member->present = false;
+    /* Retain nonce history, but a cached decision involving this admission
+     * cannot stand in for a decision after the participant rejoins. */
+    for (unsigned i = 0; i < RP_V133_POLICE_CAPACITY; ++i) {
+        rp_police_member *cached = &world->members[i];
+        if (cached->id != id && cached->last_target != id) continue;
+        cached->last_target = 0;
+        cached->last_operation = (rp_police_operation)0;
+        cached->last_applied = false;
+    }
     return true;
 }
 

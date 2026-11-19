@@ -1,0 +1,59 @@
+{
+  "schema": "private-rp-server-host-v1",
+  "recorded_date": "2026-11-19",
+  "parent_commit": "7b9c16d6b3b4f34380d9494666f6a6101ac249a3",
+  "runtime": "Windows x86_64 Python 3.13; cryptography 50.0.2; Zig 0.13.0 clang C11 DLL",
+  "python_tests": {
+    "total": 152,
+    "private_server": 15,
+    "result": "PASS",
+    "log_sha256": "5d7b86dba7443c600ea69440aa5f97c74c42e52e0e97ac3b71a79b3fc189e573"
+  },
+  "c_tests": {
+    "result": "PASS",
+    "assertions_enabled": true,
+    "binaries": [
+      "test_v133_server_ffi",
+      "test_v133_police",
+      "test_v133_police_tx",
+      "test_v133_police_bridge"
+    ],
+    "log_sha256": "8dce313f9305d47ac55384d011dcee46c7a1c1943adf49a9318c61a20aa07701"
+  },
+  "host_dll_sha256": "20a8a6d11b7a39e7de20b43c056d81af6fab17c3b4622f32ab3ece402a8e25a3",
+  "actual_network": "Loopback TCP with mutually authenticated TLS 1.3, server/client certificate pinning and two host clients",
+  "synthetic_inputs": "All game observations (position, job, vehicle and jail intake); supplied only by test-owned in-process fixture",
+  "verified": [
+    "certificate registry roles",
+    "opt-in and opt-out",
+    "duty and custody sequence under modeled facts",
+    "matching two-client snapshots",
+    "deadline and oversized-record rejection",
+    "wrong scope and nonce replay rejection",
+    "duplicate connection rejection",
+    "distance/freshness/instance checks",
+    "lease expiry and disconnect revocation",
+    "timer-driven jail release",
+    "reconnect nonce retention and old ACK invalidation",
+    "client snapshot invalidation on close and cancelled transaction",
+    "generated development certificate kit"
+  ],
+  "default_game_observation_provider": null,
+  "iphone_tested": false,
+  "two_device_tested": false,
+  "gameplay_online_working": false,
+  "remaining": [
+    "native iOS authority protocol client",
+    "independent RP identity to GTA player binding",
+    "trusted game observations",
+    "native game-thread effects",
+    "real two-device and stock-mode regression tests"
+  ],
+  "parent_ci": {
+    "source": 44333349429,
+    "ai_lab": 44333349400,
+    "watch": 44333349363,
+    "conclusion": "success"
+  },
+  "this_checkpoint_ci": "pending until pushed; inspect Actions for resulting commit"
+}

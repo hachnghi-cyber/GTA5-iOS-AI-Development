@@ -23,8 +23,10 @@ hợp lệ đã xác thực sẽ tiêu thụ nonce kể cả khi bị từ chố
 phải lập lại phiên và quyền. Kiểm thử C dùng snapshot giả lập để kiểm tra
 luật, bao gồm giả danh, ghế trùng, timestamp tràn và lệnh sau ngắt kết nối.
 
-Probe iOS hiện có chỉ dành cho thử TLS GREET/DOCUMENTS. Các quyết định
-trong module này chưa được gửi qua TLS hoặc áp dụng lên game. Trước khi
+Server riêng hiện đã gửi quyết định qua mTLS cho hai client host và đồng bộ
+snapshot; xem `PRIVATE_RP_SERVER_VI.md`. Quan sát game trong test là mô phỏng.
+Probe iOS hiện có vẫn chỉ dành cho thử TLS GREET/DOCUMENTS; chưa áp dụng
+quyết định authority mới lên game. Trước khi
 tích hợp, cần nối ID TLS với người chơi game đã đồng ý, chuyển snapshot
 và kết quả trên callback đã xác minh, rồi thử hành động trên hai thiết bị.
 

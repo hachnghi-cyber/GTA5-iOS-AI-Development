@@ -1,5 +1,15 @@
 # Continue — native receive provenance
 
+Private-server implementation checkpoint (parent `7b9c16d6b3b4f34380d9494666f6a6101ac249a3`):
+real mTLS authority + two host clients reuse PRPC/PRPA and C Police rules.
+152 Python tests pass (15 private-server tests); test game facts are synthetic.
+The normal CLI has no game observation provider and denies duty/custody.
+Disconnect clears consent/custody, invalidates old ACKs, preserves replay state;
+clients clear stale snapshots and abandon ambiguous streams on cancellation.
+Parent CI source 44333349429, AI Lab 44333349400, Watch 44333349363 passed.
+Next: native iOS authority-protocol client, then independently verified game
+participant binding and game-thread observations. See `PRIVATE_RP_SERVER_VI.md`.
+
 Current direction (2026-11-18): the user now requests a private RP server for
 v13.3. Reuse mTLS, PRPC/PRPA and the C Police authority. First verify a real
 host server with two clients; TLS principals do not identify GTA characters.

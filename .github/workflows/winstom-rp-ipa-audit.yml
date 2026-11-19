@@ -65,6 +65,12 @@ jobs:
         run: |
           python -m pip install cryptography==50.0.2
           python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_prp3_direct_tls.py' -v
+      - name: Build C authority and exercise two real TLS clients (synthetic game facts)
+        env:
+          RP_AUTHORITY_LIBRARY: /tmp/rp_authority.so
+        run: |
+          python ai-lab/projects/roleplay-ios/v133_interaction/tools/build_rp_authority.py --compiler gcc --output "$RP_AUTHORITY_LIBRARY"
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_rp_private_server.py' -v
 
   v133-interaction-gate:
     name: v13.3 RP interaction C11 source-only tests
@@ -140,13 +146,17 @@ jobs:
             src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
             -o /tmp/v133_mailbox_threads_clang
           /tmp/v133_mailbox_threads_clang
-      - name: Reproduce all ten source-only test binaries from project runner
+      - name: Reproduce twelve source test binaries with GCC and Clang sanitizers
         shell: bash
         run: |
           set -euo pipefail
           cd ai-lab/projects/roleplay-ios/v133_interaction
           CC=gcc bash tools/run_host_tests.sh
           CC=clang bash tools/run_host_tests.sh
+      - name: Static analysis of private authority boundary
+        run: |
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          clang --analyze -std=c11 -Wall -Wextra -Werror -I include server/rp_authority_ffi.c src/rp_v133_police.c src/rp_v133_police_tx.c
       - name: Clang strict host build
         shell: bash
         run: |
