@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server ABI 3 tách lần vào TLS khỏi lần vào phiên GTA. Khi nguồn game báo
+rời phiên hoặc đổi generation, server giải phóng custody, hủy consent và
+giữ nonce trên kênh TLS hiện tại. 169 test host và C FFI đã qua. Kiểm thử
+vòng đời dùng dữ liệu GTA mô hình. Cần peer GTA thứ hai để xác minh nguồn.
+
 Server và probe có kênh PRP3 tùy chọn cho Chào hỏi và yêu cầu kiểm tra giấy
 tờ. Gửi chỉ khi hai bên đã opt-in và xác nhận bằng kết nối người nhận.
 Build ARM64 `0c38348` đã đạt. IPA chẩn đoán chưa ký

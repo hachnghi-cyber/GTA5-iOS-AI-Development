@@ -66,20 +66,31 @@ bool rp_police_admit(rp_police_world *world, uint64_t id, rp_police_role role) {
     return false;
 }
 
-bool rp_police_leave(rp_police_world *world, uint64_t id) {
-    rp_police_member *member = present_member(world, id);
-    if (!member) return false;
+static void reset_admission(rp_police_world *world, rp_police_member *member) {
     revoke_consent(world, member);
-    member->present = false;
     /* Retain nonce history, but a cached decision involving this admission
      * cannot stand in for a decision after the participant rejoins. */
     for (unsigned i = 0; i < RP_V133_POLICE_CAPACITY; ++i) {
         rp_police_member *cached = &world->members[i];
-        if (cached->id != id && cached->last_target != id) continue;
+        if (cached->id != member->id && cached->last_target != member->id) continue;
         cached->last_target = 0;
         cached->last_operation = (rp_police_operation)0;
         cached->last_applied = false;
     }
+}
+
+bool rp_police_leave(rp_police_world *world, uint64_t id) {
+    rp_police_member *member = present_member(world, id);
+    if (!member) return false;
+    reset_admission(world, member);
+    member->present = false;
+    return true;
+}
+
+bool rp_police_reset_game_member(rp_police_world *world, uint64_t id) {
+    rp_police_member *member = present_member(world, id);
+    if (!member) return false;
+    reset_admission(world, member);
     return true;
 }
 

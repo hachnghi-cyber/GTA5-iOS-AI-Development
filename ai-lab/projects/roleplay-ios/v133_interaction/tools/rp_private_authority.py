@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import struct
 
+from prp3_direct_tls import u64
+
 U64 = C.c_uint64
 U8 = C.c_uint8
 FIELDS = ('id', 'role', 'consent', 'on_duty', 'custody', 'custodian',
@@ -22,16 +24,30 @@ class ParticipantAdmission:
 
 
 @dataclass(frozen=True)
+class GameScope:
+    session: int
+    generation: int
+
+
+@dataclass(frozen=True)
+class GameBinding:
+    admission: ParticipantAdmission
+    scope: GameScope
+    participant: int
+    incarnation: int
+
+
+@dataclass(frozen=True)
 class DutyObservation:
-    subject: ParticipantAdmission
+    subject: GameBinding
     observed_at_ms: int
     on_shift: bool
 
 
 @dataclass(frozen=True)
 class PairObservation:
-    actor: ParticipantAdmission
-    target: ParticipantAdmission
+    actor: GameBinding
+    target: GameBinding
     observed_at_ms: int
     vehicle_id: int
     distance_cm: int
@@ -43,13 +59,14 @@ class NativeAuthority:
     def __init__(self, library, session, epoch, *, observation_provider=None, duty_provider=None):
         self.lib = C.CDLL(str(Path(library).resolve()))
         self.lib.rp_server_abi.restype, self.lib.rp_server_abi.argtypes = C.c_uint32, []
-        if self.lib.rp_server_abi() != 2:
+        if self.lib.rp_server_abi() != 3:
             raise ValueError('unsupported authority ABI; rebuild the host library')
         signatures = {
             'create': (C.c_void_p, [U64, U64]),
             'destroy': (None, [C.c_void_p]),
             'admit': (C.c_int, [C.c_void_p, U64, C.c_uint32]),
             'leave': (C.c_int, [C.c_void_p, U64]),
+            'reset_game_member': (C.c_int, [C.c_void_p, U64]),
             'revoke_duty': (C.c_int, [C.c_void_p, U64]),
             'tick': (C.c_int, [C.c_void_p, U64]),
             'snapshot': (C.c_int, [C.c_void_p, U64, C.POINTER(U64), C.c_size_t]),
@@ -63,7 +80,7 @@ class NativeAuthority:
         if not self.handle:
             raise ValueError('invalid authority scope')
         self.session, self.epoch = session, epoch
-        # The trusted source returns the original actor and target admissions
+        # The trusted source returns the original actor and target bindings
         # alongside game facts already bound to those participants. The packet
         # selects the lookup; it cannot provide facts or bind a participant.
         self.observation_provider = observation_provider
@@ -74,11 +91,19 @@ class NativeAuthority:
         self._admissions = {}
         self._last_duty = {}
         self._admission_generation = 0
+        self._game_scope = None
+        self._game_generation = 0
+        self._highest_game_incarnation = 0
+        self._game_bindings = {}
 
     def close(self):
         if self.handle:
             self.lib.rp_server_destroy(self.handle)
             self.handle = None
+        self._admissions.clear()
+        self._game_bindings.clear()
+        self._last_duty.clear()
+        self._game_scope = None
 
     def admit(self, identity, role):
         if not self.lib.rp_server_admit(self.handle, identity, role):
@@ -93,10 +118,69 @@ class NativeAuthority:
             return False
         self._admissions.pop(identity, None)
         self._last_duty.pop(identity, None)
+        self._game_bindings.pop(identity, None)
+        return True
+
+    def current_admission(self, identity):
+        """For the verified in-process game adapter, never for wire handlers."""
+        return self._admissions.get(identity)
+
+    def begin_game_scope(self, scope):
+        """Publish a verified generation, using a monotonic local generation."""
+        if (not self.handle or type(scope) is not GameScope or not u64(scope.session) or not u64(scope.generation)
+                or scope.generation <= self._game_generation):
+            return False
+        if self._game_scope is not None and not self.end_game_scope(self._game_scope):
+            return False
+        self._game_scope = scope
+        self._game_generation = scope.generation
+        self._highest_game_incarnation = 0
+        return True
+
+    def end_game_scope(self, scope):
+        if self._game_scope is None or scope != self._game_scope:
+            return False
+        for binding in list(self._game_bindings.values()):
+            if not self.unbind_game_participant(binding):
+                return False
+        self._game_scope = None
+        return True
+
+    def bind_game_participant(self, binding):
+        """Install a one-to-one mapping proven by a trusted game source.
+
+        This owner API does not discover or authenticate GTA players. The
+        adapter must establish the link independently of the client packet.
+        A game participant ID is neither a raw pointer nor a player slot.
+        """
+        if (type(binding) is not GameBinding or type(binding.admission) is not ParticipantAdmission or
+                self._game_scope is None or binding.scope != self._game_scope or
+                not u64(binding.participant) or not u64(binding.incarnation) or
+                binding.incarnation <= self._highest_game_incarnation):
+            return False
+        identity = binding.admission.principal
+        if (self._admissions.get(identity) != binding.admission or identity in self._game_bindings or
+                any(current.participant == binding.participant for current in self._game_bindings.values())):
+            return False
+        if not self.lib.rp_server_reset_game_member(self.handle, identity):
+            return False
+        self._game_bindings[identity] = binding
+        self._highest_game_incarnation = binding.incarnation
+        return True
+
+    def unbind_game_participant(self, binding):
+        """Release effects on engine leave but keep the authenticated RP link."""
+        if type(binding) is not GameBinding or type(binding.admission) is not ParticipantAdmission:
+            return False
+        identity = binding.admission.principal
+        if self._game_bindings.get(identity) != binding or not self.lib.rp_server_reset_game_member(self.handle, identity):
+            return False
+        del self._game_bindings[identity]
+        self._last_duty.pop(identity, None)
         return True
 
     def _current_duty(self, identity, now):
-        subject = self._admissions.get(identity)
+        subject = self._game_bindings.get(identity)
         if not subject or self.duty_provider is None:
             return False
         try:
@@ -135,7 +219,7 @@ class NativeAuthority:
         return tuple(result)
 
     def _pair_facts(self, sender, target, now, on_shift):
-        actor, recipient = self._admissions.get(sender), self._admissions.get(target)
+        actor, recipient = self._game_bindings.get(sender), self._game_bindings.get(target)
         if not on_shift or not actor or not recipient or self.observation_provider is None:
             return None
         try:

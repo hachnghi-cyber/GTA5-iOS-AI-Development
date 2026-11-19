@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the same received game event to its participant and current admission, then bind both RP identities to verified game participants before enabling native effects or testing custody gameplay.",
+  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the received event to its participant, live game admission and session generation, then wire genuine lifecycle notifications to the game binding API before enabling native effects or testing custody gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,19 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_game_binding_lifecycle": {
+      "parent_commit": "a7f57f74d41b9a629156e5fb0aa4fbfa2bc84d01",
+      "host_abi": 3,
+      "scope": "Game-dependent actions require an in-process verified one-to-one binding for each current mTLS admission, GTA scope and game incarnation. No client wire can establish this mapping; no GTA adapter is active.",
+      "lifecycle": "Engine leave or generation rotation revokes consent and releases custody while retaining TLS and replay nonces; old bindings cannot revoke a replacement. New game binding requires a new opt-in.",
+      "host_python_tests_passed": 169,
+      "host_c_ffi_tests_passed": true,
+      "host_test_log_sha256": "743adb556ac7b0307cb8c9a9e9f88eec4d7d8e8d266cc56e7058b6112a9b5bea",
+      "local_server_dll_sha256": "048da3951d2ee03ab8c1dc28b4501806f02237d191121ba6d75f50ea7fe51c64",
+      "lan_cli_smoke_log_sha256": "16e4be68455b749a06c3a2ffa24559bbe202e6ff9b59cbee87b018460d69b5b2",
+      "validation_scope": "Live mTLS with modeled GTA game admissions for leave and rotation; two Windows CLI peers via Wi-Fi for consent/notifications with no GTA adapter.",
+      "gameplay_tested_on_iphone": false
     },
     "private_authority_social_transport": {
       "parent_commit": "052c8b1db30cf5658d9d9c56c402517c0aa61f6f",

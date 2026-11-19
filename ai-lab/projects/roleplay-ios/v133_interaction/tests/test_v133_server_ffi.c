@@ -61,7 +61,7 @@ static void ready(void *server) {
 }
 
 static void test_abi_and_bounds(void) {
-    assert(rp_server_abi() == 2);
+    assert(rp_server_abi() == 3);
     assert(!rp_server_create(0, 7));
     assert(!rp_server_create(123, 0));
     rp_server_destroy(NULL);

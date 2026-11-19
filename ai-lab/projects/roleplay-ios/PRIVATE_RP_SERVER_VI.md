@@ -12,7 +12,7 @@ chạy bình thường không có provider đó: opt-in/out và snapshot hoạt 
 nhận ca và tác động custody bị từ chối cho đến khi có dữ liệu game tin cậy.
 Đây chưa phải bản RP chơi được trên iPhone.
 
-Authority host ABI 2 cần build lại DLL hoặc `.so`. Định dạng truyền tới
+Authority host ABI 3 cần build lại DLL hoặc `.so`. Định dạng truyền tới
 iPhone giữ nguyên. Bên cạnh dữ liệu cho từng lệnh, server yêu cầu nguồn
 quan sát ca độc lập, trong cùng tiến trình authority. Mẫu phải khớp chứng
 thực RP, phiên, epoch và lần kết nối hiện tại, với dấu thời gian gốc không
@@ -20,12 +20,14 @@ quá 250 ms. Nếu nguồn báo bỏ ca, mất dữ liệu hoặc mẫu hết h�
 nhật server thu hồi ca và phát snapshot giải phóng người bị giữ ngay cả
 khi client không gửi lệnh. Mặc định chưa có nguồn quan sát game như vậy.
 
-Nguồn dữ liệu cho từng lệnh nhận hai `ParticipantAdmission` đang hoạt động,
-thay vì nhận gói lệnh. Nó trả `PairObservation` gắn với cặp người chơi và
-lần gia nhập lúc lấy mẫu. Gói lệnh chỉ chọn người cần tra. Server từ chối mẫu
-tráo người, mẫu của lần kết nối cũ và mẫu quá 250 ms, kể cả khi client mới
-dùng lại cùng chứng chỉ. Adapter thật phải giữ ràng buộc và thời điểm lấy mẫu
-gốc. Chỉ khi xác minh hai nhân vật trong cùng phiên game mới cấp dữ liệu.
+Nguồn quan sát cho từng lệnh nhận hai `GameBinding` đang hoạt động. Mỗi liên
+kết gồm lần vào RP qua TLS, phiên GTA, generation và lần vào của nhân vật.
+Nguồn trả lại `PairObservation` với hai liên kết gốc của lần lấy mẫu. Server
+từ chối mẫu tráo người hoặc mẫu từ phiên cũ, kể cả khi client vẫn dùng cùng
+chứng chỉ và chưa đóng kết nối. Adapter phải xác minh các liên kết trong GTA
+và giữ dấu thời gian gốc. Khi rời phiên hoặc chuyển generation, server xóa
+trạng thái giữ người, thu hồi ca và yêu cầu opt-in lại. Luồng RP giữ kết nối
+và nonce để lệnh cũ không được khôi phục.
 
 Ngày 19/11/2026, **iPhone thật và Windows đã qua phép thử tham gia/rời RP**.
 Log iPhone lấy qua USB xác nhận TLS và hai phản hồi. PC quan sát lần lượt

@@ -97,6 +97,9 @@ bool rp_police_init(rp_police_world *world, uint64_t session, uint64_t epoch);
 /* Authority-only registrations. Rejoining retains role and last nonce. */
 bool rp_police_admit(rp_police_world *world, uint64_t id, rp_police_role role);
 bool rp_police_leave(rp_police_world *world, uint64_t id);
+/* A verified game admission ended. Release all its effects and invalidate
+ * affected ACKs, retaining the RP connection, role and nonce history. */
+bool rp_police_reset_game_member(rp_police_world *world, uint64_t id);
 /* Call when trusted engine job eligibility ends, e.g. quitting the stock job. */
 bool rp_police_revoke_duty(rp_police_world *world, uint64_t id);
 bool rp_police_tick(rp_police_world *world, uint64_t now_ms);

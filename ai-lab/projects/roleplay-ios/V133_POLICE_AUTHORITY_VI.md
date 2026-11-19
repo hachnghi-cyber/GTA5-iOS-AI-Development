@@ -98,6 +98,9 @@ với game, theo phiên và lần kết nối hiện tại. Server dùng lại l
 chẩn đoán. Server không lấy log hoặc lệnh TLS làm nguồn cấp quyền.
 
 Để chuyển lệnh tác động sang lõi C, server yêu cầu `PairObservation` khớp cả
-hai lần gia nhập RP đang hoạt động. Việc kiểm tra này đứng sau mTLS và trước
-luật khoảng cách/custody. Adapter game vẫn phải xác minh liên kết với từng
-nhân vật và thế hệ phiên game trước khi tạo mẫu cặp.
+hai liên kết `GameBinding` đang hoạt động. Việc kiểm tra đứng sau mTLS và trước
+luật khoảng cách/custody. Adapter game vẫn phải xác minh từng nhân vật và
+thế hệ phiên thật trước khi gọi `begin_game_scope` và `bind_game_participant`.
+Khi game báo rời, `unbind_game_participant` chỉ chấp nhận đúng lần vào đã
+xác minh. Nó giải phóng hiệu ứng quản lý ở server, xóa xác nhận lệnh cũ và
+giữ lịch sử nonce. Mất kết nối TLS vẫn phải đi qua luồng `leave` riêng.

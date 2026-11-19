@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from test_prp3_direct_tls import issue
 from prp3_direct_tls import Credentials, ProtocolError, WIRE
-from rp_private_authority import DutyObservation, NativeAuthority, PairObservation, ParticipantAdmission
+from rp_private_authority import DutyObservation, GameBinding, GameScope, NativeAuthority, PairObservation
 from rp_private_client import SocialClient
 import rp_private_server as rp
 import rp_social_relay as social
@@ -40,6 +40,30 @@ class SyntheticScene:
 
     def __call__(self, actor, target, now):
         return PairObservation(actor, target, now - self.age, 77, self.distance, 1, self.flags)
+
+
+class ModeledGameAuthority(NativeAuthority):
+    """Fixture adapter only. The production listener has no binding source."""
+    def __init__(self, library, session, epoch, scene, use_duty_provider):
+        super().__init__(library, session, epoch, observation_provider=scene,
+                         duty_provider=scene.duty_state if use_duty_provider else None)
+        self.model_scope = GameScope(999, 1)
+        self.last_incarnation = 0
+        if not self.begin_game_scope(self.model_scope):
+            raise AssertionError('could not create modeled GTA session')
+
+    def new_model_binding(self, identity):
+        self.last_incarnation += 1
+        return GameBinding(self.current_admission(identity), self.model_scope,
+                           identity + 100, self.last_incarnation)
+
+    def admit(self, identity, role):
+        if not super().admit(identity, role):
+            return False
+        if self.bind_game_participant(self.new_model_binding(identity)):
+            return True
+        self.leave(identity)
+        return False
 
 
 class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
@@ -66,8 +90,8 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
 
     @asynccontextmanager
     async def running(self, scene=None, *, lease=3, scope=(123, 7), use_duty_provider=True):
-        authority = NativeAuthority(self.library, *scope, observation_provider=scene,
-                                    duty_provider=scene.duty_state if scene and use_duty_provider else None)
+        authority = (ModeledGameAuthority(self.library, *scope, scene, use_duty_provider) if scene
+                     else NativeAuthority(self.library, *scope))
         registry = {self.pins['cop']: rp.Principal(COP, 2),
                     self.pins['citizen']: rp.Principal(CITIZEN, 1)}
         server = rp.PrivateServer(self.credentials['server'], registry, authority, lease_seconds=lease)
@@ -258,8 +282,8 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             citizen = await self.connect(address, 'citizen')
             await self.apply(officer, OPT_IN)
             await self.apply(officer, DUTY)
-            self.assertIsInstance(captured, ParticipantAdmission)
-            self.assertEqual(captured.principal, COP)
+            self.assertIsInstance(captured, GameBinding)
+            self.assertEqual(captured.admission.principal, COP)
             old_subject = captured
             await officer.close()
             await self.wait_state(citizen, lambda m: m and COP not in m)
@@ -279,7 +303,7 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
                 return saved
             server.authority.observation_provider = capture
             await self.apply(cop, CUFF, CITIZEN)
-            self.assertEqual(saved.target.principal, CITIZEN)
+            self.assertEqual(saved.target.admission.principal, CITIZEN)
             await citizen.close()
             await self.wait_state(cop, lambda members: members and CITIZEN not in members)
             replacement = await self.connect(address, 'citizen')
@@ -291,6 +315,61 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             server.authority.observation_provider = scene
             await self.apply(cop, CUFF, CITIZEN)
             await self.wait_state(replacement, lambda members: CITIZEN in members and members[CITIZEN][4] == 1)
+
+    async def test_game_leave_keeps_tls_and_requires_new_binding_and_consent(self):
+        scene = SyntheticScene()
+        async with self.running(scene) as (server, address):
+            authority = server.authority
+            cop, citizen = await self.ready(address)
+            prior = None
+            def capture(actor, target, now):
+                nonlocal prior
+                prior = scene(actor, target, now)
+                return prior
+            authority.observation_provider = capture
+            await self.apply(cop, CUFF, CITIZEN)
+            await self.wait_state(citizen, lambda m: CITIZEN in m and m[CITIZEN][4] == 1)
+            old_game_binding = prior.target
+            self.assertTrue(authority.unbind_game_participant(old_game_binding))
+            await self.wait_state(citizen, lambda m: CITIZEN in m and m[CITIZEN][2:5] == (0, 0, 0))
+            self.assertEqual(citizen.members[CITIZEN][9], 1)
+            self.assertIsNotNone(authority.current_admission(CITIZEN))
+            self.assertFalse(authority.bind_game_participant(old_game_binding))
+            await self.apply(cop, CUFF, CITIZEN, expected=1)
+            fresh = authority.new_model_binding(CITIZEN)
+            self.assertFalse(authority.bind_game_participant(replace(fresh, participant=prior.actor.participant)))
+            self.assertTrue(authority.bind_game_participant(fresh))
+            self.assertFalse(authority.unbind_game_participant(old_game_binding))
+            await self.apply(citizen, OPT_IN)  # same TLS stream, next nonce
+            authority.observation_provider = lambda _a, _t, now: replace(prior, observed_at_ms=now)
+            await self.apply(cop, CUFF, CITIZEN, expected=1)
+            authority.observation_provider = scene
+            await self.apply(cop, CUFF, CITIZEN)
+            await self.wait_state(citizen, lambda m: CITIZEN in m and m[CITIZEN][4] == 1)
+
+    async def test_game_scope_rotation_releases_all_custody_without_dropping_rp_links(self):
+        async with self.running(SyntheticScene()) as (server, address):
+            authority = server.authority
+            cop, citizen = await self.ready(address)
+            await self.apply(cop, CUFF, CITIZEN)
+            await self.wait_state(citizen, lambda m: CITIZEN in m and m[CITIZEN][4] == 1)
+            old_scope = authority.model_scope
+            self.assertFalse(authority.begin_game_scope(GameScope(777, old_scope.generation)))
+            new_scope = GameScope(777, old_scope.generation + 1)
+            self.assertTrue(authority.begin_game_scope(new_scope))
+            self.assertFalse(authority.end_game_scope(old_scope))
+            await self.wait_state(citizen, lambda m: len(m) == 2 and all(row[2:5] == (0, 0, 0) for row in m.values()))
+            await self.apply(cop, OPT_IN)
+            await self.apply(citizen, OPT_IN)
+            await self.apply(cop, DUTY, expected=1)  # TLS opt-in is not game binding.
+            self.assertFalse(authority.bind_game_participant(authority.new_model_binding(COP)))
+            authority.model_scope = new_scope
+            for identity in (COP, CITIZEN):
+                self.assertTrue(authority.bind_game_participant(authority.new_model_binding(identity)))
+            await self.apply(cop, OPT_IN)
+            await self.apply(citizen, OPT_IN)
+            await self.apply(cop, DUTY)
+            await self.apply(cop, CUFF, CITIZEN)
 
     async def test_pair_source_cannot_substitute_actor_or_target(self):
         scene = SyntheticScene()

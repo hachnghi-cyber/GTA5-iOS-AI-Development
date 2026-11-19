@@ -4,7 +4,7 @@
 #include <string.h>
 
 uint32_t rp_server_abi(void) {
-    return 2u;
+    return 3u;
 }
 
 void *rp_server_create(uint64_t session, uint64_t epoch) {
@@ -28,6 +28,10 @@ int rp_server_admit(void *handle, uint64_t id, uint32_t role) {
 
 int rp_server_leave(void *handle, uint64_t id) {
     return rp_police_leave(handle, id);
+}
+
+int rp_server_reset_game_member(void *handle, uint64_t id) {
+    return rp_police_reset_game_member(handle, id);
 }
 
 int rp_server_revoke_duty(void *handle, uint64_t id) {
