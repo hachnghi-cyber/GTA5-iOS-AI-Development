@@ -1,0 +1,134 @@
+{
+  "schema": "v133-private-session-leave-usb-v1",
+  "date": "2026-11-19",
+  "parent_commit": "3e38f3a1f4b2057b2ccebbb54d1cff4d1b411187",
+  "device_build_source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+  "executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "scope": "One development-signed iPhone, user-confirmed private invite-only GTA room and return to Sandbox. Separate USB attaches and two manual exits; verified app process remained the same across the test.",
+  "first_leave": {
+    "private_room": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": true,
+        "native_main_session_in_progress": false,
+        "native_transition_session_in_progress": true,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_context_status": "observed",
+        "session_generation_verified": false,
+        "session_identity_verified": false,
+        "session_slots": {
+          "candidate_slot": "main",
+          "main_slot_established": true,
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "site": "jobs_update",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "738cc26160ca4151b6f4209a98e6f1713d7198086be165c98305d3621d4c4d52"
+    },
+    "swap_during_leave": {
+      "bounded_window_seconds": 60,
+      "sample": {
+        "same_session_slots_swapped": false,
+        "session_generation_verified": false,
+        "site": "session_swap",
+        "status": "timeout"
+      },
+      "raw_log_sha256": "8ec8d326e1849cb5e489c88e25757235b4af0d78a45f35ecd09151125017d690"
+    },
+    "sandbox_after_leave": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": true,
+        "native_main_session_in_progress": true,
+        "native_transition_session_in_progress": true,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_context_status": "observed",
+        "session_generation_verified": false,
+        "session_identity_verified": false,
+        "session_slots": {
+          "candidate_slot": "none",
+          "main_slot_established": false,
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "site": "jobs_update",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "ab37fa55c73cdeca6d3cd0d10cc9cad8c6aff2724117d2a108cc2fce005c5888"
+    }
+  },
+  "second_leave": {
+    "clear_session_entry_during_leave": {
+      "bounded_window_seconds": 60,
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": false,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_generation_verified": false,
+        "site": "clear_session",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "80df103d54bb460f3dd1eea4713d51ead8941df348742cdafb6d1d61500d18a4"
+    },
+    "sandbox_after_leave": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": true,
+        "native_main_session_in_progress": true,
+        "native_transition_session_in_progress": true,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_context_status": "observed",
+        "session_generation_verified": false,
+        "session_identity_verified": false,
+        "session_slots": {
+          "candidate_slot": "none",
+          "main_slot_established": false,
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "site": "jobs_update",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "ab37fa55c73cdeca6d3cd0d10cc9cad8c6aff2724117d2a108cc2fce005c5888"
+    }
+  },
+  "verified": [
+    "One established main slot was observed in the private room even though its progress bit was clear.",
+    "Neither slot was established in either post-exit Sandbox capture.",
+    "The second manual exit reached the guarded ClearSession entry. No arguments or session identifiers were read at entry."
+  ],
+  "limits": "The first leave did not produce a SwapSessions sample. Independent samples do not identify the invocation caller, underlying session ID, generation, thread affinity or remote sender.",
+  "authenticated_rp_sender_verified": false,
+  "native_game_binding_verified": false,
+  "two_gta_peers_tested": false
+}

@@ -248,6 +248,24 @@ python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_
 cùng thread và frame. Dữ liệu xuất chỉ gồm trạng thái và cờ so sánh.
 Timeout chỉ cho biết observer không bắt được lần hoán đổi trong cửa sổ đo.
 
+Trong phòng thử chỉ mời, dùng `--site jobs_update --session-context` trước
+và sau khi thoát để đối chiếu trạng thái thiết lập của slot. Có thể quan sát
+điểm vào hàm dọn phiên trong cửa sổ riêng:
+
+```powershell
+python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id> --site clear_session --wait-seconds 60
+```
+
+Bật observer trước khi người thử rời phòng qua menu rồi về Sandbox.
+Kết quả `hardware_stop_at_expected_pc=true` xác nhận điểm vào
+`CNetworkSession::ClearSession`. Bộ đo tại đây chỉ đọc PC. Ngày 19/11/2026,
+một iPhone ghi slot chính thiết lập trong phòng riêng dù bit tiến trình
+slot chính bằng false. Hai mẫu sau khi rời đều không còn slot thiết lập.
+Lượt đầu hết thời gian ở `session_swap`; lượt sau trúng `clear_session`.
+Xem `baselines/v133-private-session-leave-iphone-20261119.json`.
+Hai lần đo dùng attach riêng. Caller, phiên bị dọn và generation vẫn chưa
+được xác minh để nối vào authority.
+
 `enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame

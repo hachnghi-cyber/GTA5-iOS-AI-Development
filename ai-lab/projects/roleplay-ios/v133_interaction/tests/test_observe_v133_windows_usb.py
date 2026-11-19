@@ -197,6 +197,16 @@ class ScriptEventObserverTests(unittest.TestCase):
                                   site="script_event_handler")
         self.assertFalse(sample["hardware_stop_at_expected_pc"])
 
+    def test_clear_session_observes_entry_without_inspecting_arguments(self):
+        remote = _BreakRemote(self.pc)
+        metadata = {"symbols": {"clear_session": {"va": self.va}}}
+        sample = observer.capture(remote, self.base, metadata, site="clear_session")
+        self.assertTrue(sample["hardware_stop_at_expected_pc"])
+        self.assertFalse(sample["session_generation_verified"])
+        self.assertFalse(sample["authenticated_rp_sender_verified"])
+        self.assertEqual(remote.register_reads, [32])
+        self.assertEqual(remote.requests[-1], f"z1,{self.pc:x},4".encode())
+
     def test_other_stop_signal_at_same_pc_does_not_report_breakpoint_hit(self):
         remote = _BreakRemote(self.pc)
         with patch.object(remote, 'receive', return_value=b'T0bthread:abcd;'):

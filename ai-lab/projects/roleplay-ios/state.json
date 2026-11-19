@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the received event to its participant, live game admission and session generation, then wire genuine lifecycle notifications to the game binding API before enabling native effects or testing custody gameplay.",
+  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the event to its authenticated participant and live admission. Use the observed ClearSession entry as a lifecycle candidate and verify which established slot and generation the invocation retires before wiring lifecycle notifications or enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,17 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "native_private_session_leave_iphone": {
+      "parent_commit": "3e38f3a1f4b2057b2ccebbb54d1cff4d1b411187",
+      "evidence": "baselines/v133-private-session-leave-iphone-20261119.json",
+      "scope": "One signed iPhone, invite-only GTA room and two manual exits to Sandbox. The main slot was established in the private room while its progress bit was clear. Both post-exit samples had no established slot.",
+      "lifecycle_entry": "A guarded read-only USB breakpoint hit ClearSession during the second exit. SwapSessions was not sampled during the first exit.",
+      "host_python_tests_passed": 173,
+      "host_test_log_sha256": "7858946a508d09ac527be2657c167ca276cfd9b4f8e635766ec25de329fb322a",
+      "session_generation_verified": false,
+      "remote_sender_verified": false,
+      "native_game_binding_verified": false
     },
     "private_authority_listener_shutdown": {
       "parent_commit": "89fcd86f9b70979e304823ea04cf2f1026d3f2e8",

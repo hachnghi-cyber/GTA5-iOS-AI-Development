@@ -4,6 +4,14 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Một iPhone đã xác nhận điểm vào `ClearSession` khi rời phòng GTA chỉ mời.
+Trong phòng riêng, slot chính đã thiết lập dù bit tiến trình của slot chính
+báo false. Sau hai lần rời phòng về Sandbox, cả hai slot đều chưa thiết lập.
+Phép đo `SwapSessions` ở lượt đầu hết thời gian. Xem
+`baselines/v133-private-session-leave-iphone-20261119.json`.
+Lượt đo xác nhận điểm vào hàm, chưa xác định phiên cụ thể bị dọn, generation
+hoặc luồng của callback nhận. Cần peer GTA thứ hai để đối chiếu đường nhận.
+
 Bản iPhone có giao diện tùy chọn `RP riêng` cho một cặp danh tính của kit LAN.
 `prepare_private_rp.py --panel` bật nút Tham gia/Rời RP, Chào hỏi và Yêu cầu
 giấy tờ. Người chơi xác nhận tham gia bằng nút; giao diện chờ ACK cùng

@@ -1,7 +1,7 @@
 """Bounded one-site observer for an authorized, development-signed v13.3 iPhone.
 
-Run with Python 3.13 and pymobiledevice3 11.56.0. GTA must already be
-running in Sandbox. This tool uses a loopback Apple debugproxy connection.
+Run with Python 3.13 and pymobiledevice3 11.56.0 in a controlled Sandbox
+or a private GTA session. This tool uses a loopback Apple debugproxy connection.
 It can briefly pause GTA and never falls back to a software breakpoint.
 """
 import argparse
@@ -24,7 +24,8 @@ UUID = "EB122C35-96F4-307F-91C3-A2255DD9C685"
 IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
 OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
-                    "on_net_event_pre_dispatch", "on_connection_peer_verify", "session_swap")
+                    "on_net_event_pre_dispatch", "on_connection_peer_verify",
+                    "clear_session", "session_swap")
 MAX_REPLY = 16384
 
 
