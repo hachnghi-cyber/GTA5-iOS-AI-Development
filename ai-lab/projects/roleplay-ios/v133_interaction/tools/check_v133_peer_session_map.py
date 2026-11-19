@@ -52,6 +52,7 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
         count=read32(session+0xba30)
         if not 1<=count<=MAX_PEERS:
             r["status"]="session_peer_count_out_of_bounds";return r
+        r["session_remote_peer_count"] = count
         matched=0
         matched_entry=None
         for i in range(count):

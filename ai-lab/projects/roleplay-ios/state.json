@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Reconnect USB and reproduce the same-room standalone and LiveContainer test. Record the conflicting session row's transport metadata and trace the distinct connection IDs to their native lookup domains before establishing sender authority. Observe the earlier LeaveSession call and correlate the slot ID and generation before wiring lifecycle notifications or enabling gameplay.",
+  "next_action": "Trace the two distinct connection values observed for the same rl peer and transport identity to their native lookup and assignment domains. Observe the guarded OnConnectionEvent session lookup during a private-room join and correlate it to a live game admission. Observe the earlier LeaveSession call and confirm slot generation before enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -898,11 +898,13 @@
       "parent_commit": "96be0918ff2c69d48f150f6446ef2a2a647e5bff",
       "evidence": "baselines/v133-single-iphone-native-receive-20261119.json",
       "scope": "One standalone GTA client and one LiveContainer GTA client on an iPhone. The tester reported both in one invite-only room and stock player interaction. USB samples on the standalone receiver validated the native receive stack and event to netPlayer connection equality.",
-      "main_session_sample": "Established main slot; one remote entry with an equal rl peer ID and a different connection value.",
+      "main_session_sample": "Established main slot; the first examined remote entry had an equal rl peer ID and a different connection value. The scan stopped at that row; this is not a roster count.",
       "queue_sample": "Immediate ingress frame with connection and guarded integrity-path evidence; dispatch stage did not match.",
-      "next_diagnostic": "Compare the conflicting entry's transport metadata with the sender at one guarded stop. The additional device sample could not start after USB disconnected.",
-      "host_python_tests_passed": 183,
-      "host_test_log_sha256": "be48aa4d017c53973e0426681467ee928074f41754de9f653d50e0d84aa23a26",
+      "transport_domain_followup": "After reconnecting USB, a guarded standalone receive stop found that the conflicting row's transport metadata also matched the sender. The event and session table connection values still differed.",
+      "connection_lookup_static": "Three exact instructions after GetPeerCxn at the guarded OnConnectionEvent call site check its -1 sentinel and select the continuation. This immediate block does not compare the returned connection to the event connection.",
+      "roster_count": "The checker now reports the guarded session remote peer count separately from the number of rows examined. The user later reported five players in the room; no sample was attributed to a specific guest based on that count.",
+      "host_python_tests_passed": 184,
+      "host_test_log_sha256": "0c4d8571994ee0fc3910c4e358eca9c34b221aea4040b6370017c6d6aba4ced5",
       "authenticated_sender_verified": false,
       "session_generation_verified": false,
       "native_gameplay_rp_verified": false

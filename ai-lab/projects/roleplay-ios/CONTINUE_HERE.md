@@ -9,8 +9,13 @@ LiveContainer, vào cùng phòng chỉ mời và tương tác được trong gam
 USB trên bản cài riêng bắt đường nhận `engine_receive_dispatch` và cùng
 connection ID ở event và netPlayer. Tại lần dừng có đọc bảng phiên, slot
 chính đã thiết lập nhưng mục trùng rl peer ID có connection ID khác.
-Bộ đo đã bổ sung so sánh metadata truyền tải tại mục đó. 183 bài kiểm thử
-host đã qua. Cần kết nối USB lại để lấy mẫu tiếp.
+Mẫu sau khi kết nối lại USB xác nhận metadata truyền tải của mục này
+cũng khớp. Trong binary, ngay sau `GetPeerCxn`, nhánh đã khảo sát chỉ
+kiểm tra giá trị không tìm thấy `-1`. Cần truy vết cách engine tra và gán
+hai connection ID trước khi dùng dữ liệu này để cấp quyền.
+Người thử báo phòng hiện có 5 người. `remote_entries_seen` đếm số mục
+đã đọc trước khi dừng. Bộ đo mới xuất thêm `session_remote_peer_count`
+theo dữ liệu engine. 184 bài kiểm thử host đã qua.
 Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
 
 Một iPhone có tiến trình GTA cài riêng và LiveProcess cùng tồn tại.

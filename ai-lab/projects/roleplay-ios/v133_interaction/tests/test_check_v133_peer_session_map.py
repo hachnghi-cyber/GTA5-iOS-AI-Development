@@ -134,9 +134,18 @@ class PeerMappingTests(unittest.TestCase):
                 result = mod.check_peer_session_map(read, read, *args, check_transport_domain=True)
                 self.assertEqual(result['status'], 'peer_alias_different_connection')
                 self.assertEqual(result['alias_transport_peer_status'], expected)
+                self.assertEqual(result['session_remote_peer_count'], 2)
                 for key in ('peer_map_consistent', 'transport_peer_map_consistent',
                             'session_membership_verified', 'authenticated_rage_sender_verified'):
                     self.assertFalse(result[key])
+
+    def test_scan_can_stop_before_the_last_peer_row(self):
+        mem, args = self.fixture()
+        mem[0x8000 + 0x1d8] = 222
+        result = self.probe(mem, args)
+        self.assertEqual(result['status'], 'peer_alias_different_connection')
+        self.assertEqual(result['remote_entries_seen'], 1)
+        self.assertEqual(result['session_remote_peer_count'], 2)
 
     def test_legacy_rl_only_reader_never_claims_transport_binding(self):
         mem,args=self.fixture()

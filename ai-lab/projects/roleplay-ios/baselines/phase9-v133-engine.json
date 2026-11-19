@@ -566,6 +566,24 @@
   ],
   "observations": [
     {
+      "at": "0x1017dfa4c",
+      "function": "on_connection_event",
+      "word": "0x3100041f",
+      "observation": "test GetPeerCxn return against the not-found sentinel -1"
+    },
+    {
+      "at": "0x1017dfa50",
+      "function": "on_connection_event",
+      "word": "0x540033c0",
+      "observation": "branch when the session peer lookup returns -1"
+    },
+    {
+      "at": "0x1017dfa54",
+      "function": "on_connection_event",
+      "word": "0x5280001b",
+      "observation": "set the local continuation flag after the lookup"
+    },
+    {
       "at": "0x1019d255c",
       "function": "session_id",
       "word": "0x9102a000",

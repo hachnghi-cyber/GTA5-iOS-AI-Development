@@ -173,8 +173,12 @@ LiveContainer vào một phòng chỉ mời và xác nhận hai nhân vật tư�
 Khi kết quả nhận khớp, observer đọc bảng phiên tại cùng lần dừng sau khi
 kiểm tra mã của các getter. Mẫu thật ghi `peer_alias_different_connection`
 trong slot chính. Trường `alias_transport_peer_status` mới so sánh
-metadata truyền tải riêng cho trường hợp này. Cần lấy mẫu thật cho trường
-này và xác minh vì sao hai connection ID khác nhau trước khi cấp quyền.
+metadata truyền tải riêng cho trường hợp này. Lượt USB kế tiếp ghi
+`alias_transport_peer_status=match` trong khi connection ID vẫn khác.
+Ngay sau lời gọi `GetPeerCxn`, nhánh `OnConnectionEvent` đã khảo sát
+kiểm tra giá trị không tìm thấy `-1`. Cần xác minh nguồn của hai connection
+ID trước khi cấp quyền. `remote_entries_seen` là số mục đã đọc. Bộ đo mới
+cũng xuất `session_remote_peer_count` khi trường đếm hợp lệ.
 Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
 
 ## Session context

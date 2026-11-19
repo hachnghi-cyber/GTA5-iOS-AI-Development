@@ -313,6 +313,9 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('on_connection_event', 0x658, 0x3100041f, 'test GetPeerCxn return against the not-found sentinel -1'),
+        ('on_connection_event', 0x65c, 0x540033c0, 'branch when the session peer lookup returns -1'),
+        ('on_connection_event', 0x660, 0x5280001b, 'set the local continuation flag after the lookup'),
         ('session_id', 0, 0x9102a000, 'session ID wrapper selects the rlSession member at +0xa8'),
         ('rl_session_id', 0, 0xf9429000, 'rlSession ID getter reads a 64-bit value at +0x520'),
         ('rl_session_id', 4, 0xd65f03c0, 'rlSession ID getter returns directly'),
