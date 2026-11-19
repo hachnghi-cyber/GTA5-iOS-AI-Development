@@ -109,5 +109,13 @@ Trong `PoliceRP-v13.3-Authority.txt`, `rp_tls_verified=1` và
 Windows cần hiện cả PC và iPhone, sau đó còn một thành viên khi đóng game.
 Chỉ gửi log `.txt` khi cần đối chiếu. Cấu hình JSON chứa khóa client.
 
+Với bản IPA hỗ trợ `consent-round-trip-v1`, thêm `--consent-probe` lúc tạo
+kit. iPhone tự gửi yêu cầu tham gia rồi rời RP cho chính ID của mình, đối
+chiếu ACK và snapshot theo nonce, sau đó đóng kết nối. PC có thể quan sát
+thành viên xuất hiện và trạng thái trả về như cũ. Log iPhone chỉ ghi
+`result=consent_round_trip_passed` khi nhận đủ cả hai xác nhận. Dòng
+`connected=0` là trạng thái dự kiến sau khi phép thử hoàn tất. Khi bỏ tùy
+chọn, probe duy trì kết nối như trên và không gửi lệnh tham gia.
+
 Chưa có hai iPhone, log gameplay, kiểm thử native effects hay regression của
 Story/GTA Online. Không phát hành IPA gameplay hoặc bật runtime adapter lúc này.

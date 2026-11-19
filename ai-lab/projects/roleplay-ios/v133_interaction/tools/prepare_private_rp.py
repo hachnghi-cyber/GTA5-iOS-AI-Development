@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from run_ios_tls_probe import issue
 
 
-def prepare(folder, address, port):
+def prepare(folder, address, port, *, consent_probe=False):
     folder = folder.resolve()
     if any((parent / '.git').exists() for parent in (folder, *folder.parents)):
         raise ValueError('private kit must be outside every Git working tree')
@@ -50,12 +50,15 @@ def prepare(folder, address, port):
             password = secrets.token_urlsafe(32)
             identity = pkcs12.serialize_key_and_certificates(b'Private RP development',
                 peer_key, cert, [ca], serialization.BestAvailableEncryption(password.encode()))
-            emit(name + '-iPhone-PRIVATE.json', {
+            iphone_config = {
                 'schema': 'prp-authority-client-v1', 'host': str(address), 'port': port,
                 'expires': int(now.timestamp()) + 1200, 'rp_id': '11' if name == 'officer' else '22',
                 'server_pin': base64.b64encode(bytes.fromhex(pins['server'])).decode(),
                 'anchor': base64.b64encode(ca.public_bytes(serialization.Encoding.DER)).decode(),
-                'identity': base64.b64encode(identity).decode(), 'passphrase': password})
+                'identity': base64.b64encode(identity).decode(), 'passphrase': password}
+            if consent_probe:
+                iphone_config['diagnostic'] = 'consent-round-trip-v1'
+            emit(name + '-iPhone-PRIVATE.json', iphone_config)
     emit('server.json', {'certificate': 'server.pem', 'private_key': 'server.key',
          'trusted_ca': 'ca.pem', 'principals': [
              {'certificate_sha256': pins['officer'], 'rp_id': 11, 'role': 2},
@@ -72,8 +75,10 @@ def main():
     parser.add_argument('folder', type=Path)
     parser.add_argument('--ip', type=ipaddress.ip_address, default=ipaddress.ip_address('127.0.0.1'))
     parser.add_argument('--port', type=int, default=30133)
+    parser.add_argument('--consent-probe', action='store_true',
+                        help='request one iPhone opt-in/opt-out round trip and disconnect')
     args = parser.parse_args()
-    prepare(args.folder, args.ip, args.port)
+    prepare(args.folder, args.ip, args.port, consent_probe=args.consent_probe)
     print('Created local development kit (30 minutes); private keys are not printed.')
 
 

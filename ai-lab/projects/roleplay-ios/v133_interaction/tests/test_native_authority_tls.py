@@ -27,6 +27,7 @@ class NativeClient:
             'request': (C.c_int, [ptr, C.c_uint32, u64, C.POINTER(u8), size]),
             'row': (C.c_int, [ptr, u64, C.POINTER(u64), size]),
             'revision': (u64, [ptr]),
+            'consent_step': (C.c_int, [ptr, C.POINTER(C.c_uint32), C.POINTER(u8), size]),
         }
         for name, (result, args) in signatures.items():
             function = getattr(self.lib, 'test_client_' + name)
@@ -129,6 +130,32 @@ class NativeAuthorityTLSTests(unittest.IsolatedAsyncioTestCase):
             replacement = await self.connect(address, 'cop', COP)
             self.assertEqual(await replacement.request(1), 2)
             await self.wait_row(replacement, COP, lambda row: row is not None and row[9] == 3)
+
+    async def test_phone_consent_probe_round_trip_with_host_witness(self):
+        async with self.running() as (_, address):
+            host = await self.connect(address, 'citizen', CITIZEN)
+            phone_codec = await self.connect(address, 'cop', COP)
+            phase = C.c_uint32()
+            observed_consents = []
+            async with asyncio.timeout(3):
+                while True:
+                    await phone_codec.receive()
+                    wire = (C.c_uint8 * 45)()
+                    outcome = phone_codec.lib.test_client_consent_step(phone_codec.handle, C.byref(phase), wire, 45)
+                    self.assertIn(outcome, (0, 1, 2))
+                    if outcome == 2:
+                        break
+                    if outcome == 1:
+                        expected = int(phase.value == 2)
+                        await self.wait_row(host, COP, lambda row: row is not None and row[2] == expected)
+                        observed_consents.append(host.row(COP)[2])
+                        phone_codec.writer.write(bytes(wire))
+                        await phone_codec.writer.drain()
+            await self.wait_row(host, COP, lambda row: row is not None and row[2] == 0)
+            self.assertEqual(observed_consents + [host.row(COP)[2]], [0, 1, 0])
+            self.assertEqual(phone_codec.row(COP), host.row(COP))
+            await phone_codec.close()
+            await self.wait_row(host, COP, lambda row: row is None)
 
 
 if __name__ == '__main__':

@@ -148,3 +148,47 @@ bool rp_authority_client_ping(const rp_authority_client *client, uint8_t *out, s
     memcpy(out, record, sizeof record);
     return true;
 }
+
+rp_consent_probe_result rp_authority_consent_probe_step(rp_authority_client *client,
+    rp_consent_probe_phase *phase, uint8_t *out, size_t size) {
+    if (!client || !client->ready || !phase || !out || size != RP_AUTHORITY_REQUEST_BYTES)
+        return RP_CONSENT_PROBE_FAILED;
+    if (!client->revision || client->pending) return RP_CONSENT_PROBE_WAIT;
+
+    const uint64_t *self = NULL;
+    for (uint32_t i = 0; i < client->member_count; ++i) {
+        if (client->members[i][0] == client->expected_id) {
+            self = client->members[i];
+            break;
+        }
+    }
+    if (!self || self[3] || self[4] || self[9] > client->last_nonce)
+        return RP_CONSENT_PROBE_FAILED;
+
+    rp_police_operation next;
+    rp_consent_probe_phase next_phase;
+    if (*phase == RP_CONSENT_PROBE_INITIAL) {
+        if (self[2] || self[9] != client->last_nonce || client->last_nonce >= UINT64_MAX - 1u)
+            return RP_CONSENT_PROBE_FAILED;
+        next = RP_POLICE_OPT_IN;
+        next_phase = RP_CONSENT_PROBE_OPTING_IN;
+    } else {
+        const rp_police_ack *ack = &client->last_ack;
+        const bool opting_in = *phase == RP_CONSENT_PROBE_OPTING_IN;
+        if (!opting_in && *phase != RP_CONSENT_PROBE_OPTING_OUT)
+            return RP_CONSENT_PROBE_FAILED;
+        if (ack->outcome != RP_POLICE_TX_APPLIED || ack->command.target != client->expected_id ||
+            ack->command.nonce != client->last_nonce ||
+            ack->command.operation != (opting_in ? RP_POLICE_OPT_IN : RP_POLICE_OPT_OUT))
+            return RP_CONSENT_PROBE_FAILED;
+        if (self[9] < client->last_nonce) return RP_CONSENT_PROBE_WAIT;
+        if (self[2] != (uint64_t)opting_in) return RP_CONSENT_PROBE_FAILED;
+        if (!opting_in) return RP_CONSENT_PROBE_PASSED;
+        next = RP_POLICE_OPT_OUT;
+        next_phase = RP_CONSENT_PROBE_OPTING_OUT;
+    }
+    if (!rp_authority_client_request(client, next, client->expected_id, out, size))
+        return RP_CONSENT_PROBE_FAILED;
+    *phase = next_phase;
+    return RP_CONSENT_PROBE_SEND;
+}

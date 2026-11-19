@@ -71,6 +71,24 @@ bool rp_authority_client_request(rp_authority_client *client,
 bool rp_authority_client_ping(const rp_authority_client *client,
                                uint8_t *out, size_t size);
 
+/* Optional local diagnostic. Call after successfully consuming a frame. It
+ * verifies ACK plus snapshot for self opt-in/out, without gameplay effects. */
+typedef enum {
+    RP_CONSENT_PROBE_INITIAL = 0,
+    RP_CONSENT_PROBE_OPTING_IN,
+    RP_CONSENT_PROBE_OPTING_OUT
+} rp_consent_probe_phase;
+
+typedef enum {
+    RP_CONSENT_PROBE_WAIT = 0,
+    RP_CONSENT_PROBE_SEND,
+    RP_CONSENT_PROBE_PASSED,
+    RP_CONSENT_PROBE_FAILED
+} rp_consent_probe_result;
+
+rp_consent_probe_result rp_authority_consent_probe_step(rp_authority_client *client,
+    rp_consent_probe_phase *phase, uint8_t *out, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -4,6 +4,10 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Chế độ chẩn đoán `--consent-probe` kiểm tra thêm đường iPhone gửi lệnh. Nó
+yêu cầu ACK và snapshot cùng nonce khi tham gia và rời RP. Xem hướng dẫn LAN
+trong `PRIVATE_RP_SERVER_VI.md` trước khi cài bản chẩn đoán mới.
+
 Đã nối mã client iOS với giao thức server riêng và thêm cấu hình mTLS cho
 iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật
 trên Windows. Tổng 154 test Python đạt. Build iPhoneOS ARM64 và source CI

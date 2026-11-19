@@ -308,6 +308,52 @@ static void test_uint64_and_nonce_exhaustion(void) {
     stopped(&client);
 }
 
+static void test_consent_probe_requires_ack_and_current_snapshot(void) {
+    rp_authority_client client;
+    rp_consent_probe_phase phase = RP_CONSENT_PROBE_INITIAL;
+    uint8_t request[45], reply[40], members[104];
+    ready(&client, 5);
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_WAIT);
+    snapshot(members, 1, 1);
+    be64(members + SCOPE_BYTES + 16, 0);
+    be64(members + SCOPE_BYTES + 72, 5);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_SNAPSHOT, members, sizeof members));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_SEND);
+    ack(request, reply, RP_POLICE_TX_APPLIED);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_ACK, reply, sizeof reply));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_WAIT);
+    be64(members + 16, 2);
+    be64(members + SCOPE_BYTES + 16, 1);
+    be64(members + SCOPE_BYTES + 72, 6);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_SNAPSHOT, members, sizeof members));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_SEND);
+    be64(members + 16, 3);
+    be64(members + SCOPE_BYTES + 16, 0);
+    be64(members + SCOPE_BYTES + 72, 7);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_SNAPSHOT, members, sizeof members));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_WAIT);
+    ack(request, reply, RP_POLICE_TX_APPLIED);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_ACK, reply, sizeof reply));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_PASSED);
+}
+
+static void test_consent_probe_rejects_denied_ack_and_preexisting_consent(void) {
+    rp_authority_client client;
+    rp_consent_probe_phase phase = RP_CONSENT_PROBE_INITIAL;
+    uint8_t members[104], request[45], reply[40];
+    ready(&client, 0);
+    snapshot(members, 1, 1);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_SNAPSHOT, members, sizeof members));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_FAILED);
+    be64(members + 16, 2);
+    be64(members + SCOPE_BYTES + 16, 0);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_SNAPSHOT, members, sizeof members));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_SEND);
+    ack(request, reply, RP_POLICE_TX_DENIED);
+    assert(rp_authority_client_receive(&client, RP_AUTHORITY_ACK, reply, sizeof reply));
+    assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_FAILED);
+}
+
 int main(void) {
     test_header_bounds();
     test_welcome_and_disconnect();
@@ -315,6 +361,8 @@ int main(void) {
     test_mismatched_ack_clears_pending_and_snapshot();
     test_snapshot_validation_and_revisions();
     test_uint64_and_nonce_exhaustion();
+    test_consent_probe_requires_ack_and_current_snapshot();
+    test_consent_probe_rejects_denied_ack_and_preexisting_consent();
     puts("Authority client codec: PASS (protocol fixtures; no TLS or GTA authorization)");
     return 0;
 }

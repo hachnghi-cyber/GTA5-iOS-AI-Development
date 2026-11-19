@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Sign and install the verified local diagnostic IPA and collect the iPhone private authority transport log with a host peer on the private LAN. Then establish RP principal binding and trusted game-thread observations before enabling native effects, and verify gameplay on two devices.",
+  "next_action": "Build and sign the consent-round-trip diagnostic, then collect the iPhone private authority log with a host peer on the private LAN. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,12 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_consent_probe": {
+      "mode": "Explicit local kit opt-in; self opt-in and opt-out with ACK and nonce-matched snapshots, then disconnect",
+      "gameplay_effects": false,
+      "device_runtime": "unverified; requires signed diagnostic on iPhone",
+      "host_validation": "155 Python tests passed, including the new native C round trip over real loopback mTLS with a second client observing [0, 1, 0]; Zig Clang C11 assertion fixtures passed for ACK/snapshot ordering and policy failure"
     },
     "private_authority_ios_transport": {
       "scope": "Native C codec and Objective-C private mTLS transport source; no engine binding or gameplay hooks",

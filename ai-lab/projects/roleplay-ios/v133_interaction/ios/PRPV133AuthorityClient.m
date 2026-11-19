@@ -13,6 +13,7 @@ static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 @interface PRPV133AuthorityClient : NSObject {
 @public
     rp_authority_client state;
+    rp_consent_probe_phase consentProbePhase;
 }
 @property(nonatomic, strong) nw_connection_t channel;
 @property(nonatomic, strong) dispatch_queue_t queue;
@@ -23,6 +24,8 @@ static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 @property(nonatomic) NSTimeInterval readDeadline;
 @property(nonatomic) NSTimeInterval requestDeadline;
 @property(nonatomic) NSTimeInterval nextPing;
+@property(nonatomic) NSTimeInterval consentProbeDeadline;
+@property(nonatomic) BOOL consentProbe;
 @property(nonatomic) BOOL verified;
 @property(nonatomic) BOOL done;
 @property(nonatomic, copy) NSString *result;
@@ -123,11 +126,24 @@ static NSTimeInterval rp_uptime(void) {
         [self finish:@"protocol_rejected"];
         return;
     }
-    if (kind == 1) [self report:@"authority_ready"];
-    else if (kind == 3) {
+    if (kind == RP_AUTHORITY_WELCOME) [self report:@"authority_ready"];
+    else if (kind == RP_AUTHORITY_ACK) {
         self.requestDeadline = 0;
         [self report:state.last_ack.outcome == RP_POLICE_TX_APPLIED ? @"decision_applied" : @"decision_denied"];
-    } else if (kind == 4) [self report:@"snapshot_received"];
+    } else if (kind == RP_AUTHORITY_SNAPSHOT) [self report:@"snapshot_received"];
+    if (self.consentProbe) {
+        uint8_t request[RP_AUTHORITY_REQUEST_BYTES];
+        rp_consent_probe_result result = rp_authority_consent_probe_step(
+            &state, &consentProbePhase, request, sizeof request);
+        if (result == RP_CONSENT_PROBE_FAILED || result == RP_CONSENT_PROBE_PASSED) {
+            [self finish:result == RP_CONSENT_PROBE_PASSED ? @"consent_round_trip_passed" : @"consent_round_trip_rejected"];
+            return;
+        }
+        if (result == RP_CONSENT_PROBE_SEND) {
+            self.requestDeadline = rp_uptime() + 5.0;
+            [self send:[NSData dataWithBytes:request length:sizeof request]];
+        }
+    }
     [self readRecord];
 }
 
@@ -148,7 +164,7 @@ static NSTimeInterval rp_uptime(void) {
 }
 
 - (void)submit:(uint32_t)operation target:(uint64_t)target {
-    if (self.done || !self.verified || !state.ready) return;
+    if (self.done || !self.verified || !state.ready || self.consentProbe) return;
     uint8_t request[45];
     if (!rp_authority_client_request(&state, (rp_police_operation)operation, target,
                                      request, sizeof request)) {
@@ -175,6 +191,7 @@ static NSTimeInterval rp_uptime(void) {
         return;
     }
     self.verified = YES; // RP certificate channel only; never RAGE/player auth.
+    if (self.consentProbe) self.consentProbeDeadline = rp_uptime() + 12.0;
     self.nextPing = rp_uptime() + 3.0;
     [self readRecord];
 }
@@ -198,7 +215,8 @@ static NSTimeInterval rp_uptime(void) {
         if (!client || client.done) return;
         NSTimeInterval now = rp_uptime();
         if ([NSDate date].timeIntervalSince1970 >= client.expires || now >= client.readDeadline ||
-                (client.requestDeadline && now >= client.requestDeadline)) {
+                (client.requestDeadline && now >= client.requestDeadline) ||
+                (client.consentProbeDeadline && now >= client.consentProbeDeadline)) {
             [client finish:@"expired_or_deadline"];
             return;
         }
@@ -236,13 +254,15 @@ void prp_start_authority_client(NSString *folder) {
             authorityClient = client;
             NSString *host = config[@"host"];
             NSNumber *port = config[@"port"], *expires = config[@"expires"];
+            id diagnostic = config[@"diagnostic"];
             uint64_t identityID = 0;
             NSTimeInterval now = [NSDate date].timeIntervalSince1970;
             if (![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
                 ![port isKindOfClass:[NSNumber class]] || port.doubleValue != port.unsignedIntValue ||
                 port.unsignedIntValue < 1024 || port.unsignedIntValue > 65535 ||
                 ![expires isKindOfClass:[NSNumber class]] || !(expires.doubleValue > now && expires.doubleValue <= now + 1230) ||
-                !prp_parse_id(config[@"rp_id"], &identityID)) {
+                !prp_parse_id(config[@"rp_id"], &identityID) ||
+                (diagnostic && ![diagnostic isEqual:@"consent-round-trip-v1"])) {
                 [client finish:@"invalid_or_expired_config"];
                 return;
             }
@@ -271,6 +291,7 @@ void prp_start_authority_client(NSString *folder) {
                 }, authorityQueue);
             }, NW_PARAMETERS_DEFAULT_CONFIGURATION);
             client.expectedID = identityID;
+            client.consentProbe = diagnostic != nil;
             client.expires = expires.doubleValue;
             nw_endpoint_t endpoint = nw_endpoint_create_host(host.UTF8String, port.stringValue.UTF8String);
             client.channel = nw_connection_create(endpoint, parameters);

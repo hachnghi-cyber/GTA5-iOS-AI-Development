@@ -43,3 +43,9 @@ EXPORT uint64_t test_client_revision(const void *handle) {
     const rp_authority_client *client = handle;
     return client ? client->revision : 0;
 }
+EXPORT int test_client_consent_step(void *client, uint32_t *phase, uint8_t *out, size_t size) {
+    rp_consent_probe_phase value = (rp_consent_probe_phase)*phase;
+    rp_consent_probe_result result = rp_authority_consent_probe_step(client, &value, out, size);
+    *phase = (uint32_t)value;
+    return result;
+}
