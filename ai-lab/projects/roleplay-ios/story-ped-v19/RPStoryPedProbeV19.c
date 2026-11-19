@@ -189,12 +189,13 @@ static void rp19_script(void) {
         }
         pressed=key;
         int opt=rp19_opted_in();
-        int offline=rp19_offline();
+        /* No ScriptHookV game-native calls at all before explicit opt-in + F11. */
+        int offline=(opt&&armed)?rp19_offline():0;
         if(!opt||!armed||!offline){
             rp19_delete(&ped);
             if(pending){(void)rp19_call1(H_MODEL_RELEASE,model);pending=0;}
             stale=0;model_ticks=0;peer_frame=0;peer_epoch=0;peer_id=0;
-            if(!offline&&!had_error){rp19_log("ONLINE_GUARD_BLOCK");had_error=1;}
+            if(opt&&armed&&!offline&&!had_error){rp19_log("ONLINE_GUARD_BLOCK");had_error=1;}
             scriptWait(250);
             continue;
         }
