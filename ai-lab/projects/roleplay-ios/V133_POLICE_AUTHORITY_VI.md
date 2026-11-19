@@ -90,3 +90,9 @@ Xem `baselines/v133-local-work-duty-iphone-20261119.json`.
 
 Sandbox đủ để xác minh việc nhận và bỏ ca cục bộ. Đồng bộ giữa người chơi
 cần một phiên GTA nhiều người riêng với peer đối chứng và kênh RP mTLS.
+
+Server riêng đã có API để kiểm tra lại ca trong vòng cập nhật. Nguồn quan sát
+phải cung cấp trạng thái ca và thời điểm quan sát cho chính danh tính đã ghép
+với game, theo phiên và lần kết nối hiện tại. Server dùng lại luật thu hồi
+`rp_police_revoke_duty`. Trường `local_work_candidate` của observer vẫn là log
+chẩn đoán. Server không lấy log hoặc lệnh TLS làm nguồn cấp quyền.

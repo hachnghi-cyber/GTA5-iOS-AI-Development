@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "For remote binding, collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Bind the RP TLS principal to the verified participant before using the verified local duty signal for gameplay and running two-device regression tests.",
+  "next_action": "Collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Establish the exact game participant and admission binding, then wire the verified game-thread duty source into the independent server duty API before enabling effects and running two-device regression tests.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,19 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_duty_revocation": {
+      "parent_commit": "9db58b4d71c812cdfb5f44614abdba743e04bc42",
+      "host_abi": 2,
+      "scope": "Authority owner requires an independent in-process duty observation scoped to RP principal, session, epoch and admission; original observation age <= 250ms. No RP wire changes or native source enabled.",
+      "verified": "Timer reuses C revoke_duty and publishes released custody when local duty ends, becomes stale, or its source fails. A paired action observation alone cannot grant duty. A previous admission cannot regrant it after reconnect.",
+      "host_python_tests_passed": 161,
+      "test_log_sha256": "c7072aece407b9c5f22055257c4e82282e1e5306cf392fcc362590acdaf698a7",
+      "host_c_ffi_tests_passed": true,
+      "windows_server_dll_sha256": "8fb1b29202d6b5bbcb895640c2a0179a72fd0f364c9cda9d390730af18f94341",
+      "windows_lan_cli_smoke": "two Windows processes over the PC Wi-Fi interface, mutual TLS, opt-in and disconnect synchronized; duty denied without a native source",
+      "windows_lan_cli_log_sha256": "9f73654488e580f417bbfe9d5832314f3f4f86956500beb62dcd34cf9077bdf6",
+      "gameplay_tested_on_iphone": false
     },
     "v133_local_work_duty": {
       "baseline": "baselines/v133-local-work-duty-iphone-20261119.json",

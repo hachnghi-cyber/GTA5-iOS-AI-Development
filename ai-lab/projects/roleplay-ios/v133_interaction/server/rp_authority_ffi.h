@@ -19,7 +19,7 @@ extern "C" {
 #define RP_SERVER_FACT_COUNT 7u
 #define RP_SERVER_SNAPSHOT_COUNT 10u
 
-/* ABI 1. One trusted, serialized in-process authority owner uses each handle.
+/* ABI 2. One trusted, serialized in-process authority owner uses each handle.
  * This adapter neither authenticates sockets nor binds an RP principal to a
  * GTA player. The TLS owner must derive sender from its certificate registry,
  * assign roles itself, and call leave on disconnect or admission expiry.
@@ -31,6 +31,8 @@ RP_SERVER_API void *rp_server_create(uint64_t session, uint64_t epoch);
 RP_SERVER_API void rp_server_destroy(void *handle);
 RP_SERVER_API int rp_server_admit(void *handle, uint64_t id, uint32_t role);
 RP_SERVER_API int rp_server_leave(void *handle, uint64_t id);
+/* Trusted owner only. Clears the officer's duty and any custody they hold. */
+RP_SERVER_API int rp_server_revoke_duty(void *handle, uint64_t id);
 RP_SERVER_API int rp_server_tick(void *handle, uint64_t now_ms);
 
 /* Optional facts is NULL/count 0, or exactly seven uint64_t values:

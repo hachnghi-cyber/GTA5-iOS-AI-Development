@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server host ABI 2 xác minh nguồn ca độc lập theo lần kết nối và tự thu hồi
+quyền/giải phóng custody khi bỏ ca, dữ liệu quá cũ hoặc nguồn lỗi. 161 test
+Python và C FFI đạt; kiểm thử ca server dùng dữ liệu mô hình. Build lại DLL
+trước khi chạy server. Chưa nối nguồn game thật, giao thức iPhone giữ nguyên.
+
 Đã đo ca cảnh sát thật trong Sandbox. `MacportWorkStatus` dùng chỉ số job
 và cờ ca riêng với metadata network job. Probe mới đọc `cop_ls` và
 `on_shift=true` cùng lúc trường network job báo rỗng. Sau bỏ ca, phép đo

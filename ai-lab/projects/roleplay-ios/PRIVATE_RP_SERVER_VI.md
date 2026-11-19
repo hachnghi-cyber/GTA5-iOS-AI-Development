@@ -12,6 +12,14 @@ chạy bình thường không có provider đó: opt-in/out và snapshot hoạt 
 nhận ca và tác động custody bị từ chối cho đến khi có dữ liệu game tin cậy.
 Đây chưa phải bản RP chơi được trên iPhone.
 
+Authority host ABI 2 cần build lại DLL hoặc `.so`. Định dạng truyền tới
+iPhone giữ nguyên. Bên cạnh dữ liệu cho từng lệnh, server yêu cầu nguồn
+quan sát ca độc lập, trong cùng tiến trình authority. Mẫu phải khớp chứng
+thực RP, phiên, epoch và lần kết nối hiện tại, với dấu thời gian gốc không
+quá 250 ms. Nếu nguồn báo bỏ ca, mất dữ liệu hoặc mẫu hết hạn, vòng cập
+nhật server thu hồi ca và phát snapshot giải phóng người bị giữ ngay cả
+khi client không gửi lệnh. Mặc định chưa có nguồn quan sát game như vậy.
+
 Ngày 19/11/2026, **iPhone thật và Windows đã qua phép thử tham gia/rời RP**.
 Log iPhone lấy qua USB xác nhận TLS và hai phản hồi. PC quan sát lần lượt
 kết nối, tham gia, rời RP và ngắt kết nối trong cùng phiên. Xem bằng chứng

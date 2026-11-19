@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from test_prp3_direct_tls import issue
 from prp3_direct_tls import Credentials, ProtocolError
-from rp_private_authority import NativeAuthority
+from rp_private_authority import DutyObservation, DutySubject, NativeAuthority
 import rp_private_server as rp
 from prepare_private_rp import prepare
 
@@ -29,6 +29,11 @@ class SyntheticScene:
     """Test-owned facts, never obtained from an RP socket or game engine."""
     def __init__(self):
         self.distance, self.age, self.flags = 200, 0, 31
+        self.duty = True
+        self.duty_age = 0
+
+    def duty_state(self, subject, now):
+        return DutyObservation(subject, now - self.duty_age, self.duty)
 
     def __call__(self, sender, now, wire):
         target = rp.COMMAND.unpack(wire)[5]
@@ -58,8 +63,9 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             cls.pins[label] = cert.fingerprint(hashes.SHA256())
 
     @asynccontextmanager
-    async def running(self, scene=None, *, lease=3, scope=(123, 7)):
-        authority = NativeAuthority(self.library, *scope, observation_provider=scene)
+    async def running(self, scene=None, *, lease=3, scope=(123, 7), use_duty_provider=True):
+        authority = NativeAuthority(self.library, *scope, observation_provider=scene,
+                                    duty_provider=scene.duty_state if scene and use_duty_provider else None)
         registry = {self.pins['cop']: rp.Principal(COP, 2),
                     self.pins['citizen']: rp.Principal(CITIZEN, 1)}
         server = rp.PrivateServer(self.credentials['server'], registry, authority, lease_seconds=lease)
@@ -123,6 +129,53 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             await self.apply(cop, DUTY, expected=1)
             await self.apply(cop, CUFF, CITIZEN, expected=1)
             await self.apply(citizen, DUTY, expected=1)
+
+    async def test_pair_facts_without_separate_duty_source_cannot_start_shift(self):
+        async with self.running(SyntheticScene(), use_duty_provider=False) as (_, address):
+            cop = await self.connect(address, 'cop')
+            await self.apply(cop, OPT_IN)
+            await self.apply(cop, DUTY, expected=1)
+
+    async def test_off_shift_and_stale_duty_clear_custody_without_client_request(self):
+        for failure in ('off_shift', 'stale', 'unavailable'):
+            with self.subTest(failure=failure):
+                scene = SyntheticScene()
+                async with self.running(scene) as (server, address):
+                    cop, citizen = await self.ready(address)
+                    await self.apply(cop, CUFF, CITIZEN)
+                    await self.wait_state(citizen, lambda m: CITIZEN in m and m[CITIZEN][4] == 1)
+                    if failure == 'off_shift':
+                        scene.duty = False
+                    elif failure == 'stale':
+                        scene.duty_age = 251
+                    else:
+                        def down(_subject, _now):
+                            raise TimeoutError('modeled source unavailable')
+                        server.authority.duty_provider = down
+                    await self.wait_state(citizen, lambda m: COP in m and m[COP][3] == 0 and m[CITIZEN][4] == 0)
+                    await self.apply(cop, DUTY, expected=1)
+
+    async def test_stale_admission_cannot_regrant_duty_after_reconnect(self):
+        async with self.running(SyntheticScene()) as (server, address):
+            captured = None
+            def first(subject, now):
+                nonlocal captured
+                captured = subject
+                return DutyObservation(subject, now, True)
+            server.authority.duty_provider = first
+            officer = await self.connect(address, 'cop')
+            citizen = await self.connect(address, 'citizen')
+            await self.apply(officer, OPT_IN)
+            await self.apply(officer, DUTY)
+            self.assertIsInstance(captured, DutySubject)
+            self.assertEqual(captured.principal, COP)
+            old_subject = captured
+            await officer.close()
+            await self.wait_state(citizen, lambda m: m and COP not in m)
+            server.authority.duty_provider = lambda _subject, now: DutyObservation(old_subject, now, True)
+            replacement = await self.connect(address, 'cop')
+            await self.apply(replacement, OPT_IN)
+            await self.apply(replacement, DUTY, expected=1)
 
     async def test_generated_development_kit_uses_actual_server_and_client_credentials(self):
         with tempfile.TemporaryDirectory() as root:
