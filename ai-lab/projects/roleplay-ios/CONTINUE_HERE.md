@@ -7,15 +7,15 @@
 Observer đọc kênh cấu hình trong cùng lần dừng khi peer và endpoint khớp
 nhưng connection ID khác. Nó khôi phục player manager từ frame Dispatch,
 đối chiếu delegate và yêu cầu player manager với snSession cùng dùng một
-transport manager. 186 bài kiểm thử host qua. Cần mẫu thật để so sánh hai
-kênh, rồi đối chiếu các đối tượng kết nối tương ứng.
+transport manager. Mẫu iPhone ghi cùng endpoint. Player manager cấu hình
+kênh 7, còn phiên chính cấu hình kênh 13. Cần đối chiếu hai đối tượng kết
+nối trong bảng của transport manager. 186 bài kiểm thử host đã qua.
 
 Binary v13.3 xác nhận hai đường gán connection ID. `AddRemotePlayer` dùng
 kênh của player manager khi gọi `EstablishConnection`; `ConnectToPeer`
 dùng kênh của snSession khi cần thiết lập kết nối. `netPlayer` và `snPeer`
 đều lưu endpoint ID. Observer mới so sánh endpoint khi rl peer ID và
-metadata truyền tải đã khớp nhưng connection ID khác. 185 bài kiểm thử
-host đã qua. Cần đo endpoint và xác nhận kênh thực tế trên iPhone.
+metadata truyền tải đã khớp nhưng connection ID khác.
 
 Người thử xác nhận hai GTA trên một iPhone, một cài riêng và một trong
 LiveContainer, vào cùng phòng chỉ mời và tương tác được trong game.

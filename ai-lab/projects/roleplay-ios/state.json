@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Measure whether the mismatched connection values for the same peer and transport identity use the same endpoint. Compare their live channel assignments in the same guarded native receive before treating them as related. Observe private join and leave to establish admission generation before enabling gameplay.",
+  "next_action": "Trace both distinct connection IDs through the guarded GetEndpointId lookup and endpoint channel table at the same receive stop. An iPhone sample confirmed equal endpoint metadata, one manager and configured channels 7/13. Verify live connection objects, sender authority and join or leave generation before enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -900,7 +900,9 @@
       "observer": "script_event_handler --receive-context",
       "host_python_tests_passed": 186,
       "host_test_log_sha256": "68d2f5ce57f0f2d23bdc9fed4e0cab6cda7232159ae463e538f28e5542f93c6d",
-      "live_channel_comparison_verified": false,
+      "live_channel_comparison_verified": true,
+      "iphone_sample": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "observed_configured_channels": {"player_manager": 7, "main_session": 13},
       "live_connection_objects_verified": false,
       "authenticated_sender_verified": false
     },
@@ -912,7 +914,7 @@
       "observer": "script_event_handler --receive-context records an anonymous endpoint comparison only after matching the rl peer and transport identities on a different-connection row.",
       "host_python_tests_passed": 185,
       "host_test_log_sha256": "613c3efc5f657b045e38bcac27b0cf177dffcbb346c5a84222f3113332d44aee",
-      "live_endpoint_comparison_verified": false,
+      "live_endpoint_comparison_verified": true,
       "live_channel_assignments_verified": false,
       "authenticated_sender_verified": false
     },

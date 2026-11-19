@@ -194,8 +194,10 @@ Cần kiểm chứng endpoint và kênh của hai giá trị trong mẫu thật.
 Khi `alias_endpoint_status=match`, điểm đo trực tiếp đọc thêm
 `alias_channel_configuration`. Nó lấy player manager từ thanh ghi đã lưu
 trong frame `Dispatch`, đối chiếu delegate và chỉ đọc hai kênh nếu hai bên
-dùng cùng transport manager. Kết quả là kênh đã cấu hình. Cần đối chiếu
-hai đối tượng kết nối đang hoạt động trước khi dùng liên kết này cho quyền RP.
+dùng cùng transport manager. Mẫu iPhone trong phòng chỉ mời xác nhận
+endpoint khớp, kênh cấu hình của người chơi bằng 7 và của phiên chính bằng 13.
+Cần đối chiếu hai đối tượng kết nối đang hoạt động trước khi dùng liên kết
+này cho quyền RP. Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
 
 ## Session context
 

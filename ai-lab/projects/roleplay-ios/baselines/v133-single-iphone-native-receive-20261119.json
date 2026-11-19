@@ -152,6 +152,64 @@
         "thread_label_scope": "anonymous_single_capture_only",
         "timed_out": false
       }
+    },
+    "same_stop_endpoint_and_channel_configuration": {
+      "observer_commit": "0b42c4107bd16ed347aac0bd5e512cb17a5b6bb7",
+      "scope": "The tester confirmed the standalone and LiveContainer clients had entered the same invite-only room. USB attached only to the standalone receiver.",
+      "raw_log_sha256": "123477360f980f66c8c014500abf0eece0b35809ddb1be521698d9336cb5596d",
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "connection_id_matches_source": true,
+        "context_status": "observed",
+        "custom_rp_event_received": false,
+        "engine_source_association_observed": true,
+        "game_thread_affinity_verified": false,
+        "handler_destination_matches_message": true,
+        "handler_source_matches_message": true,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": false,
+        "matched_frames": [
+          "process_events",
+          "packed_events",
+          "on_message",
+          "dispatch"
+        ],
+        "network_receive_call_chain_observed": true,
+        "network_receive_stack_confirmed": true,
+        "observed_path": "engine_receive_dispatch",
+        "scripted_session_candidate": {
+          "alias_channel_configuration": {
+            "channels_differ": true,
+            "player_channel": 7,
+            "session_channel": 13,
+            "status": "observed"
+          },
+          "candidate_slot": "main",
+          "main_slot_established": true,
+          "peer_table": {
+            "alias_endpoint_status": "match",
+            "alias_transport_peer_status": "match",
+            "authenticated_rage_sender_verified": false,
+            "peer_map_consistent": false,
+            "remote_entries_seen": 1,
+            "schema": "v133-peer-session-map-v1",
+            "session_generation_verified": false,
+            "session_membership_verified": false,
+            "session_remote_peer_count": 1,
+            "status": "peer_alias_different_connection",
+            "transport_peer_map_consistent": false
+          },
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "session_generation_verified": false,
+        "site": "script_event_handler",
+        "source_destination_distinct": true,
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "interpretation": "The stopped event and matching session row use different connection IDs but match their peer identities and endpoint ID. The two native owners reference the same transport manager and are configured for channels 7 and 13. The connection table objects were not dereferenced."
     }
   },
   "interpretation": "A guarded immediate frame reached enqueue with a connection and a set integrity-path indicator. Separate stops validated the engine scripted receive stack and event-to-netPlayer connection equality. In the membership stop, the established main session row had the same rl peer identity with a different connection value.",
