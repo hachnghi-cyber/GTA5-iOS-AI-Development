@@ -6,7 +6,9 @@
 
 Server và probe có kênh PRP3 tùy chọn cho Chào hỏi và yêu cầu kiểm tra giấy
 tờ. Gửi chỉ khi hai bên đã opt-in và xác nhận bằng kết nối người nhận.
-Xem `PRIVATE_RP_SERVER_VI.md`. Cần build và xác nhận probe mới trên iPhone.
+Build ARM64 `0c38348` đã đạt. IPA chẩn đoán chưa ký
+`GTAV-v13.3-Private-RP-Social-Probe-0c38348-UNSIGNED.ipa` đã kiểm tra ZIP và
+Mach-O. Cần ký/cài và đối chiếu log với PC theo `PRIVATE_RP_SERVER_VI.md`.
 
 Server đã kiểm tra hai lần gia nhập hiện tại trước khi đưa dữ liệu cặp vào
 luật còng/áp giải. 163 test host đạt, gồm từ chối tráo người và dùng mẫu

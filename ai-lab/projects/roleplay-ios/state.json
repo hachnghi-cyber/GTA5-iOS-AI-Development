@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Build and run the optional GREET/DOCUMENTS probe on a signed iPhone with the Windows private server. For native gameplay, collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session, then establish the exact game participant/admission binding before enabling effects.",
+  "next_action": "Run the verified GREET/DOCUMENTS diagnostic IPA after signing and installing it, then match its iPhone log with the Windows witness. For native gameplay, collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session and establish the exact game participant/admission binding before enabling effects.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -901,7 +901,21 @@
       "host_c_codec_tests_passed": true,
       "interop": "compiled native C client and Windows peer exchanged both actions over real loopback TLS; two actual host CLI processes did so using the PC Wi-Fi address",
       "negative_cases": "unsubscribed peer, opt-out cancellation, sender cannot confirm own delivery, expiration, replay after reconnect",
-      "iphone_build": "pending source checkpoint CI",
+      "source_commit": "0c3834880f2dfeadbb20e36addcd6bf645e040b7",
+      "iphone_build": {
+        "status": "passed",
+        "run": 44508897696,
+        "artifact": 14521415918,
+        "dylib_uuid": "C86C942B-4E2B-39D3-80D3-6E6D41BF3163",
+        "dylib_sha256": "4e637a5ba0dcb2096b566b0d0ee7e91ce9e2bab4ea76aedadcf3acb191601291",
+        "arm64_ios_sdk_static_analyzer_diagnostics": 0
+      },
+      "local_unsigned_ipa": {
+        "name": "GTAV-v13.3-Private-RP-Social-Probe-0c38348-UNSIGNED.ipa",
+        "sha256": "a0b28c6b42bdb5a4c7dfb90c3c688d819c4156a1a463a52f4c8f0333a6e8d5fd",
+        "verification": "Exact original checked; ZIP intact, one probe added, original asset data byte-identical, system dylib dependencies only. User signing pending."
+      },
+      "windows_private_lan_witness": "Normal ABI 2 server started on the PC Wi-Fi interface with a consenting Windows peer and fresh private iPhone diagnostic credentials. Ready to test after signing/installing.",
       "iphone_runtime_tested": false,
       "game_identity_binding": false
     },
