@@ -4,6 +4,14 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Binary v13.3 có hai đường gọi `ClearSession` trực tiếp. Trong `Update`,
+`DropSession` gọi shutdown và init trên slot chính trước `ClearSession`.
+Observer hai mốc `drop_session_call` hết thời gian trong lượt rời phòng chỉ
+mời. Observer `clear_session` giờ đối chiếu LR với lệnh gọi đã kiểm tra mã
+để phân biệt `Update` và `UpdateTransition`. Cần lấy nhãn này trên iPhone
+để xác định nhánh rời phòng thực tế. 176 bài kiểm thử host đã qua.
+Xem `baselines/v133-drop-session-boundary-iphone-20261119.json`.
+
 Một iPhone đã xác nhận điểm vào `ClearSession` khi rời phòng GTA chỉ mời.
 Trong phòng riêng, slot chính đã thiết lập dù bit tiến trình của slot chính
 báo false. Sau hai lần rời phòng về Sandbox, cả hai slot đều chưa thiết lập.

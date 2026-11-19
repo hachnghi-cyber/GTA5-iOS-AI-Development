@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the event to its authenticated participant and live admission. Use the observed ClearSession entry as a lifecycle candidate and verify which established slot and generation the invocation retires before wiring lifecycle notifications or enabling gameplay.",
+  "next_action": "Capture the guarded ClearSession caller label in an invite-only GTA room, then follow the observed path to the retired slot and generation. Collect a guarded queue/receive sample with a cooperating second GTA participant and correlate it to the authenticated participant and live admission before wiring lifecycle notifications or enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,17 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "native_drop_session_boundary": {
+      "parent_commit": "4e6914fdf88ed2d3ba74322122be46579ef7e204",
+      "evidence": "baselines/v133-drop-session-boundary-iphone-20261119.json",
+      "scope": "The exact Update branch calls DropSession before ClearSession. The exact DropSession wrapper shuts down and reinitializes the main snSession slot. UpdateTransition contains a separate direct call to ClearSession.",
+      "iphone_drop_session_call_status": "timeout",
+      "clear_session_caller_observer": "Guarded LR labels distinguish the two direct call sites. Runtime caller label still needs a device capture.",
+      "host_python_tests_passed": 176,
+      "host_test_log_sha256": "d0a8770bfcfd108e7ec19761cd0003967dffca79370f1157edd977051c2f33a7",
+      "session_generation_verified": false,
+      "native_game_binding_verified": false
     },
     "native_private_session_leave_iphone": {
       "parent_commit": "3e38f3a1f4b2057b2ccebbb54d1cff4d1b411187",

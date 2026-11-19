@@ -258,6 +258,26 @@
     "swap_sessions": {
       "name": "__ZN15CNetworkSession12SwapSessionsEv",
       "va": "0x1018043d4"
+    },
+    "session_update": {
+      "name": "__ZN15CNetworkSession6UpdateEv",
+      "va": "0x1017ebabc"
+    },
+    "session_transition_update": {
+      "name": "__ZN15CNetworkSession16UpdateTransitionEv",
+      "va": "0x1017f166c"
+    },
+    "drop_session": {
+      "name": "__ZN15CNetworkSession11DropSessionEv",
+      "va": "0x1017eb6e4"
+    },
+    "session_shutdown": {
+      "name": "__ZN4rage9snSession8ShutdownEbi",
+      "va": "0x1019d0aac"
+    },
+    "session_init": {
+      "name": "__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc",
+      "va": "0x1019d0744"
     }
   },
   "branches": [
@@ -436,6 +456,36 @@
       "kind": "BL"
     },
     {
+      "at": "0x1017ec224",
+      "source": "session_update",
+      "target": "drop_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ec234",
+      "source": "session_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017f19a4",
+      "source": "session_transition_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eb7a0",
+      "source": "drop_session",
+      "target": "session_shutdown",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eba1c",
+      "source": "drop_session",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
       "at": "0x10180bc78",
       "source": "get_current_session",
       "target": "session_exists",
@@ -491,6 +541,24 @@
     }
   ],
   "observations": [
+    {
+      "at": "0x1017ec220",
+      "function": "session_update",
+      "word": "0xaa1803e0",
+      "observation": "pass manager x24 as the DropSession receiver"
+    },
+    {
+      "at": "0x1017ec228",
+      "function": "session_update",
+      "word": "0xb948ab21",
+      "observation": "read ClearSession flags after DropSession returns"
+    },
+    {
+      "at": "0x1017eb794",
+      "function": "drop_session",
+      "word": "0xf9401260",
+      "observation": "load the main session slot before shutdown"
+    },
     {
       "at": "0x100e33834",
       "function": "startup_script",
@@ -1065,6 +1133,7 @@
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
     "migrate_end": "0xa9ba6ffc",
+    "drop_session_call": "0x97fffd30",
     "session_swap": "0x3d800a61",
     "on_net_event_pre_dispatch": "0xa9012be9",
     "on_connection_peer_verify": "0x9407da23"
@@ -1155,6 +1224,41 @@
       }
     ],
     "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "clear_session_caller_context": {
+    "code_guards": [
+      {
+        "function": "session_update_clear_call",
+        "va": "0x1017ec228",
+        "size": 16,
+        "sha256": "4e90e7262294d1fb5c2b62b4910e543995bcdc2256a14b74510796e36d14a89a"
+      },
+      {
+        "function": "session_transition_clear_call",
+        "va": "0x1017f1998",
+        "size": 16,
+        "sha256": "36abc92ab358d38aeafd390c631041c22ba9da097668cbf68c9689ca5d40707f"
+      }
+    ],
+    "scope": "exact ClearSession direct caller label from the link register"
+  },
+  "drop_session_context": {
+    "return_va": "0x1017ec228",
+    "code_guards": [
+      {
+        "function": "session_update_drop_call",
+        "va": "0x1017ec220",
+        "size": 24,
+        "sha256": "f20b41ed201b2199a51a3b79f49f9d947036a903ad2d03a792227b3d9c744f2c"
+      },
+      {
+        "function": "drop_session",
+        "va": "0x1017eb6e4",
+        "size": 984,
+        "sha256": "eed27e4e92e332d631ce96cea3a658d0708c6585ecaf870056b53dc3282f7699"
+      }
+    ],
+    "scope": "anonymous slot predicates across one guarded Update call to DropSession"
   },
   "session_swap": {
     "global_pointer_va": "0x1031ef4e0",
@@ -1329,6 +1433,7 @@
   "two_device_verified": false,
   "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
   "internal_sites": {
+    "drop_session_call": "0x1017ec224",
     "session_swap": "0x10180443c",
     "on_net_event_pre_dispatch": "0x1020249a8",
     "on_connection_peer_verify": "0x1017dfa48"

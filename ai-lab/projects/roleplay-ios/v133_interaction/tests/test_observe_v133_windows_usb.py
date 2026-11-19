@@ -197,15 +197,27 @@ class ScriptEventObserverTests(unittest.TestCase):
                                   site="script_event_handler")
         self.assertFalse(sample["hardware_stop_at_expected_pc"])
 
-    def test_clear_session_observes_entry_without_inspecting_arguments(self):
-        remote = _BreakRemote(self.pc)
-        metadata = {"symbols": {"clear_session": {"va": self.va}}}
-        sample = observer.capture(remote, self.base, metadata, site="clear_session")
-        self.assertTrue(sample["hardware_stop_at_expected_pc"])
-        self.assertFalse(sample["session_generation_verified"])
-        self.assertFalse(sample["authenticated_rp_sender_verified"])
-        self.assertEqual(remote.register_reads, [32])
-        self.assertEqual(remote.requests[-1], f"z1,{self.pc:x},4".encode())
+    def test_clear_session_matches_only_guarded_callers_without_inspecting_arguments(self):
+        metadata = {
+            'symbols': {'clear_session': {'va': self.va}},
+            'clear_session_caller_context': {},
+            'branches': [
+                {'source': 'session_update', 'target': 'clear_session', 'kind': 'BL', 'at': '0x100012000'},
+                {'source': 'session_transition_update', 'target': 'clear_session', 'kind': 'BL', 'at': '0x100012004'},
+            ],
+        }
+        for lr, caller in ((0x102012004, 'session_update'), (0x102012008, 'session_transition_update'),
+                           (0x10201200c, 'unrecognized')):
+            with self.subTest(caller=caller), patch.object(observer, 'verify_context_code') as guards:
+                remote = _BreakRemote(self.pc, lr)
+                sample = observer.capture(remote, self.base, metadata, site='clear_session')
+                guards.assert_called_once_with(remote, self.base, {}, label='clear-session-caller')
+                self.assertTrue(sample['hardware_stop_at_expected_pc'])
+                self.assertEqual(sample['clear_session_caller'], caller)
+                self.assertFalse(sample['session_generation_verified'])
+                self.assertFalse(sample['authenticated_rp_sender_verified'])
+                self.assertEqual(remote.register_reads, [32, 30])
+                self.assertEqual(remote.requests[-1], f'z1,{self.pc:x},4'.encode())
 
     def test_other_stop_signal_at_same_pc_does_not_report_breakpoint_hit(self):
         remote = _BreakRemote(self.pc)
@@ -348,6 +360,68 @@ class SessionContextTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             observer.capture(remote, self.base, {}, site='on_net_event', session_context=True)
         self.assertEqual(remote.requests, [])
+
+
+class DropSessionTests(unittest.TestCase):
+    def capture(self, second_thread=b'same', global_manager=0x170000000):
+        metadata = {
+            'internal_sites': {'drop_session_call': '0x100012340'},
+            'drop_session_context': {'return_va': '0x100012344'},
+            'session_slots': {'global_pointer_va': '0x1031ef4e0'},
+        }
+        registers = {0: 0x170000000, 24: 0x170000000, 29: 0x180000000}
+
+        class SlotMemory:
+            def __init__(self):
+                self.reads = []
+                self.main_state = iter((2, 0))
+
+            def request(self, packet):
+                return {b'qRegisterInfo0': b'name:x0;', b'qRegisterInfo18': b'name:x24;',
+                        b'qRegisterInfo1d': b'name:fp;'}[packet]
+
+            def read_register(self, number):
+                return registers[number]
+
+            def memory(self, address, size):
+                self.reads.append((address, size))
+                if (address, size) == (0x1031ef4e0, 8):
+                    return struct.pack('<Q', global_manager)
+                if (address, size) == (0x170000020, 16):
+                    return struct.pack('<QQ', 0x190000000, 0)
+                if (address, size) == (0x1900000b0, 4):
+                    return struct.pack('<I', next(self.main_state))
+                raise AssertionError('unexpected memory read')
+
+        remote = SlotMemory()
+        stops = ((0x100012340, b'same', 'hit'), (0x100012344, second_thread, 'hit'))
+        with patch.object(observer, 'verify_context_code'), \
+                patch.object(observer, 'queue_stage_stop', side_effect=stops):
+            sample = observer.capture_drop_session(remote, 0x100000000, metadata, 5)
+        return sample, remote.reads
+
+    def test_establishment_loss_requires_before_and_after_on_the_same_call(self):
+        sample, _ = self.capture()
+        self.assertTrue(sample['same_call_observed'])
+        self.assertTrue(sample['main_slot_establishment_ended'])
+        self.assertEqual(sample['before']['candidate_slot'], 'main')
+        self.assertEqual(sample['after']['candidate_slot'], 'none')
+        self.assertFalse(sample['session_generation_verified'])
+        self.assertFalse(sample['authenticated_rp_sender_verified'])
+
+    def test_second_stop_on_the_wrong_thread_does_not_use_its_slots(self):
+        sample, reads = self.capture(second_thread=b'other')
+        self.assertEqual(sample['status'], 'different_drop_call_context')
+        self.assertEqual(len(reads), 3)
+        self.assertNotIn('after', sample)
+        self.assertFalse(sample['same_call_observed'])
+        self.assertFalse(sample['main_slot_establishment_ended'])
+
+    def test_non_global_receiver_is_not_dereferenced(self):
+        sample, reads = self.capture(global_manager=0x170000100)
+        self.assertEqual(sample['before']['status'], 'unexpected_session_manager')
+        self.assertEqual(reads, [(0x1031ef4e0, 8)])
+        self.assertFalse(sample['same_call_observed'])
 
 
 class _ContextMemory:

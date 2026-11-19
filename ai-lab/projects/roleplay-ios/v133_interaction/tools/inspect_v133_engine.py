@@ -79,6 +79,11 @@ SYMBOLS = {
     'session_is_established': '__ZNK4rage9rlSession13IsEstablishedEv',
     'peer_id_by_connection': '__ZNK4rage9snSession14GetPeerIdByCxnEi',
     'swap_sessions': '__ZN15CNetworkSession12SwapSessionsEv',
+    'session_update': '__ZN15CNetworkSession6UpdateEv',
+    'session_transition_update': '__ZN15CNetworkSession16UpdateTransitionEv',
+    'drop_session': '__ZN15CNetworkSession11DropSessionEv',
+    'session_shutdown': '__ZN4rage9snSession8ShutdownEbi',
+    'session_init': '__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
@@ -280,6 +285,11 @@ def inspect(data):
         ('script_read', 0xb0, 'read_bits', 'BL'),
         ('clear_session', 0x104, 'session_id', 'BL'),
         ('clear_session', 0x214, 'swap_sessions', 'BL'),
+        ('session_update', 0x768, 'drop_session', 'BL'),
+        ('session_update', 0x778, 'clear_session', 'BL'),
+        ('session_transition_update', 0x338, 'clear_session', 'BL'),
+        ('drop_session', 0xbc, 'session_shutdown', 'BL'),
+        ('drop_session', 0x338, 'session_init', 'BL'),
         ('get_current_session', 0x1c, 'session_exists', 'BL'),
         ('get_current_session', 0x3c, 'session_exists', 'BL'),
         ('session_exists', 0x4, 'session_is_established', 'B'),
@@ -298,6 +308,9 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('session_update', 0x764, 0xaa1803e0, 'pass manager x24 as the DropSession receiver'),
+        ('session_update', 0x76c, 0xb948ab21, 'read ClearSession flags after DropSession returns'),
+        ('drop_session', 0xb0, 0xf9401260, 'load the main session slot before shutdown'),
         ('startup_script', 0x1c, 0x34000460, 'sandbox-mode guard; registration is conditional'),
         ('sandbox_program', 0x1c, 0x90000001, 'ADRP callback page into x1'),
         ('sandbox_program', 0x20, 0x910e1021, 'ADD callback offset 0x384 into x1'),
@@ -408,6 +421,7 @@ def inspect(data):
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
     internal_sites = {
+        'drop_session_call': sites['session_update'] + 0x768,
         'session_swap': sites['swap_sessions'] + 0x68,
         'on_net_event_pre_dispatch': sites['on_net_event'] + 0x94,
         'on_connection_peer_verify': sites['on_connection_event'] + 0x654,
@@ -453,6 +467,27 @@ def inspect(data):
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites=trace_words,
                 receive_context=context,
+                clear_session_caller_context={
+                    'code_guards': [
+                        {'function': name, 'va': hex(begin), 'size': length,
+                         'sha256': hashlib.sha256(data[off+begin-va:off+begin-va+length]).hexdigest()}
+                        for name, begin, length in (
+                            ('session_update_clear_call', sites['session_update'] + 0x76c, 0x10),
+                            ('session_transition_clear_call', sites['session_transition_update'] + 0x32c, 0x10),
+                        )
+                    ],
+                    'scope': 'exact ClearSession direct caller label from the link register',
+                },
+                drop_session_context={
+                    'return_va': hex(sites['session_update'] + 0x76c),
+                    'code_guards': [
+                        {'function': name, 'va': hex(begin), 'size': length,
+                         'sha256': hashlib.sha256(data[off+begin-va:off+begin-va+length]).hexdigest()}
+                        for name, begin, length in (('session_update_drop_call', sites['session_update'] + 0x764, 0x18),
+                                                    ('drop_session', sites['drop_session'], 0x3d8))
+                    ],
+                    'scope': 'anonymous slot predicates across one guarded Update call to DropSession',
+                },
                 session_swap={
                     'global_pointer_va': hex(session_global),
                     'post_store_va': hex(sites['swap_sessions'] + 0x6c),

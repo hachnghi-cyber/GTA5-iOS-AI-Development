@@ -25,7 +25,7 @@ IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
 OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
                     "on_net_event_pre_dispatch", "on_connection_peer_verify",
-                    "clear_session", "session_swap")
+                    "clear_session", "session_swap", "drop_session_call")
 MAX_REPLY = 16384
 
 
@@ -212,7 +212,7 @@ def read_session_context(remote, base, profile):
     return result
 
 
-def read_session_slots(remote, base, profile):
+def read_session_slots(remote, base, profile, *, expected_manager=None):
     """Read both established predicates. The selected pointer is local to this stop."""
     status = {'status': 'unobserved'}
 
@@ -224,6 +224,8 @@ def read_session_slots(remote, base, profile):
         manager, = struct.unpack('<Q', remote.memory(at, 8))
         if not pointer_ok(manager):
             return {'status': 'session_manager_unavailable'}, None
+        if expected_manager is not None and expected_manager != manager:
+            return {'status': 'unexpected_session_manager'}, None
         main, transition = struct.unpack('<QQ', remote.memory(manager + 0x20, 16))
         slots = {'main': main, 'transition': transition}
         if (main and main == transition) or any(ptr and not pointer_ok(ptr) for ptr in slots.values()):
@@ -510,6 +512,57 @@ def capture_session_swap(remote, base, metadata, wait_seconds):
     return sample
 
 
+def capture_drop_session(remote, base, metadata, wait_seconds):
+    """Read slot predicates on both sides of one guarded DropSession call."""
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    profile = metadata['drop_session_context']
+    slots = metadata['session_slots']
+    verify_context_code(remote, base, profile, label='drop-session')
+    verify_context_code(remote, base, slots, label='session-slots')
+    for number, names in ((0, (b'x0',)), (24, (b'x24',)), (29, (b'fp', b'x29'))):
+        name = remote.request(f'qRegisterInfo{number:x}'.encode()).partition(b';')[0]
+        if name not in tuple(b'name:' + n for n in names):
+            raise DebugProtocolError('drop-session register layout mismatch')
+
+    pre = base + internal_site_va(metadata, 'drop_session_call') - IMAGE_VMADDR
+    post = base + int(profile['return_va'], 16) - IMAGE_VMADDR
+    if post != pre + 4:
+        raise DebugProtocolError('drop-session call and return are not adjacent')
+    deadline = time.monotonic() + wait_seconds
+    sample = {'site': 'drop_session_call', 'status': 'incomplete',
+              'same_call_observed': False, 'main_slot_establishment_ended': False,
+              'session_generation_verified': False, 'authenticated_rp_sender_verified': False}
+    pc, thread, sample['status'] = queue_stage_stop(remote, (pre,), deadline)
+    if pc is None:
+        return sample
+    manager, frame = remote.read_register(24), remote.read_register(29)
+    if remote.read_register(0) != manager or not 0 < frame < (1 << 48) or frame % 16:
+        sample['status'] = 'invalid_drop_call_context'
+        return sample
+    before, _ = read_session_slots(remote, base, slots, expected_manager=manager)
+    sample['before'] = before
+    if before['status'] != 'observed':
+        sample['status'] = 'unobserved_before'
+        return sample
+
+    pc, next_thread, sample['status'] = queue_stage_stop(remote, (post,), deadline)
+    if pc is None:
+        return sample
+    if next_thread != thread or remote.read_register(24) != manager or remote.read_register(29) != frame:
+        sample['status'] = 'different_drop_call_context'
+        return sample
+    after, _ = read_session_slots(remote, base, slots, expected_manager=manager)
+    sample['after'] = after
+    if after['status'] != 'observed':
+        sample['status'] = 'unobserved_after'
+        return sample
+    sample['status'] = 'observed'
+    sample['same_call_observed'] = True
+    sample['main_slot_establishment_ended'] = before['main_slot_established'] and not after['main_slot_established']
+    return sample
+
+
 def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
     """A buffered event must never inherit the current packet's decrypt indicator."""
     result = {'caller_observed': False, 'endpoint_connection_observed': False,
@@ -761,6 +814,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         verify_context_code(remote, base, metadata['session_context'], label='session-context')
         if 'session_slots' in metadata:
             verify_context_code(remote, base, metadata['session_slots'], label='session-slots')
+    if site == 'clear_session':
+        verify_context_code(remote, base, metadata['clear_session_caller_context'], label='clear-session-caller')
     hardware = f"{address:x},4".encode()
     require_ok(remote, b"Z1," + hardware, "hardware breakpoint installation")
     try:
@@ -804,6 +859,14 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         if receive_context and hit and not timed_out:
             remote.conn.settimeout(3)
             sample.update(read_receive_context(remote, base, metadata['receive_context']))
+        if site == 'clear_session' and hit and not timed_out:
+            return_pc = remote.read_register(30)
+            sample['clear_session_caller'] = next(
+                (branch['source'] for branch in metadata['branches']
+                 if branch['target'] == site and branch['kind'] == 'BL'
+                 and return_pc == base + int(branch['at'], 16) - IMAGE_VMADDR + 4),
+                'unrecognized',
+            )
         if site in ("on_net_event_pre_dispatch","on_connection_peer_verify") and (
             hit and not timed_out):
             # All reads happen only when the verified one-shot PC actually hit.
@@ -845,6 +908,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                                          follow_scripted=receive_context)
         if site == 'session_swap':
             return capture_session_swap(remote, base, metadata, wait_seconds)
+        if site == 'drop_session_call':
+            return capture_drop_session(remote, base, metadata, wait_seconds)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -936,7 +1001,7 @@ def main():
     parser.add_argument("--stock-job", action="store_true",
                         help="Also sample exact-build local stock job fields at jobs_update only.")
     parser.add_argument("--site", choices=OBSERVABLE_SITES, default=DEFAULT_SITE,
-                        help="Read-only observation site. session_swap checks before and after one store.")
+                        help="Read-only observation site. drop_session_call checks around one guarded call.")
     parser.add_argument("--wait-seconds", type=int, default=3,
                         help="Bounded time (1-60 seconds) to observe one stop; no polling loop.")
     parser.add_argument('--receive-context', action='store_true',
@@ -967,6 +1032,8 @@ def main():
     print(json.dumps(sample, sort_keys=True))
     if args.site == 'session_swap':
         return 0 if sample['same_session_slots_swapped'] else 1
+    if args.site == 'drop_session_call':
+        return 0 if sample['same_call_observed'] else 1
     if args.queue_context:
         matched = (sample.get('same_queued_event_at_scripted_handler') if args.receive_context
                    else sample['queue_object_link_observed'])

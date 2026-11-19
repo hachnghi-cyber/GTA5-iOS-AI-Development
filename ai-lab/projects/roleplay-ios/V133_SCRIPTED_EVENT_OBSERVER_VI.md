@@ -258,13 +258,22 @@ python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_
 
 Bật observer trước khi người thử rời phòng qua menu rồi về Sandbox.
 Kết quả `hardware_stop_at_expected_pc=true` xác nhận điểm vào
-`CNetworkSession::ClearSession`. Bộ đo tại đây chỉ đọc PC. Ngày 19/11/2026,
+`CNetworkSession::ClearSession`. Bộ đo hiện đọc PC và LR, kiểm tra mã tại
+hai điểm gọi và xuất nhãn `session_update`, `session_transition_update` hoặc
+`unrecognized`. Ngày 19/11/2026,
 một iPhone ghi slot chính thiết lập trong phòng riêng dù bit tiến trình
 slot chính bằng false. Hai mẫu sau khi rời đều không còn slot thiết lập.
 Lượt đầu hết thời gian ở `session_swap`; lượt sau trúng `clear_session`.
 Xem `baselines/v133-private-session-leave-iphone-20261119.json`.
-Hai lần đo dùng attach riêng. Caller, phiên bị dọn và generation vẫn chưa
-được xác minh để nối vào authority.
+Hai lần đo dùng attach riêng, trước khi thêm nhãn caller. Cần xác minh
+caller, phiên bị dọn và generation để nối vào authority.
+
+`Update` gọi `DropSession` trước `ClearSession`. Trong `DropSession`,
+shutdown và init dùng slot chính. Dùng `--site drop_session_call` để đọc
+trạng thái slot trước và sau đúng lời gọi này. Observer đối chiếu cùng
+thread, frame và manager với global đã kiểm tra. Lượt thử riêng trên một
+iPhone hết 60 giây mà chưa bắt được lời gọi. Xem
+`baselines/v133-drop-session-boundary-iphone-20261119.json`.
 
 `enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
