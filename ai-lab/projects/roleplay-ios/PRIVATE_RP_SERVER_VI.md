@@ -155,3 +155,30 @@ dòng báo đạt trên PC riêng lẻ chưa chứng minh peer là iPhone thật
 
 Chưa có hai iPhone, log gameplay, kiểm thử native effects hay regression của
 Story/GTA Online. Không phát hành IPA gameplay hoặc bật runtime adapter lúc này.
+
+## Thử Chào hỏi và yêu cầu kiểm tra giấy tờ
+
+Kênh PRP3 tùy chọn chuyển thông báo giữa những người cùng chọn tham gia.
+Sender do server lấy từ mTLS. Chỉ phiên kết nối của người nhận mới có thể
+xác nhận. Một bên rời hoặc rút đồng ý trước ACK, hoặc hết hạn 3 giây, sẽ hủy
+lệnh đang chờ. Nonce giữ qua reconnect; kiểm tra này độc lập với nonce
+custody. Yêu cầu giấy tờ không gửi nội dung giấy tờ.
+
+Hai client Windows có thể bật `--social`, rồi mỗi bên gõ `opt-in`. Gõ
+`greet 22` hoặc `documents 22` từ ID 11. Người nhận thấy loại tương tác và
+RP sender. Người gửi chỉ thấy `recipient_received` khi peer đã xác nhận.
+
+Trên iPhone, cần bản IPA hỗ trợ `social-round-trip-v1`:
+
+1. Tạo kit mới bằng `prepare_private_rp.py ... --ip IP_WIFI_CUA_PC --social-probe`.
+   Dùng đường dẫn mới ngoài Git. Bật server bằng `server.json` như trên.
+2. Mở client Windows với `--config …/citizen.json --social`, rồi gõ `opt-in`.
+3. Chép `officer-iPhone-PRIVATE.json` vào Documents của GTA dưới tên
+   `PoliceRP-Authority-PRIVATE.json`, sau đó mở lại app trên cùng Wi-Fi.
+4. Khi PC thấy ID 11 đã opt-in, gõ `greet 11` trong vòng 60 giây. iPhone
+   xác nhận Chào hỏi và gửi lại yêu cầu giấy tờ. PC tự xác nhận, iPhone
+   ghi `result=social_round_trip_passed` rồi đóng kết nối.
+
+Chỉ bật chế độ này qua kit tùy chọn. Client cũ vẫn dùng giao thức consent
+bình thường. Phép thử xác minh đường gửi giữa hai RP principal qua server.
+Các hành động game tiếp tục cần ánh xạ đúng nhân vật và phiên GTA.

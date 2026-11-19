@@ -17,9 +17,11 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from test_prp3_direct_tls import issue
-from prp3_direct_tls import Credentials, ProtocolError
+from prp3_direct_tls import Credentials, ProtocolError, WIRE
 from rp_private_authority import DutyObservation, NativeAuthority, PairObservation, ParticipantAdmission
+from rp_private_client import SocialClient
 import rp_private_server as rp
+import rp_social_relay as social
 from prepare_private_rp import prepare
 
 COP, CITIZEN = 11, 22
@@ -101,6 +103,95 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
         await self.apply(citizen, OPT_IN)
         await self.apply(cop, DUTY)
         return cop, citizen
+
+    async def receive_kind(self, client, expected):
+        async with asyncio.timeout(3):
+            while True:
+                kind, payload = await client.receive()
+                if kind == expected:
+                    return payload
+                self.assertIn(kind, (rp.SNAPSHOT, rp.PONG))
+
+    async def test_social_both_directions_and_only_recipient_can_confirm(self):
+        async with self.running() as (server, address):
+            officer = await self.connect(address, 'cop')
+            civilian = await self.connect(address, 'citizen')
+            actor, target = SocialClient(officer), SocialClient(civilian)
+            await actor.open()
+            await target.open()
+            await self.apply(officer, OPT_IN)
+            await self.apply(civilian, OPT_IN)
+            await actor.request(1, CITIZEN)
+            greet = await self.receive_kind(civilian, social.SOCIAL_EVENT)
+            await officer.send(social.SOCIAL_RECEIPT, social.RECEIPT.pack(COP, actor.pending))
+            await officer.send(rp.PING)
+            await self.receive_kind(officer, rp.PONG)
+            self.assertIn(COP, server.social.pending)
+            self.assertEqual(await target.consume(social.SOCIAL_EVENT, greet),
+                             {'interaction': 'greet', 'rp_sender': COP})
+            result = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, result))['interaction_result'],
+                             'recipient_received')
+            await target.request(2, COP)
+            docs = await self.receive_kind(officer, social.SOCIAL_EVENT)
+            self.assertEqual(await actor.consume(social.SOCIAL_EVENT, docs),
+                             {'interaction': 'documents', 'rp_sender': CITIZEN})
+            result = await self.receive_kind(civilian, social.SOCIAL_RESULT)
+            self.assertEqual((await target.consume(social.SOCIAL_RESULT, result))['interaction_result'],
+                             'recipient_received')
+
+    async def test_social_requires_consent_and_cancels_after_opt_out(self):
+        async with self.running() as (_, address):
+            officer = await self.connect(address, 'cop')
+            civilian = await self.connect(address, 'citizen')
+            actor, target = SocialClient(officer), SocialClient(civilian)
+            await actor.open()
+            await self.apply(officer, OPT_IN)
+            await self.apply(civilian, OPT_IN)
+            await actor.request(1, CITIZEN)
+            result = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, result))['interaction_result'], 'denied')
+            await target.open()
+            await actor.request(1, CITIZEN)
+            event = await self.receive_kind(civilian, social.SOCIAL_EVENT)
+            await self.apply(civilian, OPT_OUT)
+            result = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, result))['interaction_result'], 'cancelled')
+            # An in-flight delivery from before the revocation cannot produce a receipt.
+            await target.consume(social.SOCIAL_EVENT, event)
+            await officer.send(rp.PING)
+            await self.receive_kind(officer, rp.PONG)
+            await actor.request(2, CITIZEN)
+            result = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, result))['interaction_result'], 'denied')
+
+    async def test_social_replay_rejected_across_reconnect_and_expiry_cancels(self):
+        async with self.running() as (server, address):
+            clock = [5000]
+            server.now = lambda: clock[0]
+            officer = await self.connect(address, 'cop')
+            civilian = await self.connect(address, 'citizen')
+            actor, target = SocialClient(officer), SocialClient(civilian)
+            await actor.open()
+            await target.open()
+            await self.apply(officer, OPT_IN)
+            await self.apply(civilian, OPT_IN)
+            await actor.request(1, CITIZEN)
+            await self.receive_kind(civilian, social.SOCIAL_EVENT)
+            clock[0] += social.RECEIPT_TIMEOUT_MS
+            result = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, result))['interaction_result'], 'cancelled')
+            await officer.close()
+            await self.wait_state(civilian, lambda m: m and COP not in m)
+            replacement = await self.connect(address, 'cop')
+            actor = SocialClient(replacement)
+            await actor.open()
+            self.assertEqual(actor.last_nonce, 1)
+            await self.apply(replacement, OPT_IN)
+            old = WIRE.pack(b'PRP3', 1, 1, 0, replacement.session, CITIZEN, replacement.epoch, 1)
+            await replacement.send(social.SOCIAL_REQUEST, old)
+            with self.assertRaises((asyncio.IncompleteReadError, ConnectionError)):
+                await self.receive_kind(replacement, social.SOCIAL_RESULT)
 
     async def test_two_clients_full_police_sequence_and_opt_out(self):
         async with self.running(SyntheticScene()) as (_, address):

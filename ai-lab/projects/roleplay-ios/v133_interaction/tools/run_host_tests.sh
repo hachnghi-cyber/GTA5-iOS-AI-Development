@@ -18,6 +18,7 @@ ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 "$work/test_carrier_tw
   server/rp_authority_ffi.c tests/test_v133_server_ffi.c -o "$work/test_v133_server_ffi"
 ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 "$work/test_v133_server_ffi"
 "$compiler" "${flags[@]}" src/rp_v133_police.c src/rp_v133_police_tx.c \
-  src/rp_v133_authority_client.c tests/test_v133_authority_client.c -o "$work/test_v133_authority_client"
+  src/rp_v133_authority_client.c src/rp_v133_authority_social.c src/rp_v133_interact_gate.c \
+  src/rp_v133_wire.c tests/test_v133_authority_client.c -o "$work/test_v133_authority_client"
 ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 "$work/test_v133_authority_client"
 echo "Host tests: PASS (13 source test binaries; no game or device)"

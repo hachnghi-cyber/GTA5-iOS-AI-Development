@@ -4,6 +4,10 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server và probe có kênh PRP3 tùy chọn cho Chào hỏi và yêu cầu kiểm tra giấy
+tờ. Gửi chỉ khi hai bên đã opt-in và xác nhận bằng kết nối người nhận.
+Xem `PRIVATE_RP_SERVER_VI.md`. Cần build và xác nhận probe mới trên iPhone.
+
 Server đã kiểm tra hai lần gia nhập hiện tại trước khi đưa dữ liệu cặp vào
 luật còng/áp giải. 163 test host đạt, gồm từ chối tráo người và dùng mẫu
 cũ sau reconnect; dữ liệu game trong test là mô hình. Adapter game thật

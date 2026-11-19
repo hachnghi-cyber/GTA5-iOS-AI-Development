@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "rp_v133_authority_client.h"
+#include "rp_v133_authority_social.h"
 
 enum {SELF = 11, OTHER = 22, SCOPE_BYTES = 24, ROW_BYTES = 80};
 
@@ -75,6 +76,7 @@ static void ack(const uint8_t request[45], uint8_t out[40], uint8_t outcome) {
 static void test_header_bounds(void) {
     const struct {uint8_t kind; uint32_t length;} good[] = {
         {RP_AUTHORITY_WELCOME, 40}, {RP_AUTHORITY_ACK, 40},
+        {RP_AUTHORITY_SOCIAL_RESULT, 9}, {RP_AUTHORITY_SOCIAL_EVENT, 48}, {RP_AUTHORITY_SOCIAL_STATE, 8},
         {RP_AUTHORITY_SNAPSHOT, 24}, {RP_AUTHORITY_SNAPSHOT, 104},
         {RP_AUTHORITY_SNAPSHOT, 2584}, {RP_AUTHORITY_PONG, 0}
     }, bad[] = {
@@ -354,6 +356,42 @@ static void test_consent_probe_rejects_denied_ack_and_preexisting_consent(void) 
     assert(rp_authority_consent_probe_step(&client, &phase, request, sizeof request) == RP_CONSENT_PROBE_FAILED);
 }
 
+static void test_social_channel_event_and_verified_receipt(void) {
+    rp_authority_client client;
+    rp_authority_social social = {0};
+    uint8_t open[5], request[45], receipt[21], event[48], result[9];
+    ready(&client, 99);
+    assert(rp_authority_social_open(&social, &client, open, sizeof open));
+    assert(open[0] == RP_AUTHORITY_SOCIAL_OPEN && open[4] == 0);
+    assert(!rp_authority_social_request(&social, RP_V133_DOCUMENTS, OTHER, request, sizeof request));
+    be64(result, 19);
+    assert(rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_STATE, result, 8, NULL, 0));
+    assert(rp_authority_social_request(&social, RP_V133_DOCUMENTS, OTHER, request, sizeof request));
+    rp_v133_action decoded;
+    assert(rp_v133_wire_decode(request + 5, 40, &decoded));
+    assert(decoded.kind == RP_V133_DOCUMENTS && decoded.receiver == OTHER && decoded.nonce == 20);
+    assert(!rp_authority_social_request(&social, RP_V133_GREET, OTHER, request, sizeof request));
+    result[8] = 2;
+    assert(!rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_RESULT, result, 9, NULL, 0));
+    be64(result, 20);
+    assert(rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_RESULT, result, 9, NULL, 0));
+    assert(social.last_result == 2 && !social.pending_nonce);
+
+    be64(event, OTHER);
+    rp_v133_action input = {.session_id = client.session, .receiver = SELF,
+        .epoch = client.epoch + 1, .nonce = 51, .kind = RP_V133_GREET};
+    assert(rp_v133_wire_encode(&input, event + 8, 40));
+    assert(!rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_EVENT, event, 48, receipt, 21));
+    input.epoch = client.epoch;
+    assert(rp_v133_wire_encode(&input, event + 8, 40));
+    assert(rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_EVENT, event, 48, receipt, 21));
+    assert(social.last_sender == OTHER && social.last_kind == RP_V133_GREET);
+    assert(receipt[0] == RP_AUTHORITY_SOCIAL_RECEIPT && receipt[4] == 16 && receipt[12] == OTHER && receipt[20] == 51);
+    assert(!rp_authority_social_receive(&social, RP_AUTHORITY_SOCIAL_EVENT, event, 48, receipt, 21));
+    rp_authority_social_stop(&social);
+    assert(!social.ready && !social.last_sender && !social.last_nonce);
+}
+
 int main(void) {
     test_header_bounds();
     test_welcome_and_disconnect();
@@ -363,6 +401,7 @@ int main(void) {
     test_uint64_and_nonce_exhaustion();
     test_consent_probe_requires_ack_and_current_snapshot();
     test_consent_probe_rejects_denied_ack_and_preexisting_consent();
+    test_social_channel_event_and_verified_receipt();
     puts("Authority client codec: PASS (protocol fixtures; no TLS or GTA authorization)");
     return 0;
 }

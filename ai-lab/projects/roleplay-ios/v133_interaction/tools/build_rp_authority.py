@@ -18,7 +18,9 @@ def main():
     flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Wpedantic', '-O2', '-shared']
     if sys.platform != 'win32':
         flags += ['-fPIC']
-    fixture = [str(root / 'src/rp_v133_authority_client.c'), str(root / 'tests/authority_client_test_ffi.c')] if args.with_client_test_fixture else []
+    fixture = [str(root / file) for file in ('src/rp_v133_authority_client.c', 'src/rp_v133_authority_social.c',
+                                            'src/rp_v133_interact_gate.c', 'src/rp_v133_wire.c',
+                                            'tests/authority_client_test_ffi.c')] if args.with_client_test_fixture else []
     subprocess.run([args.compiler, *args.compiler_arg, *flags, '-I', str(root / 'include'),
                     str(root / 'src/rp_v133_police.c'), str(root / 'src/rp_v133_police_tx.c'),
                     str(root / 'server/rp_authority_ffi.c'), *fixture, '-o', str(args.output.resolve())], check=True)

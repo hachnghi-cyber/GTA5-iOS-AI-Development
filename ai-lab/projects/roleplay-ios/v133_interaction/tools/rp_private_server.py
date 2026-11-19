@@ -17,6 +17,7 @@ import time
 
 from prp3_direct_tls import Credentials, ProtocolError, u64
 from rp_private_authority import COMMAND, NativeAuthority
+from rp_social_relay import SOCIAL_OPEN, SOCIAL_RECEIPT, SOCIAL_REQUEST, SocialRelay
 
 ALPN = 'police-rp-authority/1'
 HEADER = struct.Struct('!BI')
@@ -88,6 +89,7 @@ class PrivateServer:
         self.credentials, self.registry, self.authority = credentials, dict(registry), authority
         self.lease = lease_seconds
         self.peers, self.tasks = {}, set()
+        self.social = SocialRelay(authority, self.peers, self._enqueue)
         self.revision, self._rows = 0, None
         self.listener = self.timer = None
         self.stopping = False
@@ -137,6 +139,7 @@ class PrivateServer:
             self.authority.leave(peer['id'])
             # Abort promptly: a silent/slow peer cannot retain consent or custody.
             peer['writer'].transport.abort()
+            self.social.tick(self.now())
             self._publish()
 
     async def _sender(self, peer):
@@ -180,12 +183,16 @@ class PrivateServer:
                     if not self._enqueue(peer, PONG):
                         raise ProtocolError('slow client')
                 elif kind == REQUEST and len(payload) == COMMAND.size:
-                    ack = self.authority.dispatch(principal.rp_id, self.now(), payload)
+                    now = self.now()
+                    ack = self.authority.dispatch(principal.rp_id, now, payload)
                     if ack is None:
                         raise ProtocolError('invalid transaction or replay')
                     if not self._enqueue(peer, ACK, ack):
                         raise ProtocolError('slow client')
+                    self.social.tick(now)
                     self._publish()
+                elif kind in (SOCIAL_OPEN, SOCIAL_REQUEST, SOCIAL_RECEIPT):
+                    self.social.handle(peer, kind, payload, self.now())
                 else:
                     raise ProtocolError('unknown record or invalid request size')
         except (OSError, EOFError, asyncio.IncompleteReadError, ProtocolError, TimeoutError):
@@ -208,6 +215,7 @@ class PrivateServer:
             await asyncio.sleep(0.05)
             if not self.authority.tick(self.now()):
                 raise RuntimeError('authority clock failed')
+            self.social.tick(self.now())
             self._publish()
 
     async def close(self):

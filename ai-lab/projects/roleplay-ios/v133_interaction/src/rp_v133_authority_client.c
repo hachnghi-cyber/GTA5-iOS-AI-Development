@@ -24,6 +24,12 @@ static bool inbound_size(uint8_t kind, size_t size) {
                 (size - SCOPE_BYTES) % ROW_BYTES == 0;
         case RP_AUTHORITY_PONG:
             return size == 0;
+        case RP_AUTHORITY_SOCIAL_RESULT:
+            return size == 9;
+        case RP_AUTHORITY_SOCIAL_EVENT:
+            return size == 48;
+        case RP_AUTHORITY_SOCIAL_STATE:
+            return size == 8;
         default:
             return false;
     }

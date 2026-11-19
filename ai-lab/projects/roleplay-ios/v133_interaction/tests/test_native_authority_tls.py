@@ -12,6 +12,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import rp_private_server as rp
+import rp_social_relay as social
+from rp_private_client import SocialClient
 import test_rp_private_server as hosttests
 from run_private_rp_iphone_check import STEPS, watch
 
@@ -99,6 +101,61 @@ class NativeAuthorityTLSTests(unittest.IsolatedAsyncioTestCase):
         async with asyncio.timeout(3):
             while not check(client.row(identity)):
                 await client.receive()
+
+    async def test_native_social_greet_and_documents_via_private_server(self):
+        async with self.running() as (_, address):
+            phone = await self.connect(address, 'cop', COP)
+            host = await hosttests.PrivateServerTests.connect(self, address, 'citizen')
+            civilian = SocialClient(host)
+            await civilian.open()
+            self.assertEqual(await phone.request(1), 2)
+            await hosttests.PrivateServerTests.apply(self, host, hosttests.OPT_IN)
+            ptr, u8_ptr, size = C.c_void_p, C.POINTER(C.c_uint8), C.c_size_t
+            lib = phone.lib
+            for name, result, args in (
+                ('open', ptr, [ptr, u8_ptr, size]), ('destroy', None, [ptr]),
+                ('request', C.c_int, [ptr, C.c_uint32, C.c_uint64, u8_ptr, size]),
+                ('receive', C.c_int, [ptr, C.c_uint8, u8_ptr, size, u8_ptr, size]),
+            ):
+                method = getattr(lib, 'test_social_' + name)
+                method.restype, method.argtypes = result, args
+            opening = (C.c_uint8 * 5)()
+            handle = lib.test_social_open(phone.handle, opening, len(opening))
+            self.assertTrue(handle)
+            self.addCleanup(lib.test_social_destroy, handle)
+
+            async def send_native(frame):
+                phone.writer.write(bytes(frame))
+                await phone.writer.drain()
+
+            async def receive_native(expected):
+                async with asyncio.timeout(3):
+                    while True:
+                        kind, payload = await rp.read_record(phone.reader, 3)
+                        if kind == expected:
+                            body = (C.c_uint8 * len(payload)).from_buffer_copy(payload)
+                            receipt = (C.c_uint8 * 21)()
+                            self.assertTrue(lib.test_social_receive(handle, kind, body, len(payload), receipt, 21))
+                            return body, receipt
+                        self.assertEqual(kind, rp.SNAPSHOT)
+
+            receive_host = hosttests.PrivateServerTests.receive_kind
+            await send_native(opening)
+            await receive_native(social.SOCIAL_STATE)
+            await civilian.request(1, COP)
+            _, receipt = await receive_native(social.SOCIAL_EVENT)
+            await send_native(receipt)
+            result = await receive_host(self, host, social.SOCIAL_RESULT)
+            self.assertEqual((await civilian.consume(social.SOCIAL_RESULT, result))['interaction_result'], 'recipient_received')
+
+            documents = (C.c_uint8 * 45)()
+            self.assertTrue(lib.test_social_request(handle, 2, CITIZEN, documents, len(documents)))
+            await send_native(documents)
+            event = await receive_host(self, host, social.SOCIAL_EVENT)
+            self.assertEqual(await civilian.consume(social.SOCIAL_EVENT, event),
+                             {'interaction': 'documents', 'rp_sender': COP})
+            result, _ = await receive_native(social.SOCIAL_RESULT)
+            self.assertEqual(result[8], social.RECEIVED)
 
     async def test_native_codec_two_clients_full_cycle(self):
         async with self.running(hosttests.SyntheticScene()) as (_, address):

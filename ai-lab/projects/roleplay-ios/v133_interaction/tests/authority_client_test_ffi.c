@@ -1,6 +1,7 @@
 /* Test-only opaque boundary for exercising the native C client over real TLS.
  * Never included in the normal server library or iOS dylib. */
 #include "rp_v133_authority_client.h"
+#include "rp_v133_authority_social.h"
 #include <stdlib.h>
 #include <string.h>
 #if defined(_WIN32)
@@ -48,4 +49,18 @@ EXPORT int test_client_consent_step(void *client, uint32_t *phase, uint8_t *out,
     rp_consent_probe_result result = rp_authority_consent_probe_step(client, &value, out, size);
     *phase = (uint32_t)value;
     return result;
+}
+
+EXPORT void *test_social_open(void *client, uint8_t *out, size_t size) {
+    rp_authority_social *social = calloc(1, sizeof *social);
+    if (!rp_authority_social_open(social, client, out, size)) { free(social); return NULL; }
+    return social;
+}
+EXPORT void test_social_destroy(void *social) { free(social); }
+EXPORT int test_social_request(void *social, uint32_t kind, uint64_t target, uint8_t *out, size_t size) {
+    return rp_authority_social_request(social, (rp_v133_interaction_kind)kind, target, out, size);
+}
+EXPORT int test_social_receive(void *social, uint8_t kind, const uint8_t *payload, size_t size,
+                               uint8_t *receipt, size_t receipt_size) {
+    return rp_authority_social_receive(social, kind, payload, size, receipt, receipt_size);
 }

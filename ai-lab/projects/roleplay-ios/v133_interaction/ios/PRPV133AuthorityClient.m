@@ -5,15 +5,21 @@
 #import <Security/SecProtocolOptions.h>
 #include <string.h>
 #include "rp_v133_authority_client.h"
+#include "rp_v133_authority_social.h"
 
 static const char RP_AUTH_ALPN[] = "police-rp-authority/1";
 static NSString *const RP_AUTH_CONFIG = @"PoliceRP-Authority-PRIVATE.json";
 static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 
+typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
+    RPSocialOpening, RPSocialOptingIn, RPSocialAwaitingGreet, RPSocialAwaitingReceipt
+};
+
 @interface PRPV133AuthorityClient : NSObject {
 @public
     rp_authority_client state;
     rp_consent_probe_phase consentProbePhase;
+    rp_authority_social social;
 }
 @property(nonatomic, strong) nw_connection_t channel;
 @property(nonatomic, strong) dispatch_queue_t queue;
@@ -26,6 +32,8 @@ static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 @property(nonatomic) NSTimeInterval nextPing;
 @property(nonatomic) NSTimeInterval consentProbeDeadline;
 @property(nonatomic) BOOL consentProbe;
+@property(nonatomic) uint64_t socialPeer;
+@property(nonatomic) RPSocialProbePhase socialPhase;
 @property(nonatomic) BOOL verified;
 @property(nonatomic) BOOL done;
 @property(nonatomic, copy) NSString *result;
@@ -39,6 +47,8 @@ static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 - (void)consume:(uint8_t)kind payload:(NSData *)payload;
 - (void)readRecord;
 - (void)ready;
+- (void)advanceSocialProbe;
+- (void)consumeSocial:(uint8_t)kind payload:(NSData *)payload;
 @end
 
 static PRPV133AuthorityClient *authorityClient;
@@ -79,6 +89,7 @@ static NSTimeInterval rp_uptime(void) {
     if (self.done) return;
     self.done = YES;
     rp_authority_client_stop(&state);
+    rp_authority_social_stop(&social);
     if (self.timer) dispatch_source_cancel(self.timer);
     self.timer = nil;
     if (self.channel) nw_connection_cancel(self.channel);
@@ -122,11 +133,27 @@ static NSTimeInterval rp_uptime(void) {
 
 - (void)consume:(uint8_t)kind payload:(NSData *)payload {
     if (self.done) return;
+    if (kind == RP_AUTHORITY_SOCIAL_STATE || kind == RP_AUTHORITY_SOCIAL_EVENT ||
+            kind == RP_AUTHORITY_SOCIAL_RESULT) {
+        [self consumeSocial:kind payload:payload];
+        [self readRecord];
+        return;
+    }
     if (!rp_authority_client_receive(&state, kind, payload.bytes, payload.length)) {
         [self finish:@"protocol_rejected"];
         return;
     }
-    if (kind == RP_AUTHORITY_WELCOME) [self report:@"authority_ready"];
+    if (kind == RP_AUTHORITY_WELCOME) {
+        [self report:@"authority_ready"];
+        if (self.socialPeer) {
+            uint8_t open[RP_AUTHORITY_HEADER_BYTES];
+            if (!rp_authority_social_open(&social, &state, open, sizeof open)) {
+                [self finish:@"social_open_rejected"];
+                return;
+            }
+            [self send:[NSData dataWithBytes:open length:sizeof open]];
+        }
+    }
     else if (kind == RP_AUTHORITY_ACK) {
         self.requestDeadline = 0;
         [self report:state.last_ack.outcome == RP_POLICE_TX_APPLIED ? @"decision_applied" : @"decision_denied"];
@@ -144,7 +171,67 @@ static NSTimeInterval rp_uptime(void) {
             [self send:[NSData dataWithBytes:request length:sizeof request]];
         }
     }
+    if (self.socialPeer) [self advanceSocialProbe];
     [self readRecord];
+}
+
+- (void)advanceSocialProbe {
+    if (!social.ready || !state.revision || state.pending || self.done) return;
+    const uint64_t *selfRow = NULL;
+    for (uint32_t i = 0; i < state.member_count; ++i) {
+        if (state.members[i][0] == state.expected_id) selfRow = state.members[i];
+    }
+    if (!selfRow) { [self finish:@"social_subject_missing"]; return; }
+    if (self.socialPhase == RPSocialOpening) {
+        uint8_t request[RP_AUTHORITY_REQUEST_BYTES];
+        if (selfRow[2] || !rp_authority_client_request(&state, RP_POLICE_OPT_IN, state.expected_id,
+                                                       request, sizeof request)) {
+            [self finish:@"social_opt_in_rejected"];
+            return;
+        }
+        self.socialPhase = RPSocialOptingIn;
+        self.requestDeadline = rp_uptime() + 5.0;
+        [self send:[NSData dataWithBytes:request length:sizeof request]];
+    } else if (self.socialPhase == RPSocialOptingIn) {
+        if (state.last_ack.outcome != RP_POLICE_TX_APPLIED) {
+            [self finish:@"social_opt_in_denied"];
+            return;
+        }
+        if (selfRow[2] && selfRow[9] == state.last_ack.command.nonce) {
+            self.socialPhase = RPSocialAwaitingGreet;
+            [self report:@"awaiting_private_greet"];
+        }
+    } else if (!selfRow[2]) {
+        [self finish:@"social_consent_lost"];
+    }
+}
+
+- (void)consumeSocial:(uint8_t)kind payload:(NSData *)payload {
+    uint8_t receipt[RP_AUTHORITY_SOCIAL_RECEIPT_BYTES];
+    if (!self.socialPeer || !rp_authority_social_receive(&social, kind, payload.bytes, payload.length,
+                                                        receipt, sizeof receipt)) {
+        [self finish:@"social_protocol_rejected"];
+        return;
+    }
+    if (kind == RP_AUTHORITY_SOCIAL_STATE) {
+        [self advanceSocialProbe];
+    } else if (kind == RP_AUTHORITY_SOCIAL_EVENT) {
+        uint8_t request[RP_AUTHORITY_SOCIAL_REQUEST_BYTES];
+        if (self.socialPhase != RPSocialAwaitingGreet || social.last_sender != self.socialPeer ||
+                social.last_kind != RP_V133_GREET ||
+                !rp_authority_social_request(&social, RP_V133_DOCUMENTS, self.socialPeer, request, sizeof request)) {
+            [self finish:@"unexpected_social_greet"];
+            return;
+        }
+        self.socialPhase = RPSocialAwaitingReceipt;
+        self.requestDeadline = rp_uptime() + 5.0;
+        [self send:[NSData dataWithBytes:receipt length:sizeof receipt]];
+        [self send:[NSData dataWithBytes:request length:sizeof request]];
+        [self report:@"greet_received_documents_sent"];
+    } else {
+        [self finish:(self.socialPhase == RPSocialAwaitingReceipt && social.last_result == 2) ?
+                     @"social_round_trip_passed" : @"documents_receipt_rejected"];
+    }
 }
 
 - (void)readRecord {
@@ -164,7 +251,7 @@ static NSTimeInterval rp_uptime(void) {
 }
 
 - (void)submit:(uint32_t)operation target:(uint64_t)target {
-    if (self.done || !self.verified || !state.ready || self.consentProbe) return;
+    if (self.done || !self.verified || !state.ready || self.consentProbe || self.socialPeer) return;
     uint8_t request[45];
     if (!rp_authority_client_request(&state, (rp_police_operation)operation, target,
                                      request, sizeof request)) {
@@ -192,6 +279,7 @@ static NSTimeInterval rp_uptime(void) {
     }
     self.verified = YES; // RP certificate channel only; never RAGE/player auth.
     if (self.consentProbe) self.consentProbeDeadline = rp_uptime() + 12.0;
+    if (self.socialPeer) self.consentProbeDeadline = rp_uptime() + 60.0;
     self.nextPing = rp_uptime() + 3.0;
     [self readRecord];
 }
@@ -255,14 +343,16 @@ void prp_start_authority_client(NSString *folder) {
             NSString *host = config[@"host"];
             NSNumber *port = config[@"port"], *expires = config[@"expires"];
             id diagnostic = config[@"diagnostic"];
-            uint64_t identityID = 0;
+            BOOL useSocial = [diagnostic isEqual:@"social-round-trip-v1"];
+            uint64_t identityID = 0, socialPeer = 0;
             NSTimeInterval now = [NSDate date].timeIntervalSince1970;
             if (![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
                 ![port isKindOfClass:[NSNumber class]] || port.doubleValue != port.unsignedIntValue ||
                 port.unsignedIntValue < 1024 || port.unsignedIntValue > 65535 ||
                 ![expires isKindOfClass:[NSNumber class]] || !(expires.doubleValue > now && expires.doubleValue <= now + 1230) ||
                 !prp_parse_id(config[@"rp_id"], &identityID) ||
-                (diagnostic && ![diagnostic isEqual:@"consent-round-trip-v1"])) {
+                (diagnostic && !useSocial && ![diagnostic isEqual:@"consent-round-trip-v1"]) ||
+                (useSocial && (!prp_parse_id(config[@"rp_peer_id"], &socialPeer) || socialPeer == identityID))) {
                 [client finish:@"invalid_or_expired_config"];
                 return;
             }
@@ -291,7 +381,8 @@ void prp_start_authority_client(NSString *folder) {
                 }, authorityQueue);
             }, NW_PARAMETERS_DEFAULT_CONFIGURATION);
             client.expectedID = identityID;
-            client.consentProbe = diagnostic != nil;
+            client.consentProbe = [diagnostic isEqual:@"consent-round-trip-v1"];
+            client.socialPeer = socialPeer;
             client.expires = expires.doubleValue;
             nw_endpoint_t endpoint = nw_endpoint_create_host(host.UTF8String, port.stringValue.UTF8String);
             client.channel = nw_connection_create(endpoint, parameters);

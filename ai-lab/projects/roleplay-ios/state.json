@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Establish the exact game participant and admission binding, then feed verified game observations to both the server duty API and the admission-bound pair API before enabling effects and running two-device regression tests.",
+  "next_action": "Build and run the optional GREET/DOCUMENTS probe on a signed iPhone with the Windows private server. For native gameplay, collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session, then establish the exact game participant/admission binding before enabling effects.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,17 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_social_transport": {
+      "parent_commit": "052c8b1db30cf5658d9d9c56c402517c0aa61f6f",
+      "scope": "Opt-in PRP3 GREET and DOCUMENTS notifications via private mTLS authority; source is the authenticated RP principal; one pending request per sender; receiver-specific receipt; no document content or native gameplay action.",
+      "host_tests_passed": 167,
+      "host_c_codec_tests_passed": true,
+      "interop": "compiled native C client and Windows peer exchanged both actions over real loopback TLS; two actual host CLI processes did so using the PC Wi-Fi address",
+      "negative_cases": "unsubscribed peer, opt-out cancellation, sender cannot confirm own delivery, expiration, replay after reconnect",
+      "iphone_build": "pending source checkpoint CI",
+      "iphone_runtime_tested": false,
+      "game_identity_binding": false
     },
     "private_authority_pair_admission": {
       "parent_commit": "52813aa91e4eb31a854615723612a010bd43edb5",

@@ -18,7 +18,13 @@ typedef enum {
     RP_AUTHORITY_ACK,
     RP_AUTHORITY_SNAPSHOT,
     RP_AUTHORITY_PING,
-    RP_AUTHORITY_PONG
+    RP_AUTHORITY_PONG,
+    RP_AUTHORITY_SOCIAL_REQUEST,
+    RP_AUTHORITY_SOCIAL_RESULT,
+    RP_AUTHORITY_SOCIAL_EVENT,
+    RP_AUTHORITY_SOCIAL_RECEIPT,
+    RP_AUTHORITY_SOCIAL_OPEN,
+    RP_AUTHORITY_SOCIAL_STATE
 } rp_authority_record_kind;
 
 /* A single owner uses this POD only after its external TLS adapter verifies
