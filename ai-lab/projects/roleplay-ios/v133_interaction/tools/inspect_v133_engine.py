@@ -60,6 +60,7 @@ SYMBOLS = {
     'clear_session': '__ZN15CNetworkSession12ClearSessionEj18LeaveSessionReason',
     'migrate_end': '__ZN15CNetworkSession29ProcessSessionMigrateEndEventEPN4rage24snEventSessionMigrateEndE',
     'session_id': '__ZNK4rage9snSession12GetSessionIdEv',
+    'rl_session_id': '__ZNK4rage9rlSession5GetIdEv',
     'session_member': '__ZNK4rage9snSession8IsMemberERKNS_9rlGamerIdE',
     'session_endpoint': '__ZN15CNetworkSession23GetSessionNetEndpointIdERKN4rage11rlGamerInfoEPj',
     'session_peer_connection': '__ZNK4rage9snSession10GetPeerCxnEm',
@@ -286,6 +287,7 @@ def inspect(data):
         ('register_events', 0x2ec, 'register_event', 'BL'),
         ('script_read', 0xb0, 'read_bits', 'BL'),
         ('clear_session', 0x104, 'session_id', 'BL'),
+        ('session_id', 4, 'rl_session_id', 'B'),
         ('clear_session', 0x214, 'swap_sessions', 'BL'),
         ('session_update', 0x768, 'drop_session', 'BL'),
         ('session_update', 0x778, 'clear_session', 'BL'),
@@ -311,6 +313,9 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('session_id', 0, 0x9102a000, 'session ID wrapper selects the rlSession member at +0xa8'),
+        ('rl_session_id', 0, 0xf9429000, 'rlSession ID getter reads a 64-bit value at +0x520'),
+        ('rl_session_id', 4, 0xd65f03c0, 'rlSession ID getter returns directly'),
         ('session_update', 0x5cc, 0xf9401f08, 'load the pending leave status pointer from the manager'),
         ('session_update', 0x5d0, 0xb9400108, 'read the pending leave status value'),
         ('session_update', 0x5dc, 0x71000d1f, 'compare the pending leave status with 3'),
@@ -482,11 +487,13 @@ def inspect(data):
                 receive_context=context,
                 leave_session_call_context={
                     'return_va': hex(sites['leave_session'] + 0x240),
+                    'session_id_offset': 0x5c8,
                     'code_guards': [
                         {'function': name, 'va': hex(sites[name]), 'size': length,
                          'sha256': hashlib.sha256(data[off+sites[name]-va:
                                                        off+sites[name]-va+length]).hexdigest()}
-                        for name, length in (('leave_session', 0x3c8), ('native_session_leave', 0x1e8))
+                        for name, length in (('leave_session', 0x3c8), ('native_session_leave', 0x1e8),
+                                             ('session_id', 8), ('rl_session_id', 8))
                     ],
                     'scope': 'main-slot and task reference equality through the native leave request and later Update decision',
                 },

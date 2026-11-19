@@ -618,6 +618,9 @@ def capture_leave_session_call(remote, base, metadata, wait_seconds):
     if not 1 <= wait_seconds <= 60:
         raise ValueError("wait_seconds outside bounded range")
     call = metadata['leave_session_call_context']
+    session_id_offset = call['session_id_offset']
+    if session_id_offset != 0x5c8:
+        raise DebugProtocolError('leave-session ID layout mismatch')
     slots = metadata['session_slots']
     verify_context_code(remote, base, call, label='leave-session-call')
     verify_context_code(remote, base, metadata['leave_session_branch_context'], label='leave-session-branch')
@@ -654,6 +657,8 @@ def capture_leave_session_call(remote, base, metadata, wait_seconds):
             int.from_bytes(remote.memory(manager + 0x38, 8), 'little') != task):
         sample['status'] = 'unexpected_leave_task'
         return sample
+    session_id = int.from_bytes(remote.memory(main + session_id_offset, 8), 'little')
+    sample['session_id_at_call_present'] = bool(session_id)
 
     sample['last_stage'] = 'return'
     pc, next_thread, sample['status'] = queue_stage_stop(remote, (post,), deadline)
@@ -683,6 +688,15 @@ def capture_leave_session_call(remote, base, metadata, wait_seconds):
             or int.from_bytes(remote.memory(manager + 0x20, 8), 'little') != main):
         sample['status'] = 'leave_task_or_slot_replaced'
         return sample
+    later_session_id = int.from_bytes(remote.memory(main + session_id_offset, 8), 'little')
+    if not session_id:
+        sample['session_id_at_decision'] = 'unknown_initial_id'
+    elif later_session_id == session_id:
+        sample['session_id_at_decision'] = 'unchanged'
+    elif not later_session_id:
+        sample['session_id_at_decision'] = 'cleared'
+    else:
+        sample['session_id_at_decision'] = 'changed'
     sample['decision_status_matches'] = (remote.read_register(8) & 0xffffffff) == 3
     sample['same_thread_at_decision'] = decision_thread == thread
     sample['main_slot_establishment_ended'] = (

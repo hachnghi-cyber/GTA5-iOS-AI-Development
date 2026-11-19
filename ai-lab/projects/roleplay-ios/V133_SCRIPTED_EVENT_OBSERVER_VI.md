@@ -299,6 +299,13 @@ chiếu, status 3 và slot chính mất trạng thái thiết lập. Kết quả
 cờ và trạng thái, còn cần xác minh generation và sender riêng. Điểm đo
 này đã qua kiểm thử host và chờ lượt trên iPhone.
 
+Bộ đo so sánh ID phiên sau khi đối chiếu slot và tác vụ.
+`snSession::GetSessionId` chuyển tới `rlSession::GetId`. Observer kiểm tra
+mã live của cả hai getter trước khi đọc cùng trường. `session_id_at_decision`
+ghi `unchanged`, `cleared`, `changed` hoặc `unknown_initial_id`. Giá trị
+ID và địa chỉ slot chỉ dùng trong một lần attach. Cần kiểm chứng generation
+riêng khi gia nhập lại hoặc chuyển phiên.
+
 `enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame

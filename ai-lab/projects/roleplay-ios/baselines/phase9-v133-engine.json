@@ -183,6 +183,10 @@
       "name": "__ZNK4rage9snSession12GetSessionIdEv",
       "va": "0x1019d255c"
     },
+    "rl_session_id": {
+      "name": "__ZNK4rage9rlSession5GetIdEv",
+      "va": "0x101d6b2b8"
+    },
     "session_member": {
       "name": "__ZNK4rage9snSession8IsMemberERKNS_9rlGamerIdE",
       "va": "0x1019d2ea4"
@@ -458,6 +462,12 @@
       "kind": "BL"
     },
     {
+      "at": "0x1019d2560",
+      "source": "session_id",
+      "target": "rl_session_id",
+      "kind": "B"
+    },
+    {
       "at": "0x1017ef498",
       "source": "clear_session",
       "target": "swap_sessions",
@@ -555,6 +565,24 @@
     }
   ],
   "observations": [
+    {
+      "at": "0x1019d255c",
+      "function": "session_id",
+      "word": "0x9102a000",
+      "observation": "session ID wrapper selects the rlSession member at +0xa8"
+    },
+    {
+      "at": "0x101d6b2b8",
+      "function": "rl_session_id",
+      "word": "0xf9429000",
+      "observation": "rlSession ID getter reads a 64-bit value at +0x520"
+    },
+    {
+      "at": "0x101d6b2bc",
+      "function": "rl_session_id",
+      "word": "0xd65f03c0",
+      "observation": "rlSession ID getter returns directly"
+    },
     {
       "at": "0x1017ec088",
       "function": "session_update",
@@ -1291,6 +1319,7 @@
   },
   "leave_session_call_context": {
     "return_va": "0x1017fe710",
+    "session_id_offset": 1480,
     "code_guards": [
       {
         "function": "leave_session",
@@ -1303,6 +1332,18 @@
         "va": "0x1019cfa70",
         "size": 488,
         "sha256": "a63d4fd8773715190a51f8b76d6a04b44ba93bbf93209a10ea28db940c2e4c62"
+      },
+      {
+        "function": "session_id",
+        "va": "0x1019d255c",
+        "size": 8,
+        "sha256": "ba79cd05a5754e1a9d656354be0b0bdb37a364aa39507d7fc5d90983daf7331f"
+      },
+      {
+        "function": "rl_session_id",
+        "va": "0x101d6b2b8",
+        "size": 8,
+        "sha256": "63bea93c82a1b02dfd8649b313d3d7f132788998ed628f223d09f836cb83f9f5"
       }
     ],
     "scope": "main-slot and task reference equality through the native leave request and later Update decision"

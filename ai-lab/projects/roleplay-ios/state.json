@@ -894,6 +894,16 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "native_leave_session_id_comparison": {
+      "parent_commit": "e73d0675292ca25f8ab24aa6174bd16e4fa523f6",
+      "scope": "Guard both exact v13.3 session ID getters, then compare the selected main slot's ID at the accepted leave request and later Update decision. Output contains only ID presence and relation, never the ID or slot pointer.",
+      "relations": ["unchanged", "cleared", "changed", "unknown_initial_id"],
+      "host_python_tests_passed": 182,
+      "host_test_log_sha256": "3061f27a7d2772886893e1b92428fe792596cbbbf7573458240565e17efbdfea",
+      "iphone_id_comparison_verified": false,
+      "session_generation_verified": false,
+      "authenticated_sender_verified": false
+    },
     "native_leave_call_observer": {
       "parent_commit": "a4f0975cf6bed5487b8abf0ce4e77912f43d1e18",
       "scope": "Guarded observer compares the established main slot and native leave task at the call, the accepted return in the same frame, and the later Update cleanup decision during one attach.",

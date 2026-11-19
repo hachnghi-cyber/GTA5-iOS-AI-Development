@@ -465,16 +465,18 @@ class LeaveSessionBranchTests(unittest.TestCase):
 
 
 class LeaveSessionCallTests(unittest.TestCase):
-    def capture(self, *, accepted=1, later_task=0x1a0000000, return_thread=b'caller', decision_value=3):
+    def capture(self, *, accepted=1, later_task=0x1a0000000, return_thread=b'caller',
+                decision_value=3, initial_id=0x123456789abcdef, later_id=0x123456789abcdef):
         metadata = {
             'internal_sites': {'leave_session_call': '0x100012300', 'leave_session_branch': '0x100012400'},
-            'leave_session_call_context': {'return_va': '0x100012304'},
+            'leave_session_call_context': {'return_va': '0x100012304', 'session_id_offset': 0x5c8},
             'leave_session_branch_context': {},
             'session_slots': {},
         }
         manager, main, task = 0x170000000, 0x190000000, 0x1a0000000
         receiver_or_result = iter((main, accepted))
         task_reads = iter((task, later_task))
+        id_reads = iter((initial_id, later_id))
         others = {2: task, 8: decision_value, 19: manager, 24: manager, 29: 0x180000000}
         names = {f'qRegisterInfo{number:x}'.encode(): f'name:x{number};'.encode()
                  for number in (0, 2, 8, 19, 24, 29)}
@@ -483,6 +485,8 @@ class LeaveSessionCallTests(unittest.TestCase):
             self.assertEqual(size, 8)
             if address == manager + 0x38:
                 return struct.pack('<Q', next(task_reads))
+            if address == main + 0x5c8:
+                return struct.pack('<Q', next(id_reads))
             self.assertEqual(address, manager + 0x20)
             return struct.pack('<Q', main)
 
@@ -504,6 +508,8 @@ class LeaveSessionCallTests(unittest.TestCase):
         self.assertEqual(sample['status'], 'observed')
         self.assertTrue(sample['native_leave_accepted'])
         self.assertTrue(sample['main_slot_establishment_ended'])
+        self.assertTrue(sample['session_id_at_call_present'])
+        self.assertEqual(sample['session_id_at_decision'], 'unchanged')
         self.assertFalse(sample['same_thread_at_decision'])
         self.assertFalse(sample['session_generation_verified'])
         self.assertFalse(sample['authenticated_rp_sender_verified'])
@@ -525,6 +531,18 @@ class LeaveSessionCallTests(unittest.TestCase):
         other_status, _ = self.capture(decision_value=2)
         self.assertFalse(other_status['decision_status_matches'])
         self.assertFalse(other_status['main_slot_establishment_ended'])
+
+    def test_distinguishes_cleared_or_replaced_id_without_printing_the_value(self):
+        native_value = 0x123456789abcdef
+        for initial_id, later_id, expected in (
+                (native_value, 0, 'cleared'),
+                (native_value, native_value + 1, 'changed'),
+                (0, native_value, 'unknown_initial_id')):
+            with self.subTest(expected=expected):
+                sample, _ = self.capture(initial_id=initial_id, later_id=later_id)
+                self.assertEqual(sample['session_id_at_decision'], expected)
+                self.assertNotIn(str(native_value), json.dumps(sample))
+                self.assertFalse(sample['session_generation_verified'])
 
 
 class _ContextMemory:

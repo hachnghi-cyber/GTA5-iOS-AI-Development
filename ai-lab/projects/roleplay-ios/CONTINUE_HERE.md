@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Điểm đo `leave_session_call` đã bổ sung đối chiếu ID phiên theo hai getter
+đã kiểm tra mã trên đúng v13.3. Log chỉ ghi ID lúc đầu có giá trị hay không
+và quan hệ ở mốc sau: giữ nguyên, bằng 0, đổi hoặc thiếu ID ban đầu.
+182 bài kiểm thử host đã qua. Cần lấy mẫu thật trong phòng chỉ mời.
+
 Điểm đo USB `leave_session_call` theo lời gọi `snSession::Leave`, giá trị
 trả về và quyết định dọn phiên trong `Update` trên cùng lần attach. Nó
 kiểm tra slot chính đang thiết lập ở đầu, rồi đối chiếu manager, slot và
