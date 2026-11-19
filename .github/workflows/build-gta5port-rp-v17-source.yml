@@ -1,0 +1,104 @@
+name: GTA5Port RP v1.7 - Source Integration (Pinned Upstream)
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/source-port-v17/**'
+      - '.github/workflows/build-gta5port-rp-v17-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  linux-source-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout user's engineering repository
+        uses: actions/checkout@v4
+      - name: Checkout exact public GTA5Port source snapshot (no game files)
+        uses: actions/checkout@v4
+        with:
+          repository: kevinerikjs/gta5-ios-port
+          ref: 9357c182b5cddd58e16dee684ea07ebc18a97a5d
+          path: upstream
+          persist-credentials: false
+      - name: Build host bridge from verified v1.6 source and apply to real upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          SCRIPT="ai-lab/projects/roleplay-ios/source-port-v17/tools/source_from_v16.py"
+          PAYLOAD="ai-lab/projects/roleplay-ios/native-bridge-v16/source_bundle.tar.xz.b64"
+          python3 "$SCRIPT" upstream --payload "$PAYLOAD" --check
+          python3 "$SCRIPT" upstream --payload "$PAYLOAD"
+          python3 "$SCRIPT" upstream --payload "$PAYLOAD"
+          printf '%s\n' "80c1e6e42b43617570e07a55548be6f98400f4163a7fc00d9b0dd99802b5e7af  upstream/app/Source/NativeRPBridge.c" | sha256sum -c -
+          grep -Fq 'if line == "WORLD_READY", bootedMode == .story, !ModGuard.startsWithoutMods {' upstream/app/App/NativePortViewController.swift
+          grep -Fq 'PGRPBridgeStop()' upstream/app/App/NativePortViewController.swift
+          grep -Fq '#include "NativeRPBridge.h"' upstream/app/Source/Native-Bridging-Header.h
+          grep -Fq -- '- Source' upstream/app/project.yml
+          ! grep -q '__attribute__((constructor))' upstream/app/Source/NativeRPBridge.c
+          cc -std=c11 -Wall -Wextra -Werror -fsyntax-only upstream/app/Source/NativeRPBridge.c upstream/app/Source/rp16_json.c
+          clang -std=c11 -Wall -Wextra -Werror -fsyntax-only upstream/app/Source/NativeRPBridge.c upstream/app/Source/rp16_json.c
+      - name: Run actual two-client server tests on host-integrated native C
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import io,tarfile,lzma,base64,hashlib,pathlib,shutil
+          payload=pathlib.Path('ai-lab/projects/roleplay-ios/native-bridge-v16/source_bundle.tar.xz.b64').read_text().strip()
+          raw=lzma.decompress(base64.b64decode(payload,validate=True))
+          assert hashlib.sha256(raw).hexdigest()=='a88c9463e183eba4f09455cdaf43d0fe80bebabc40c3e57717b37cb441c95c65'
+          out=pathlib.Path('ci_v17_tests');out.mkdir()
+          with tarfile.open(fileobj=io.BytesIO(raw)) as t:
+              for member in t:
+                  p=pathlib.Path(member.name)
+                  if not member.isfile() or p.is_absolute() or '..' in p.parts:raise SystemExit('unsafe tar member')
+                  dst=out/p;dst.parent.mkdir(parents=True,exist_ok=True);dst.write_bytes(t.extractfile(member).read())
+          shutil.copyfile('upstream/app/Source/NativeRPBridge.c',out/'src/RPBridgeDuplexV16.c')
+          shutil.copyfile('upstream/app/Source/rp16_json.c',out/'src/rp16_json.c')
+          shutil.copyfile('upstream/app/Source/rp16_json.h',out/'src/rp16_json.h')
+          PY
+          bash ci_v17_tests/run_tests.sh 2>&1 | tee v17_linux_tests.log
+      - name: Save source-compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v17-source-linux-evidence
+          path: |
+            v17_linux_tests.log
+            upstream/app/Source/NativeRPBridge.c
+            upstream/app/Source/NativeRPBridge.h
+          if-no-files-found: warn
+          retention-days: 7
+
+  ios-source-syntax:
+    runs-on: macos-15
+    needs: linux-source-integration
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: kevinerikjs/gta5-ios-port
+          ref: 9357c182b5cddd58e16dee684ea07ebc18a97a5d
+          path: upstream
+          persist-credentials: false
+      - name: Apply source bridge and check iPhoneOS ARM64 + Swift syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ai-lab/projects/roleplay-ios/source-port-v17/tools/source_from_v16.py upstream \
+            --payload ai-lab/projects/roleplay-ios/native-bridge-v16/source_bundle.tar.xz.b64
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -std=c11 -Wall -Wextra -Werror -target arm64-apple-ios16.0 \
+            -isysroot "$SDK" -fsyntax-only upstream/app/Source/NativeRPBridge.c upstream/app/Source/rp16_json.c
+          xcrun swiftc -frontend -parse upstream/app/App/NativePortViewController.swift
+          echo 'iPhoneOS ARM64 C11 syntax + Swift parser: PASS (not a full game build)' | tee v17_ios_syntax.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v17-ios-source-syntax
+          path: v17_ios_syntax.log
+          if-no-files-found: error
+          retention-days: 7
