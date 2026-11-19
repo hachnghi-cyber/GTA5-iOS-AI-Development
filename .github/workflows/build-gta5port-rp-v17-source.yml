@@ -37,6 +37,7 @@ jobs:
           grep -Fq 'if line == "WORLD_READY", bootedMode == .story, !ModGuard.startsWithoutMods {' upstream/app/App/NativePortViewController.swift
           grep -Fq 'PGRPBridgeStop()' upstream/app/App/NativePortViewController.swift
           grep -Fq '#include "NativeRPBridge.h"' upstream/app/Source/Native-Bridging-Header.h
+          grep -Fq '<key>NSLocalNetworkUsageDescription</key>' upstream/app/App/Info.plist
           grep -Fq -- '- Source' upstream/app/project.yml
           ! grep -q '__attribute__((constructor))' upstream/app/Source/NativeRPBridge.c
           cc -std=c11 -Wall -Wextra -Werror -fsyntax-only upstream/app/Source/NativeRPBridge.c upstream/app/Source/rp16_json.c
@@ -95,6 +96,7 @@ jobs:
           xcrun clang -std=c11 -Wall -Wextra -Werror -target arm64-apple-ios16.0 \
             -isysroot "$SDK" -fsyntax-only upstream/app/Source/NativeRPBridge.c upstream/app/Source/rp16_json.c
           xcrun swiftc -frontend -parse upstream/app/App/NativePortViewController.swift
+          plutil -lint upstream/app/App/Info.plist
           echo 'iPhoneOS ARM64 C11 syntax + Swift parser: PASS (not a full game build)' | tee v17_ios_syntax.log
       - uses: actions/upload-artifact@v4
         with:
