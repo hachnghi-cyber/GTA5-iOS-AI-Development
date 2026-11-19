@@ -19,6 +19,7 @@ SYMBOLS = {
     'sandbox_callback': '__ZL20MacportSandboxNativeRN4rage9scrThread4InfoE',
     'online_update': '__ZL19MacportOnlineUpdatev',
     'jobs_update': '__ZL17MacportJobsUpdateP4CPedi',
+    'work_status': '__ZL17MacportWorkStatusv',
     'online_command': '__ZL20MacportOnlineCommandPKc',
     'job_start': '__ZL15MacportJobStartiPKcii',
     'job_cleanup': '__ZL17MacportJobCleanupi',
@@ -232,6 +233,22 @@ def inspect(data):
         if not va <= pc <= va+size-4 or pc % 4:
             raise ValueError('instruction outside code')
         return struct.unpack_from('<I', data, off+pc-va)[0]
+    work_status = sites['work_status']
+    work_pins = (0xb0013cc8, 0xb945ad08, 0x37f80308, 0x52800909, 0x9ba97d08,
+                 0xb0012fe9, 0x910e8129, 0xf8686928, 0xd001aa29, 0x39775129)
+    if work_status != 0x1000f92a0 or any(word(work_status + 0x34 + i*4) != expected
+                                       for i, expected in enumerate(work_pins)):
+        raise ValueError('local work status layout mismatch')
+    # The pinned routine uses 72-byte rows with the name pointer at +0.
+    # The exact binary's file-backed __TEXT maps from offset zero at VM 0x100000000.
+    labels = ('cop_ls', 'cop_sandy', 'cop_paleto')
+    for index, label in enumerate(labels):
+        pointer = chained_rebase(data, 0x1026f63a0 + 72*index)
+        string_offset = pointer - 0x100000000
+        expected = label.encode('ascii') + b'\0'
+        if not (0 <= string_offset <= len(data) - len(expected)
+                and data[string_offset:string_offset+len(expected)] == expected):
+            raise ValueError('local police work job name mismatch')
     branches = []
     for src, delta, dst, kind in (
         ('startup_script', 0x20, 'sandbox_program', 'BL'),
@@ -488,6 +505,15 @@ def inspect(data):
                         if row['function'] in ('job_start', 'online_command')
                     ],
                     'scope': 'read-only local stock job candidate; not police role authority',
+                },
+                local_work_sample={
+                    'job_index_va': '0x1028925ac', 'on_shift_va': '0x10363fdd4',
+                    'police_labels': list(labels),
+                    'code_guards': [
+                        {'function': 'work_status', 'va': hex(work_status), 'size': 0xcc,
+                         'sha256': hashlib.sha256(data[off+work_status-va:off+work_status-va+0xcc]).hexdigest()},
+                    ],
+                    'scope': 'local work status only; not a verified game identity or authority',
                 },
                 engine_owned_sender_path_static=True, cryptographic_authentication_verified=False,
                 runtime_thread_verified=False, hook_installed=False,

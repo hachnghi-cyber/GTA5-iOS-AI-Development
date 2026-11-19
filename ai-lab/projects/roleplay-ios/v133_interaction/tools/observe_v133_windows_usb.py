@@ -156,6 +156,17 @@ def read_stock_job(remote, base, sample):
     }
 
 
+def read_local_work(remote, base, profile):
+    index, = struct.unpack('<i', remote.memory(base + int(profile['job_index_va'], 16) - IMAGE_VMADDR, 4))
+    shift, = remote.memory(base + int(profile['on_shift_va'], 16) - IMAGE_VMADDR, 1)
+    labels = profile['police_labels']
+    police = 0 <= index < len(labels)
+    return {'job': labels[index] if police else ('none' if index == -1 else 'other'),
+            'shift_field_valid': shift in (0, 1), 'on_shift': shift == 1,
+            'local_police_duty_candidate': police and shift == 1,
+            'police_role_authorized': False}
+
+
 def verify_context_code(remote, base, profile, label='receive-context'):
     """Guard full functions, including every prologue and tail-call path."""
     if not profile['code_guards']:
@@ -782,6 +793,8 @@ def capture(remote, base, metadata, stock_job=False, site=DEFAULT_SITE, wait_sec
         }
         if stock_job and callsite_matches:
             sample["stock_job_candidate"] = read_stock_job(remote, base, metadata["stock_job_sample"])
+            if 'local_work_sample' in metadata:
+                sample['local_work_candidate'] = read_local_work(remote, base, metadata['local_work_sample'])
         if session_context and callsite_matches:
             remote.conn.settimeout(3)
             sample.update(read_session_context(remote, base, metadata['session_context']))
@@ -836,6 +849,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
                 if remote.memory(address, 4) != struct.pack("<I", int(guard["word"], 16)):
                     raise DebugProtocolError("local job metadata instruction guard mismatch")
+            if 'local_work_sample' in metadata:
+                verify_context_code(remote, base, metadata['local_work_sample'], label='local-work')
         return capture(remote, base, metadata, stock_job=stock_job, site=site,
                        wait_seconds=wait_seconds, receive_context=receive_context,
                        session_context=session_context)

@@ -19,6 +19,10 @@
       "name": "__ZL17MacportJobsUpdateP4CPedi",
       "va": "0x1000eb57c"
     },
+    "work_status": {
+      "name": "__ZL17MacportWorkStatusv",
+      "va": "0x1000f92a0"
+    },
     "online_command": {
       "name": "__ZL20MacportOnlineCommandPKc",
       "va": "0x1000f2d54"
@@ -1298,6 +1302,24 @@
       }
     ],
     "scope": "read-only local stock job candidate; not police role authority"
+  },
+  "local_work_sample": {
+    "job_index_va": "0x1028925ac",
+    "on_shift_va": "0x10363fdd4",
+    "police_labels": [
+      "cop_ls",
+      "cop_sandy",
+      "cop_paleto"
+    ],
+    "code_guards": [
+      {
+        "function": "work_status",
+        "va": "0x1000f92a0",
+        "size": 204,
+        "sha256": "9f69f1a4abdcd2f72c58c9e43ad77039ea8b029d62cd337815a8271c13d06caa"
+      }
+    ],
+    "scope": "local work status only; not a verified game identity or authority"
   },
   "engine_owned_sender_path_static": true,
   "cryptographic_authentication_verified": false,

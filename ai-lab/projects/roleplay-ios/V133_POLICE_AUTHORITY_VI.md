@@ -78,3 +78,15 @@ Sau khi đối chiếu UUID, instruction và điểm dừng trong `jobs_update`,
 cho biết ID có phải `cop_ls` hoặc rỗng hay không, cùng hai mã số. Không in
 ID lạ, địa chỉ hay token. Lấy mẫu ba mốc chưa nhận ca, đã nhận, đã bỏ ca
 trong Sandbox. Mã job vẫn chỉ là điều kiện, chưa có quyền Police RP.
+
+Ngày 19/11/2026, iPhone hiển thị nhiệm vụ cảnh sát đang chạy trong Sandbox
+nhưng mẫu job trên vẫn rỗng. Trên đúng binary, `MacportWorkStatus` đọc chỉ
+số công việc local và cờ đang trong ca. Ba dòng đầu bảng tên đã đối chiếu
+qua Mach-O chained rebase. `--stock-job` nay kiểm tra toàn bộ hàm trạng thái
+trước điểm dừng, sau đó đọc thêm hai trường local trong `local_work_candidate`.
+Mẫu iPhone cho `job=cop_ls`, `on_shift=true` khi nhận ca rồi `job=none`,
+`on_shift=false` khi bỏ ca. Metadata job cũ vẫn idle trong cả hai mẫu.
+Xem `baselines/v133-local-work-duty-iphone-20261119.json`.
+
+Sandbox đủ để xác minh việc nhận và bỏ ca cục bộ. Đồng bộ giữa người chơi
+cần một phiên GTA nhiều người riêng với peer đối chứng và kênh RP mTLS.

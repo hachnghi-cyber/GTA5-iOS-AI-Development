@@ -70,6 +70,29 @@ class DebugReplyTests(unittest.TestCase):
 
 
 class LocalStockJobTests(unittest.TestCase):
+    def test_local_work_reads_only_index_and_shift_and_never_authorizes(self):
+        profile = {'job_index_va': '0x1028925ac', 'on_shift_va': '0x10363fdd4',
+                   'police_labels': ['cop_ls', 'cop_sandy', 'cop_paleto']}
+        base = 0x110000000
+        for index, shift, label, duty, valid in (
+            (0, 1, 'cop_ls', True, True), (1, 1, 'cop_sandy', True, True),
+            (2, 1, 'cop_paleto', True, True), (-1, 0, 'none', False, True),
+            (0, 0, 'cop_ls', False, True), (2, 2, 'cop_paleto', False, False),
+            (-2, 1, 'other', False, True), (3, 1, 'other', False, True),
+        ):
+            class Memory:
+                def memory(self, address, size):
+                    return {(base+0x28925ac, 4): struct.pack('<i', index),
+                            (base+0x363fdd4, 1): bytes([shift])}[address, size]
+
+            with self.subTest(index=index, shift=shift):
+                result = observer.read_local_work(Memory(), base, profile)
+                self.assertEqual(result['job'], label)
+                self.assertEqual(result['on_shift'], shift == 1)
+                self.assertEqual(result['shift_field_valid'], valid)
+                self.assertEqual(result['local_police_duty_candidate'], duty)
+                self.assertFalse(result['police_role_authorized'])
+
     def test_read_only_sample_does_not_report_unknown_job_ids_or_roles(self):
         fields = {"id_va": "0x100000100", "kind_va": "0x100000200", "state_va": "0x100000300"}
         base = 0x101000000

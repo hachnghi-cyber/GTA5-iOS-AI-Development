@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Đã đo ca cảnh sát thật trong Sandbox. `MacportWorkStatus` dùng chỉ số job
+và cờ ca riêng với metadata network job. Probe mới đọc `cop_ls` và
+`on_shift=true` cùng lúc trường network job báo rỗng. Sau bỏ ca, phép đo
+trả `job=none`, `on_shift=false`. Xem
+`baselines/v133-local-work-duty-iphone-20261119.json`; chưa cấp quyền online.
+
 Một iPhone thật và Windows đã qua kiểm thử server riêng. Log USB của iPhone
 ghi `consent_round_trip_passed`; PC thấy đủ kết nối, tham gia, rời RP và ngắt
 kết nối. Xem `baselines/private-rp-iphone-consent-20261119.json`. Mốc tiếp

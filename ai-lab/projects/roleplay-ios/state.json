@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Compare live local police-job fields after accepting and quitting the stock job in private Sandbox. For remote binding, collect a same-frame queue/receive sample with a cooperating second in-game peer, then establish a scoped RP principal to GTA participant binding before native effects and two-device regression tests.",
+  "next_action": "For remote binding, collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Bind the RP TLS principal to the verified participant before using the verified local duty signal for gameplay and running two-device regression tests.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,14 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "v133_local_work_duty": {
+      "baseline": "baselines/v133-local-work-duty-iphone-20261119.json",
+      "distinct_source": "MacportWorkStatus reads local work job index and on-shift byte; the older network job ID/kind/state remained idle while the displayed police mission was active",
+      "exact_binary_checks": "10 pinned ARM64 instructions, 3 first table rows verified by chained rebase, full live function SHA-256 guard",
+      "iphone_observed": "cop_ls on_shift=true while active and job=none on_shift=false after quitting in private Sandbox; both at the guarded jobs_update caller",
+      "local_policy": "read-only evidence for duty display; does not authorize remote commands or identify any player",
+      "host_checks": "32 USB observer tests and 6 static-inspector tests passed"
     },
     "private_authority_iphone_sandbox_observer": {
       "baseline": "baselines/private-rp-authority-build-sandbox-20261119.json",
