@@ -5,7 +5,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta, timezone
-import importlib.util
 import ipaddress
 from pathlib import Path
 import socket
@@ -20,14 +19,11 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
-path = Path(__file__).resolve().parents[1] / "tools" / "prp3_direct_tls.py"
-spec = importlib.util.spec_from_file_location("prp3_direct_tls", path)
-tls = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = tls
-spec.loader.exec_module(tls)
-runner_spec = importlib.util.spec_from_file_location("ios_tls_kit", path.with_name("run_ios_tls_probe.py"))
-kit = importlib.util.module_from_spec(runner_spec)
-runner_spec.loader.exec_module(kit)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+# Use one module identity across discovery orders. Replacing sys.modules here
+# creates two ProtocolError classes when the authority tests import TLS first.
+import prp3_direct_tls as tls
+import run_ios_tls_probe as kit
 
 
 def issue(label, key, authority, ca_key):

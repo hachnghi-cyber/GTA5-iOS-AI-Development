@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "rp_v133_wire.h"
+#include "PRPV133TLSCommon.h"
 
 static const char PRP_ALPN[] = "prp3-pair/1";
 static NSString *const PRP_CONFIG = @"PRP3TLS-Probe-PRIVATE.json";
@@ -17,7 +18,7 @@ typedef struct {
     uint64_t local, peer, session, epoch;
 } prp_pairing;
 
-static bool prp_parse_id(id value, uint64_t *out) {
+bool prp_parse_id(id value, uint64_t *out) {
     if (![value isKindOfClass:[NSString class]] || [value length] == 0 || [value length] > 20)
         return false;
     uint64_t n = 0;
@@ -31,7 +32,7 @@ static bool prp_parse_id(id value, uint64_t *out) {
     return n != 0;
 }
 
-static bool prp_is_local_ip(NSString *host) {
+bool prp_is_local_ip(NSString *host) {
     struct in_addr address;
     if (![host isKindOfClass:[NSString class]] || host.length > 15 ||
         strlen(host.UTF8String) != host.length || inet_pton(AF_INET, host.UTF8String, &address) != 1)
@@ -40,7 +41,7 @@ static bool prp_is_local_ip(NSString *host) {
     return (ip >> 24) == 10u || (ip >> 20) == 0xac1u || (ip >> 16) == 0xc0a8u;
 }
 
-static NSData *prp_b64(NSDictionary *config, NSString *key, NSUInteger limit) {
+NSData *prp_b64(NSDictionary *config, NSString *key, NSUInteger limit) {
     id value = config[key];
     if (![value isKindOfClass:[NSString class]] || [value length] > 2 * limit)
         return nil;
@@ -48,7 +49,7 @@ static NSData *prp_b64(NSDictionary *config, NSString *key, NSUInteger limit) {
     return data.length > 0 && data.length <= limit ? data : nil;
 }
 
-static sec_identity_t prp_import_identity(NSData *data, NSString *password) {
+sec_identity_t prp_import_identity(NSData *data, NSString *password) {
     if (!data || ![password isKindOfClass:[NSString class]] || password.length < 24 ||
         password.length > 96) return nil;
     CFArrayRef raw = NULL;
@@ -64,7 +65,7 @@ static sec_identity_t prp_import_identity(NSData *data, NSString *password) {
     return identity ? sec_identity_create(identity) : nil;
 }
 
-static bool prp_verify_trust(sec_trust_t trust, NSString *hostname, NSArray *anchors, NSData *pin) {
+bool prp_verify_trust(sec_trust_t trust, NSString *hostname, NSArray *anchors, NSData *pin) {
     SecTrustRef ref = sec_trust_copy_ref(trust);
     if (!ref) return false;
     SecPolicyRef policy = SecPolicyCreateSSL(true, (__bridge CFStringRef)hostname);

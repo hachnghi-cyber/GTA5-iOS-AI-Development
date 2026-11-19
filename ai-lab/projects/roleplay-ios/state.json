@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Build the native iOS client for the private authority ALPN/record protocol, reuse TLS trust verification and PRPC/PRPA, and verify codec/parser on host plus iPhoneOS ARM64 CI. Keep engine gameplay disabled until RP principal binding and independent game observations are proven; then validate effects with two devices.",
+  "next_action": "Run iPhoneOS ARM64 CI for the private authority transport client, package a local unsigned diagnostic after build validation, and obtain iPhone transport evidence. Keep gameplay disabled until RP principal binding and trusted game-thread observations are established, then verify native effects on two devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,16 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_ios_transport": {
+      "scope": "Native C codec and Objective-C private mTLS transport source; no engine binding or gameplay hooks",
+      "host_python_tests_passed": 154,
+      "real_loopback_tls_native_codec_tests_passed": 2,
+      "assertion_enabled_native_codec_tests": "passed on Windows with Zig Clang",
+      "windows_clang_static_analysis": "0 diagnostics across codec, authority, transactions and FFI",
+      "iphone_packer_fixture_tests_passed": 9,
+      "iphoneos_build": "pending workflow on this source",
+      "iphone_runtime": "unverified"
     },
     "private_authority_server": {
       "schema": "private-rp-server-host-v1",

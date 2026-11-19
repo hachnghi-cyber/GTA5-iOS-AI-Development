@@ -65,6 +65,7 @@ jobs:
             -framework Foundation -framework Network -framework Security \
             ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133LaunchProbe.m \
             -I "$MODULE/include" "$MODULE/ios/PRPV133TLSProbe.m" \
+            "$MODULE/ios/PRPV133AuthorityClient.m" \
             out/rp_v133_*.o \
             -o out/PoliceRPV133Probe.dylib
           xcrun lipo -info out/PoliceRPV133Probe.dylib

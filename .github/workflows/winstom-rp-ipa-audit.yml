@@ -69,8 +69,9 @@ jobs:
         env:
           RP_AUTHORITY_LIBRARY: /tmp/rp_authority.so
         run: |
-          python ai-lab/projects/roleplay-ios/v133_interaction/tools/build_rp_authority.py --compiler gcc --output "$RP_AUTHORITY_LIBRARY"
+          python ai-lab/projects/roleplay-ios/v133_interaction/tools/build_rp_authority.py --compiler gcc --with-client-test-fixture --output "$RP_AUTHORITY_LIBRARY"
           python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_rp_private_server.py' -v
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_native_authority_tls.py' -v
 
   v133-interaction-gate:
     name: v13.3 RP interaction C11 source-only tests
@@ -146,7 +147,7 @@ jobs:
             src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
             -o /tmp/v133_mailbox_threads_clang
           /tmp/v133_mailbox_threads_clang
-      - name: Reproduce twelve source test binaries with GCC and Clang sanitizers
+      - name: Reproduce thirteen source test binaries with GCC and Clang sanitizers
         shell: bash
         run: |
           set -euo pipefail
@@ -156,7 +157,7 @@ jobs:
       - name: Static analysis of private authority boundary
         run: |
           cd ai-lab/projects/roleplay-ios/v133_interaction
-          clang --analyze -std=c11 -Wall -Wextra -Werror -I include server/rp_authority_ffi.c src/rp_v133_police.c src/rp_v133_police_tx.c
+          clang --analyze -std=c11 -Wall -Wextra -Werror -I include server/rp_authority_ffi.c src/rp_v133_police.c src/rp_v133_police_tx.c src/rp_v133_authority_client.c
       - name: Clang strict host build
         shell: bash
         run: |

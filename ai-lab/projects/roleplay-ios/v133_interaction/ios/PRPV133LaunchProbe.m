@@ -6,6 +6,7 @@
 #include <mach-o/loader.h>
 #include <stdio.h>
 #include <string.h>
+#include "PRPV133AuthorityClient.h"
 
 void prp_start_tls_probe(NSString *folder);
 
@@ -71,6 +72,9 @@ static void prp_phase8_launch_probe(void) {
                        encoding:NSUTF8StringEncoding error:&error];
         }
         if (error) NSLog(@"[PRP_V133_PHASE8] file write unavailable; see device console");
-        if (exact) prp_start_tls_probe(documents);
+        if (exact) {
+            prp_start_tls_probe(documents);
+            prp_start_authority_client(documents);
+        }
     }
 }

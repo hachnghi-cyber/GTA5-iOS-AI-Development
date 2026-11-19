@@ -4,14 +4,17 @@ Reuses the audited diagnostic certificate issuer. No existing certificates,
 keys, game files or iPhone credentials are accessed. Never overwrite a kit.
 """
 import argparse
+import base64
 from datetime import datetime, timezone
 import ipaddress
 import json
 import os
 from pathlib import Path
+import secrets
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import pkcs12
 from run_ios_tls_probe import issue
 
 
@@ -43,6 +46,16 @@ def prepare(folder, address, port):
         emit(name + '.pem', cert.public_bytes(serialization.Encoding.PEM))
         emit(name + '.key', peer_key.private_bytes(serialization.Encoding.PEM,
              serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+        if name != 'server':
+            password = secrets.token_urlsafe(32)
+            identity = pkcs12.serialize_key_and_certificates(b'Private RP development',
+                peer_key, cert, [ca], serialization.BestAvailableEncryption(password.encode()))
+            emit(name + '-iPhone-PRIVATE.json', {
+                'schema': 'prp-authority-client-v1', 'host': str(address), 'port': port,
+                'expires': int(now.timestamp()) + 1200, 'rp_id': '11' if name == 'officer' else '22',
+                'server_pin': base64.b64encode(bytes.fromhex(pins['server'])).decode(),
+                'anchor': base64.b64encode(ca.public_bytes(serialization.Encoding.DER)).decode(),
+                'identity': base64.b64encode(identity).decode(), 'passphrase': password})
     emit('server.json', {'certificate': 'server.pem', 'private_key': 'server.key',
          'trusted_ca': 'ca.pem', 'principals': [
              {'certificate_sha256': pins['officer'], 'rp_id': 11, 'role': 2},

@@ -84,9 +84,12 @@ facts và lifecycle. CI chạy GCC/Clang ASan/UBSan và static analyzer. Xem
 `baselines/private-rp-server-host.json` và Actions của commit, không gộp với
 kiểm thử thiết bị.
 
-Client iOS hiện cài dùng ALPN PRP3-pair cũ, chưa kết nối giao thức authority mới.
-Bước tiếp theo: codec/session client iOS và cấu hình chứng chỉ riêng; sau đó
-xác minh RP principal ↔ game participant, observation freshness và game-thread
-callback. Không lấy tọa độ hoặc quyền job do client tự khai làm authority.
+Mã client iOS mới hỗ trợ authority ALPN, heartbeat, xác minh ACK và snapshot,
+và xóa trạng thái phiên khi ngắt kết nối. Hai bài loopback TLS kiểm tra codec
+C dùng trong client với server thật. Probe cài trước đây cần build lại để
+dùng giao thức mới. Kit sinh cấu hình iPhone theo từng chứng chỉ; đặt bản
+phù hợp vào Documents với tên `PoliceRP-Authority-PRIVATE.json` khi thử LAN.
+File chứa danh tính riêng và hết hạn sau 20 phút. Trước khi nối gameplay,
+cần xác minh RP principal ↔ game participant, nguồn quan sát và game thread.
 Chưa có hai iPhone, log gameplay, kiểm thử native effects hay regression của
 Story/GTA Online. Không phát hành IPA gameplay hoặc bật runtime adapter lúc này.

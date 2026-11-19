@@ -1,5 +1,6 @@
 """Real loopback mTLS + compiled C authority; game observations are synthetic."""
 import asyncio
+import base64
 from contextlib import asynccontextmanager
 import ipaddress
 import json
@@ -11,6 +12,7 @@ import unittest
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import pkcs12
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from test_prp3_direct_tls import issue
@@ -129,7 +131,17 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(FileExistsError):
                 prepare(folder, ipaddress.ip_address('127.0.0.1'), 30133)
             self.assertFalse((folder / 'ca.key').exists())
+            phone = json.loads((folder / 'officer-iPhone-PRIVATE.json').read_text())
+            private_key, certificate, chain = pkcs12.load_key_and_certificates(
+                base64.b64decode(phone['identity']), phone['passphrase'].encode())
+            self.assertIsNotNone(private_key)
+            self.assertEqual(len(chain), 1)
+            self.assertEqual(phone['rp_id'], '11')
+            self.assertEqual(phone['schema'], 'prp-authority-client-v1')
+            self.assertEqual(len(base64.b64decode(phone['server_pin'])), 32)
             config = json.loads((folder / 'server.json').read_text())
+            self.assertEqual(certificate.fingerprint(hashes.SHA256()).hex(),
+                             config['principals'][0]['certificate_sha256'])
             authority = NativeAuthority(self.library, 123, 7)
             def credentials(data):
                 return Credentials(*(folder / data[key] for key in ('certificate', 'private_key', 'trusted_ca')))

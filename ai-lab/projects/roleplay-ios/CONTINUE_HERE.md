@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Đã nối mã client iOS với giao thức server riêng và thêm cấu hình mTLS cho
+iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật
+trên Windows. Tổng 154 test Python đạt. Cần kiểm tra build iPhoneOS ARM64
+và lấy log từ thiết bị trước khi nối bất kỳ hành động nào vào game.
+
 Server riêng đã có mã chạy được trên Windows/Linux: xem `PRIVATE_RP_SERVER_VI.md`.
 152 test Python đạt, gồm 15 test server mTLS thật với hai client host và lõi C.
 Game observations trong test là mô phỏng; cấu hình mặc định chưa cấp duty/custody.
