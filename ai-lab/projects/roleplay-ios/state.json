@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Run iPhoneOS ARM64 CI for the private authority transport client, package a local unsigned diagnostic after build validation, and obtain iPhone transport evidence. Keep gameplay disabled until RP principal binding and trusted game-thread observations are established, then verify native effects on two devices.",
+  "next_action": "Sign and install the verified local diagnostic IPA and collect the iPhone private authority transport log with a host peer on the private LAN. Then establish RP principal binding and trusted game-thread observations before enabling native effects, and verify gameplay on two devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -901,8 +901,28 @@
       "assertion_enabled_native_codec_tests": "passed on Windows with Zig Clang",
       "windows_clang_static_analysis": "0 diagnostics across codec, authority, transactions and FFI",
       "iphone_packer_fixture_tests_passed": 9,
-      "iphoneos_build": "pending workflow on this source",
-      "iphone_runtime": "unverified"
+      "source_commit": "99ed120c35f164a14f020b11209d8d53985f0533",
+      "source_github_actions": {"run": 44492869967, "conclusion": "success", "gcc_clang_sanitizers": "passed", "static_analysis": "passed"},
+      "iphoneos_build": {
+        "run": 44492859651,
+        "artifact_id": 14513936310,
+        "conclusion": "success",
+        "architecture": "arm64",
+        "sdk": "18.5",
+        "minimum_ios": "16.3",
+        "dylib_uuid": "CD2AE636-0A9B-3AD8-99D9-65FD931AAE58",
+        "dylib_sha256": "528b170dc2d1388446ee46fb57a0173b94cca118d3bbc29f68328de5e47a8a5f",
+        "artifact_sha256": "f5b7c3ca314c6a32aedced5861c64c59b368a9e3cfe734ed70647e43483f47f0",
+        "sdk_clang_analysis_translation_units_without_diagnostics": 9
+      },
+      "local_unsigned_ipa": {
+        "file": "GTAV-v13.3-Private-RP-Authority-Diagnostic-99ed120-UNSIGNED.ipa",
+        "sha256": "4bdf4a86854a2e1dda469871930dfe1cf9eaa97d91a7dccbf0041f6602dff85a",
+        "verified": "ZIP CRC, one 80-byte load command in GTA5, one arm64 probe added, byte-identical remaining archive entries, system-only dylib dependencies",
+        "signing_and_installation": "pending"
+      },
+      "production_cli_loopback_smoke": "server plus two actual host client processes; both opt in, same snapshot, deny duty without game observations, disconnect replicated",
+      "iphone_runtime": "unverified; no USB iPhone detected at packaging checkpoint"
     },
     "private_authority_server": {
       "schema": "private-rp-server-host-v1",

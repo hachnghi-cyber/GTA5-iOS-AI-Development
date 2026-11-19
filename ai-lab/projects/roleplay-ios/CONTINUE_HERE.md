@@ -6,14 +6,16 @@
 
 Đã nối mã client iOS với giao thức server riêng và thêm cấu hình mTLS cho
 iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật
-trên Windows. Tổng 154 test Python đạt. Cần kiểm tra build iPhoneOS ARM64
-và lấy log từ thiết bị trước khi nối bất kỳ hành động nào vào game.
+trên Windows. Tổng 154 test Python đạt. Build iPhoneOS ARM64 và source CI
+của `99ed120` đã đạt. IPA chẩn đoán chưa ký đã tạo và đối chiếu từng mục ZIP.
+Bước kế tiếp là ký, cài và lấy log transport trên iPhone theo
+`PRIVATE_RP_SERVER_VI.md`. Chưa có xác nhận hành động trong game.
 
 Server riêng đã có mã chạy được trên Windows/Linux: xem `PRIVATE_RP_SERVER_VI.md`.
 152 test Python đạt, gồm 15 test server mTLS thật với hai client host và lõi C.
 Game observations trong test là mô phỏng; cấu hình mặc định chưa cấp duty/custody.
-Đã sửa client xóa snapshot cũ khi disconnect/hủy transaction. Bước tiếp theo:
-codec/client iOS cho ALPN authority mới, rồi xác minh binding game và callback.
+Đã sửa client xóa snapshot cũ khi disconnect/hủy transaction. Hai tiến trình
+client cũng đã chạy qua CLI mặc định, đồng bộ opt-in và thu hồi khi rời phiên.
 
 Yêu cầu mới ngày 2026-11-18: dùng **server RP riêng cho v13.3**. Hướng này
 thay thế ưu tiên không vận hành server riêng trước đây. Tiếp tục từ mTLS và

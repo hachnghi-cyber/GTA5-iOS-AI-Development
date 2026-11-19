@@ -91,5 +91,23 @@ dùng giao thức mới. Kit sinh cấu hình iPhone theo từng chứng chỉ; 
 phù hợp vào Documents với tên `PoliceRP-Authority-PRIVATE.json` khi thử LAN.
 File chứa danh tính riêng và hết hạn sau 20 phút. Trước khi nối gameplay,
 cần xác minh RP principal ↔ game participant, nguồn quan sát và game thread.
+
+Build ARM64 trên commit `99ed120` đạt trong run `44492859651` (SDK 18.5,
+iOS tối thiểu 16.3). Source CI `44492869967` đạt cả GCC/Clang ASan/UBSan.
+IPA chẩn đoán cục bộ `GTAV-v13.3-Private-RP-Authority-Diagnostic-99ed120-UNSIGNED.ipa`
+đã qua CRC, kiểm tra dependency và so sánh mọi mục của gói. Chỉ executable
+gốc thay đổi để nạp dylib probe, và một dylib được thêm. Dùng chữ ký và
+provisioning của thiết bị để ký lại toàn bộ app trước khi cài.
+
+Để thử một iPhone với Windows, tạo kit mới với `--ip` là IPv4 của PC trên
+cùng Wi-Fi. Khởi động server với `--host` là IP đó. Đặt `officer-iPhone-PRIVATE.json`
+trong thư mục Documents của app dưới tên `PoliceRP-Authority-PRIVATE.json`.
+Chạy CLI Windows bằng `citizen.json` để giữ hai danh tính riêng, sau đó mở
+lại GTA và cho phép truy cập mạng cục bộ nếu iOS hỏi. Giữ game ở Sandbox riêng.
+Trong `PoliceRP-v13.3-Authority.txt`, `rp_tls_verified=1` và
+`result=snapshot_received` xác nhận kênh RP đã nhận dữ liệu. Snapshot trên
+Windows cần hiện cả PC và iPhone, sau đó còn một thành viên khi đóng game.
+Chỉ gửi log `.txt` khi cần đối chiếu. Cấu hình JSON chứa khóa client.
+
 Chưa có hai iPhone, log gameplay, kiểm thử native effects hay regression của
 Story/GTA Online. Không phát hành IPA gameplay hoặc bật runtime adapter lúc này.
