@@ -6,7 +6,8 @@
 
 Chế độ chẩn đoán `--consent-probe` kiểm tra thêm đường iPhone gửi lệnh. Nó
 yêu cầu ACK và snapshot cùng nonce khi tham gia và rời RP. Xem hướng dẫn LAN
-trong `PRIVATE_RP_SERVER_VI.md` trước khi cài bản chẩn đoán mới.
+trong `PRIVATE_RP_SERVER_VI.md`. Build `2455bc3` đã đạt CI và tạo IPA chưa ký
+`GTAV-v13.3-Private-RP-Consent-Probe-2455bc3-UNSIGNED.ipa`. Cần log iPhone thật.
 
 Đã nối mã client iOS với giao thức server riêng và thêm cấu hình mTLS cho
 iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật

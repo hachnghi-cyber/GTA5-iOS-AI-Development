@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Build and sign the consent-round-trip diagnostic, then collect the iPhone private authority log with a host peer on the private LAN. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
+  "next_action": "Sign and install the verified consent-round-trip diagnostic on an iPhone, then collect its private authority log with a host peer on the private LAN. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -898,7 +898,23 @@
       "mode": "Explicit local kit opt-in; self opt-in and opt-out with ACK and nonce-matched snapshots, then disconnect",
       "gameplay_effects": false,
       "device_runtime": "unverified; requires signed diagnostic on iPhone",
-      "host_validation": "155 Python tests passed, including the new native C round trip over real loopback mTLS with a second client observing [0, 1, 0]; Zig Clang C11 assertion fixtures passed for ACK/snapshot ordering and policy failure"
+      "host_validation": "155 Python tests passed, including the new native C round trip over real loopback mTLS with a second client observing [0, 1, 0]; Zig Clang C11 assertion fixtures passed for ACK/snapshot ordering and policy failure",
+      "windows_wifi_interface_smoke": "two Windows CLI peers connected via the PC Wi-Fi IPv4 address; the kit generated the iPhone probe option; no cross-device Wi-Fi data",
+      "source_commit": "2455bc3f49b25e531bc4430612ca29c1288d6d53",
+      "source_ci": {"run": 44496263476, "conclusion": "success"},
+      "iphoneos_arm64": {
+        "run": 44496252663,
+        "artifact_id": 14515181692,
+        "conclusion": "success",
+        "dylib_uuid": "C6A8D192-F610-38AC-90D5-BBE7AB93EAF8",
+        "dylib_sha256": "39baadb617d74a5588619a9adba1963b6516ddfcc38499c46224cebe79b39461",
+        "sdk_clang_analysis_translation_units_without_diagnostics": 9
+      },
+      "unsigned_ipa": {
+        "file": "GTAV-v13.3-Private-RP-Consent-Probe-2455bc3-UNSIGNED.ipa",
+        "sha256": "48ccecbba80677dc161ea9e9256e7dcaeafdd4a5ccc5ae42e805e530fc070de6",
+        "verification": "ZIP CRC, original asset bytes, one added dylib and matching arm64 load command verified locally"
+      }
     },
     "private_authority_ios_transport": {
       "scope": "Native C codec and Objective-C private mTLS transport source; no engine binding or gameplay hooks",
