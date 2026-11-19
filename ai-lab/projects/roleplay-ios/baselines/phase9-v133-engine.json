@@ -315,6 +315,10 @@
       "name": "__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE",
       "va": "0x102026d74"
     },
+    "player_manager_init": {
+      "name": "__ZN4rage16netPlayerMgrBase4InitEPNS_20netConnectionManagerEjNS_10atDelegateIFbjRNS_9netPlayerEEEE",
+      "va": "0x102024fa4"
+    },
     "establish_connection": {
       "name": "__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE",
       "va": "0x101cdeaf8"
@@ -623,6 +627,42 @@
     }
   ],
   "observations": [
+    {
+      "at": "0x102024930",
+      "function": "on_net_event",
+      "word": "0xaa0003f3",
+      "observation": "retain the player manager in x19"
+    },
+    {
+      "at": "0x1020249b0",
+      "function": "on_net_event",
+      "word": "0x9122e260",
+      "observation": "pass the player manager delegate at +0x8b8 into Dispatch"
+    },
+    {
+      "at": "0x102026130",
+      "function": "dispatch",
+      "word": "0xf90013e0",
+      "observation": "save the delegate at dispatch frame pointer -0x20"
+    },
+    {
+      "at": "0x102024ff4",
+      "function": "player_manager_init",
+      "word": "0xf9000676",
+      "observation": "store transport manager at player manager +8"
+    },
+    {
+      "at": "0x102024ff8",
+      "function": "player_manager_init",
+      "word": "0xb900fa75",
+      "observation": "store channel at player manager +0xf8"
+    },
+    {
+      "at": "0x1019d0794",
+      "function": "session_init",
+      "word": "0xf9003403",
+      "observation": "store transport manager at snSession +0x68"
+    },
     {
       "at": "0x1017e9764",
       "function": "main_session_init",
@@ -1441,6 +1481,8 @@
     "message_source_offset": 16,
     "message_destination_offset": 24,
     "dispatch_saved_event_fp_offset": -16,
+    "dispatch_saved_manager_fp_offset": -8,
+    "dispatch_delegate_fp_offset": -32,
     "event_connection_offset": 60,
     "player_connection_offset": 24,
     "code_guards": [
@@ -1659,6 +1701,24 @@
         "va": "0x102026d74",
         "size": 476,
         "sha256": "549895b3987ad1a13f1756e27d37e7c2d03b95ef7fdddaa3daede0a6523c6f1e"
+      },
+      {
+        "function": "player_manager_init",
+        "va": "0x102024fa4",
+        "size": 500,
+        "sha256": "c802109626ab1eda5e6931cf4809fff9b4653b28d12c6f951e8b6b5326b8a35c"
+      },
+      {
+        "function": "session_init",
+        "va": "0x1019d0744",
+        "size": 756,
+        "sha256": "509b6dec9cad392814cc266e7a9207575787229ceaa8bdc28c47e7bbc4f1831b"
+      },
+      {
+        "function": "session_channel_id",
+        "va": "0x1019d6370",
+        "size": 8,
+        "sha256": "48f5c6dc7d990db27b2f2f5d3a5da8602e01c56fad62b8bf2f6bd5d627fd857a"
       },
       {
         "function": "session_add_peer",

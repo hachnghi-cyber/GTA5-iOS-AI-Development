@@ -250,6 +250,9 @@ def verify_peer_session_profile(remote, base, profile):
         ('local_net_peer_address', '0x101ce0a3c', 0x358),
         ('peer_address_getter', '0x101d64ba4', 0x4),
         ('player_add_remote', '0x102026d74', 0x1dc),
+        ('player_manager_init', '0x102024fa4', 0x1f4),
+        ('session_init', '0x1019d0744', 0x2f4),
+        ('session_channel_id', '0x1019d6370', 0x8),
         ('session_add_peer', '0x1019dcb40', 0x250),
         ('session_peer_endpoint', '0x1019d30d4', 0x9c),
     }
@@ -259,7 +262,34 @@ def verify_peer_session_profile(remote, base, profile):
     verify_context_code(remote, base, profile, label='session-slots')
 
 
-def read_same_event_session_candidate(remote, base, metadata, source, event):
+def read_alias_channel_configuration(read_word, dispatch_frame, profile, session):
+    """Compare configured channels only after matching the native dispatch owner."""
+    manager_offset = profile['dispatch_saved_manager_fp_offset']
+    delegate_offset = profile['dispatch_delegate_fp_offset']
+    if (manager_offset, delegate_offset) != (-0x8, -0x20):
+        return {'status': 'unexpected_dispatch_layout'}
+    try:
+        player_manager = read_word(dispatch_frame + manager_offset, 8)
+        delegate = read_word(dispatch_frame + delegate_offset, 8)
+        if not 0 < player_manager < (1 << 48) - 0x8b8 or player_manager % 8 or (
+                delegate != player_manager + 0x8b8):
+            return {'status': 'dispatch_owner_mismatch'}
+        player_transport = read_word(player_manager + 8, 8)
+        session_transport = read_word(session + 0x68, 8)
+        if (not 0 < player_transport < (1 << 48) or player_transport % 8 or
+                player_transport != session_transport):
+            return {'status': 'transport_manager_mismatch'}
+        player_channel = read_word(player_manager + 0xf8, 4)
+        session_channel = read_word(session + 0xbea8, 4)
+        if not 0 <= player_channel < 16 or not 0 <= session_channel < 16:
+            return {'status': 'invalid_channel'}
+    except (DebugProtocolError, OSError):
+        return {'status': 'bounded_read_failed'}
+    return {'status': 'observed', 'player_channel': player_channel, 'session_channel': session_channel,
+            'channels_differ': player_channel != session_channel}
+
+
+def read_same_event_session_candidate(remote, base, metadata, source, event, *, dispatch_frame=None):
     status, candidate = read_session_slots(remote, base, metadata['session_slots'])
     if candidate is not None:
         path = Path(__file__).with_name('check_v133_peer_session_map.py')
@@ -278,6 +308,9 @@ def read_same_event_session_candidate(remote, base, metadata, source, event):
             status['peer_table'] = checker.check_peer_session_map(
                 lambda addr: read_word(addr, 4), lambda addr: read_word(addr, 8),
                 source, candidate, connection, getter, check_transport_domain=True)
+            if dispatch_frame is not None and status['peer_table'].get('alias_endpoint_status') == 'match':
+                status['alias_channel_configuration'] = read_alias_channel_configuration(
+                    read_word, dispatch_frame, metadata['receive_context'], candidate)
         except (DebugProtocolError, OSError):
             status['peer_table'] = {'status': 'bounded_read_failed'}
     return status
@@ -378,7 +411,7 @@ def read_receive_context(remote, base, profile, expected_receive=None, session_m
         result['network_receive_stack_confirmed'] = True
         if session_metadata is not None:
             result['scripted_session_candidate'] = read_same_event_session_candidate(
-                remote, base, session_metadata, source, event)
+                remote, base, session_metadata, source, event, dispatch_frame=dispatch_fp)
     result['context_status'] = 'observed'
     return result
 

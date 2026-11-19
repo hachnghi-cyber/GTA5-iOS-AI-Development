@@ -894,6 +894,16 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "native_channel_configuration_observer": {
+      "parent_commit": "113184892cd7f969b97a38f724fca1abd4bdbb13",
+      "scope": "After an endpoint match, recover the player manager from the guarded Dispatch frame, corroborate its delegate, and compare configured channels only if the player manager and session use the same transport manager.",
+      "observer": "script_event_handler --receive-context",
+      "host_python_tests_passed": 186,
+      "host_test_log_sha256": "68d2f5ce57f0f2d23bdc9fed4e0cab6cda7232159ae463e538f28e5542f93c6d",
+      "live_channel_comparison_verified": false,
+      "live_connection_objects_verified": false,
+      "authenticated_sender_verified": false
+    },
     "native_connection_assignment_domains": {
       "parent_commit": "657f5025e418106ffe64026cdf1504e55722b0c0",
       "scope": "Exact-build AddRemotePlayer uses the player manager channel and stores connection and endpoint on netPlayer. ConnectToPeer uses the session channel when establishing a connection; AddPeer stores the supplied connection and endpoint in a separate snPeer row.",

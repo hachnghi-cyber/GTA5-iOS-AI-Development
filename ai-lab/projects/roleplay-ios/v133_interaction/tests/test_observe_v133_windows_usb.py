@@ -620,7 +620,8 @@ class ReceiveContextTests(unittest.TestCase):
             sample = observer.capture(remote, memory.base, metadata,
                                       site='script_event_handler', receive_context=True)
         self.assertEqual(guard.call_count, 2)
-        peer.assert_called_once_with(remote, memory.base, metadata, memory.source, memory.event)
+        peer.assert_called_once_with(remote, memory.base, metadata, memory.source, memory.event,
+                                     dispatch_frame=memory.frames[3])
         self.assertEqual(sample['scripted_session_candidate'], candidate)
         self.assertTrue(sample['engine_source_association_observed'])
         for field in ('authenticated_rp_sender_verified', 'session_generation_verified',
@@ -639,6 +640,31 @@ class ReceiveContextTests(unittest.TestCase):
         self.assertFalse(sample['network_receive_stack_confirmed'])
         self.assertFalse(sample['engine_source_association_observed'])
         self.assertFalse(any(address >= memory.source for address, _ in memory.reads))
+
+    def test_channel_configuration_requires_same_dispatch_owner_and_transport_manager(self):
+        frame, manager, session, transport = 0x170000000, 0x180000000, 0x190000000, 0x1a0000000
+        for change, expected in (
+                ({}, 'observed'),
+                ({frame - 0x20: manager + 0x8c0}, 'dispatch_owner_mismatch'),
+                ({session + 0x68: transport + 8}, 'transport_manager_mismatch'),
+                ({manager + 0xf8: 17}, 'invalid_channel')):
+            with self.subTest(expected=expected):
+                values = {(frame - 0x8, 8): manager, (frame - 0x20, 8): manager + 0x8b8,
+                          (manager + 8, 8): transport, (session + 0x68, 8): transport,
+                          (manager + 0xf8, 4): 7, (session + 0xbea8, 4): 13}
+                for address, value in change.items():
+                    width = 4 if address == manager + 0xf8 else 8
+                    values[address, width] = value
+                result = observer.read_alias_channel_configuration(
+                    lambda addr, width: values[addr, width], frame, self.profile, session)
+                self.assertEqual(result['status'], expected)
+                if expected == 'observed':
+                    self.assertEqual(result, {'status': 'observed', 'player_channel': 7,
+                                              'session_channel': 13, 'channels_differ': True})
+                else:
+                    self.assertNotIn('player_channel', result)
+                for pointer in (frame, manager, session, transport):
+                    self.assertNotIn(str(pointer), json.dumps(result))
 
     def test_source_or_destination_mismatch_rejects_association_before_dereference(self):
         for reg in (1, 2):

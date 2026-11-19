@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Observer đọc kênh cấu hình trong cùng lần dừng khi peer và endpoint khớp
+nhưng connection ID khác. Nó khôi phục player manager từ frame Dispatch,
+đối chiếu delegate và yêu cầu player manager với snSession cùng dùng một
+transport manager. 186 bài kiểm thử host qua. Cần mẫu thật để so sánh hai
+kênh, rồi đối chiếu các đối tượng kết nối tương ứng.
+
 Binary v13.3 xác nhận hai đường gán connection ID. `AddRemotePlayer` dùng
 kênh của player manager khi gọi `EstablishConnection`; `ConnectToPeer`
 dùng kênh của snSession khi cần thiết lập kết nối. `netPlayer` và `snPeer`

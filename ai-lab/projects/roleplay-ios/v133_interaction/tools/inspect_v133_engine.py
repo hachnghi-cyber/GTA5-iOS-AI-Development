@@ -93,6 +93,7 @@ SYMBOLS = {
     'session_connect_peer': '__ZN4rage9snSession13ConnectToPeerERKNS_10rlPeerInfoEijPKvjPNS_9netStatusE',
     'session_add_peer': '__ZN4rage9snSession7AddPeerEijRKNS_10rlPeerInfoE',
     'player_add_remote': '__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE',
+    'player_manager_init': '__ZN4rage16netPlayerMgrBase4InitEPNS_20netConnectionManagerEjNS_10atDelegateIFbjRNS_9netPlayerEEEE',
     'establish_connection': '__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
@@ -325,6 +326,12 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('on_net_event', 0x1c, 0xaa0003f3, 'retain the player manager in x19'),
+        ('on_net_event', 0x9c, 0x9122e260, 'pass the player manager delegate at +0x8b8 into Dispatch'),
+        ('dispatch', 0x1c, 0xf90013e0, 'save the delegate at dispatch frame pointer -0x20'),
+        ('player_manager_init', 0x50, 0xf9000676, 'store transport manager at player manager +8'),
+        ('player_manager_init', 0x54, 0xb900fa75, 'store channel at player manager +0xf8'),
+        ('session_init', 0x50, 0xf9003403, 'store transport manager at snSession +0x68'),
         ('main_session_init', 0xf0, 0x528001a4, 'initial main snSession channel argument is 13'),
         ('transition_session_init', 0x48, 0x52800184, 'initial transition snSession channel argument is 12'),
         ('session_init', 0x54, 0xb90eaaa4, 'store supplied snSession channel'),
@@ -501,6 +508,8 @@ def inspect(data):
         },
         'message_source_offset': 0x10, 'message_destination_offset': 0x18,
         'dispatch_saved_event_fp_offset': -0x10,
+        'dispatch_saved_manager_fp_offset': -0x8,
+        'dispatch_delegate_fp_offset': -0x20,
         'event_connection_offset': 0x3c, 'player_connection_offset': 0x18,
         'code_guards': [
             {'function': name, 'va': hex(sites[name]), 'size': length,
@@ -589,6 +598,9 @@ def inspect(data):
                                              ('local_net_peer_address', 0x358),
                                              ('peer_address_getter', 0x4),
                                              ('player_add_remote', 0x1dc),
+                                             ('player_manager_init', 0x1f4),
+                                             ('session_init', 0x2f4),
+                                             ('session_channel_id', 0x8),
                                              ('session_add_peer', 0x250),
                                              ('session_peer_endpoint', 0x9c))
                     ],

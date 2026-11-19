@@ -191,6 +191,12 @@ phiên là 13 cho slot chính và 12 cho slot chuyển tiếp.
 khớp. Các cờ xác thực và membership vẫn tắt khi connection ID khác.
 Cần kiểm chứng endpoint và kênh của hai giá trị trong mẫu thật.
 
+Khi `alias_endpoint_status=match`, điểm đo trực tiếp đọc thêm
+`alias_channel_configuration`. Nó lấy player manager từ thanh ghi đã lưu
+trong frame `Dispatch`, đối chiếu delegate và chỉ đọc hai kênh nếu hai bên
+dùng cùng transport manager. Kết quả là kênh đã cấu hình. Cần đối chiếu
+hai đối tượng kết nối đang hoạt động trước khi dùng liên kết này cho quyền RP.
+
 ## Session context
 
 Tùy chọn `--session-context` dùng tại `jobs_update`. Công cụ kiểm tra hash
