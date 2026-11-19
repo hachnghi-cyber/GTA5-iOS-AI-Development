@@ -225,7 +225,6 @@ class PrivateServer:
         self.stopping = True
         if self.listener:
             self.listener.close()
-            await self.listener.wait_closed()
         if self.timer:
             self.timer.cancel()
             await asyncio.gather(self.timer, return_exceptions=True)
@@ -235,6 +234,9 @@ class PrivateServer:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        if self.listener:
+            # Recent asyncio versions wait for existing client transports here.
+            await self.listener.wait_closed()
 
 
 class PrivateClient:

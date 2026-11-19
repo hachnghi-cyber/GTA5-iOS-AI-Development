@@ -9,9 +9,15 @@ Bản iPhone có giao diện tùy chọn `RP riêng` cho một cặp danh tính 
 giấy tờ. Người chơi xác nhận tham gia bằng nút; giao diện chờ ACK cùng
 snapshot trước khi bật tác vụ. Source CI và build iPhoneOS ARM64 của
 `103c23b` đã đạt. Gói cục bộ `GTAV-v13.3-Private-RP-Panel-103c23b-UNSIGNED.ipa`
-đã qua CRC, kiểm tra Mach-O và đối chiếu từng mục với IPA gốc. Cần ký, thử
-giao diện trên máy thật và đối chiếu cả hai chiều với CLI Windows hoặc
-iPhone thứ hai.
+đã qua CRC, kiểm tra Mach-O và đối chiếu từng mục với IPA gốc.
+Bản ký đã qua phép thử với Windows qua LAN. Một lượt xác nhận Chào hỏi
+và Yêu cầu giấy tờ theo cả hai chiều. Lượt riêng xác nhận Tham gia/Rời RP
+theo hai nonce kế tiếp. Xem `baselines/private-rp-iphone-panel-20261119.json`.
+Cần peer GTA thứ hai để xác minh game binding và thử tác động lên nhân vật.
+
+Server đóng các client TLS sau khi ngừng nhận kết nối mới và trước khi
+đợi listener đóng hẳn. Kiểm thử hồi quy dùng một kết nối mTLS còn mở.
+172 bài kiểm thử host đã qua. Bản iPhone `103c23b` dùng được với server này.
 
 Server kiểm tra lại kết nối sau mỗi lần chờ đọc TLS. Kiểm thử hồi quy dùng
 hai kết nối mTLS liên tiếp của cùng một tài khoản, xác nhận kết nối cũ

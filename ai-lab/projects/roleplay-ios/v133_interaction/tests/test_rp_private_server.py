@@ -574,6 +574,19 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
                 await citizen.transact(bytes(forged))
             await self.wait_state(cop, lambda m: CITIZEN not in m)
 
+    async def test_close_releases_an_idle_tls_peer(self):
+        async with self.running(lease=15) as (server, address):
+            client = await self.connect(address, 'cop')
+            await self.apply(client, OPT_IN)
+            await asyncio.wait_for(server.close(), 3)
+            self.assertEqual(server.peers, {})
+            self.assertEqual(server.tasks, set())
+            self.assertIsNone(server.authority.snapshot(COP))
+            with self.assertRaises((asyncio.IncompleteReadError, ConnectionError)):
+                async with asyncio.timeout(3):
+                    while True:
+                        await client.receive()
+
     async def test_lease_expiry_revokes_and_replicates_to_live_client(self):
         async with self.running(SyntheticScene(), lease=0.4) as (_, address):
             cop, citizen = await self.ready(address)

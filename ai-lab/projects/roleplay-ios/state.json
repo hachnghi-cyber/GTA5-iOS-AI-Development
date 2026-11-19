@@ -894,6 +894,13 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "private_authority_listener_shutdown": {
+      "parent_commit": "89fcd86f9b70979e304823ea04cf2f1026d3f2e8",
+      "scope": "Stop the listener from accepting new connections, retire active TLS clients, and then await listener shutdown. Python 3.13 can otherwise keep waiting while admitted clients remain connected.",
+      "validation_scope": "A real idle mTLS peer with an active RP admission is retired within the three-second regression deadline and receives EOF. Signed iPhone panel consent completed with the corrected Windows server.",
+      "host_python_tests_passed": 172,
+      "host_test_log_sha256": "d5186cc17e0b713e2de4869b45ab080fbd2b012bde47a50f2d506cb478edf5ba"
+    },
     "private_authority_player_panel": {
       "parent_commit": "6155e9de1628ee191a52341c09711244613f0f3e",
       "scope": "Optional native UIKit controls for manual join/leave and two-way GREET/DOCUMENTS against the paired RP principal in a development kit. Uses the existing authenticated LAN transport.",
@@ -911,9 +918,11 @@
         "dylib_sha256": "7f38538c09c567192e93288cee2ce97d0a774d725b319530aa15c4ef9b3f9416",
         "dylib_uuid": "2BC69080-1D4C-354B-A739-9F327EA03BEA",
         "validation": "ZIP CRC and exact entry comparison passed. Only the GTA5 dylib load command and the additional probe changed. UIKit linked as an iOS system dependency. C static analyzer reported no diagnostics.",
-        "device_tested": false
+        "device_tested": true
       },
-      "manual_ui_verified_on_iphone": false,
+      "manual_ui_verified_on_iphone": true,
+      "physical_evidence": "baselines/private-rp-iphone-panel-20261119.json",
+      "physical_validation_scope": "One signed iPhone and a distinct Windows RP principal on private LAN. Both social operations were receipted in both directions in one trial. Manual opt-in and opt-out were matched to ordered snapshots and successive nonces in a separate trial.",
       "native_game_binding_verified": false
     },
     "private_authority_reconnect_read_guard": {

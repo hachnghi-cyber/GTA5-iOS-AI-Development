@@ -132,6 +132,11 @@ Bảng hiển thị xác nhận ứng dụng đối tác đã nhận yêu cầu.
 lại GTA. Giao diện hiện điều khiển thông báo RP. Tác động lên nhân vật
 trong phiên GTA còn cần adapter và kiểm thử riêng.
 
+Bản ký `103c23b` đã xác nhận hai yêu cầu theo cả hai chiều giữa iPhone và
+Windows trong một lượt LAN. Lượt khác xác nhận hai nút Tham gia/Rời RP
+qua snapshot của cùng lần vào phiên. Xem log đã lọc ở
+`baselines/private-rp-iphone-panel-20261119.json`.
+
 Build ARM64 trên commit `99ed120` đạt trong run `44492859651` (SDK 18.5,
 iOS tối thiểu 16.3). Source CI `44492869967` đạt cả GCC/Clang ASan/UBSan.
 IPA chẩn đoán cục bộ `GTAV-v13.3-Private-RP-Authority-Diagnostic-99ed120-UNSIGNED.ipa`
