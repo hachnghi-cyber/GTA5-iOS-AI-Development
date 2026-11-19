@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Run the verified GREET/DOCUMENTS diagnostic IPA after signing and installing it, then match its iPhone log with the Windows witness. For native gameplay, collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session and establish the exact game participant/admission binding before enabling effects.",
+  "next_action": "Collect a guarded queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Correlate the same received game event to its participant and current admission, then bind both RP identities to verified game participants before enabling native effects or testing custody gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -915,8 +915,10 @@
         "sha256": "a0b28c6b42bdb5a4c7dfb90c3c688d819c4156a1a463a52f4c8f0333a6e8d5fd",
         "verification": "Exact original checked; ZIP intact, one probe added, original asset data byte-identical, system dylib dependencies only. User signing pending."
       },
-      "windows_private_lan_witness": "Normal ABI 2 server started on the PC Wi-Fi interface with a consenting Windows peer and fresh private iPhone diagnostic credentials. Ready to test after signing/installing.",
-      "iphone_runtime_tested": false,
+      "windows_private_lan_witness": "Physical signed iPhone and distinct Windows peer completed both receipted RP actions over private mTLS; iPhone log collected by USB. Server stopped on completion.",
+      "source_ci": {"run": 44508906075, "status": "passed"},
+      "device_evidence": "baselines/private-rp-iphone-social-20261119.json",
+      "iphone_runtime_tested": true,
       "game_identity_binding": false
     },
     "private_authority_pair_admission": {

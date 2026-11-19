@@ -8,7 +8,9 @@ Server và probe có kênh PRP3 tùy chọn cho Chào hỏi và yêu cầu kiể
 tờ. Gửi chỉ khi hai bên đã opt-in và xác nhận bằng kết nối người nhận.
 Build ARM64 `0c38348` đã đạt. IPA chẩn đoán chưa ký
 `GTAV-v13.3-Private-RP-Social-Probe-0c38348-UNSIGNED.ipa` đã kiểm tra ZIP và
-Mach-O. Cần ký/cài và đối chiếu log với PC theo `PRIVATE_RP_SERVER_VI.md`.
+Mach-O. Bản ký đã chạy trên iPhone và qua hai chiều với Windows. Xem
+`baselines/private-rp-iphone-social-20261119.json`. Cần peer GTA thứ hai
+để đo đường nhận native và ghép danh tính với nhân vật.
 
 Server đã kiểm tra hai lần gia nhập hiện tại trước khi đưa dữ liệu cặp vào
 luật còng/áp giải. 163 test host đạt, gồm từ chối tráo người và dùng mẫu

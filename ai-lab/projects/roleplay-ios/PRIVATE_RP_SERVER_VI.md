@@ -182,3 +182,9 @@ Trên iPhone, cần bản IPA hỗ trợ `social-round-trip-v1`:
 Chỉ bật chế độ này qua kit tùy chọn. Client cũ vẫn dùng giao thức consent
 bình thường. Phép thử xác minh đường gửi giữa hai RP principal qua server.
 Các hành động game tiếp tục cần ánh xạ đúng nhân vật và phiên GTA.
+
+Phép thử ngày 19/11/2026 trên iPhone thật đã ghi
+`social_round_trip_passed`. Windows xác nhận iPhone nhận lời chào và máy
+Windows nhận yêu cầu kiểm tra giấy tờ ngược lại. Log iPhone lấy qua USB.
+Xem `baselines/private-rp-iphone-social-20261119.json`. Hai danh tính RP
+qua TLS đã đối chiếu. Phép thử chưa ghép chúng với hai nhân vật GTA.
