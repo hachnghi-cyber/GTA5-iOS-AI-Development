@@ -76,6 +76,7 @@ jobs:
             ai-lab/projects/roleplay-ios/story-ped-v19/RPStoryPedProbeV19.c
             ai-lab/projects/roleplay-ios/story-ped-v19/tests/test_ped_v19.py
             ai-lab/projects/roleplay-ios/story-ped-v19/README.md
+            ai-lab/projects/roleplay-ios/story-ped-v19/example/RP19_STORY_TEST.txt.example
             ai-lab/projects/roleplay-ios/guest-reader-v18/RPRemoteMailboxReaderV18.c
           if-no-files-found: error
           retention-days: 7
