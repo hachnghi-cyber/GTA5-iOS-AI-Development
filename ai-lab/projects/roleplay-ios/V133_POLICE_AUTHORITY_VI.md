@@ -96,3 +96,8 @@ phải cung cấp trạng thái ca và thời điểm quan sát cho chính danh 
 với game, theo phiên và lần kết nối hiện tại. Server dùng lại luật thu hồi
 `rp_police_revoke_duty`. Trường `local_work_candidate` của observer vẫn là log
 chẩn đoán. Server không lấy log hoặc lệnh TLS làm nguồn cấp quyền.
+
+Để chuyển lệnh tác động sang lõi C, server yêu cầu `PairObservation` khớp cả
+hai lần gia nhập RP đang hoạt động. Việc kiểm tra này đứng sau mTLS và trước
+luật khoảng cách/custody. Adapter game vẫn phải xác minh liên kết với từng
+nhân vật và thế hệ phiên game trước khi tạo mẫu cặp.

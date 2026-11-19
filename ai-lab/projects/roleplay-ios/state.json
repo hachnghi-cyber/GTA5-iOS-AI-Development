@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Establish the exact game participant and admission binding, then wire the verified game-thread duty source into the independent server duty API before enabling effects and running two-device regression tests.",
+  "next_action": "Collect a guarded same-frame queue/receive sample with a cooperating second GTA participant in a private multiplayer session. Establish the exact game participant and admission binding, then feed verified game observations to both the server duty API and the admission-bound pair API before enabling effects and running two-device regression tests.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,15 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_pair_admission": {
+      "parent_commit": "52813aa91e4eb31a854615723612a010bd43edb5",
+      "scope": "Server validates current RP actor and target admissions on a typed observation before applying pair actions. Provider cannot read the raw client command. C authority remains the decision maker. No wire or ABI changes.",
+      "host_python_tests_passed": 163,
+      "test_log_sha256": "f52e2017ab3929954130d486dc2bbef5b215fdcab45422035568bb8cb748c590",
+      "host_checks": "Real loopback mTLS with synthetic observations: reject switched actor/target and stale target admission even with a fresh timestamp; accept matching current admissions.",
+      "native_game_provider_enabled": false,
+      "gameplay_tested_on_iphone": false
     },
     "private_authority_duty_revocation": {
       "parent_commit": "9db58b4d71c812cdfb5f44614abdba743e04bc42",

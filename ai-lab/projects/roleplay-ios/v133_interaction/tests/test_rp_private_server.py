@@ -2,6 +2,7 @@
 import asyncio
 import base64
 from contextlib import asynccontextmanager
+from dataclasses import replace
 import ipaddress
 import json
 import os
@@ -17,7 +18,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from test_prp3_direct_tls import issue
 from prp3_direct_tls import Credentials, ProtocolError
-from rp_private_authority import DutyObservation, DutySubject, NativeAuthority
+from rp_private_authority import DutyObservation, NativeAuthority, PairObservation, ParticipantAdmission
 import rp_private_server as rp
 from prepare_private_rp import prepare
 
@@ -35,9 +36,8 @@ class SyntheticScene:
     def duty_state(self, subject, now):
         return DutyObservation(subject, now - self.duty_age, self.duty)
 
-    def __call__(self, sender, now, wire):
-        target = rp.COMMAND.unpack(wire)[5]
-        return (now - self.age, 77, self.distance, 1, self.flags, sender, target)
+    def __call__(self, actor, target, now):
+        return PairObservation(actor, target, now - self.age, 77, self.distance, 1, self.flags)
 
 
 class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
@@ -167,7 +167,7 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             citizen = await self.connect(address, 'citizen')
             await self.apply(officer, OPT_IN)
             await self.apply(officer, DUTY)
-            self.assertIsInstance(captured, DutySubject)
+            self.assertIsInstance(captured, ParticipantAdmission)
             self.assertEqual(captured.principal, COP)
             old_subject = captured
             await officer.close()
@@ -176,6 +176,40 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             replacement = await self.connect(address, 'cop')
             await self.apply(replacement, OPT_IN)
             await self.apply(replacement, DUTY, expected=1)
+
+    async def test_custody_denied_for_old_target_admission_even_with_fresh_timestamp(self):
+        scene = SyntheticScene()
+        async with self.running(scene) as (server, address):
+            cop, citizen = await self.ready(address)
+            saved = None
+            def capture(actor, target, now):
+                nonlocal saved
+                saved = scene(actor, target, now)
+                return saved
+            server.authority.observation_provider = capture
+            await self.apply(cop, CUFF, CITIZEN)
+            self.assertEqual(saved.target.principal, CITIZEN)
+            await citizen.close()
+            await self.wait_state(cop, lambda members: members and CITIZEN not in members)
+            replacement = await self.connect(address, 'citizen')
+            await self.apply(replacement, OPT_IN)
+            # A fresh time cannot make evidence from the old admission valid.
+            server.authority.observation_provider = lambda _a, _t, now: replace(saved, observed_at_ms=now)
+            await self.apply(cop, CUFF, CITIZEN, expected=1)
+            self.assertEqual(server.authority.snapshot(CITIZEN)[4], 0)
+            server.authority.observation_provider = scene
+            await self.apply(cop, CUFF, CITIZEN)
+            await self.wait_state(replacement, lambda members: CITIZEN in members and members[CITIZEN][4] == 1)
+
+    async def test_pair_source_cannot_substitute_actor_or_target(self):
+        scene = SyntheticScene()
+        async with self.running(scene) as (server, address):
+            cop, _ = await self.ready(address)
+            server.authority.observation_provider = lambda actor, target, now: scene(target, actor, now)
+            await self.apply(cop, CUFF, CITIZEN, expected=1)
+            self.assertEqual(server.authority.snapshot(CITIZEN)[4], 0)
+            server.authority.observation_provider = scene
+            await self.apply(cop, CUFF, CITIZEN)
 
     async def test_generated_development_kit_uses_actual_server_and_client_credentials(self):
         with tempfile.TemporaryDirectory() as root:

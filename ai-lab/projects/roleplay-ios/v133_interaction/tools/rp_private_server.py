@@ -16,14 +16,13 @@ import struct
 import time
 
 from prp3_direct_tls import Credentials, ProtocolError, u64
-from rp_private_authority import NativeAuthority
+from rp_private_authority import COMMAND, NativeAuthority
 
 ALPN = 'police-rp-authority/1'
 HEADER = struct.Struct('!BI')
 HELLO = struct.Struct('!8sQQQQ')
 SCOPE = struct.Struct('!QQQ')
 ROW = struct.Struct('!10Q')
-COMMAND = struct.Struct('<4sBBHQQQQ')
 WELCOME, REQUEST, ACK, SNAPSHOT, PING, PONG = range(1, 7)
 MAX_RECORD = 4096
 CAPACITY = 32

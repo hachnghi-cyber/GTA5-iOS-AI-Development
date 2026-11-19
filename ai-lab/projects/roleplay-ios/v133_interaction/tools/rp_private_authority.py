@@ -2,16 +2,19 @@
 import ctypes as C
 from dataclasses import dataclass
 from pathlib import Path
+import struct
 
 U64 = C.c_uint64
 U8 = C.c_uint8
 FIELDS = ('id', 'role', 'consent', 'on_duty', 'custody', 'custodian',
           'vehicle_id', 'seat', 'jail_until_ms', 'last_nonce')
 DUTY_MAX_AGE_MS = 250
+COMMAND = struct.Struct('<4sBBHQQQQ')
+_DUTY_START, _CUFF, _RELEASE_JAIL = 3, 5, 12  # rp_police_operation
 
 
 @dataclass(frozen=True)
-class DutySubject:
+class ParticipantAdmission:
     principal: int
     session: int
     epoch: int
@@ -20,9 +23,20 @@ class DutySubject:
 
 @dataclass(frozen=True)
 class DutyObservation:
-    subject: DutySubject
+    subject: ParticipantAdmission
     observed_at_ms: int
     on_shift: bool
+
+
+@dataclass(frozen=True)
+class PairObservation:
+    actor: ParticipantAdmission
+    target: ParticipantAdmission
+    observed_at_ms: int
+    vehicle_id: int
+    distance_cm: int
+    seat: int
+    flags: int
 
 
 class NativeAuthority:
@@ -49,8 +63,9 @@ class NativeAuthority:
         if not self.handle:
             raise ValueError('invalid authority scope')
         self.session, self.epoch = session, epoch
-        # Only a trusted, in-process source may supply facts. CLI leaves this None.
-        # Tests explicitly use synthetic observations; no client field can set it.
+        # The trusted source returns the original actor and target admissions
+        # alongside game facts already bound to those participants. The packet
+        # selects the lookup; it cannot provide facts or bind a participant.
         self.observation_provider = observation_provider
         # A trusted provider must bind its original game observation to the
         # subject and retain the original observation time. It runs in this
@@ -69,7 +84,8 @@ class NativeAuthority:
         if not self.lib.rp_server_admit(self.handle, identity, role):
             return False
         self._admission_generation += 1
-        self._admissions[identity] = DutySubject(identity, self.session, self.epoch, self._admission_generation)
+        self._admissions[identity] = ParticipantAdmission(identity, self.session, self.epoch,
+                                                          self._admission_generation)
         return True
 
     def leave(self, identity):
@@ -118,23 +134,40 @@ class NativeAuthority:
             return None
         return tuple(result)
 
+    def _pair_facts(self, sender, target, now, on_shift):
+        actor, recipient = self._admissions.get(sender), self._admissions.get(target)
+        if not on_shift or not actor or not recipient or self.observation_provider is None:
+            return None
+        try:
+            observation = self.observation_provider(actor, recipient, now)
+        except Exception:
+            return None  # Source unavailable. Leave the native policy to deny the action.
+        if (type(observation) is not PairObservation or observation.actor != actor or
+                observation.target != recipient):
+            return None
+        values = (observation.observed_at_ms, observation.vehicle_id, observation.distance_cm,
+                  observation.seat, observation.flags)
+        maxima = (now, (1 << 64) - 1, (1 << 32) - 1, 255, 31)
+        if (any(type(value) is not int or not 0 <= value <= maximum
+                for value, maximum in zip(values, maxima)) or now - observation.observed_at_ms > DUTY_MAX_AGE_MS):
+            return None
+        return (U64 * 7)(*values, sender, target)
+
     def dispatch(self, sender, now, wire):
-        if len(wire) != 40:
+        if len(wire) != COMMAND.size:
+            return None
+        magic, version, operation, reserved, session, target, epoch, nonce = COMMAND.unpack(wire)
+        if ((magic, version, reserved, session, epoch) != (b'PRPC', 1, 0, self.session, self.epoch)
+                or not 1 <= operation <= _RELEASE_JAIL or not nonce or not target or sender not in self._admissions):
             return None
         on_shift = self._current_duty(sender, now)
         if not on_shift:
             self._revoke_if_on_duty(sender)
-        facts = None
-        if self.observation_provider:
-            values = self.observation_provider(sender, now, wire)
-            if values is not None:
-                if len(values) != 7 or any(type(v) is not int or not 0 <= v < 2**64 for v in values):
-                    raise ValueError('invalid trusted observation')
-                facts = (U64 * 7)(*values)
-                if not on_shift:
-                    facts[4] &= ~2
-        request, ack = (U8 * 40).from_buffer_copy(wire), (U8 * 40)()
-        if not self.lib.rp_server_dispatch(self.handle, sender, now, request, 40,
-                                           facts, 7 if facts is not None else 0, ack, 40):
+        needs_observation = operation == _DUTY_START or operation >= _CUFF
+        facts = self._pair_facts(sender, target, now, on_shift) if needs_observation else None
+        size = COMMAND.size
+        request, ack = (U8 * size).from_buffer_copy(wire), (U8 * size)()
+        if not self.lib.rp_server_dispatch(self.handle, sender, now, request, size,
+                                           facts, 7 if facts is not None else 0, ack, size):
             return None
         return bytes(ack)

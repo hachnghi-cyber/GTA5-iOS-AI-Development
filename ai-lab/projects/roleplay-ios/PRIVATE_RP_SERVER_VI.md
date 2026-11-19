@@ -20,6 +20,13 @@ quá 250 ms. Nếu nguồn báo bỏ ca, mất dữ liệu hoặc mẫu hết h�
 nhật server thu hồi ca và phát snapshot giải phóng người bị giữ ngay cả
 khi client không gửi lệnh. Mặc định chưa có nguồn quan sát game như vậy.
 
+Nguồn dữ liệu cho từng lệnh nhận hai `ParticipantAdmission` đang hoạt động,
+thay vì nhận gói lệnh. Nó trả `PairObservation` gắn với cặp người chơi và
+lần gia nhập lúc lấy mẫu. Gói lệnh chỉ chọn người cần tra. Server từ chối mẫu
+tráo người, mẫu của lần kết nối cũ và mẫu quá 250 ms, kể cả khi client mới
+dùng lại cùng chứng chỉ. Adapter thật phải giữ ràng buộc và thời điểm lấy mẫu
+gốc. Chỉ khi xác minh hai nhân vật trong cùng phiên game mới cấp dữ liệu.
+
 Ngày 19/11/2026, **iPhone thật và Windows đã qua phép thử tham gia/rời RP**.
 Log iPhone lấy qua USB xác nhận TLS và hai phản hồi. PC quan sát lần lượt
 kết nối, tham gia, rời RP và ngắt kết nối trong cùng phiên. Xem bằng chứng

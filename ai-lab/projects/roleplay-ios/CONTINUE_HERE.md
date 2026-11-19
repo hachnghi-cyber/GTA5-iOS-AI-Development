@@ -4,6 +4,11 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server đã kiểm tra hai lần gia nhập hiện tại trước khi đưa dữ liệu cặp vào
+luật còng/áp giải. 163 test host đạt, gồm từ chối tráo người và dùng mẫu
+cũ sau reconnect; dữ liệu game trong test là mô hình. Adapter game thật
+cần nối mỗi danh tính RP với đúng nhân vật trong phiên GTA riêng.
+
 Server host ABI 2 xác minh nguồn ca độc lập theo lần kết nối và tự thu hồi
 quyền/giải phóng custody khi bỏ ca, dữ liệu quá cũ hoặc nguồn lỗi. 161 test
 Python và C FFI đạt; kiểm thử ca server dùng dữ liệu mô hình. Build lại DLL
