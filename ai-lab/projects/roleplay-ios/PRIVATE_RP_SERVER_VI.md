@@ -12,6 +12,13 @@ chạy bình thường không có provider đó: opt-in/out và snapshot hoạt 
 nhận ca và tác động custody bị từ chối cho đến khi có dữ liệu game tin cậy.
 Đây chưa phải bản RP chơi được trên iPhone.
 
+Ngày 19/11/2026, **iPhone thật và Windows đã qua phép thử tham gia/rời RP**.
+Log iPhone lấy qua USB xác nhận TLS và hai phản hồi. PC quan sát lần lượt
+kết nối, tham gia, rời RP và ngắt kết nối trong cùng phiên. Xem bằng chứng
+đã lọc tại `baselines/private-rp-iphone-consent-20261119.json`. Hai bên dùng
+hai danh tính RP. Chỉ phía iPhone chạy GTA, nên chưa xác minh ánh xạ nhân vật
+hay gameplay giữa hai thiết bị.
+
 ## Chạy trên host
 
 Yêu cầu Python 3.11 trở lên; `cryptography==50.0.2` để tạo bộ chứng chỉ phát

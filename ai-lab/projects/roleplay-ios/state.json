@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Sign and install the verified consent-round-trip diagnostic on an iPhone, and compare its local authority log with the bounded Windows LAN witness. Establish RP principal binding and trusted game-thread observations before enabling native effects, then verify gameplay on two devices.",
+  "next_action": "On the installed v13.3 diagnostic in private Sandbox, verify current game-thread and session observations. Establish a separate scoped binding between RP mTLS principal and GTA game participant before enabling gameplay; then verify native effects and stock-mode regressions on devices.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -894,16 +894,25 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "private_authority_iphone_device_consent": {
+      "baseline": "baselines/private-rp-iphone-consent-20261119.json",
+      "physical_iphone": true,
+      "host_witness": "Windows second mTLS identity verified ordered join, opt-in, opt-out and disconnect at 09:47:58 UTC",
+      "device_log": "consent_round_trip_passed, rp_tls_verified=1, retrieved via USB from GTA Documents",
+      "game_uuid_verified": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "native_game_binding_verified": false,
+      "two_iphone_gameplay_tested": false
+    },
     "private_authority_iphone_lan_witness": {
       "scope": "One command generates a temporary private kit, binds the diagnostic server, and observes join / opt-in / opt-out / disconnect through a distinct host mTLS identity",
       "host_tests_passed": 157,
       "host_checks": "Positive test ran the native codec over real loopback mTLS. Negative test rejected disconnect after opt-in. The PC Wi-Fi listener and host witness reached ready on Windows.",
-      "device_runtime": "waiting for signed iPhone and matching device log"
+      "device_runtime": "one iPhone plus a host peer passed; see private_authority_iphone_device_consent"
     },
     "private_authority_consent_probe": {
       "mode": "Explicit local kit opt-in; self opt-in and opt-out with ACK and nonce-matched snapshots, then disconnect",
       "gameplay_effects": false,
-      "device_runtime": "unverified; requires signed diagnostic on iPhone",
+      "device_runtime": "passed on a physical iPhone; see private_authority_iphone_device_consent",
       "host_validation": "155 Python tests passed, including the new native C round trip over real loopback mTLS with a second client observing [0, 1, 0]; Zig Clang C11 assertion fixtures passed for ACK/snapshot ordering and policy failure",
       "windows_wifi_interface_smoke": "two Windows CLI peers connected via the PC Wi-Fi IPv4 address; the kit generated the iPhone probe option; no cross-device Wi-Fi data",
       "source_commit": "2455bc3f49b25e531bc4430612ca29c1288d6d53",

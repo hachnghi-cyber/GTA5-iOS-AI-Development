@@ -4,17 +4,22 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Một iPhone thật và Windows đã qua kiểm thử server riêng. Log USB của iPhone
+ghi `consent_round_trip_passed`; PC thấy đủ kết nối, tham gia, rời RP và ngắt
+kết nối. Xem `baselines/private-rp-iphone-consent-20261119.json`. Mốc tiếp
+theo là xác minh game thread trong Sandbox riêng và ghép đúng người chơi.
+
 Chế độ chẩn đoán `--consent-probe` kiểm tra thêm đường iPhone gửi lệnh. Nó
 yêu cầu ACK và snapshot cùng nonce khi tham gia và rời RP. Xem hướng dẫn LAN
 trong `PRIVATE_RP_SERVER_VI.md`. Build `2455bc3` đã đạt CI và tạo IPA chưa ký
-`GTAV-v13.3-Private-RP-Consent-Probe-2455bc3-UNSIGNED.ipa`. Cần log iPhone thật.
+`GTAV-v13.3-Private-RP-Consent-Probe-2455bc3-UNSIGNED.ipa`.
 
 Đã nối mã client iOS với giao thức server riêng và thêm cấu hình mTLS cho
 iPhone. Hai client dùng cùng codec C đã qua kiểm thử với server qua TLS thật
 trên Windows. Tổng 154 test Python đạt. Build iPhoneOS ARM64 và source CI
 của `99ed120` đã đạt. IPA chẩn đoán chưa ký đã tạo và đối chiếu từng mục ZIP.
-Bước kế tiếp là ký, cài và so log iPhone với phép thử Windows tự động theo
-`PRIVATE_RP_SERVER_VI.md`. Chưa có xác nhận hành động trong game.
+Hướng dẫn cài và kiểm thử nằm trong `PRIVATE_RP_SERVER_VI.md`. Chưa có xác
+nhận hành động trong game.
 
 Server riêng đã có mã chạy được trên Windows/Linux: xem `PRIVATE_RP_SERVER_VI.md`.
 152 test Python đạt, gồm 15 test server mTLS thật với hai client host và lõi C.
