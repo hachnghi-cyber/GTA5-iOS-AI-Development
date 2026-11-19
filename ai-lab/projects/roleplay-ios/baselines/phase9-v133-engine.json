@@ -290,6 +290,34 @@
     "session_init": {
       "name": "__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc",
       "va": "0x1019d0744"
+    },
+    "main_session_init": {
+      "name": "__ZN15CNetworkSession4InitEv",
+      "va": "0x1017e9674"
+    },
+    "transition_session_init": {
+      "name": "__ZN15CNetworkSession14InitTransitionEv",
+      "va": "0x1017e9c30"
+    },
+    "session_channel_id": {
+      "name": "__ZNK4rage9snSession12GetChannelIdEv",
+      "va": "0x1019d6370"
+    },
+    "session_connect_peer": {
+      "name": "__ZN4rage9snSession13ConnectToPeerERKNS_10rlPeerInfoEijPKvjPNS_9netStatusE",
+      "va": "0x1019e6ca4"
+    },
+    "session_add_peer": {
+      "name": "__ZN4rage9snSession7AddPeerEijRKNS_10rlPeerInfoE",
+      "va": "0x1019dcb40"
+    },
+    "player_add_remote": {
+      "name": "__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE",
+      "va": "0x102026d74"
+    },
+    "establish_connection": {
+      "name": "__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE",
+      "va": "0x101cdeaf8"
     }
   },
   "branches": [
@@ -510,6 +538,36 @@
       "kind": "BL"
     },
     {
+      "at": "0x1017e9768",
+      "source": "main_session_init",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017e9c7c",
+      "source": "transition_session_init",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019e6eb4",
+      "source": "session_connect_peer",
+      "target": "establish_connection",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019e6ed4",
+      "source": "session_connect_peer",
+      "target": "session_add_peer",
+      "kind": "BL"
+    },
+    {
+      "at": "0x102026dcc",
+      "source": "player_add_remote",
+      "target": "establish_connection",
+      "kind": "BL"
+    },
+    {
       "at": "0x10180bc78",
       "source": "get_current_session",
       "target": "session_exists",
@@ -565,6 +623,108 @@
     }
   ],
   "observations": [
+    {
+      "at": "0x1017e9764",
+      "function": "main_session_init",
+      "word": "0x528001a4",
+      "observation": "initial main snSession channel argument is 13"
+    },
+    {
+      "at": "0x1017e9c78",
+      "function": "transition_session_init",
+      "word": "0x52800184",
+      "observation": "initial transition snSession channel argument is 12"
+    },
+    {
+      "at": "0x1019d0798",
+      "function": "session_init",
+      "word": "0xb90eaaa4",
+      "observation": "store supplied snSession channel"
+    },
+    {
+      "at": "0x1019d6370",
+      "function": "session_channel_id",
+      "word": "0x5297d508",
+      "observation": "select the session channel field at +0xbea8"
+    },
+    {
+      "at": "0x1019d6374",
+      "function": "session_channel_id",
+      "word": "0xb8686800",
+      "observation": "load the session channel"
+    },
+    {
+      "at": "0x1019e6cdc",
+      "function": "session_connect_peer",
+      "word": "0x91402c1c",
+      "observation": "form the snSession base plus 0xb000"
+    },
+    {
+      "at": "0x1019e6ea0",
+      "function": "session_connect_peer",
+      "word": "0xb94eab82",
+      "observation": "pass snSession channel to EstablishConnection"
+    },
+    {
+      "at": "0x1019e6ec8",
+      "function": "session_connect_peer",
+      "word": "0xaa1703e1",
+      "observation": "pass the selected session connection ID to AddPeer"
+    },
+    {
+      "at": "0x1019dcb70",
+      "function": "session_add_peer",
+      "word": "0xaa0103f8",
+      "observation": "preserve the supplied connection ID in x24"
+    },
+    {
+      "at": "0x1019dccc0",
+      "function": "session_add_peer",
+      "word": "0xb9000118",
+      "observation": "store connection ID at snPeer +0"
+    },
+    {
+      "at": "0x1019dccc4",
+      "function": "session_add_peer",
+      "word": "0xb901e115",
+      "observation": "store endpoint ID at snPeer +0x1e0"
+    },
+    {
+      "at": "0x1019d3104",
+      "function": "session_peer_endpoint",
+      "word": "0xb941e100",
+      "observation": "return the matching snPeer endpoint ID"
+    },
+    {
+      "at": "0x102026d90",
+      "function": "player_add_remote",
+      "word": "0xaa0303f7",
+      "observation": "preserve the supplied endpoint ID in x23"
+    },
+    {
+      "at": "0x102026db8",
+      "function": "player_add_remote",
+      "word": "0xb940fa82",
+      "observation": "pass the player manager channel to EstablishConnection"
+    },
+    {
+      "at": "0x102026dbc",
+      "function": "player_add_remote",
+      "word": "0xaa1703e1",
+      "observation": "pass the endpoint ID to EstablishConnection"
+    },
+    {
+      "at": "0x102026dd4",
+      "function": "player_add_remote",
+      "word": "0x29035ea0",
+      "observation": "store returned connection and endpoint at netPlayer +0x18 and +0x1c"
+    },
+    {
+      "at": "0x101cdeef8",
+      "function": "establish_connection",
+      "word": "0xf8765b5a",
+      "observation": "select the established connection for the supplied channel"
+    },
     {
       "at": "0x1017dfa4c",
       "function": "on_connection_event",
@@ -1493,6 +1653,24 @@
         "va": "0x101d64ba4",
         "size": 4,
         "sha256": "110f46b5b35c069160560c6ad6786f647dd44e8760a52a46fc22dbbcd7630b91"
+      },
+      {
+        "function": "player_add_remote",
+        "va": "0x102026d74",
+        "size": 476,
+        "sha256": "549895b3987ad1a13f1756e27d37e7c2d03b95ef7fdddaa3daede0a6523c6f1e"
+      },
+      {
+        "function": "session_add_peer",
+        "va": "0x1019dcb40",
+        "size": 592,
+        "sha256": "feffd6aeba80864bb7d763aa4556918a610e74c5c040befab9f2b019dc3feb15"
+      },
+      {
+        "function": "session_peer_endpoint",
+        "va": "0x1019d30d4",
+        "size": 156,
+        "sha256": "8a41121903ad538c7c7f9f8a88ec6f6c79bf9855aef961f26248a0af45ad38c8"
       }
     ],
     "scope": "established slot/peer-table candidate only; no proof of routing, membership lifetime or identity"

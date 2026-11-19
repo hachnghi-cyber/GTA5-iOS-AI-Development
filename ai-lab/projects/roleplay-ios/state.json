@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Trace the two distinct connection values observed for the same rl peer and transport identity to their native lookup and assignment domains. Observe the guarded OnConnectionEvent session lookup during a private-room join and correlate it to a live game admission. Observe the earlier LeaveSession call and confirm slot generation before enabling gameplay.",
+  "next_action": "Measure whether the mismatched connection values for the same peer and transport identity use the same endpoint. Compare their live channel assignments in the same guarded native receive before treating them as related. Observe private join and leave to establish admission generation before enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,18 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "native_connection_assignment_domains": {
+      "parent_commit": "657f5025e418106ffe64026cdf1504e55722b0c0",
+      "scope": "Exact-build AddRemotePlayer uses the player manager channel and stores connection and endpoint on netPlayer. ConnectToPeer uses the session channel when establishing a connection; AddPeer stores the supplied connection and endpoint in a separate snPeer row.",
+      "initial_session_channels": {"main": 13, "transition": 12},
+      "profile": "baselines/phase9-v133-engine.json",
+      "observer": "script_event_handler --receive-context records an anonymous endpoint comparison only after matching the rl peer and transport identities on a different-connection row.",
+      "host_python_tests_passed": 185,
+      "host_test_log_sha256": "613c3efc5f657b045e38bcac27b0cf177dffcbb346c5a84222f3113332d44aee",
+      "live_endpoint_comparison_verified": false,
+      "live_channel_assignments_verified": false,
+      "authenticated_sender_verified": false
     },
     "single_iphone_native_receive": {
       "parent_commit": "96be0918ff2c69d48f150f6446ef2a2a647e5bff",

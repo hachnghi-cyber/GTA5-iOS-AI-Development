@@ -4,6 +4,13 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Binary v13.3 xác nhận hai đường gán connection ID. `AddRemotePlayer` dùng
+kênh của player manager khi gọi `EstablishConnection`; `ConnectToPeer`
+dùng kênh của snSession khi cần thiết lập kết nối. `netPlayer` và `snPeer`
+đều lưu endpoint ID. Observer mới so sánh endpoint khi rl peer ID và
+metadata truyền tải đã khớp nhưng connection ID khác. 185 bài kiểm thử
+host đã qua. Cần đo endpoint và xác nhận kênh thực tế trên iPhone.
+
 Người thử xác nhận hai GTA trên một iPhone, một cài riêng và một trong
 LiveContainer, vào cùng phòng chỉ mời và tương tác được trong game.
 USB trên bản cài riêng bắt đường nhận `engine_receive_dispatch` và cùng

@@ -181,6 +181,16 @@ ID trước khi cấp quyền. `remote_entries_seen` là số mục đã đọc.
 cũng xuất `session_remote_peer_count` khi trường đếm hợp lệ.
 Xem `baselines/v133-single-iphone-native-receive-20261119.json`.
 
+Binary v13.3 xác nhận `netPlayerMgrBase::AddRemotePlayer` truyền kênh của
+player manager và endpoint vào `EstablishConnection`, rồi lưu cả connection
+ID và endpoint ID trong `netPlayer`. Khi cần mở kết nối,
+`snSession::ConnectToPeer` dùng kênh của phiên. `snSession::AddPeer`
+lưu connection ID và endpoint ID riêng trong `snPeer`. Hai kênh khởi tạo
+phiên là 13 cho slot chính và 12 cho slot chuyển tiếp.
+`alias_endpoint_status` so sánh endpoint sau khi hai định danh peer đã
+khớp. Các cờ xác thực và membership vẫn tắt khi connection ID khác.
+Cần kiểm chứng endpoint và kênh của hai giá trị trong mẫu thật.
+
 ## Session context
 
 Tùy chọn `--session-context` dùng tại `jobs_update`. Công cụ kiểm tra hash

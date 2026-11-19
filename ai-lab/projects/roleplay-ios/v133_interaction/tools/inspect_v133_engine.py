@@ -87,6 +87,13 @@ SYMBOLS = {
     'drop_session': '__ZN15CNetworkSession11DropSessionEv',
     'session_shutdown': '__ZN4rage9snSession8ShutdownEbi',
     'session_init': '__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc',
+    'main_session_init': '__ZN15CNetworkSession4InitEv',
+    'transition_session_init': '__ZN15CNetworkSession14InitTransitionEv',
+    'session_channel_id': '__ZNK4rage9snSession12GetChannelIdEv',
+    'session_connect_peer': '__ZN4rage9snSession13ConnectToPeerERKNS_10rlPeerInfoEijPKvjPNS_9netStatusE',
+    'session_add_peer': '__ZN4rage9snSession7AddPeerEijRKNS_10rlPeerInfoE',
+    'player_add_remote': '__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE',
+    'establish_connection': '__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE',
 }
 DATA_SYMBOLS = {'network_session_global': '__ZN8CNetwork17sm_NetworkSessionE'}
 
@@ -295,6 +302,11 @@ def inspect(data):
         ('leave_session', 0x23c, 'native_session_leave', 'BL'),
         ('drop_session', 0xbc, 'session_shutdown', 'BL'),
         ('drop_session', 0x338, 'session_init', 'BL'),
+        ('main_session_init', 0xf4, 'session_init', 'BL'),
+        ('transition_session_init', 0x4c, 'session_init', 'BL'),
+        ('session_connect_peer', 0x210, 'establish_connection', 'BL'),
+        ('session_connect_peer', 0x230, 'session_add_peer', 'BL'),
+        ('player_add_remote', 0x58, 'establish_connection', 'BL'),
         ('get_current_session', 0x1c, 'session_exists', 'BL'),
         ('get_current_session', 0x3c, 'session_exists', 'BL'),
         ('session_exists', 0x4, 'session_is_established', 'B'),
@@ -313,6 +325,23 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('main_session_init', 0xf0, 0x528001a4, 'initial main snSession channel argument is 13'),
+        ('transition_session_init', 0x48, 0x52800184, 'initial transition snSession channel argument is 12'),
+        ('session_init', 0x54, 0xb90eaaa4, 'store supplied snSession channel'),
+        ('session_channel_id', 0, 0x5297d508, 'select the session channel field at +0xbea8'),
+        ('session_channel_id', 4, 0xb8686800, 'load the session channel'),
+        ('session_connect_peer', 0x38, 0x91402c1c, 'form the snSession base plus 0xb000'),
+        ('session_connect_peer', 0x1fc, 0xb94eab82, 'pass snSession channel to EstablishConnection'),
+        ('session_connect_peer', 0x224, 0xaa1703e1, 'pass the selected session connection ID to AddPeer'),
+        ('session_add_peer', 0x30, 0xaa0103f8, 'preserve the supplied connection ID in x24'),
+        ('session_add_peer', 0x180, 0xb9000118, 'store connection ID at snPeer +0'),
+        ('session_add_peer', 0x184, 0xb901e115, 'store endpoint ID at snPeer +0x1e0'),
+        ('session_peer_endpoint', 0x30, 0xb941e100, 'return the matching snPeer endpoint ID'),
+        ('player_add_remote', 0x1c, 0xaa0303f7, 'preserve the supplied endpoint ID in x23'),
+        ('player_add_remote', 0x44, 0xb940fa82, 'pass the player manager channel to EstablishConnection'),
+        ('player_add_remote', 0x48, 0xaa1703e1, 'pass the endpoint ID to EstablishConnection'),
+        ('player_add_remote', 0x60, 0x29035ea0, 'store returned connection and endpoint at netPlayer +0x18 and +0x1c'),
+        ('establish_connection', 0x400, 0xf8765b5a, 'select the established connection for the supplied channel'),
         ('on_connection_event', 0x658, 0x3100041f, 'test GetPeerCxn return against the not-found sentinel -1'),
         ('on_connection_event', 0x65c, 0x540033c0, 'branch when the session peer lookup returns -1'),
         ('on_connection_event', 0x660, 0x5280001b, 'set the local continuation flag after the lookup'),
@@ -558,7 +587,10 @@ def inspect(data):
                                              ('peer_id_getter', 0x8),
                                              ('peer_info_init', 0xb8),
                                              ('local_net_peer_address', 0x358),
-                                             ('peer_address_getter', 0x4))
+                                             ('peer_address_getter', 0x4),
+                                             ('player_add_remote', 0x1dc),
+                                             ('session_add_peer', 0x250),
+                                             ('session_peer_endpoint', 0x9c))
                     ],
                     'scope': 'established slot/peer-table candidate only; no proof of routing, membership lifetime or identity',
                 },

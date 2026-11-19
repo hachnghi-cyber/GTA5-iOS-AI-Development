@@ -20,6 +20,17 @@ def transport_peer_status(read64, player_info, session_peer):
         return "read_failed"
     return "match"
 
+def endpoint_status(read32, player, session_peer):
+    """Compare local endpoint IDs, keeping them distinct from connection IDs."""
+    try:
+        player_endpoint = read32(player + 0x1c)
+        session_endpoint = read32(session_peer + 0x1e0)
+        if not 0 < player_endpoint < 0xffffffff or not 0 < session_endpoint < 0xffffffff:
+            return "invalid_endpoint_metadata"
+    except (KeyError, TypeError, ValueError, RuntimeError, OverflowError, IndexError):
+        return "read_failed"
+    return "match" if player_endpoint == session_endpoint else "mismatch"
+
 def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,expected_peer_id=None,
                            *,check_transport_domain=False):
     r={"schema":"v133-peer-session-map-v1","status":"invalid_input",
@@ -73,6 +84,8 @@ def check_peer_session_map(read32,read64,netplayer,session,conn,expected_getter,
                 r["status"]="peer_alias_different_connection"
                 if check_transport_domain:
                     r["alias_transport_peer_status"] = transport_peer_status(read64, pinfo, p)
+                    if r["alias_transport_peer_status"] == "match":
+                        r["alias_endpoint_status"] = endpoint_status(read32, netplayer, p)
                 return r
         if matched!=1:
             r["status"]="no_unique_session_connection";return r

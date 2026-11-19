@@ -135,9 +135,30 @@ class PeerMappingTests(unittest.TestCase):
                 self.assertEqual(result['status'], 'peer_alias_different_connection')
                 self.assertEqual(result['alias_transport_peer_status'], expected)
                 self.assertEqual(result['session_remote_peer_count'], 2)
+                if expected != 'match':
+                    self.assertNotIn('alias_endpoint_status', result)
                 for key in ('peer_map_consistent', 'transport_peer_map_consistent',
                             'session_membership_verified', 'authenticated_rage_sender_verified'):
                     self.assertFalse(result[key])
+
+    def test_alias_endpoint_comparison_keeps_connection_and_authority_gates_closed(self):
+        for endpoint, expected in ((771122, 'match'), (771123, 'mismatch'),
+                                   (0, 'invalid_endpoint_metadata'), (None, 'read_failed')):
+            with self.subTest(expected=expected):
+                mem, args = self.fixture()
+                mem[0x9000] = 88
+                mem[0x3020] = mem[0x9008] = 777
+                mem[args[0] + 0x1c] = 771122
+                if endpoint is not None:
+                    mem[0x9000 + 0x1e0] = endpoint
+                read = mem.__getitem__
+                result = mod.check_peer_session_map(read, read, *args, check_transport_domain=True)
+                self.assertEqual(result['status'], 'peer_alias_different_connection')
+                self.assertEqual(result['alias_endpoint_status'], expected)
+                self.assertFalse(result['peer_map_consistent'])
+                self.assertFalse(result['session_membership_verified'])
+                self.assertFalse(result['authenticated_rage_sender_verified'])
+                self.assertNotIn('771122', str(result))
 
     def test_scan_can_stop_before_the_last_peer_row(self):
         mem, args = self.fixture()

@@ -249,6 +249,9 @@ def verify_peer_session_profile(remote, base, profile):
         ('peer_info_init', '0x101d64ae4', 0xb8),
         ('local_net_peer_address', '0x101ce0a3c', 0x358),
         ('peer_address_getter', '0x101d64ba4', 0x4),
+        ('player_add_remote', '0x102026d74', 0x1dc),
+        ('session_add_peer', '0x1019dcb40', 0x250),
+        ('session_peer_endpoint', '0x1019d30d4', 0x9c),
     }
     supplied = {(guard['function'], guard['va'], guard['size']) for guard in profile['code_guards']}
     if not required <= supplied:
