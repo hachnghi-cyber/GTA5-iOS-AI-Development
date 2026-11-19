@@ -894,6 +894,15 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "private_authority_player_panel": {
+      "parent_commit": "6155e9de1628ee191a52341c09711244613f0f3e",
+      "scope": "Optional native UIKit controls for manual join/leave and two-way GREET/DOCUMENTS against the paired RP principal in a development kit. Uses the existing authenticated LAN transport.",
+      "config": "prepare_private_rp.py --panel",
+      "safety": "No game identifiers, game state changes or custody requests. Controls require the existing RP server state and consent. No UI for default config.",
+      "private_server_host_tests_passed": 27,
+      "manual_ui_verified_on_iphone": false,
+      "native_game_binding_verified": false
+    },
     "private_authority_reconnect_read_guard": {
       "parent_commit": "1bafd76e379c6876811d2a3d83662b1d0793b57c",
       "scope": "The server verifies that a TLS connection still owns its RP admission after awaiting a record and before dispatching it.",

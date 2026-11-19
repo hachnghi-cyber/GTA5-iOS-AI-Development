@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Bản iPhone có giao diện tùy chọn `RP riêng` cho một cặp danh tính của kit LAN.
+`prepare_private_rp.py --panel` bật nút Tham gia/Rời RP, Chào hỏi và Yêu cầu
+giấy tờ. Người chơi xác nhận tham gia bằng nút; giao diện chờ ACK cùng
+snapshot trước khi bật tác vụ. Cần thử giao diện trên bản ký và đối chiếu
+cả hai chiều với CLI Windows hoặc iPhone thứ hai.
+
 Server kiểm tra lại kết nối sau mỗi lần chờ đọc TLS. Kiểm thử hồi quy dùng
 hai kết nối mTLS liên tiếp của cùng một tài khoản, xác nhận kết nối cũ
 không đổi consent hoặc nonce của lần vào mới. 170 test host đã qua.

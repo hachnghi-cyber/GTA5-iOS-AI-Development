@@ -18,9 +18,9 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from run_ios_tls_probe import issue
 
 
-def prepare(folder, address, port, *, consent_probe=False, social_probe=False):
-    if consent_probe and social_probe:
-        raise ValueError('choose one iPhone diagnostic mode')
+def prepare(folder, address, port, *, consent_probe=False, social_probe=False, panel=False):
+    if sum((consent_probe, social_probe, panel)) > 1:
+        raise ValueError('choose one iPhone mode')
     folder = folder.resolve()
     if any((parent / '.git').exists() for parent in (folder, *folder.parents)):
         raise ValueError('private kit must be outside every Git working tree')
@@ -62,6 +62,9 @@ def prepare(folder, address, port, *, consent_probe=False, social_probe=False):
                 iphone_config['diagnostic'] = 'consent-round-trip-v1'
             if social_probe:
                 iphone_config['diagnostic'] = 'social-round-trip-v1'
+            if panel:
+                iphone_config['interface'] = 'rp-panel-v1'
+            if social_probe or panel:
                 iphone_config['rp_peer_id'] = '22' if name == 'officer' else '11'
             emit(name + '-iPhone-PRIVATE.json', iphone_config)
     emit('server.json', {'certificate': 'server.pem', 'private_key': 'server.key',
@@ -85,8 +88,11 @@ def main():
                         help='request one iPhone opt-in/opt-out round trip and disconnect')
     probes.add_argument('--social-probe', action='store_true',
                         help='opt in on iPhone, wait for a greet and request documents from the paired RP identity')
+    probes.add_argument('--panel', action='store_true',
+                        help='enable manual RP controls for the two generated iPhone identities')
     args = parser.parse_args()
-    prepare(args.folder, args.ip, args.port, consent_probe=args.consent_probe, social_probe=args.social_probe)
+    prepare(args.folder, args.ip, args.port, consent_probe=args.consent_probe,
+            social_probe=args.social_probe, panel=args.panel)
     print('Created local development kit (30 minutes); private keys are not printed.')
 
 

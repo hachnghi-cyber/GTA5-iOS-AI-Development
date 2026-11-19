@@ -10,6 +10,7 @@
 static const char RP_AUTH_ALPN[] = "police-rp-authority/1";
 static NSString *const RP_AUTH_CONFIG = @"PoliceRP-Authority-PRIVATE.json";
 static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
+void prp_install_authority_panel(void);
 
 typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
     RPSocialOpening, RPSocialOptingIn, RPSocialAwaitingGreet, RPSocialAwaitingReceipt
@@ -32,11 +33,15 @@ typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
 @property(nonatomic) NSTimeInterval nextPing;
 @property(nonatomic) NSTimeInterval consentProbeDeadline;
 @property(nonatomic) BOOL consentProbe;
+@property(nonatomic) BOOL playerPanel;
 @property(nonatomic) uint64_t socialPeer;
 @property(nonatomic) RPSocialProbePhase socialPhase;
 @property(nonatomic) BOOL verified;
 @property(nonatomic) BOOL done;
 @property(nonatomic, copy) NSString *result;
+@property(nonatomic) uint64_t panelConsentNonce;
+@property(nonatomic) uint8_t lastPanelReceipt;
+@property(nonatomic, copy) NSString *lastPanelEvent;
 - (void)start;
 - (void)finish:(NSString *)result;
 - (void)submit:(uint32_t)operation target:(uint64_t)target;
@@ -49,6 +54,8 @@ typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
 - (void)ready;
 - (void)advanceSocialProbe;
 - (void)consumeSocial:(uint8_t)kind payload:(NSData *)payload;
+- (const uint64_t *)member:(uint64_t)identity;
+- (void)submitPanelAction:(uint32_t)interaction;
 @end
 
 static PRPV133AuthorityClient *authorityClient;
@@ -59,6 +66,13 @@ static NSTimeInterval rp_uptime(void) {
 }
 
 @implementation PRPV133AuthorityClient
+- (const uint64_t *)member:(uint64_t)identity {
+    for (uint32_t i = 0; i < state.member_count; ++i) {
+        if (state.members[i][0] == identity) return state.members[i];
+    }
+    return NULL;
+}
+
 - (NSDictionary *)status {
     NSMutableArray *members = [NSMutableArray array];
     for (uint32_t i = 0; i < state.member_count; ++i) {
@@ -66,9 +80,17 @@ static NSTimeInterval rp_uptime(void) {
         [members addObject:@{@"rp_id": [NSString stringWithFormat:@"%llu", (unsigned long long)row[0]],
             @"role": @(row[1]), @"consent": @(row[2]), @"duty": @(row[3]), @"custody": @(row[4])}];
     }
+    const uint64_t *subject = [self member:self.expectedID];
+    const uint64_t *peer = [self member:self.socialPeer];
     return @{@"connected": @(!self.done && self.verified && state.ready),
-             @"pending": @(state.pending), @"revision": @(state.revision),
+             @"pending": @(state.pending || self.panelConsentNonce), @"revision": @(state.revision),
              @"result": self.result ?: @"starting", @"members": members,
+             @"panel_ready": @(self.playerPanel && social.ready && subject != NULL),
+             @"panel_consented": @(subject && subject[2]),
+             @"panel_peer_consented": @(peer && peer[2]),
+             @"panel_social_pending": @(social.pending_nonce != 0),
+             @"panel_receipt": @(self.lastPanelReceipt),
+             @"panel_event": self.lastPanelEvent ?: @"",
              @"gameplay_enabled": @NO};
 }
 
@@ -88,6 +110,9 @@ static NSTimeInterval rp_uptime(void) {
 - (void)finish:(NSString *)result {
     if (self.done) return;
     self.done = YES;
+    self.panelConsentNonce = 0;
+    self.lastPanelReceipt = 0;
+    self.lastPanelEvent = nil;
     rp_authority_client_stop(&state);
     rp_authority_social_stop(&social);
     if (self.timer) dispatch_source_cancel(self.timer);
@@ -155,9 +180,17 @@ static NSTimeInterval rp_uptime(void) {
         }
     }
     else if (kind == RP_AUTHORITY_ACK) {
-        self.requestDeadline = 0;
+        if (state.last_ack.outcome != RP_POLICE_TX_APPLIED) self.panelConsentNonce = 0;
+        if (!self.panelConsentNonce) self.requestDeadline = 0;
         [self report:state.last_ack.outcome == RP_POLICE_TX_APPLIED ? @"decision_applied" : @"decision_denied"];
-    } else if (kind == RP_AUTHORITY_SNAPSHOT) [self report:@"snapshot_received"];
+    } else if (kind == RP_AUTHORITY_SNAPSHOT) {
+        const uint64_t *subject = self.panelConsentNonce ? [self member:self.expectedID] : NULL;
+        if (subject && subject[9] == self.panelConsentNonce && !state.pending) {
+            self.panelConsentNonce = 0;
+            self.requestDeadline = 0;
+        }
+        [self report:@"snapshot_received"];
+    }
     if (self.consentProbe) {
         uint8_t request[RP_AUTHORITY_REQUEST_BYTES];
         rp_consent_probe_result result = rp_authority_consent_probe_step(
@@ -171,16 +204,13 @@ static NSTimeInterval rp_uptime(void) {
             [self send:[NSData dataWithBytes:request length:sizeof request]];
         }
     }
-    if (self.socialPeer) [self advanceSocialProbe];
+    if (self.socialPeer && !self.playerPanel) [self advanceSocialProbe];
     [self readRecord];
 }
 
 - (void)advanceSocialProbe {
     if (!social.ready || !state.revision || state.pending || self.done) return;
-    const uint64_t *selfRow = NULL;
-    for (uint32_t i = 0; i < state.member_count; ++i) {
-        if (state.members[i][0] == state.expected_id) selfRow = state.members[i];
-    }
+    const uint64_t *selfRow = [self member:state.expected_id];
     if (!selfRow) { [self finish:@"social_subject_missing"]; return; }
     if (self.socialPhase == RPSocialOpening) {
         uint8_t request[RP_AUTHORITY_REQUEST_BYTES];
@@ -211,6 +241,19 @@ static NSTimeInterval rp_uptime(void) {
     if (!self.socialPeer || !rp_authority_social_receive(&social, kind, payload.bytes, payload.length,
                                                         receipt, sizeof receipt)) {
         [self finish:@"social_protocol_rejected"];
+        return;
+    }
+    if (self.playerPanel) {
+        if (kind == RP_AUTHORITY_SOCIAL_EVENT) {
+            const uint64_t *subject = [self member:self.expectedID];
+            if (!subject || !subject[2] || social.last_sender != self.socialPeer) return;
+            self.lastPanelEvent = social.last_kind == RP_V133_GREET ?
+                @"Đã nhận lời chào" : @"Đã nhận yêu cầu kiểm tra giấy tờ";
+            [self send:[NSData dataWithBytes:receipt length:sizeof receipt]];
+        } else if (kind == RP_AUTHORITY_SOCIAL_RESULT) {
+            self.requestDeadline = 0;
+            self.lastPanelReceipt = social.last_result;
+        }
         return;
     }
     if (kind == RP_AUTHORITY_SOCIAL_STATE) {
@@ -251,13 +294,37 @@ static NSTimeInterval rp_uptime(void) {
 }
 
 - (void)submit:(uint32_t)operation target:(uint64_t)target {
-    if (self.done || !self.verified || !state.ready || self.consentProbe || self.socialPeer) return;
-    uint8_t request[45];
+    if (self.done || !self.verified || !state.ready || self.consentProbe ||
+        (self.socialPeer && !self.playerPanel)) return;
+    if (self.playerPanel) {
+        const uint64_t *subject = [self member:self.expectedID];
+        if (!social.ready || !subject || social.pending_nonce || self.panelConsentNonce || target != self.expectedID ||
+            (operation != RP_POLICE_OPT_IN && operation != RP_POLICE_OPT_OUT) ||
+            (subject[2] != 0) == (operation == RP_POLICE_OPT_IN)) return;
+    }
+    uint8_t request[RP_AUTHORITY_REQUEST_BYTES];
     if (!rp_authority_client_request(&state, (rp_police_operation)operation, target,
                                      request, sizeof request)) {
         [self report:@"request_not_ready_or_invalid"];
         return;
     }
+    self.lastPanelReceipt = 0;
+    self.lastPanelEvent = nil;
+    if (self.playerPanel) self.panelConsentNonce = state.pending_command.nonce;
+    self.requestDeadline = rp_uptime() + 5.0;
+    [self send:[NSData dataWithBytes:request length:sizeof request]];
+}
+
+- (void)submitPanelAction:(uint32_t)interaction {
+    const uint64_t *subject = [self member:self.expectedID];
+    const uint64_t *peer = [self member:self.socialPeer];
+    uint8_t request[RP_AUTHORITY_SOCIAL_REQUEST_BYTES];
+    if (!self.playerPanel || self.done || state.pending || self.panelConsentNonce ||
+        !subject || !subject[2] || !peer || !peer[2] ||
+        (interaction != RP_V133_GREET && interaction != RP_V133_DOCUMENTS) ||
+        !rp_authority_social_request(&social, (rp_v133_interaction_kind)interaction, self.socialPeer,
+                                     request, sizeof request)) return;
+    self.lastPanelReceipt = 0;
     self.requestDeadline = rp_uptime() + 5.0;
     [self send:[NSData dataWithBytes:request length:sizeof request]];
 }
@@ -279,7 +346,7 @@ static NSTimeInterval rp_uptime(void) {
     }
     self.verified = YES; // RP certificate channel only; never RAGE/player auth.
     if (self.consentProbe) self.consentProbeDeadline = rp_uptime() + 12.0;
-    if (self.socialPeer) self.consentProbeDeadline = rp_uptime() + 60.0;
+    if (self.socialPeer && !self.playerPanel) self.consentProbeDeadline = rp_uptime() + 60.0;
     self.nextPing = rp_uptime() + 3.0;
     [self readRecord];
 }
@@ -343,7 +410,9 @@ void prp_start_authority_client(NSString *folder) {
             NSString *host = config[@"host"];
             NSNumber *port = config[@"port"], *expires = config[@"expires"];
             id diagnostic = config[@"diagnostic"];
+            id panel = config[@"interface"];
             BOOL useSocial = [diagnostic isEqual:@"social-round-trip-v1"];
+            BOOL usePanel = [panel isEqual:@"rp-panel-v1"];
             uint64_t identityID = 0, socialPeer = 0;
             NSTimeInterval now = [NSDate date].timeIntervalSince1970;
             if (![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
@@ -352,7 +421,9 @@ void prp_start_authority_client(NSString *folder) {
                 ![expires isKindOfClass:[NSNumber class]] || !(expires.doubleValue > now && expires.doubleValue <= now + 1230) ||
                 !prp_parse_id(config[@"rp_id"], &identityID) ||
                 (diagnostic && !useSocial && ![diagnostic isEqual:@"consent-round-trip-v1"]) ||
-                (useSocial && (!prp_parse_id(config[@"rp_peer_id"], &socialPeer) || socialPeer == identityID))) {
+                (panel && (!usePanel || diagnostic)) ||
+                ((useSocial || usePanel) &&
+                    (!prp_parse_id(config[@"rp_peer_id"], &socialPeer) || socialPeer == identityID))) {
                 [client finish:@"invalid_or_expired_config"];
                 return;
             }
@@ -382,11 +453,15 @@ void prp_start_authority_client(NSString *folder) {
             }, NW_PARAMETERS_DEFAULT_CONFIGURATION);
             client.expectedID = identityID;
             client.consentProbe = [diagnostic isEqual:@"consent-round-trip-v1"];
+            client.playerPanel = usePanel;
             client.socialPeer = socialPeer;
             client.expires = expires.doubleValue;
             nw_endpoint_t endpoint = nw_endpoint_create_host(host.UTF8String, port.stringValue.UTF8String);
             client.channel = nw_connection_create(endpoint, parameters);
-            if (client.channel) [client start];
+            if (client.channel) {
+                if (usePanel) dispatch_async(dispatch_get_main_queue(), ^{ prp_install_authority_panel(); });
+                [client start];
+            }
             else [client finish:@"connection_setup_failed"];
         });
     });
@@ -395,6 +470,20 @@ void prp_start_authority_client(NSString *folder) {
 void prp_authority_submit(uint32_t operation, uint64_t target) {
     if (!authorityQueue) return;
     dispatch_async(authorityQueue, ^{ [authorityClient submit:operation target:target]; });
+}
+
+void prp_authority_panel_consent(BOOL enabled) {
+    if (!authorityQueue) return;
+    dispatch_async(authorityQueue, ^{
+        PRPV133AuthorityClient *client = authorityClient;
+        if (client.playerPanel) [client submit:enabled ? RP_POLICE_OPT_IN : RP_POLICE_OPT_OUT
+                                       target:client.expectedID];
+    });
+}
+
+void prp_authority_panel_send(uint32_t interaction) {
+    if (!authorityQueue) return;
+    dispatch_async(authorityQueue, ^{ [authorityClient submitPanelAction:interaction]; });
 }
 
 void prp_authority_read_status(void (^reply)(NSDictionary *)) {

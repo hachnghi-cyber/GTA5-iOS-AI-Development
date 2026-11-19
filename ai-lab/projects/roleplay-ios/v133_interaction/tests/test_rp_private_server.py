@@ -412,6 +412,20 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             server.authority.observation_provider = scene
             await self.apply(cop, CUFF, CITIZEN)
 
+    def test_generated_panel_config_assigns_the_other_principal(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root) / 'panel-kit'
+            address = ipaddress.ip_address('127.0.0.1')
+            with self.assertRaises(ValueError):
+                prepare(folder, address, 30133, panel=True, social_probe=True)
+            self.assertFalse(folder.exists())
+            prepare(folder, address, 30133, panel=True)
+            for role, peer in (('officer', '22'), ('citizen', '11')):
+                config = json.loads((folder / f'{role}-iPhone-PRIVATE.json').read_text())
+                self.assertEqual(config['interface'], 'rp-panel-v1')
+                self.assertEqual(config['rp_peer_id'], peer)
+                self.assertNotIn('diagnostic', config)
+
     async def test_generated_development_kit_uses_actual_server_and_client_credentials(self):
         with tempfile.TemporaryDirectory() as root:
             folder = Path(root) / 'private-kit'

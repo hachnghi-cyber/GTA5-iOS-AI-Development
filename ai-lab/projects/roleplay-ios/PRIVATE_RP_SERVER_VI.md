@@ -116,6 +116,22 @@ phù hợp vào Documents với tên `PoliceRP-Authority-PRIVATE.json` khi thử
 File chứa danh tính riêng và hết hạn sau 20 phút. Trước khi nối gameplay,
 cần xác minh RP principal ↔ game participant, nguồn quan sát và game thread.
 
+### Thử bảng RP trên iPhone
+
+Với build có bảng `RP riêng`, thêm `--panel` khi tạo kit LAN. Chép cấu hình
+`officer-iPhone-PRIVATE.json` vào Documents theo tên ở trên. Mở GTA và vào
+Sandbox riêng, bấm **RP riêng → Tham gia RP**. Ở CLI Windows dùng danh tính
+`citizen.json`, chạy `opt-in` rồi thử `greet 11` hoặc `documents 11`.
+Trên iPhone, bấm **Chào hỏi** hoặc **Yêu cầu giấy tờ** để thử chiều về.
+Nếu dùng hai iPhone, máy thứ hai dùng `citizen-iPhone-PRIVATE.json` và thao
+tác qua cùng bảng. Mỗi file cấu hình có sẵn ID của người còn lại trong kit.
+
+Bảng hiển thị xác nhận ứng dụng đối tác đã nhận yêu cầu. Bấm **Rời RP**
+để thu hồi consent trên server. Bảng chỉ xuất hiện khi dùng cấu hình
+`--panel`. Muốn tắt, xóa riêng cấu hình RP trong Documents rồi khởi động
+lại GTA. Giao diện hiện điều khiển thông báo RP. Tác động lên nhân vật
+trong phiên GTA còn cần adapter và kiểm thử riêng.
+
 Build ARM64 trên commit `99ed120` đạt trong run `44492859651` (SDK 18.5,
 iOS tối thiểu 16.3). Source CI `44492869967` đạt cả GCC/Clang ASan/UBSan.
 IPA chẩn đoán cục bộ `GTAV-v13.3-Private-RP-Authority-Diagnostic-99ed120-UNSIGNED.ipa`
