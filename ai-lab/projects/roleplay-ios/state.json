@@ -894,6 +894,21 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "private_authority_reconnect_read_guard": {
+      "parent_commit": "1bafd76e379c6876811d2a3d83662b1d0793b57c",
+      "scope": "The server verifies that a TLS connection still owns its RP admission after awaiting a record and before dispatching it.",
+      "validation_scope": "Loopback mTLS regression pauses a completed read, retires the original connection, then checks that the replacement keeps its own consent and nonce. The replacement can submit its own opt-in.",
+      "host_python_tests_passed": 170,
+      "host_test_log_sha256": "0e2de3e5b6bdf2a3b21c30cd8d8b9979c1b00bd87a1920f47edac2fd4604a792",
+      "iphone_session_swap_observation": {
+        "context": "Sandbox reported by tester",
+        "wait_seconds": 55,
+        "status": "timeout",
+        "same_session_slots_swapped": false,
+        "session_generation_verified": false
+      },
+      "gameplay_tested_on_iphone": false
+    },
     "private_authority_game_binding_lifecycle": {
       "parent_commit": "a7f57f74d41b9a629156e5fb0aa4fbfa2bc84d01",
       "host_abi": 3,

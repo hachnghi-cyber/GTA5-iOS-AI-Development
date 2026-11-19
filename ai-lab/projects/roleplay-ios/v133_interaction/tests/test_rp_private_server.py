@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -135,6 +136,36 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
                 if kind == expected:
                     return payload
                 self.assertIn(kind, (rp.SNAPSHOT, rp.PONG))
+
+    async def test_record_read_before_drop_cannot_change_reconnected_member(self):
+        async with self.running() as (server, address):
+            command = None
+            read_complete = asyncio.get_running_loop().create_future()
+            release = asyncio.Event()
+            read_record = rp.read_record
+
+            async def pause_completed_read(reader, timeout):
+                kind, payload = await read_record(reader, timeout)
+                if kind == rp.REQUEST and payload == command and not read_complete.done():
+                    read_complete.set_result(asyncio.current_task())
+                    await release.wait()
+                return kind, payload
+
+            with patch.object(rp, 'read_record', pause_completed_read):
+                original = await self.connect(address, 'cop')
+                old_peer = server.peers[COP]
+                command = original.command(OPT_IN)
+                await original.send(rp.REQUEST, command)
+                old_handler = await asyncio.wait_for(read_complete, 3)
+                try:
+                    server._drop(old_peer)
+                    replacement = await self.connect(address, 'cop')
+                finally:
+                    release.set()
+                await asyncio.wait_for(old_handler, 3)
+                self.assertEqual(server.authority.snapshot(COP)[2], 0)
+                self.assertEqual(server.authority.snapshot(COP)[9], 0)
+                await self.apply(replacement, OPT_IN)
 
     async def test_social_both_directions_and_only_recipient_can_confirm(self):
         async with self.running() as (server, address):

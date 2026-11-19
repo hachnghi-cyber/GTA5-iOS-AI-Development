@@ -174,6 +174,9 @@ class PrivateServer:
             tokens, replenished = 60.0, time.monotonic()
             while self.peers.get(principal.rp_id) is peer:
                 kind, payload = await read_record(reader, self.lease)
+                # A writer failure can retire this admission while the read is suspended.
+                if self.peers.get(principal.rp_id) is not peer:
+                    break
                 current = time.monotonic()
                 tokens = min(60.0, tokens + (current - replenished) * 30) - 1
                 replenished = current

@@ -4,6 +4,15 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server kiểm tra lại kết nối sau mỗi lần chờ đọc TLS. Kiểm thử hồi quy dùng
+hai kết nối mTLS liên tiếp của cùng một tài khoản, xác nhận kết nối cũ
+không đổi consent hoặc nonce của lần vào mới. 170 test host đã qua.
+Thay đổi nằm ở server.
+
+Phép đo `session_swap` qua USB sau khi người thử báo đã vào Sandbox hết
+cửa sổ 55 giây. Chưa có mẫu hoán đổi slot hoặc bằng chứng về thế hệ phiên.
+Cần phiên GTA riêng với peer thứ hai để đối chiếu đường nhận và lúc rời phiên.
+
 Server ABI 3 tách lần vào TLS khỏi lần vào phiên GTA. Khi nguồn game báo
 rời phiên hoặc đổi generation, server giải phóng custody, hủy consent và
 giữ nonce trên kênh TLS hiện tại. 169 test host và C FFI đã qua. Kiểm thử
