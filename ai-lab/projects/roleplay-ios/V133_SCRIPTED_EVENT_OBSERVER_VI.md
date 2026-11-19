@@ -284,6 +284,21 @@ ngay tại điểm quyết định. Binary có mốc sớm hơn: `LeaveSession` 
 tra mốc sớm trên iPhone và khớp nó với phiên đang hoạt động.
 Xem `baselines/v133-private-leave-path-iphone-20261119.json`.
 
+Để quan sát sớm hơn, chạy lệnh dưới khi người thử đang ở phòng chỉ mời.
+Sau khi bật observer, người thử rời phòng qua menu.
+
+```powershell
+python ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py <bundle-id> --site leave_session_call --wait-seconds 60
+```
+
+Observer kiểm tra slot chính đang thiết lập và x0 trỏ đúng slot, x2 trỏ
+đúng tác vụ của manager. Bộ đo theo giá trị trả về trên cùng thread và
+frame rồi đối chiếu manager, slot và tác vụ tại quyết định dọn phiên.
+`main_slot_establishment_ended` yêu cầu hàm nhận yêu cầu rời, đúng các tham
+chiếu, status 3 và slot chính mất trạng thái thiết lập. Kết quả chỉ xuất
+cờ và trạng thái, còn cần xác minh generation và sender riêng. Điểm đo
+này đã qua kiểm thử host và chờ lượt trên iPhone.
+
 `enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame

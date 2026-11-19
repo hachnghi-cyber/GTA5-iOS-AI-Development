@@ -25,7 +25,8 @@ IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
 OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
                     "on_net_event_pre_dispatch", "on_connection_peer_verify",
-                    "clear_session", "session_swap", "drop_session_call", "leave_session_branch")
+                    "clear_session", "session_swap", "drop_session_call", "leave_session_branch",
+                    "leave_session_call")
 MAX_REPLY = 16384
 
 
@@ -612,6 +613,84 @@ def capture_leave_session_branch(remote, base, metadata, wait_seconds):
     return sample
 
 
+def capture_leave_session_call(remote, base, metadata, wait_seconds):
+    """Correlate an accepted native Leave with the later Update decision."""
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    call = metadata['leave_session_call_context']
+    slots = metadata['session_slots']
+    verify_context_code(remote, base, call, label='leave-session-call')
+    verify_context_code(remote, base, metadata['leave_session_branch_context'], label='leave-session-branch')
+    verify_context_code(remote, base, slots, label='session-slots')
+    for number, names in ((0, (b'x0',)), (2, (b'x2',)), (8, (b'x8',)), (19, (b'x19',)),
+                          (24, (b'x24',)), (29, (b'fp', b'x29',))):
+        name = remote.request(f'qRegisterInfo{number:x}'.encode()).partition(b';')[0]
+        if name not in tuple(b'name:' + candidate for candidate in names):
+            raise DebugProtocolError('leave-session call register layout mismatch')
+
+    entry = base + internal_site_va(metadata, 'leave_session_call') - IMAGE_VMADDR
+    post = base + int(call['return_va'], 16) - IMAGE_VMADDR
+    decision = base + internal_site_va(metadata, 'leave_session_branch') - IMAGE_VMADDR
+    if post != entry + 4:
+        raise DebugProtocolError('leave-session call and return are not adjacent')
+    deadline = time.monotonic() + wait_seconds
+    sample = {'site': 'leave_session_call', 'status': 'incomplete', 'last_stage': 'call',
+              'native_leave_accepted': False, 'main_slot_establishment_ended': False,
+              'session_generation_verified': False, 'authenticated_rp_sender_verified': False}
+    pc, thread, sample['status'] = queue_stage_stop(remote, (entry,), deadline)
+    if pc is None:
+        return sample
+    manager, frame = remote.read_register(19), remote.read_register(29)
+    if not 0 < frame < (1 << 48) or frame % 16:
+        sample['status'] = 'invalid_leave_call_frame'
+        return sample
+    before, main = read_session_slots(remote, base, slots, expected_manager=manager)
+    sample['slots_at_call'] = before
+    if before.get('candidate_slot') != 'main' or remote.read_register(0) != main:
+        sample['status'] = 'unbound_main_slot_at_leave'
+        return sample
+    task = remote.read_register(2)
+    if not 0 < task <= (1 << 48) - 4 or task % 4 or (
+            int.from_bytes(remote.memory(manager + 0x38, 8), 'little') != task):
+        sample['status'] = 'unexpected_leave_task'
+        return sample
+
+    sample['last_stage'] = 'return'
+    pc, next_thread, sample['status'] = queue_stage_stop(remote, (post,), deadline)
+    if pc is None:
+        return sample
+    if next_thread != thread or remote.read_register(19) != manager or remote.read_register(29) != frame:
+        sample['status'] = 'different_leave_call_return'
+        return sample
+    if not (remote.read_register(0) & 1):
+        sample['status'] = 'native_leave_rejected'
+        return sample
+    sample['native_leave_accepted'] = True
+
+    sample['last_stage'] = 'decision'
+    pc, decision_thread, sample['status'] = queue_stage_stop(remote, (decision,), deadline)
+    if pc is None:
+        return sample
+    if remote.read_register(24) != manager:
+        sample['status'] = 'different_leave_manager'
+        return sample
+    after, _ = read_session_slots(remote, base, slots, expected_manager=manager)
+    sample['slots_at_decision'] = after
+    if after['status'] != 'observed':
+        sample['status'] = 'unobserved_decision_slots'
+        return sample
+    if (int.from_bytes(remote.memory(manager + 0x38, 8), 'little') != task
+            or int.from_bytes(remote.memory(manager + 0x20, 8), 'little') != main):
+        sample['status'] = 'leave_task_or_slot_replaced'
+        return sample
+    sample['decision_status_matches'] = (remote.read_register(8) & 0xffffffff) == 3
+    sample['same_thread_at_decision'] = decision_thread == thread
+    sample['main_slot_establishment_ended'] = (
+        sample['decision_status_matches'] and not after['main_slot_established'])
+    sample['status'] = 'observed'
+    return sample
+
+
 def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
     """A buffered event must never inherit the current packet's decrypt indicator."""
     result = {'caller_observed': False, 'endpoint_connection_observed': False,
@@ -961,6 +1040,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             return capture_drop_session(remote, base, metadata, wait_seconds)
         if site == 'leave_session_branch':
             return capture_leave_session_branch(remote, base, metadata, wait_seconds)
+        if site == 'leave_session_call':
+            return capture_leave_session_call(remote, base, metadata, wait_seconds)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -1087,6 +1168,8 @@ def main():
         return 0 if sample['same_call_observed'] else 1
     if args.site == 'leave_session_branch':
         return 0 if sample['status'] == 'observed' else 1
+    if args.site == 'leave_session_call':
+        return 0 if sample['main_slot_establishment_ended'] else 1
     if args.queue_context:
         matched = (sample.get('same_queued_event_at_scripted_handler') if args.receive_context
                    else sample['queue_object_link_observed'])

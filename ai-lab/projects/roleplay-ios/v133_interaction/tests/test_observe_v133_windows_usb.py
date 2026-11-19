@@ -464,6 +464,69 @@ class LeaveSessionBranchTests(unittest.TestCase):
                 self.assertEqual(sample['path'], 'unobserved')
 
 
+class LeaveSessionCallTests(unittest.TestCase):
+    def capture(self, *, accepted=1, later_task=0x1a0000000, return_thread=b'caller', decision_value=3):
+        metadata = {
+            'internal_sites': {'leave_session_call': '0x100012300', 'leave_session_branch': '0x100012400'},
+            'leave_session_call_context': {'return_va': '0x100012304'},
+            'leave_session_branch_context': {},
+            'session_slots': {},
+        }
+        manager, main, task = 0x170000000, 0x190000000, 0x1a0000000
+        receiver_or_result = iter((main, accepted))
+        task_reads = iter((task, later_task))
+        others = {2: task, 8: decision_value, 19: manager, 24: manager, 29: 0x180000000}
+        names = {f'qRegisterInfo{number:x}'.encode(): f'name:x{number};'.encode()
+                 for number in (0, 2, 8, 19, 24, 29)}
+
+        def memory(address, size):
+            self.assertEqual(size, 8)
+            if address == manager + 0x38:
+                return struct.pack('<Q', next(task_reads))
+            self.assertEqual(address, manager + 0x20)
+            return struct.pack('<Q', main)
+
+        remote = SimpleNamespace(request=names.__getitem__, memory=memory,
+                                 read_register=lambda number: next(receiver_or_result) if number == 0 else others[number])
+        before = {'status': 'observed', 'candidate_slot': 'main', 'main_slot_established': True}
+        after = {'status': 'observed', 'candidate_slot': 'none', 'main_slot_established': False}
+        stops = ((0x100012300, b'caller', 'hit'), (0x100012304, return_thread, 'hit'),
+                 (0x100012400, b'update', 'hit'))
+        with patch.object(observer, 'verify_context_code'), \
+                patch.object(observer, 'queue_stage_stop', side_effect=stops) as stop, \
+                patch.object(observer, 'read_session_slots', side_effect=[(before, main), (after, None)]):
+            sample = observer.capture_leave_session_call(remote, 0x100000000, metadata, 5)
+        return sample, stop.call_count
+
+    def test_links_accepted_leave_to_the_same_slot_and_task(self):
+        sample, count = self.capture()
+        self.assertEqual(count, 3)
+        self.assertEqual(sample['status'], 'observed')
+        self.assertTrue(sample['native_leave_accepted'])
+        self.assertTrue(sample['main_slot_establishment_ended'])
+        self.assertFalse(sample['same_thread_at_decision'])
+        self.assertFalse(sample['session_generation_verified'])
+        self.assertFalse(sample['authenticated_rp_sender_verified'])
+
+    def test_rejected_return_and_wrong_thread_stop_before_the_decision(self):
+        for args, status in (({'accepted': 0}, 'native_leave_rejected'),
+                             ({'return_thread': b'other'}, 'different_leave_call_return')):
+            with self.subTest(status=status):
+                sample, count = self.capture(**args)
+                self.assertEqual(count, 2)
+                self.assertEqual(sample['status'], status)
+                self.assertFalse(sample['native_leave_accepted'])
+                self.assertFalse(sample['main_slot_establishment_ended'])
+
+    def test_replaced_task_or_wrong_status_does_not_prove_establishment_ended(self):
+        replaced, _ = self.capture(later_task=0x1a0000010)
+        self.assertEqual(replaced['status'], 'leave_task_or_slot_replaced')
+        self.assertFalse(replaced['main_slot_establishment_ended'])
+        other_status, _ = self.capture(decision_value=2)
+        self.assertFalse(other_status['decision_status_matches'])
+        self.assertFalse(other_status['main_slot_establishment_ended'])
+
+
 class _ContextMemory:
     """Golden synthetic stack from independently disassembled call/frame sites.
 

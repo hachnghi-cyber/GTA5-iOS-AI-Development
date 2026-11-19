@@ -318,6 +318,7 @@ def inspect(data):
         ('leave_session', 0x228, 0xf9401275, 'read main session into x21 for the Leave call'),
         ('leave_session', 0x234, 0xf9401e62, 'pass the manager leave status pointer as x2'),
         ('leave_session', 0x238, 0xaa1503e0, 'pass the main session as the Leave receiver'),
+        ('leave_session', 0x240, 0x370002e0, 'test bit zero of the native Leave return value'),
         ('session_update', 0x764, 0xaa1803e0, 'pass manager x24 as the DropSession receiver'),
         ('session_update', 0x76c, 0xb948ab21, 'read ClearSession flags after DropSession returns'),
         ('drop_session', 0xb0, 0xf9401260, 'load the main session slot before shutdown'),
@@ -431,6 +432,7 @@ def inspect(data):
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
     internal_sites = {
+        'leave_session_call': sites['leave_session'] + 0x23c,
         'leave_session_branch': sites['session_update'] + 0x5e0,
         'drop_session_call': sites['session_update'] + 0x768,
         'session_swap': sites['swap_sessions'] + 0x68,
@@ -478,6 +480,16 @@ def inspect(data):
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites=trace_words,
                 receive_context=context,
+                leave_session_call_context={
+                    'return_va': hex(sites['leave_session'] + 0x240),
+                    'code_guards': [
+                        {'function': name, 'va': hex(sites[name]), 'size': length,
+                         'sha256': hashlib.sha256(data[off+sites[name]-va:
+                                                       off+sites[name]-va+length]).hexdigest()}
+                        for name, length in (('leave_session', 0x3c8), ('native_session_leave', 0x1e8))
+                    ],
+                    'scope': 'main-slot and task reference equality through the native leave request and later Update decision',
+                },
                 leave_session_branch_context={
                     'code_guards': [{
                         'function': 'session_update_leave_status',

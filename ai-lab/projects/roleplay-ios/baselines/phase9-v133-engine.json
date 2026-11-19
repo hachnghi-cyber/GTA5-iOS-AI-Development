@@ -598,6 +598,12 @@
       "observation": "pass the main session as the Leave receiver"
     },
     {
+      "at": "0x1017fe710",
+      "function": "leave_session",
+      "word": "0x370002e0",
+      "observation": "test bit zero of the native Leave return value"
+    },
+    {
       "at": "0x1017ec220",
       "function": "session_update",
       "word": "0xaa1803e0",
@@ -1189,6 +1195,7 @@
     "on_net_event": "0xb9403c48",
     "clear_session": "0xd10203ff",
     "migrate_end": "0xa9ba6ffc",
+    "leave_session_call": "0x940744d9",
     "leave_session_branch": "0x54000c60",
     "drop_session_call": "0x97fffd30",
     "session_swap": "0x3d800a61",
@@ -1281,6 +1288,24 @@
       }
     ],
     "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "leave_session_call_context": {
+    "return_va": "0x1017fe710",
+    "code_guards": [
+      {
+        "function": "leave_session",
+        "va": "0x1017fe4d0",
+        "size": 968,
+        "sha256": "1dd31185dcfed275f8e175cd9a8515d1e9da5d9f216193ab86adfc1c47882b8c"
+      },
+      {
+        "function": "native_session_leave",
+        "va": "0x1019cfa70",
+        "size": 488,
+        "sha256": "a63d4fd8773715190a51f8b76d6a04b44ba93bbf93209a10ea28db940c2e4c62"
+      }
+    ],
+    "scope": "main-slot and task reference equality through the native leave request and later Update decision"
   },
   "leave_session_branch_context": {
     "code_guards": [
@@ -1501,6 +1526,7 @@
   "two_device_verified": false,
   "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
   "internal_sites": {
+    "leave_session_call": "0x1017fe70c",
     "leave_session_branch": "0x1017ec09c",
     "drop_session_call": "0x1017ec224",
     "session_swap": "0x10180443c",

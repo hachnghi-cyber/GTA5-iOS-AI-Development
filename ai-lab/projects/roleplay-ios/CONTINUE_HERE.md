@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Điểm đo USB `leave_session_call` theo lời gọi `snSession::Leave`, giá trị
+trả về và quyết định dọn phiên trong `Update` trên cùng lần attach. Nó
+kiểm tra slot chính đang thiết lập ở đầu, rồi đối chiếu manager, slot và
+tác vụ ở mốc sau. Profile xác minh trên binary v13.3 và 181 bài kiểm thử
+host đã qua. Cần chạy điểm đo mới trên iPhone trong phòng chỉ mời.
+
 Trên iPhone, một lượt rời phòng chỉ mời xác nhận `ClearSession` được gọi
 từ `Update`. Lượt khác bắt đúng nhánh status 3 và đích nhảy bỏ qua
 `DropSession`, trong cùng frame và thread. Cả hai slot đã mất trạng thái

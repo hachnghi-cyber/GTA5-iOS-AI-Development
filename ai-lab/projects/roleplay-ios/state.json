@@ -894,6 +894,17 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "native_leave_call_observer": {
+      "parent_commit": "a4f0975cf6bed5487b8abf0ce4e77912f43d1e18",
+      "scope": "Guarded observer compares the established main slot and native leave task at the call, the accepted return in the same frame, and the later Update cleanup decision during one attach.",
+      "observer_site": "leave_session_call",
+      "profile": "baselines/phase9-v133-engine.json",
+      "host_python_tests_passed": 181,
+      "host_test_log_sha256": "3325b5cac938f84ccc14bf3355d95ac19f0fa924b690d2f594762774ee656c0a",
+      "iphone_call_capture_verified": false,
+      "session_generation_verified": false,
+      "authenticated_sender_verified": false
+    },
     "native_private_leave_path_iphone": {
       "parent_commit": "f7bbede429b2445517b169e040dad87c10aaea1a",
       "evidence": "baselines/v133-private-leave-path-iphone-20261119.json",
