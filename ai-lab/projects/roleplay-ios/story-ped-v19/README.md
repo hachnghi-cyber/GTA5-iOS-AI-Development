@@ -9,7 +9,7 @@ v1.8 guest mailbox has NOT YET BEEN VERIFIED on real iPhone v2.0.0. Do NOT enabl
 - Explicit F11 press for each new launch; F11 toggles arm/disarm (use on-screen Mod keys or physical keyboard). Nothing spawns merely from installing the ASI.
 - NETWORK_IS_SESSION_ACTIVE and NETWORK_IS_GAME_IN_PROGRESS both must return false. Because v2.0.0 host is closed-source, these are **not a cryptographically reliable positive Story-mode attestation**; operator MUST only test while in Story Mode, never Online.
 - Exact CRC-validated RPF8 local pose and RPR1 mailbox with exactly **one** remote peer. Missing, malformed, empty or 2+ peers means no spawn.
-- Fresh mailbox epoch/generation within 16 ticks (4s). No new frames, disarm, removal of marker, loss of remote or network-mode change forces cleanup.
+- Fresh mailbox epoch/generation within 80 ticks (4s). No new frames, disarm, removal of marker, loss of remote or network-mode change forces cleanup.
 - Model a_m_m_business_01 must be valid, a ped, and loaded (4s timeout) before spawning. All native calls occur on the cooperative ScriptHookV script thread.
 - Spawn location is next to the local player (+3m X, +2m Y); does NOT apply remote XYZ, attach, assign tasks, control player, perform police interactions or affect Online.
 - Only one ped handle, frozen. On teardown, DELETE_PED is called only if DOES_ENTITY_EXIST says true. No network flags or game binary patch.
@@ -32,3 +32,6 @@ The Win64 x86-64 PE32+ .asi is compiled using Clang MSVC target and pinned MIT-p
 - Plaintext RP TCP is private LAN diagnostic only. No port forward and no public server.
 - RAGE original hashes were cross-checked with community native references. Their availability on GTA5Port v2.0.0 is not guaranteed.
 - Never merge the Draft PR or claim Online RP complete based only on these tests.
+
+## Input responsiveness
+F11 state and safety gates are sampled every **50 ms**. The 4-second model/remote timeout budgets remain unchanged at 80 ticks. Use `example/RP19_STORY_TEST.txt.example` as the exact-byte opt-in file template; remove `.example` only after proving the v1.8 mailbox in Story Mode.
