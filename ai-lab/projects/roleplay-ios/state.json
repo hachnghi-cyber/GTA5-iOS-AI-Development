@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "Capture the guarded ClearSession caller label in an invite-only GTA room, then follow the observed path to the retired slot and generation. Collect a guarded queue/receive sample with a cooperating second GTA participant and correlate it to the authenticated participant and live admission before wiring lifecycle notifications or enabling gameplay.",
+  "next_action": "Observe the guarded LeaveSession call to snSession::Leave in an invite-only GTA room and correlate the selected main slot with the live game admission and its subsequent loss of establishment. Separately collect a guarded queue/receive sample with a cooperating second GTA participant to verify authenticated sender and generation before wiring lifecycle notifications or enabling gameplay.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,16 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "native_private_leave_path_iphone": {
+      "parent_commit": "f7bbede429b2445517b169e040dad87c10aaea1a",
+      "evidence": "baselines/v133-private-leave-path-iphone-20261119.json",
+      "scope": "Two private-room exits on one signed iPhone. The first hit ClearSession from Update. The second reached the bypass destination in the same guarded Update frame and thread. Both slots were already unestablished at the branch.",
+      "earlier_target": "The exact LeaveSession call passes the main slot as the snSession::Leave receiver and the manager task-status pointer as x2. Runtime capture of this earlier path is pending.",
+      "host_python_tests_passed": 178,
+      "host_test_log_sha256": "5221481055f2d9b3f1c988b106dca48a7367158d57cca0e01606ebf7391d9957",
+      "session_generation_verified": false,
+      "native_game_binding_verified": false
     },
     "native_drop_session_boundary": {
       "parent_commit": "4e6914fdf88ed2d3ba74322122be46579ef7e204",

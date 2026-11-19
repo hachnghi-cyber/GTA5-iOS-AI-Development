@@ -5,6 +5,7 @@ import json
 import struct
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 path = Path(__file__).resolve().parents[1] / "tools" / "observe_v133_windows_usb.py"
@@ -422,6 +423,45 @@ class DropSessionTests(unittest.TestCase):
         self.assertEqual(sample['before']['status'], 'unexpected_session_manager')
         self.assertEqual(reads, [(0x1031ef4e0, 8)])
         self.assertFalse(sample['same_call_observed'])
+
+
+class LeaveSessionBranchTests(unittest.TestCase):
+    def capture(self, task_value, reached_pc, second_thread=b'same'):
+        metadata = {
+            'internal_sites': {'leave_session_branch': '0x100012300', 'drop_session_call': '0x100012340'},
+            'leave_session_branch_context': {},
+            'drop_session_context': {'return_va': '0x100012344'},
+            'session_slots': {},
+        }
+        registers = {8: task_value, 24: 0x170000000, 29: 0x180000000}
+        names = {b'qRegisterInfo8': b'name:x8;', b'qRegisterInfo18': b'name:x24;',
+                 b'qRegisterInfo1d': b'name:fp;'}
+        remote = SimpleNamespace(request=names.__getitem__, read_register=registers.__getitem__)
+        slots = {'status': 'observed', 'main_slot_established': False, 'transition_slot_established': False}
+        stops = ((0x100012300, b'same', 'hit'), (reached_pc, second_thread, 'hit'))
+        with patch.object(observer, 'verify_context_code'), \
+                patch.object(observer, 'queue_stage_stop', side_effect=stops), \
+                patch.object(observer, 'read_session_slots', return_value=(slots, None)) as read:
+            sample = observer.capture_leave_session_branch(remote, 0x100000000, metadata, 5)
+            read.assert_called_once_with(remote, 0x100000000, {}, expected_manager=registers[24])
+        return sample
+
+    def test_selects_each_path_only_when_the_destination_matches_the_task_status(self):
+        for task, pc, path in ((3, 0x100012344, 'bypass_drop_session'), (2, 0x100012340, 'drop_session')):
+            with self.subTest(path=path):
+                sample = self.capture(task, pc)
+                self.assertEqual(sample['status'], 'observed')
+                self.assertEqual(sample['path'], path)
+                self.assertFalse(sample['session_generation_verified'])
+                self.assertFalse(sample['authenticated_rp_sender_verified'])
+
+    def test_rejects_another_thread_or_unexpected_destination(self):
+        for dest, thread, status in ((0x100012344, b'other', 'different_leave_invocation'),
+                                     (0x100012340, b'same', 'unexpected_leave_branch')):
+            with self.subTest(status=status):
+                sample = self.capture(3, dest, thread)
+                self.assertEqual(sample['status'], status)
+                self.assertEqual(sample['path'], 'unobserved')
 
 
 class _ContextMemory:

@@ -81,6 +81,8 @@ SYMBOLS = {
     'swap_sessions': '__ZN15CNetworkSession12SwapSessionsEv',
     'session_update': '__ZN15CNetworkSession6UpdateEv',
     'session_transition_update': '__ZN15CNetworkSession16UpdateTransitionEv',
+    'leave_session': '__ZN15CNetworkSession12LeaveSessionEj18LeaveSessionReason',
+    'native_session_leave': '__ZN4rage9snSession5LeaveEiPNS_9netStatusE',
     'drop_session': '__ZN15CNetworkSession11DropSessionEv',
     'session_shutdown': '__ZN4rage9snSession8ShutdownEbi',
     'session_init': '__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc',
@@ -288,6 +290,7 @@ def inspect(data):
         ('session_update', 0x768, 'drop_session', 'BL'),
         ('session_update', 0x778, 'clear_session', 'BL'),
         ('session_transition_update', 0x338, 'clear_session', 'BL'),
+        ('leave_session', 0x23c, 'native_session_leave', 'BL'),
         ('drop_session', 0xbc, 'session_shutdown', 'BL'),
         ('drop_session', 0x338, 'session_init', 'BL'),
         ('get_current_session', 0x1c, 'session_exists', 'BL'),
@@ -308,6 +311,13 @@ def inspect(data):
         branches.append(dict(at=hex(pc), source=src, target=dst, kind=kind))
     # Small, independently disassembled ARM64 observations, not original source.
     checks = (
+        ('session_update', 0x5cc, 0xf9401f08, 'load the pending leave status pointer from the manager'),
+        ('session_update', 0x5d0, 0xb9400108, 'read the pending leave status value'),
+        ('session_update', 0x5dc, 0x71000d1f, 'compare the pending leave status with 3'),
+        ('session_update', 0x5e0, 0x54000c60, 'status 3 branches past DropSession to the ClearSession call sequence'),
+        ('leave_session', 0x228, 0xf9401275, 'read main session into x21 for the Leave call'),
+        ('leave_session', 0x234, 0xf9401e62, 'pass the manager leave status pointer as x2'),
+        ('leave_session', 0x238, 0xaa1503e0, 'pass the main session as the Leave receiver'),
         ('session_update', 0x764, 0xaa1803e0, 'pass manager x24 as the DropSession receiver'),
         ('session_update', 0x76c, 0xb948ab21, 'read ClearSession flags after DropSession returns'),
         ('drop_session', 0xb0, 0xf9401260, 'load the main session slot before shutdown'),
@@ -421,6 +431,7 @@ def inspect(data):
     trace_sites = ('jobs_update', 'script_event_handler', 'script_decide',
                    'on_net_event', 'clear_session', 'migrate_end')
     internal_sites = {
+        'leave_session_branch': sites['session_update'] + 0x5e0,
         'drop_session_call': sites['session_update'] + 0x768,
         'session_swap': sites['swap_sessions'] + 0x68,
         'on_net_event_pre_dispatch': sites['on_net_event'] + 0x94,
@@ -467,6 +478,16 @@ def inspect(data):
                                 'primary_vtable_slots': virtual_slots},
                 trace_sites=trace_words,
                 receive_context=context,
+                leave_session_branch_context={
+                    'code_guards': [{
+                        'function': 'session_update_leave_status',
+                        'va': hex(sites['session_update'] + 0x5cc),
+                        'size': 0x2c,
+                        'sha256': hashlib.sha256(data[off+sites['session_update']+0x5cc-va:
+                                                       off+sites['session_update']+0x5f8-va]).hexdigest(),
+                    }],
+                    'scope': 'same invocation from the leave status branch to the guarded cleanup path',
+                },
                 clear_session_caller_context={
                     'code_guards': [
                         {'function': name, 'va': hex(begin), 'size': length,

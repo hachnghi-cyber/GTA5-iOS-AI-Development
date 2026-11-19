@@ -275,6 +275,15 @@ thread, frame và manager với global đã kiểm tra. Lượt thử riêng tr�
 iPhone hết 60 giây mà chưa bắt được lời gọi. Xem
 `baselines/v133-drop-session-boundary-iphone-20261119.json`.
 
+Lượt đo tiếp theo xác nhận `clear_session_caller=session_update` khi rời
+phòng chỉ mời. Dùng `--site leave_session_branch` để đọc trạng thái slot
+tại quyết định dọn phiên và theo tới đích nhảy trong cùng thread và frame.
+Một lượt riêng ghi `bypass_drop_session`, với cả hai slot chưa thiết lập
+ngay tại điểm quyết định. Binary có mốc sớm hơn: `LeaveSession` gọi
+`snSession::Leave` với slot chính và con trỏ trạng thái tác vụ. Cần kiểm
+tra mốc sớm trên iPhone và khớp nó với phiên đang hoạt động.
+Xem `baselines/v133-private-leave-path-iphone-20261119.json`.
+
 `enqueue_origin` phân biệt `immediate_frame` và `buffered_frame`.
 `enqueue_transport` ghi một byte chỉ báo dưới dạng `set`, `clear` hoặc
 `unobserved`. Với frame mới, công cụ kiểm tra toàn bộ chuỗi frame

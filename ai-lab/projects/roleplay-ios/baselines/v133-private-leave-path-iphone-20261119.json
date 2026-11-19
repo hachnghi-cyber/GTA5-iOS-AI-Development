@@ -1,0 +1,89 @@
+{
+  "schema": "v133-private-leave-path-iphone-v1",
+  "date": "2026-11-19",
+  "parent_commit": "f7bbede429b2445517b169e040dad87c10aaea1a",
+  "device_build_source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+  "gta_executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "gta_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "scope": "One signed iPhone, two separate user-confirmed manual exits from a private invite-only GTA room to Sandbox.",
+  "first_exit": {
+    "clear_session_entry": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "clear_session_caller": "session_update",
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": false,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_generation_verified": false,
+        "site": "clear_session",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "50cb97a2f8008ddeeda89f96f071e159c22e29a1dc176b9c93949bbf65f20a3b"
+    },
+    "sandbox": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "custom_rp_event_received": false,
+        "game_thread_affinity_verified": false,
+        "hardware_stop_at_expected_pc": true,
+        "macport_online_update_callsite_matches": true,
+        "native_main_session_in_progress": true,
+        "native_transition_session_in_progress": true,
+        "network_receive_call_chain_observed": false,
+        "network_receive_stack_confirmed": false,
+        "observed_path": "undetermined",
+        "session_context_status": "observed",
+        "session_generation_verified": false,
+        "session_identity_verified": false,
+        "session_slots": {
+          "candidate_slot": "none",
+          "main_slot_established": false,
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "site": "jobs_update",
+        "thread_label": "T1",
+        "thread_label_scope": "anonymous_single_capture_only",
+        "timed_out": false
+      },
+      "raw_log_sha256": "ab37fa55c73cdeca6d3cd0d10cc9cad8c6aff2724117d2a108cc2fce005c5888"
+    }
+  },
+  "second_exit": {
+    "leave_status_branch": {
+      "sample": {
+        "authenticated_rp_sender_verified": false,
+        "path": "bypass_drop_session",
+        "session_generation_verified": false,
+        "site": "leave_session_branch",
+        "slots_at_decision": {
+          "candidate_slot": "none",
+          "main_slot_established": false,
+          "status": "observed",
+          "transition_slot_established": false
+        },
+        "status": "observed"
+      },
+      "raw_log_sha256": "74887d50c71bd2bdfbf93a315e6576570a9621c6714401b3555b1c313af9d79b"
+    }
+  },
+  "observed": "The ClearSession caller was Update in the first exit. The second exit matched the task-status branch and its actual bypass destination in one caller frame and OS thread. Neither slot was established when that decision ran.",
+  "next_static_target": {
+    "branch": {
+      "at": "0x1017fe70c",
+      "source": "leave_session",
+      "target": "native_session_leave",
+      "kind": "BL"
+    },
+    "scope": "The LeaveSession wrapper passes the main slot and asynchronous leave status pointer to snSession::Leave. The invocation and slot lifetime still need a device capture."
+  },
+  "session_generation_verified": false,
+  "authenticated_sender_verified": false,
+  "two_gta_peers_tested": false
+}

@@ -4,6 +4,15 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Trên iPhone, một lượt rời phòng chỉ mời xác nhận `ClearSession` được gọi
+từ `Update`. Lượt khác bắt đúng nhánh status 3 và đích nhảy bỏ qua
+`DropSession`, trong cùng frame và thread. Cả hai slot đã mất trạng thái
+thiết lập tại điểm quyết định. Mốc sớm hơn trên binary là
+`LeaveSession → snSession::Leave`, nhận slot chính và con trỏ trạng thái
+của tác vụ rời phiên. Cần đo mốc này để xác định phiên bị thu hồi.
+178 bài kiểm thử host đã qua. Xem
+`baselines/v133-private-leave-path-iphone-20261119.json`.
+
 Binary v13.3 có hai đường gọi `ClearSession` trực tiếp. Trong `Update`,
 `DropSession` gọi shutdown và init trên slot chính trước `ClearSession`.
 Observer hai mốc `drop_session_call` hết thời gian trong lượt rời phòng chỉ

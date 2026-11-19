@@ -25,7 +25,7 @@ IMAGE_VMADDR = 0x100000000
 DEFAULT_SITE = "jobs_update"
 OBSERVABLE_SITES = ("jobs_update", "script_event_handler", "script_decide", "on_net_event",
                     "on_net_event_pre_dispatch", "on_connection_peer_verify",
-                    "clear_session", "session_swap", "drop_session_call")
+                    "clear_session", "session_swap", "drop_session_call", "leave_session_branch")
 MAX_REPLY = 16384
 
 
@@ -563,6 +563,55 @@ def capture_drop_session(remote, base, metadata, wait_seconds):
     return sample
 
 
+def capture_leave_session_branch(remote, base, metadata, wait_seconds):
+    """Follow the guarded leave status decision to either cleanup path."""
+    if not 1 <= wait_seconds <= 60:
+        raise ValueError("wait_seconds outside bounded range")
+    verify_context_code(remote, base, metadata['leave_session_branch_context'], label='leave-session-branch')
+    verify_context_code(remote, base, metadata['drop_session_context'], label='drop-session')
+    slots = metadata['session_slots']
+    verify_context_code(remote, base, slots, label='session-slots')
+    for number, names in ((8, (b'x8',)), (24, (b'x24',)), (29, (b'fp', b'x29'))):
+        name = remote.request(f'qRegisterInfo{number:x}'.encode()).partition(b';')[0]
+        if name not in tuple(b'name:' + n for n in names):
+            raise DebugProtocolError('leave-session register layout mismatch')
+
+    decision = base + internal_site_va(metadata, 'leave_session_branch') - IMAGE_VMADDR
+    drop = base + internal_site_va(metadata, 'drop_session_call') - IMAGE_VMADDR
+    bypass = base + int(metadata['drop_session_context']['return_va'], 16) - IMAGE_VMADDR
+    if bypass != drop + 4:
+        raise DebugProtocolError('leave-session cleanup targets are not adjacent')
+    deadline = time.monotonic() + wait_seconds
+    sample = {'site': 'leave_session_branch', 'status': 'incomplete',
+              'path': 'unobserved', 'session_generation_verified': False,
+              'authenticated_rp_sender_verified': False}
+    pc, thread, sample['status'] = queue_stage_stop(remote, (decision,), deadline)
+    if pc is None:
+        return sample
+    manager, frame = remote.read_register(24), remote.read_register(29)
+    if not 0 < frame < (1 << 48) or frame % 16:
+        sample['status'] = 'invalid_leave_frame'
+        return sample
+    bypass_expected = (remote.read_register(8) & 0xffffffff) == 3
+    decision_slots, _ = read_session_slots(remote, base, slots, expected_manager=manager)
+    sample['slots_at_decision'] = decision_slots
+    if decision_slots['status'] != 'observed':
+        sample['status'] = 'unobserved_decision_slots'
+        return sample
+    pc, next_thread, sample['status'] = queue_stage_stop(remote, (drop, bypass), deadline)
+    if pc is None:
+        return sample
+    if next_thread != thread or remote.read_register(24) != manager or remote.read_register(29) != frame:
+        sample['status'] = 'different_leave_invocation'
+        return sample
+    if (pc == bypass) != bypass_expected:
+        sample['status'] = 'unexpected_leave_branch'
+        return sample
+    sample['status'] = 'observed'
+    sample['path'] = 'bypass_drop_session' if bypass_expected else 'drop_session'
+    return sample
+
+
 def read_enqueue_transport(remote, base, profile, queue, queue_offset, producer):
     """A buffered event must never inherit the current packet's decrypt indicator."""
     result = {'caller_observed': False, 'endpoint_connection_observed': False,
@@ -910,6 +959,8 @@ def run_capture(conn, pid, stock_job=False, site=DEFAULT_SITE, wait_seconds=3,
             return capture_session_swap(remote, base, metadata, wait_seconds)
         if site == 'drop_session_call':
             return capture_drop_session(remote, base, metadata, wait_seconds)
+        if site == 'leave_session_branch':
+            return capture_leave_session_branch(remote, base, metadata, wait_seconds)
         if stock_job:
             for guard in metadata["stock_job_sample"]["guard_sites"]:
                 address = base + int(guard["va"], 16) - IMAGE_VMADDR
@@ -1034,6 +1085,8 @@ def main():
         return 0 if sample['same_session_slots_swapped'] else 1
     if args.site == 'drop_session_call':
         return 0 if sample['same_call_observed'] else 1
+    if args.site == 'leave_session_branch':
+        return 0 if sample['status'] == 'observed' else 1
     if args.queue_context:
         matched = (sample.get('same_queued_event_at_scripted_handler') if args.receive_context
                    else sample['queue_object_link_observed'])
