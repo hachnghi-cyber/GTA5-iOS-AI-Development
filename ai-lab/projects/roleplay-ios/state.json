@@ -894,6 +894,15 @@
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
     },
+    "single_iphone_livecontainer_feasibility": {
+      "parent_commit": "c262c3c173aef7870292b44b23fbc62a863edab9",
+      "evidence": "baselines/v133-livecontainer-standalone-cpu-20261119.json",
+      "scope": "One USB-connected iPhone with a standalone GTA5 process and a LiveProcess. Over an eight-second Sysmon window GTA5 had zero reported CPU across all 16 samples and LiveProcess reported nonzero CPU across all 16.",
+      "liveprocess_guest_executable_verified": false,
+      "both_gta_game_loops_verified": false,
+      "same_private_gta_room_verified": false,
+      "native_event_delivery_verified": false
+    },
     "native_leave_session_id_comparison": {
       "parent_commit": "e73d0675292ca25f8ab24aa6174bd16e4fa523f6",
       "scope": "Guard both exact v13.3 session ID getters, then compare the selected main slot's ID at the accepted leave request and later Update decision. Output contains only ID presence and relation, never the ID or slot pointer.",

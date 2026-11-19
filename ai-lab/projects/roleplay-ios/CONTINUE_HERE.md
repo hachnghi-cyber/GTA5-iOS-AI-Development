@@ -4,6 +4,12 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Một iPhone có tiến trình GTA cài riêng và LiveProcess cùng tồn tại.
+Trong cửa sổ Sysmon 8 giây, GTA5 báo CPU 0 ở 16/16 mẫu, còn LiveProcess
+báo CPU trên 0 ở 16/16 mẫu. Cần kiểm tra hai cửa sổ cùng hoạt động và
+cùng phòng trước khi dùng cấu hình này để đo nhận sự kiện GTA.
+Xem `baselines/v133-livecontainer-standalone-cpu-20261119.json`.
+
 Điểm đo `leave_session_call` đã bổ sung đối chiếu ID phiên theo hai getter
 đã kiểm tra mã trên đúng v13.3. Log chỉ ghi ID lúc đầu có giá trị hay không
 và quan hệ ở mốc sau: giữ nguyên, bằng 0, đổi hoặc thiếu ID ban đầu.
