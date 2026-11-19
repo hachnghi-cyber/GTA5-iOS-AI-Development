@@ -282,7 +282,7 @@
       ]
     }
   ],
-  "next_action": "On the installed v13.3 diagnostic in private Sandbox, verify current game-thread and session observations. Establish a separate scoped binding between RP mTLS principal and GTA game participant before enabling gameplay; then verify native effects and stock-mode regressions on devices.",
+  "next_action": "Compare live local police-job fields after accepting and quitting the stock job in private Sandbox. For remote binding, collect a same-frame queue/receive sample with a cooperating second in-game peer, then establish a scoped RP principal to GTA participant binding before native effects and two-device regression tests.",
   "last_completed_task": null,
   "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
   "historical_baselines": [
@@ -893,6 +893,14 @@
         "rp_v133_police_tx.c"
       ],
       "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "private_authority_iphone_sandbox_observer": {
+      "baseline": "baselines/private-rp-authority-build-sandbox-20261119.json",
+      "device_scope": "one physical iPhone after passing the private authority transport test",
+      "sample": "Verified two jobs_update hardware stops and the expected direct caller. Both progress bits true, neither session slot established; local stock job idle. Queue v3 preflight reached enqueue on this signed app, timed out without a frame in 7 seconds.",
+      "game_thread_affinity_verified": false,
+      "native_authenticated_sender_verified": false,
+      "session_generation_verified": false
     },
     "private_authority_iphone_device_consent": {
       "baseline": "baselines/private-rp-iphone-consent-20261119.json",

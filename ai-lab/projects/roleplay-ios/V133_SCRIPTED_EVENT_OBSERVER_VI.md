@@ -201,7 +201,10 @@ Profile hiện tại v3 giữ sửa điểm enqueue của v2: `0x101cd70bc` th�
 `netConnection::Unpack` (`0x101cc5cec`). Nó kiểm tra vtable `InFrame`, hàm
 GetId, type 4, connection ID và queue trước khi theo tiếp. Profile cũ bị từ chối.
 V3 bổ sung bốn hash cho key lookup/HMAC/decrypt, tổng 17 vùng mã queue.
-Preflight iPhone trước đây chỉ áp dụng cho profile cũ; v3 chưa thử trên thiết bị.
+Ngày 19/11/2026, v3 và `--receive-context` đã vượt bước kiểm tra mã trên
+iPhone chạy bản chẩn đoán server riêng và tới điểm đo enqueue. Cửa sổ 7 giây
+không bắt frame trong Sandbox một máy. Xem
+`baselines/private-rp-authority-build-sandbox-20261119.json`.
 
 Trong một lần attach, observer lấy mẫu frame chuẩn bị đưa vào queue,
 xác nhận queue mà `Dispatch` đã đọc cùng event ở `DispatchEvent`, rồi

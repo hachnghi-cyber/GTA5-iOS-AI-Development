@@ -9,6 +9,13 @@ ghi `consent_round_trip_passed`; PC thấy đủ kết nối, tham gia, rời RP
 kết nối. Xem `baselines/private-rp-iphone-consent-20261119.json`. Mốc tiếp
 theo là xác minh game thread trong Sandbox riêng và ghép đúng người chơi.
 
+Trên cùng bản cài, hai mẫu trong Sandbox dừng đúng ở `jobs_update` và caller
+đã xác minh. Hai bit tiến trình đều bật, chưa có slot phiên đã thiết lập;
+metadata job ở trạng thái chưa nhận ca. Profile queue v3 tới được điểm đo
+enqueue và hết 7 giây mà không bắt frame. Xem
+`baselines/private-rp-authority-build-sandbox-20261119.json`. Cần mốc nhận/bỏ
+ca thật và một peer GTA thứ hai để đối chiếu nguồn sender.
+
 Chế độ chẩn đoán `--consent-probe` kiểm tra thêm đường iPhone gửi lệnh. Nó
 yêu cầu ACK và snapshot cùng nonce khi tham gia và rời RP. Xem hướng dẫn LAN
 trong `PRIVATE_RP_SERVER_VI.md`. Build `2455bc3` đã đạt CI và tạo IPA chưa ký

@@ -1,0 +1,73 @@
+{
+  "schema": "private-rp-authority-build-sandbox-observer-v1",
+  "date": "2026-11-19",
+  "diagnostic_source_commit": "2455bc3f49b25e531bc4430612ca29c1288d6d53",
+  "observer_source_commit": "5606859905d31d867c1fa8c6eaa2af227938ba6f",
+  "executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "mode": "Private Sandbox confirmed by the operator; one physical iPhone",
+  "scope": "Read-only USB observations on the same GTA installation that passed private mTLS. Separate captures; thread labels are not comparable across captures.",
+  "session_observation": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "game_thread_affinity_verified": false,
+    "hardware_stop_at_expected_pc": true,
+    "macport_online_update_callsite_matches": true,
+    "native_main_session_in_progress": true,
+    "native_transition_session_in_progress": true,
+    "network_receive_call_chain_observed": false,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_context_status": "observed",
+    "session_generation_verified": false,
+    "session_identity_verified": false,
+    "session_slots": {
+      "candidate_slot": "none",
+      "main_slot_established": false,
+      "status": "observed",
+      "transition_slot_established": false
+    },
+    "site": "jobs_update",
+    "thread_label": "T1",
+    "thread_label_scope": "anonymous_single_capture_only",
+    "timed_out": false
+  },
+  "stock_job_before_duty": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "game_thread_affinity_verified": false,
+    "hardware_stop_at_expected_pc": true,
+    "macport_online_update_callsite_matches": true,
+    "network_receive_call_chain_observed": false,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_generation_verified": false,
+    "site": "jobs_update",
+    "stock_job_candidate": {
+      "job_id_is_cop_ls": false,
+      "job_id_known": true,
+      "police_role_authorized": false,
+      "stock_job_kind": 0,
+      "stock_job_state": 0
+    },
+    "thread_label": "T1",
+    "thread_label_scope": "anonymous_single_capture_only",
+    "timed_out": false
+  },
+  "queue_v3_and_receive_context": {
+    "capture_window_seconds": 7,
+    "sample": {
+      "authenticated_rp_sender_verified": false,
+      "custom_rp_event_received": false,
+      "dispatch_and_predispatch_same_thread": false,
+      "game_thread_affinity_verified": false,
+      "last_stage": "enqueue",
+      "queue_context_status": "timeout",
+      "queue_object_link_observed": false,
+      "session_generation_verified": false,
+      "site": "phase19_queue_context"
+    },
+    "interpretation": "Exact build preflight reached the guarded enqueue observation. The window expired without a frame; a cooperating in-game remote peer was not exercised."
+  },
+  "verified_rp_to_gta_participant_binding": false,
+  "verified_online_gameplay": false
+}
