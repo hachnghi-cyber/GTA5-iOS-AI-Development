@@ -1,0 +1,82 @@
+name: GTA5Port RP v1.9 - Story PED Gate
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/story-ped-v19/**'
+      - '.github/workflows/build-gta5port-rp-v19-ped.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  native-ped-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: kevinerikjs/gta5-ios-port
+          ref: 9357c182b5cddd58e16dee684ea07ebc18a97a5d
+          path: upstream
+          persist-credentials: false
+      - name: Compile C11 and pure guard tests with GCC/Clang
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=ai-lab/projects/roleplay-ios
+          for cc in gcc clang; do
+            "$cc" -std=c11 -Wall -Wextra -Werror -DRP18_TEST -DRP19_TEST \
+              -fsyntax-only "$BASE/guest-reader-v18/RPRemoteMailboxReaderV18.c" \
+              "$BASE/story-ped-v19/RPStoryPedProbeV19.c"
+          done
+          python3 -m unittest discover -s "$BASE/story-ped-v19/tests" -v 2>&1 | tee rp19_tests.log
+      - name: Build Windows x64 PE32+ ScriptHookV ASI
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=ai-lab/projects/roleplay-ios
+          mkdir -p outputs
+          clang -target x86_64-pc-windows-msvc -fms-extensions -fms-compatibility \
+            -std=c11 -O1 -Wall -Wextra -Werror -fno-builtin -fno-stack-protector \
+            -DRP18_TEST -c "$BASE/guest-reader-v18/RPRemoteMailboxReaderV18.c" -o outputs/reader.obj
+          clang -target x86_64-pc-windows-msvc -fms-extensions -fms-compatibility \
+            -std=c11 -O1 -Wall -Wextra -Werror -fno-builtin -fno-stack-protector \
+            -c "$BASE/story-ped-v19/RPStoryPedProbeV19.c" -o outputs/ped.obj
+          python3 upstream/app/Tests/asi_crt/link_pe.py \
+            -o outputs/RPStoryPedProbeV19.asi outputs/reader.obj outputs/ped.obj
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct,hashlib
+          p=Path('outputs/RPStoryPedProbeV19.asi')
+          d=p.read_bytes()
+          assert d[:2]==b'MZ'
+          off=struct.unpack_from('<I',d,0x3c)[0]
+          assert d[off:off+4]==b'PE\0\0'
+          assert struct.unpack_from('<H',d,off+4)[0]==0x8664
+          assert struct.unpack_from('<H',d,off+24)[0]==0x20b
+          for s in (b'ScriptHookV.dll',b'nativeInit',b'nativePush64',b'nativeCall',
+                    b'GetAsyncKeyState',b'scriptRegister',b'CreateFileA',b'ReadFile',
+                    b'WriteFile',b'RP19_STORY_TEST.txt',b'RPV10_remote.bin',b'RPV08_pose.bin'):
+              assert s in d,s
+          sha=hashlib.sha256(d).hexdigest()
+          print('PE64 AMD64 valid',len(d),'bytes SHA256',sha)
+          Path('outputs/SHA256.txt').write_text(sha+'  RPStoryPedProbeV19.asi\n')
+          PY
+      - name: Upload research ASI (not a finished multiplayer mod)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v19-story-ped-research-asi
+          path: |
+            outputs/RPStoryPedProbeV19.asi
+            outputs/SHA256.txt
+            rp19_tests.log
+            ai-lab/projects/roleplay-ios/story-ped-v19/RPStoryPedProbeV19.c
+            ai-lab/projects/roleplay-ios/story-ped-v19/tests/test_ped_v19.py
+            ai-lab/projects/roleplay-ios/story-ped-v19/README.md
+            ai-lab/projects/roleplay-ios/story-ped-v19/example/RP19_STORY_TEST.txt.example
+            ai-lab/projects/roleplay-ios/guest-reader-v18/RPRemoteMailboxReaderV18.c
+          if-no-files-found: error
+          retention-days: 7

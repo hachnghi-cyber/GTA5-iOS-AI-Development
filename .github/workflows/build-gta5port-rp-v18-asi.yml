@@ -1,0 +1,80 @@
+name: GTA5Port RP v1.8 - ScriptHookV Remote Mailbox Reader
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/guest-reader-v18/**'
+      - '.github/workflows/build-gta5port-rp-v18-asi.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  validate-rpr1-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out PINNED public ScriptHookV linker reference (not v2.0.0 source)
+        uses: actions/checkout@v4
+        with:
+          repository: kevinerikjs/gta5-ios-port
+          ref: 9357c182b5cddd58e16dee684ea07ebc18a97a5d
+          path: upstream
+          persist-credentials: false
+      - name: Validate decoder with GCC, Clang and 8 independent fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/guest-reader-v18
+          gcc -std=c11 -Wall -Wextra -Werror -DRP18_TEST -fsyntax-only RPRemoteMailboxReaderV18.c
+          clang -std=c11 -Wall -Wextra -Werror -DRP18_TEST -fsyntax-only RPRemoteMailboxReaderV18.c
+          python3 -m unittest discover -s tests -v 2>&1 | tee /tmp/rp18_decoder_test.log
+      - name: Compile Win64 PE/COFF .asi for emulated ScriptHookV (no Windows SDK)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          SRC=ai-lab/projects/roleplay-ios/guest-reader-v18/RPRemoteMailboxReaderV18.c
+          clang -target x86_64-pc-windows-msvc -fms-extensions -fms-compatibility \
+            -std=c11 -O1 -Wall -Wextra -Werror -fno-builtin -fno-stack-protector \
+            -c "$SRC" -o outputs/RPRemoteMailboxReaderV18.obj
+          python3 upstream/app/Tests/asi_crt/link_pe.py \
+            -o outputs/RPRemoteMailboxReaderV18.asi \
+            outputs/RPRemoteMailboxReaderV18.obj
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct,hashlib
+          path=Path("outputs/RPRemoteMailboxReaderV18.asi")
+          data=path.read_bytes()
+          assert data[:2]==b"MZ"
+          off=struct.unpack_from("<I",data,0x3c)[0]
+          assert data[off:off+4]==b"PE\0\0"
+          assert struct.unpack_from("<H",data,off+4)[0]==0x8664
+          assert struct.unpack_from("<H",data,off+24)[0]==0x20b # PE32+
+          for symbol in (b"ScriptHookV.dll",b"scriptRegister",b"scriptWait",
+                         b"CreateFileA",b"ReadFile",b"WriteFile"):
+              assert symbol in data,symbol
+          print("PE64/AMD64 import verification PASS")
+          print("size",len(data),"SHA256",hashlib.sha256(data).hexdigest())
+          Path("outputs/sha256.txt").write_text(hashlib.sha256(data).hexdigest()+"  RPRemoteMailboxReaderV18.asi\n")
+          PY
+      - name: Upload research-only ASI and build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v18-mailbox-reader-asi
+          path: |
+            outputs/RPRemoteMailboxReaderV18.asi
+            outputs/sha256.txt
+            ai-lab/projects/roleplay-ios/guest-reader-v18/RPRemoteMailboxReaderV18.c
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload fixture test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v18-decoder-test-log
+          path: /tmp/rp18_decoder_test.log
+          if-no-files-found: warn
+          retention-days: 7

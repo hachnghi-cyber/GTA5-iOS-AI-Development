@@ -1,0 +1,46 @@
+name: GTA5Port RP v1.1 - iPhoneOS ARM64 compile-only
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/v10-ci/**'
+      - '.github/workflows/build-gta5port-rp-ios-arm64-v11.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iphoneos-arm64-compile:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Swift host bridge with the iPhoneOS ARM64 SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          test -d "$SDK"
+          mkdir -p outputs
+          xcrun swiftc -version
+          find ai-lab/projects/roleplay-ios/v10-ci/Sources/RPBridgeCore -maxdepth 1 -name '*.swift' -print | sort > outputs/sources.txt
+          SOURCES=(ai-lab/projects/roleplay-ios/v10-ci/Sources/RPBridgeCore/*.swift)
+          xcrun swiftc -sdk "$SDK" -target arm64-apple-ios16.0 \
+            -module-name RPBridgeCore -parse-as-library -O -whole-module-optimization \
+            -emit-module -emit-module-path outputs/RPBridgeCore.swiftmodule \
+            -emit-object -o outputs/RPBridgeCore-arm64-iphoneos.o "${SOURCES[@]}"
+          file outputs/RPBridgeCore-arm64-iphoneos.o | tee outputs/format.txt
+          xcrun otool -hv outputs/RPBridgeCore-arm64-iphoneos.o | tee outputs/macho-header.txt
+          grep -E 'Mach-O.*arm64' outputs/format.txt
+          grep -q ARM64 outputs/macho-header.txt
+      - name: Upload ARM64 compile artifacts (no game binary or signing)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v11-iphoneos-arm64-compile-only
+          path: outputs/
+          if-no-files-found: error
+          retention-days: 7

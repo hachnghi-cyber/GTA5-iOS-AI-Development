@@ -1,0 +1,59 @@
+name: GTA5Port RP v1.4 - Mods File Bridge Diagnostic
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/native-probe-v14/**'
+      - '.github/workflows/build-gta5port-rp-v14-mods-path.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux-fixture-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build native probe and test file discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/native-probe-v14
+          mkdir -p build
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pthread -fPIC -shared -DRP_FAST_TEST RPBridgeProbe.c \
+            -o build/RPBridgeProbe.so
+          python3 -m unittest discover -s tests -v
+  ios-dylib:
+    runs-on: macos-15
+    needs: linux-fixture-tests
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned iPhoneOS ARM64 read-only dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          SOURCE=ai-lab/projects/roleplay-ios/native-probe-v14/RPBridgeProbe.c
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -std=c11 -Wall -Wextra -Werror \
+            -target arm64-apple-ios16.0 -isysroot "$SDK" -fsyntax-only "$SOURCE"
+          xcrun clang -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden \
+            -target arm64-apple-ios16.0 -isysroot "$SDK" -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/RPBridgeProbe.dylib \
+            -o outputs/RPBridgeProbe.dylib "$SOURCE"
+          file outputs/RPBridgeProbe.dylib | tee outputs/format.txt
+          xcrun otool -hv outputs/RPBridgeProbe.dylib | tee outputs/macho-header.txt
+          xcrun otool -l outputs/RPBridgeProbe.dylib > outputs/load-commands.txt
+          grep -q 'Mach-O 64-bit dynamically linked shared library arm64' outputs/format.txt
+          grep -Eq '[[:space:]]DYLIB[[:space:]]' outputs/macho-header.txt
+          grep -q 'LC_BUILD_VERSION' outputs/load-commands.txt
+          shasum -a 256 outputs/RPBridgeProbe.dylib | tee outputs/sha256.txt
+      - name: Save unsigned diagnostics (no IPA or game assets)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v14-iphoneos-arm64-dylib
+          path: outputs/
+          if-no-files-found: error
+          retention-days: 7

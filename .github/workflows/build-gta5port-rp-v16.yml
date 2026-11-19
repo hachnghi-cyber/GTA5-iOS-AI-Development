@@ -1,0 +1,116 @@
+name: GTA5Port RP v1.6 - Duplex pose bridge
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/native-bridge-v16/**'
+      - '.github/workflows/build-gta5port-rp-v16.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-duplex-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct source with SHA-256 and validate tar members
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, lzma, hashlib, io, tarfile
+          base = Path("ai-lab/projects/roleplay-ios/native-bridge-v16")
+          payload = (base/"source_bundle.tar.xz.b64").read_text().strip()
+          raw = lzma.decompress(base64.b64decode(payload, validate=True))
+          expected = "a88c9463e183eba4f09455cdaf43d0fe80bebabc40c3e57717b37cb441c95c65"
+          actual = hashlib.sha256(raw).hexdigest()
+          if actual != expected:
+              raise SystemExit("SOURCE SHA256 mismatch: " + actual)
+          out = base/"working"
+          out.mkdir(exist_ok=True)
+          with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as tf:
+              for member in tf:
+                  p = Path(member.name)
+                  if not member.isfile() or p.is_absolute() or ".." in p.parts:
+                      raise SystemExit("Invalid source bundle member")
+                  dst = out/p
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  dst.write_bytes(tf.extractfile(member).read())
+          print("Reproducible source verified:", actual)
+          PY
+      - name: Compile GCC and Clang and test actual two-client localhost TCP
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/native-bridge-v16/working
+          clang -std=c11 -Wall -Wextra -Werror -fsyntax-only src/RPBridgeDuplexV16.c src/rp16_json.c
+          bash run_tests.sh 2>&1 | tee /tmp/rp_v16_linux_tests.log
+      - name: Save Linux test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v16-linux-tests
+          path: /tmp/rp_v16_linux_tests.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  iphoneos-arm64-dylib:
+    runs-on: macos-15
+    needs: linux-duplex-tests
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and reconstruct source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, lzma, hashlib, io, tarfile
+          base=Path("ai-lab/projects/roleplay-ios/native-bridge-v16")
+          raw=lzma.decompress(base64.b64decode((base/"source_bundle.tar.xz.b64").read_text().strip(),validate=True))
+          assert hashlib.sha256(raw).hexdigest()=="a88c9463e183eba4f09455cdaf43d0fe80bebabc40c3e57717b37cb441c95c65"
+          out=base/"working"
+          out.mkdir(exist_ok=True)
+          with tarfile.open(fileobj=io.BytesIO(raw),mode="r:") as tf:
+              for item in tf:
+                  p=Path(item.name)
+                  if not item.isfile() or p.is_absolute() or ".." in p.parts:
+                      raise SystemExit("invalid source member")
+                  path=out/p;path.parent.mkdir(parents=True,exist_ok=True)
+                  path.write_bytes(tf.extractfile(item).read())
+          PY
+      - name: Build unsigned iPhoneOS ARM64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          SRC=ai-lab/projects/roleplay-ios/native-bridge-v16/working/src
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcodebuild -version
+          xcrun clang -std=c11 -Wall -Wextra -Werror -target arm64-apple-ios16.0 \
+            -isysroot "$SDK" -fsyntax-only "$SRC/RPBridgeDuplexV16.c" "$SRC/rp16_json.c"
+          xcrun clang -std=c11 -O2 -Wall -Wextra -Werror -fvisibility=hidden \
+            -target arm64-apple-ios16.0 -isysroot "$SDK" -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/RPBridgeDuplexV16.dylib \
+            -o outputs/RPBridgeDuplexV16.dylib "$SRC/RPBridgeDuplexV16.c" "$SRC/rp16_json.c"
+          file outputs/RPBridgeDuplexV16.dylib | tee outputs/format.txt
+          xcrun otool -hv outputs/RPBridgeDuplexV16.dylib | tee outputs/macho-header.txt
+          xcrun otool -l outputs/RPBridgeDuplexV16.dylib > outputs/load-commands.txt
+          xcrun otool -L outputs/RPBridgeDuplexV16.dylib > outputs/dependencies.txt
+          grep -q 'Mach-O 64-bit dynamically linked shared library arm64' outputs/format.txt
+          grep -Eq '[[:space:]]DYLIB[[:space:]]' outputs/macho-header.txt
+          grep -q 'LC_BUILD_VERSION' outputs/load-commands.txt
+          shasum -a 256 outputs/RPBridgeDuplexV16.dylib | tee outputs/sha256.txt
+      - name: Upload unsigned dylib (no game IPA)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v16-duplex-iphoneos-arm64
+          path: outputs/
+          if-no-files-found: error
+          retention-days: 7

@@ -169,5 +169,52 @@
   ],
   "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "gta5port_v20_roleplay": {
+    "track": "GTA5Port v2.0.0 with separate opt-in Roleplay bridge; independent of legacy GTA V iOS v12 PoliceRP baseline",
+    "host_version": "GTA5Port 2.0.0 build 45, user-supplied IPA; source correspondence to public GTA5Port 1.5.2 NOT established",
+    "branch": "feature/gta5port-rp-v10-build-20261118",
+    "draft_pr": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/pull/20",
+    "stages": [
+      {
+        "version": "v1.4",
+        "scope": "Real iPhone: ASI v0.8-E -> RPF8 file -> ARM64",
+        "status": "device-verified",
+        "evidence": "RPBridgeProbe_v14.log: FILE_SOURCE mods_child; POSE_LIVE sequences 57->59 and 119->127"
+      },
+      {
+        "version": "v1.6",
+        "scope": "LAN TCP two-way host bridge -> RPR1 remote mailbox",
+        "status": "linux-two-client-tested-and-arm64-compiled",
+        "evidence": "GitHub Actions 44444593992; iPhone receive unverified"
+      },
+      {
+        "version": "v1.7",
+        "scope": "source-level opt-in host bridge for public reference source 1.5.2",
+        "status": "ci-verified-source-only",
+        "evidence": "GitHub Actions 44473976650; not matching closed source v2.0.0"
+      },
+      {
+        "version": "v1.8",
+        "scope": "Win64 ScriptHookV read-only RPR1 guest mailbox reader",
+        "status": "ci-built-device-unverified",
+        "evidence": "GitHub Actions 44486520314; 8/8 tests PASS"
+      },
+      {
+        "version": "v1.9",
+        "scope": "One local non-networked frozen PED Story-only research; explicit file+F11 opt-in; 50ms polling; fresh RPR1 + local RPF8, 4s stale cleanup",
+        "status": "ci-built-device-unverified",
+        "evidence": "GitHub Actions 44536480169 SUCCESS 9/9 pure tests; PE32+ AMD64 7680 bytes SHA256 c804479ca4681656be8ab44379781e49de9a026d7ffb205824be8a13d4ae6f4b"
+      }
+    ],
+    "verified_today": "2026-11-19: v1.9 source and PE64 build gated, 9 pure tests pass; no game binary modified",
+    "next_acceptance": [
+      "Real device v2.0.0 Story mode native-port.log shows RP18 READER_STARTED and RP18 MAILBOX_VALID count=1 then count=0 after peer leaves",
+      "Only after first proof: run manual v1.9 F11 opt-in Story mode and capture RP19 MODEL_REQUESTED, PED_CREATED_SINGLE_LOCAL_PROTOTYPE and PED_CLEANUP",
+      "Validate exact v2.0.0 native availability and safe session state; do not infer Story attestation from missing network natives returning 0",
+      "If PED proof succeeds: prototype remote position/heading update with bounded smoothing, authoritative peer identity and teardown tests",
+      "Never claim two-player replication, Online RP, traffic sync or 32-person stability before device evidence"
+    ],
+    "safety": "No default gameplay mutations or public server exposure; do not merge Draft PR or publish proprietary game assets/IPA"
+  }
 }

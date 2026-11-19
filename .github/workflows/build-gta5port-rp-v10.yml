@@ -1,0 +1,39 @@
+name: GTA5Port RP v1.0 - Swift bridge core (Linux)
+on:
+  push:
+    branches:
+      - feature/gta5port-rp-v10-build-20261118
+    paths:
+      - 'ai-lab/projects/roleplay-ios/v10-ci/**'
+      - '.github/workflows/build-gta5port-rp-v10.yml'
+  pull_request:
+    paths:
+      - 'ai-lab/projects/roleplay-ios/v10-ci/**'
+      - '.github/workflows/build-gta5port-rp-v10.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  swift-source-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Swift toolchain
+        run: swift --version
+      - name: Compile source-only bridge core
+        run: swift build -c release --package-path ai-lab/projects/roleplay-ios/v10-ci
+      - name: Unit tests (no iPhone runtime)
+        shell: bash
+        run: |
+          set -o pipefail
+          swift test -c release --package-path ai-lab/projects/roleplay-ios/v10-ci 2>&1 | tee rp_v10_test.log
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5port-rp-v10-swift-core-build-log
+          path: rp_v10_test.log
+          if-no-files-found: warn
