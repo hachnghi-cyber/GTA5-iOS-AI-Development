@@ -8,6 +8,7 @@
 #include "rp_v133_authority_social.h"
 
 static const char RP_AUTH_ALPN[] = "police-rp-authority/1";
+static const char RP_ACCOUNT_ALPN[] = "police-rp-account/1";
 static NSString *const RP_AUTH_CONFIG = @"PoliceRP-Authority-PRIVATE.json";
 static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 void prp_install_authority_panel(void);
@@ -34,6 +35,9 @@ typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
 @property(nonatomic) NSTimeInterval consentProbeDeadline;
 @property(nonatomic) BOOL consentProbe;
 @property(nonatomic) BOOL playerPanel;
+@property(nonatomic) BOOL accountMode;
+@property(nonatomic) BOOL authenticating;
+@property(nonatomic, strong) NSData *accountFrame;
 @property(nonatomic) uint64_t socialPeer;
 @property(nonatomic) RPSocialProbePhase socialPhase;
 @property(nonatomic) BOOL verified;
@@ -60,6 +64,8 @@ typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
 
 static PRPV133AuthorityClient *authorityClient;
 static dispatch_queue_t authorityQueue;
+static nw_endpoint_t accountEndpoint;
+static nw_parameters_t accountParameters;
 
 static NSTimeInterval rp_uptime(void) {
     return NSProcessInfo.processInfo.systemUptime;
@@ -86,6 +92,9 @@ static NSTimeInterval rp_uptime(void) {
              @"pending": @(state.pending || self.panelConsentNonce), @"revision": @(state.revision),
              @"result": self.result ?: @"starting", @"members": members,
              @"panel_ready": @(self.playerPanel && social.ready && subject != NULL),
+             @"account_mode": @(self.accountMode), @"auth_busy": @(self.authenticating),
+             @"account_active": @(self.accountMode && !self.done && state.ready),
+             @"profile_expired": @([NSDate date].timeIntervalSince1970 >= self.expires),
              @"panel_consented": @(subject && subject[2]),
              @"panel_peer_consented": @(peer && peer[2]),
              @"panel_social_pending": @(social.pending_nonce != 0),
@@ -110,6 +119,8 @@ static NSTimeInterval rp_uptime(void) {
 - (void)finish:(NSString *)result {
     if (self.done) return;
     self.done = YES;
+    self.authenticating = NO;
+    self.accountFrame = nil;
     self.panelConsentNonce = 0;
     self.lastPanelReceipt = 0;
     self.lastPanelEvent = nil;
@@ -169,6 +180,7 @@ static NSTimeInterval rp_uptime(void) {
         return;
     }
     if (kind == RP_AUTHORITY_WELCOME) {
+        self.authenticating = NO;
         [self report:@"authority_ready"];
         if (self.socialPeer) {
             uint8_t open[RP_AUTHORITY_HEADER_BYTES];
@@ -339,12 +351,27 @@ static NSTimeInterval rp_uptime(void) {
     const char *protocol = security ? sec_protocol_metadata_get_negotiated_protocol(security) : NULL;
 #pragma clang diagnostic pop
     if (!security || sec_protocol_metadata_get_negotiated_tls_protocol_version(security) != tls_protocol_version_TLSv13 ||
-            !protocol || strcmp(protocol, RP_AUTH_ALPN) ||
+            !protocol || strcmp(protocol, self.accountMode ? RP_ACCOUNT_ALPN : RP_AUTH_ALPN) ||
             !rp_authority_client_init(&state, self.expectedID)) {
         [self finish:@"tls_protocol_rejected"];
         return;
     }
     self.verified = YES; // RP certificate channel only; never RAGE/player auth.
+    if (self.accountMode) {
+        if (!self.accountFrame) { [self finish:@"account_request_missing"]; return; }
+        [self send:self.accountFrame];
+        self.accountFrame = nil;
+        // The pre-admission reply is exactly one byte in a five-byte record header.
+        [self read:6 then:^(NSData *answer) {
+            const uint8_t expected[] = {15, 0, 0, 0, 1, 1};
+            if (answer.length != sizeof expected || memcmp(answer.bytes, expected, sizeof expected)) {
+                [self finish:@"account_denied"];
+                return;
+            }
+            [self readRecord];
+        }];
+        return;
+    }
     if (self.consentProbe) self.consentProbeDeadline = rp_uptime() + 12.0;
     if (self.socialPeer && !self.playerPanel) self.consentProbeDeadline = rp_uptime() + 60.0;
     self.nextPing = rp_uptime() + 3.0;
@@ -413,6 +440,8 @@ void prp_start_authority_client(NSString *folder) {
             id panel = config[@"interface"];
             BOOL useSocial = [diagnostic isEqual:@"social-round-trip-v1"];
             BOOL usePanel = [panel isEqual:@"rp-panel-v1"];
+            id account = config[@"account_ui"];
+            BOOL deviceAccount = [account isEqual:@"device-account-v1"];
             uint64_t identityID = 0, socialPeer = 0;
             NSTimeInterval now = [NSDate date].timeIntervalSince1970;
             if (![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
@@ -422,6 +451,7 @@ void prp_start_authority_client(NSString *folder) {
                 !prp_parse_id(config[@"rp_id"], &identityID) ||
                 (diagnostic && !useSocial && ![diagnostic isEqual:@"consent-round-trip-v1"]) ||
                 (panel && (!usePanel || diagnostic)) ||
+                (account && (!deviceAccount || !usePanel)) ||
                 ((useSocial || usePanel) &&
                     (!prp_parse_id(config[@"rp_peer_id"], &socialPeer) || socialPeer == identityID))) {
                 [client finish:@"invalid_or_expired_config"];
@@ -441,7 +471,7 @@ void prp_start_authority_client(NSString *folder) {
                 sec_protocol_options_t options = nw_tls_copy_sec_protocol_options(tls);
                 sec_protocol_options_set_min_tls_protocol_version(options, tls_protocol_version_TLSv13);
                 sec_protocol_options_set_max_tls_protocol_version(options, tls_protocol_version_TLSv13);
-                sec_protocol_options_add_tls_application_protocol(options, RP_AUTH_ALPN);
+                sec_protocol_options_add_tls_application_protocol(options, deviceAccount ? RP_ACCOUNT_ALPN : RP_AUTH_ALPN);
                 sec_protocol_options_set_local_identity(options, identity);
                 sec_protocol_options_set_tls_resumption_enabled(options, false);
                 sec_protocol_options_set_peer_authentication_required(options, true);
@@ -454,9 +484,16 @@ void prp_start_authority_client(NSString *folder) {
             client.expectedID = identityID;
             client.consentProbe = [diagnostic isEqual:@"consent-round-trip-v1"];
             client.playerPanel = usePanel;
+            client.accountMode = deviceAccount;
             client.socialPeer = socialPeer;
             client.expires = expires.doubleValue;
             nw_endpoint_t endpoint = nw_endpoint_create_host(host.UTF8String, port.stringValue.UTF8String);
+            if (deviceAccount) {
+                accountEndpoint = endpoint;
+                accountParameters = parameters;
+                dispatch_async(dispatch_get_main_queue(), ^{ prp_install_authority_panel(); });
+                return;
+            }
             client.channel = nw_connection_create(endpoint, parameters);
             if (client.channel) {
                 if (usePanel) dispatch_async(dispatch_get_main_queue(), ^{ prp_install_authority_panel(); });
@@ -484,6 +521,46 @@ void prp_authority_panel_consent(BOOL enabled) {
 void prp_authority_panel_send(uint32_t interaction) {
     if (!authorityQueue) return;
     dispatch_async(authorityQueue, ^{ [authorityClient submitPanelAction:interaction]; });
+}
+
+void prp_authority_account(BOOL create, NSString *name, NSString *password) {
+    if (!authorityQueue) return;
+    NSData *user = [name dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *secret = [password dataUsingEncoding:NSUTF8StringEncoding];
+    if (!user.length || user.length > 32 || !secret.length || secret.length > 512) return;
+    dispatch_async(authorityQueue, ^{
+        PRPV133AuthorityClient *old = authorityClient;
+        if (!old.accountMode || old.authenticating || old->state.ready ||
+            [NSDate date].timeIntervalSince1970 >= old.expires) return;
+        // Every attempt has its own connection and callbacks. A late completion
+        // from a retired connection cannot overwrite the new client's state.
+        PRPV133AuthorityClient *client = [[PRPV133AuthorityClient alloc] init];
+        client.folder = old.folder;
+        client.queue = authorityQueue;
+        client.expectedID = old.expectedID;
+        client.socialPeer = old.socialPeer;
+        client.expires = old.expires;
+        client.playerPanel = client.accountMode = client.authenticating = YES;
+        client.channel = nw_connection_create(accountEndpoint, accountParameters);
+        authorityClient = client;
+        if (!client.channel) { [client finish:@"connection_setup_failed"]; return; }
+        uint32_t n = (uint32_t)(user.length + 1 + secret.length);
+        const uint8_t header[] = {(uint8_t)(create ? 14 : 13), 0, 0, (uint8_t)(n >> 8), (uint8_t)n};
+        uint8_t separator = 0;
+        NSMutableData *frame = [NSMutableData dataWithBytes:header length:sizeof header];
+        [frame appendData:user];
+        [frame appendBytes:&separator length:1];
+        [frame appendData:secret];
+        client.accountFrame = frame;
+        [client start];
+    });
+}
+
+void prp_authority_logout(void) {
+    if (!authorityQueue) return;
+    dispatch_async(authorityQueue, ^{
+        if (authorityClient.accountMode) [authorityClient finish:@"signed_out"];
+    });
 }
 
 void prp_authority_read_status(void (^reply)(NSDictionary *)) {

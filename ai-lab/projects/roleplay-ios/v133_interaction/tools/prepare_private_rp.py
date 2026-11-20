@@ -67,6 +67,8 @@ def prepare(folder, address, port, *, consent_probe=False, social_probe=False, p
                 iphone_config['diagnostic'] = 'social-round-trip-v1'
             if panel:
                 iphone_config['interface'] = 'rp-panel-v1'
+                if login_port is not None:
+                    iphone_config['account_ui'] = 'device-account-v1'
             if social_probe or panel:
                 iphone_config['rp_peer_id'] = '22' if name == 'officer' else '11'
             emit(name + '-iPhone-PRIVATE.json', iphone_config)

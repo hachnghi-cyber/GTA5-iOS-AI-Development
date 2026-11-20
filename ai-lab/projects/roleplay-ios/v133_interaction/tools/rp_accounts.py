@@ -71,6 +71,7 @@ class Grant:
     version: int
     created: float
     touched: float
+    device_only: bool
 
 
 class Accounts:
@@ -106,22 +107,35 @@ class Accounts:
             self.attempts[k] = (start, count + 1)
         return True
 
-    async def login(self, name, password, remote):
+    async def login(self, name, password, remote, *, device_id=None, register=False):
+        """device_id, when present, must come from the server certificate registry."""
         try:
             name = username(name)
         except ValueError:
             return None
-        if (not isinstance(password, str) or not 1 <= len(password) <= 128 or
+        if ((register and device_id is None) or not isinstance(password, str) or
+                not (15 if register else 1) <= len(password) <= 128 or
                 not self._attempt(name, remote) or self.hashing):
             return None
         row = self._row(name)
+        salt = secrets.token_bytes(16) if register else (row[1] if row else self.dummy_salt)
         generation = self.generations.get(name, 0)
         self.hashing = True  # At most one 128 MiB password operation, no unbounded queue.
         try:
-            value = await asyncio.to_thread(password_hash, password, row[1] if row else self.dummy_salt)
+            value = await asyncio.to_thread(password_hash, password, salt)
         finally:
             self.hashing = False
-        if (not row or not hmac.compare_digest(value, row[2]) or not row[4] or
+        if register:
+            # Both unique constraints arbitrate races with the operator or another device.
+            try:
+                with self.db:
+                    self.db.execute('INSERT INTO accounts(name,rp_id,salt,verifier) VALUES (?,?,?,?)',
+                                    (name, str(device_id), salt, value))
+            except sqlite3.IntegrityError:
+                return None
+            row = self._row(name)
+        if (not row or (device_id is not None and int(row[0]) != device_id) or
+                not hmac.compare_digest(value, row[2]) or not row[4] or
                 row != self._row(name) or generation != self.generations.get(name, 0)):
             return None
         identity = int(row[0])
@@ -129,7 +143,7 @@ class Accounts:
         token = secrets.token_urlsafe(32)
         key = self.token_key(token)
         now = self.clock()
-        self.grants[key] = Grant(name, identity, row[3], now, now)
+        self.grants[key] = Grant(name, identity, row[3], now, now, device_id is not None)
         self.identities[identity] = key
         return token
 
@@ -153,7 +167,8 @@ class Accounts:
 
     def admission(self, identity):
         key = self.identities.get(identity)
-        return key if self.validate(key, identity) else None
+        grant = self.validate(key, identity)
+        return key if grant and not grant.device_only else None
 
     def revoke_identity(self, identity):
         key = self.identities.pop(identity, None)

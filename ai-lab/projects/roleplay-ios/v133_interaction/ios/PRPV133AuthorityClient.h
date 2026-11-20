@@ -10,6 +10,8 @@ void prp_start_authority_client(NSString *folder);
 void prp_authority_submit(uint32_t operation, uint64_t target);
 void prp_authority_panel_consent(BOOL enabled);
 void prp_authority_panel_send(uint32_t interaction);
+void prp_authority_account(BOOL create, NSString *name, NSString *password);
+void prp_authority_logout(void);
 // Copies transport state to main queue. A snapshot is not a native effect.
 void prp_authority_read_status(void (^reply)(NSDictionary *status));
 #endif

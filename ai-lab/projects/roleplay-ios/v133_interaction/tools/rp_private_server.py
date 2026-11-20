@@ -20,6 +20,8 @@ from rp_private_authority import COMMAND, NativeAuthority
 from rp_social_relay import SOCIAL_OPEN, SOCIAL_RECEIPT, SOCIAL_REQUEST, SocialRelay
 
 ALPN = 'police-rp-authority/1'
+ACCOUNT_ALPN = 'police-rp-account/1'
+ACCOUNT_LOGIN, ACCOUNT_REGISTER, ACCOUNT_RESULT = 13, 14, 15
 HEADER = struct.Struct('!BI')
 HELLO = struct.Struct('!8sQQQQ')
 SCOPE = struct.Struct('!QQQ')
@@ -60,9 +62,10 @@ def validate_registry(registry):
         ids.add(principal.rp_id)
 
 
-def context(credentials, server_side):
+def context(credentials, server_side, *, device_accounts=False):
     result = credentials.context(server_side)
-    result.set_alpn_protocols([ALPN])
+    result.set_alpn_protocols(([ACCOUNT_ALPN, ALPN] if server_side else [ACCOUNT_ALPN])
+                              if device_accounts else [ALPN])
     return result
 
 
@@ -110,7 +113,7 @@ class PrivateServer:
         if self.listener or self.stopping:
             raise RuntimeError('server cannot be restarted with old replay state')
         self.listener = await asyncio.start_server(
-            self._handle, host, port, ssl=context(self.credentials, True),
+            self._handle, host, port, ssl=context(self.credentials, True, device_accounts=self.accounts is not None),
             ssl_handshake_timeout=3, ssl_shutdown_timeout=1, limit=8192, backlog=32)
         self.timer = asyncio.create_task(self._timer())
         return self.listener.sockets[0].getsockname()[:2]
@@ -162,15 +165,40 @@ class PrivateServer:
         task = asyncio.current_task()
         self.tasks.add(task)
         peer = sender = None
+        device_token = None
         try:
             secure = writer.get_extra_info('ssl_object')
-            if self.stopping or not secure or secure.version() != 'TLSv1.3' or secure.selected_alpn_protocol() != ALPN:
+            protocol = secure.selected_alpn_protocol() if secure else None
+            if self.stopping or not secure or secure.version() != 'TLSv1.3' or protocol not in (ALPN, ACCOUNT_ALPN):
                 raise ProtocolError('unsupported TLS protocol')
             certificate = secure.getpeercert(binary_form=True)
             principal = self.registry.get(hashlib.sha256(certificate).digest()) if certificate else None
-            if principal is None or principal.rp_id in self.peers:
-                raise ProtocolError('unregistered certificate or duplicate connection')
-            login = self.accounts.admission(principal.rp_id) if self.accounts is not None else None
+            if principal is None:
+                raise ProtocolError('unregistered certificate')
+            if protocol == ACCOUNT_ALPN:
+                if self.accounts is None:
+                    raise ProtocolError('device accounts unavailable')
+                action, body = await read_record(reader, 10)
+                if action not in (ACCOUNT_LOGIN, ACCOUNT_REGISTER) or len(body) > 545 or body.count(b'\0') != 1:
+                    raise ProtocolError('invalid account request')
+                try:
+                    name, password = body.decode('utf-8').split('\0')
+                except UnicodeError:
+                    raise ProtocolError('invalid account text') from None
+                remote = writer.get_extra_info('peername')[0]
+                device_token = await self.accounts.login(name, password, remote, device_id=principal.rp_id,
+                                                         register=action == ACCOUNT_REGISTER)
+                del body, password
+                self.revoke_logins()
+                writer.write(record(ACCOUNT_RESULT, bytes([int(device_token is not None)])))
+                await asyncio.wait_for(writer.drain(), 3)
+                login = self.accounts.token_key(device_token)
+                if not self.accounts.validate(login, principal.rp_id):
+                    raise ProtocolError('account authentication failed')
+            else:
+                login = self.accounts.admission(principal.rp_id) if self.accounts is not None else None
+            if self.stopping or principal.rp_id in self.peers:
+                raise ProtocolError('duplicate connection')
             if self.accounts is not None and login is None:
                 raise ProtocolError('account login required')
             if not self.authority.admit(principal.rp_id, principal.role):
@@ -213,6 +241,8 @@ class PrivateServer:
         except (OSError, EOFError, asyncio.IncompleteReadError, ProtocolError, TimeoutError):
             pass  # Do not echo credentials, raw requests or peer addresses into logs.
         finally:
+            if device_token is not None:
+                self.accounts.logout(device_token)
             if peer is not None:
                 self._drop(peer)
             if sender:

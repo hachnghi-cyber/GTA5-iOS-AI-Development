@@ -11,6 +11,9 @@
 @property(nonatomic, strong) UIButton *consent;
 @property(nonatomic, strong) UIButton *greet;
 @property(nonatomic, strong) UIButton *documents;
+@property(nonatomic, strong) UIButton *login;
+@property(nonatomic, strong) UIButton *signup;
+@property(nonatomic, strong) UIButton *logout;
 @property(nonatomic, strong) NSTimer *refreshTimer;
 @property(nonatomic) BOOL optedIn;
 @property(nonatomic) BOOL reading;
@@ -45,11 +48,16 @@
     self.consent = [self button:@"Tham gia RP" action:@selector(changeConsent)];
     self.greet = [self button:@"Chào hỏi" action:@selector(sendGreet)];
     self.documents = [self button:@"Yêu cầu giấy tờ" action:@selector(sendDocuments)];
+    self.login = [self button:@"Đăng nhập" action:@selector(showLogin)];
+    self.signup = [self button:@"Tạo tài khoản" action:@selector(showSignup)];
+    self.logout = [self button:@"Đăng xuất" action:@selector(logoutAccount)];
+    self.login.hidden = self.signup.hidden = self.logout.hidden = YES;
     self.consent.enabled = self.greet.enabled = self.documents.enabled = NO;
     self.status = [self label];
     self.event = [self label];
     self.panel = [[UIStackView alloc] initWithArrangedSubviews:
-                  @[self.status, self.event, self.consent, self.greet, self.documents]];
+                  @[self.status, self.event, self.login, self.signup, self.consent,
+                    self.greet, self.documents, self.logout]];
     self.panel.axis = UILayoutConstraintAxisVertical;
     self.panel.spacing = 4;
     self.panel.layoutMarginsRelativeArrangement = YES;
@@ -113,6 +121,62 @@
 - (void)sendGreet { prp_authority_panel_send(RP_V133_GREET); }
 - (void)sendDocuments { prp_authority_panel_send(RP_V133_DOCUMENTS); }
 
+- (void)showLogin { [self accountForm:NO]; }
+- (void)showSignup { [self accountForm:YES]; }
+- (void)logoutAccount { prp_authority_logout(); }
+
+- (void)accountForm:(BOOL)create {
+    UIViewController *presenter = self.container.window.rootViewController;
+    while (presenter.presentedViewController) presenter = presenter.presentedViewController;
+    if (!presenter || [presenter isKindOfClass:UIAlertController.class]) return;
+    UIAlertController *form = [UIAlertController alertControllerWithTitle:create ? @"Tạo tài khoản RP" : @"Đăng nhập RP"
+        message:create ? @"Tên gồm 3–32 chữ cái Latin, chữ số hoặc dấu gạch dưới. Mật khẩu từ 15 đến 128 ký tự."
+                       : @"Nhập tài khoản của bạn trên server RP."
+        preferredStyle:UIAlertControllerStyleAlert];
+    [form addTextFieldWithConfigurationHandler:^(UITextField *field) {
+        field.placeholder = @"Tên tài khoản";
+        field.textContentType = UITextContentTypeUsername;
+        field.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        field.autocorrectionType = UITextAutocorrectionTypeNo;
+        field.keyboardType = UIKeyboardTypeASCIICapable;
+    }];
+    [form addTextFieldWithConfigurationHandler:^(UITextField *field) {
+        field.placeholder = @"Mật khẩu";
+        field.secureTextEntry = YES;
+        field.textContentType = create ? UITextContentTypeNewPassword : UITextContentTypePassword;
+    }];
+    if (create) [form addTextFieldWithConfigurationHandler:^(UITextField *field) {
+        field.placeholder = @"Nhập lại mật khẩu";
+        field.secureTextEntry = YES;
+        field.textContentType = UITextContentTypeNewPassword;
+    }];
+    __weak UIAlertController *weakForm = form;
+    UIAlertAction *submit = [UIAlertAction actionWithTitle:create ? @"Tạo tài khoản" : @"Đăng nhập"
+        style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            (void)action;
+            NSArray<UITextField *> *fields = weakForm.textFields;
+            prp_authority_account(create, fields[0].text, fields[1].text);
+            for (UITextField *field in fields) field.text = @"";
+        }];
+    submit.enabled = NO;
+    [form addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+    [form addAction:submit];
+    for (UITextField *field in form.textFields) {
+        [field addAction:[UIAction actionWithHandler:^(__kindof UIAction *action) {
+            (void)action;
+            NSArray<UITextField *> *fields = weakForm.textFields;
+            if (!fields) return;
+            NSString *name = fields[0].text, *password = fields[1].text;
+            NSRange match = [name rangeOfString:@"^[A-Za-z0-9_]{3,32}$" options:NSRegularExpressionSearch];
+            NSUInteger length = [password lengthOfBytesUsingEncoding:NSUTF32LittleEndianStringEncoding] / 4;
+            submit.enabled = name.length >= 3 && match.location == 0 && match.length == name.length &&
+                length >= (create ? 15u : 1u) && length <= 128 &&
+                (!create || [password isEqualToString:fields[2].text]);
+        }] forControlEvents:UIControlEventEditingChanged];
+    }
+    [presenter presentViewController:form animated:YES completion:nil];
+}
+
 - (void)setOpen:(BOOL)open {
     self.panel.hidden = !open;
     [self.refreshTimer invalidate];
@@ -131,6 +195,14 @@
         self.reading = NO;
         if (self.panel.hidden) return;
         BOOL ready = [state[@"panel_ready"] boolValue];
+        BOOL account = [state[@"account_mode"] boolValue];
+        BOOL active = [state[@"account_active"] boolValue];
+        BOOL authBusy = [state[@"auth_busy"] boolValue];
+        BOOL expired = [state[@"profile_expired"] boolValue];
+        self.login.hidden = self.signup.hidden = !account || active;
+        self.login.enabled = self.signup.enabled = !authBusy && !expired;
+        self.logout.hidden = !account || !active;
+        self.consent.hidden = self.greet.hidden = self.documents.hidden = account && !active;
         BOOL busy = [state[@"pending"] boolValue] || [state[@"panel_social_pending"] boolValue];
         BOOL peer = [state[@"panel_peer_consented"] boolValue];
         self.optedIn = [state[@"panel_consented"] boolValue];
@@ -140,7 +212,16 @@
         self.consent.enabled = ready && !busy;
         self.greet.enabled = self.documents.enabled = ready && !busy && self.optedIn && peer;
         NSString *status;
-        if (!ready) status = [state[@"connected"] boolValue] ? @"Đang đồng bộ" : @"Chưa kết nối server RP";
+        NSString *result = state[@"result"];
+        if (account && expired) status = @"Hồ sơ đã hết hạn. Hãy cập nhật hồ sơ RP.";
+        else if (account && !active) {
+            if (authBusy) status = @"Đang xác thực tài khoản…";
+            else if ([result isEqual:@"account_denied"]) status = @"Server chưa chấp nhận. Kiểm tra tên, mật khẩu hoặc tài khoản đã có.";
+            else if ([result isEqual:@"signed_out"]) status = @"Bạn đã đăng xuất.";
+            else if (result.length && ![result isEqual:@"starting"]) status = @"Mất kết nối. Kiểm tra Wi-Fi và thử đăng nhập lại.";
+            else status = @"Tài khoản Police RP";
+        }
+        else if (!ready) status = [state[@"connected"] boolValue] ? @"Đang đồng bộ" : @"Chưa kết nối server RP";
         else if (busy) status = @"Đang chờ phản hồi";
         else if (!self.optedIn) status = @"Bạn chưa tham gia RP";
         else if (!peer) status = @"Đang chờ người chơi kia tham gia";

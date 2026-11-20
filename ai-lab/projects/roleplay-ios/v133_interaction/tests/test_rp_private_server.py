@@ -220,6 +220,49 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(accounts._attempt('invalid', 'other'))
         self.assertFalse(accounts._attempt('invalid', 'other'))
 
+    async def test_device_registration_login_and_socket_bound_logout(self):
+        import secrets
+        from rp_accounts import Accounts, open_database
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        db = open_database(folder / 'accounts.sqlite3')
+        self.addCleanup(db.close)
+        accounts = Accounts(db)
+        secret = secrets.token_urlsafe(24).encode()
+        async with self.running(accounts=accounts, lease=30) as (server, address):
+            async def request(label, kind, secret_value, expect, name=b'cadet'):
+                tls = rp.context(self.credentials[label], False, device_accounts=True)
+                reader, writer = await asyncio.open_connection(*address, ssl=tls, server_hostname='127.0.0.1')
+                self.addAsyncCleanup(writer.wait_closed)
+                self.addCleanup(writer.close)
+                self.assertEqual(writer.get_extra_info('ssl_object').selected_alpn_protocol(), rp.ACCOUNT_ALPN)
+                writer.write(rp.record(kind, name + b'\0' + secret_value))
+                await writer.drain()
+                self.assertEqual(await rp.read_record(reader, 4), (rp.ACCOUNT_RESULT, bytes([expect])))
+                if expect:
+                    message, payload = await rp.read_record(reader, 4)
+                    self.assertEqual(message, rp.WELCOME)
+                    magic, identity, session, epoch, nonce = rp.HELLO.unpack(payload)
+                    self.assertEqual((magic, identity), (b'PRPSRV01', COP))
+                    return rp.PrivateClient(reader, writer, identity, session, epoch, nonce)
+                self.assertEqual(await asyncio.wait_for(reader.read(1), 4), b'')
+
+            first = await request('cop', rp.ACCOUNT_REGISTER, secret, 1)
+            await self.apply(first, OPT_IN)
+            await request('citizen', rp.ACCOUNT_LOGIN, secret, 0)
+            await request('citizen', rp.ACCOUNT_REGISTER, secret, 0)
+            await request('cop', rp.ACCOUNT_REGISTER, secret, 0, b'another')
+            self.assertTrue(server.authority.snapshot(COP)[2])
+            await first.close()
+            async with asyncio.timeout(3):
+                while COP in server.peers:
+                    await asyncio.sleep(.01)
+            self.assertFalse(accounts.grants)
+            await request('cop', rp.ACCOUNT_LOGIN, b'incorrect', 0)
+            second = await request('cop', rp.ACCOUNT_LOGIN, secret, 1)
+            self.assertIsNone(accounts.admission(COP))
+            self.assertEqual(server.authority.snapshot(COP)[2], 0)
+            await second.close()
+
     async def receive_kind(self, client, expected):
         async with asyncio.timeout(3):
             while True:
