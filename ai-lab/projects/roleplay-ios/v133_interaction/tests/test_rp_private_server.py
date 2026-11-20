@@ -90,12 +90,13 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
             cls.pins[label] = cert.fingerprint(hashes.SHA256())
 
     @asynccontextmanager
-    async def running(self, scene=None, *, lease=3, scope=(123, 7), use_duty_provider=True):
+    async def running(self, scene=None, *, lease=3, scope=(123, 7), use_duty_provider=True, accounts=None):
         authority = (ModeledGameAuthority(self.library, *scope, scene, use_duty_provider) if scene
                      else NativeAuthority(self.library, *scope))
         registry = {self.pins['cop']: rp.Principal(COP, 2),
                     self.pins['citizen']: rp.Principal(CITIZEN, 1)}
-        server = rp.PrivateServer(self.credentials['server'], registry, authority, lease_seconds=lease)
+        server = rp.PrivateServer(self.credentials['server'], registry, authority, lease_seconds=lease,
+                                  accounts=accounts)
         address = await server.start()
         try:
             yield server, address
@@ -128,6 +129,96 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
         await self.apply(citizen, OPT_IN)
         await self.apply(cop, DUTY)
         return cop, citizen
+
+    async def test_browser_login_gates_real_mtls_and_retires_existing_connections(self):
+        import ssl
+        import secrets
+        from aiohttp import ClientSession, DummyCookieJar
+        from rp_accounts import Accounts, open_database, provision
+        from rp_login_web import COOKIE, start_portal
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        db = open_database(folder / 'accounts.sqlite3')
+        self.addCleanup(db.close)
+        password = secrets.token_urlsafe(20)
+        provision(db, 'officer', COP, password)
+        accounts = Accounts(db)
+        async with self.running(accounts=accounts) as (server, address):
+            async def denied(label):
+                with self.assertRaises((EOFError, OSError, ProtocolError)):
+                    await self.connect(address, label)
+
+            await denied('cop')
+            # Ephemeral test port, a fixed expected Origin for CSRF checks.
+            origin = 'https://127.0.0.1:4433'
+            portal = await start_portal(accounts, '127.0.0.1', 0, origin,
+                                        self.credentials['server'], server.revoke_logins)
+            self.addAsyncCleanup(portal.cleanup)
+            url = 'https://127.0.0.1:' + str(portal.addresses[0][1])
+            tls = ssl.create_default_context(cafile=str(self.credentials['server'].trusted_ca))
+            async with ClientSession(cookie_jar=DummyCookieJar()) as browser:
+                login = {'username': 'officer', 'password': password}
+
+                async def post(path, data, origin_value=origin, cookies=None):
+                    return await browser.post(url + path, data=data, ssl=tls, cookies=cookies,
+                                              headers={'Origin': origin_value}, allow_redirects=False)
+
+                async with await browser.get(url, ssl=tls) as page:
+                    self.assertIn('Đăng nhập', await page.text())
+                async with await post('/login', login, 'https://wrong.invalid') as response:
+                    self.assertEqual(response.status, 403)
+                async with await post('/login', dict(login, password='incorrect')) as response:
+                    self.assertEqual(response.status, 401)
+                async with await post('/login', login) as response:
+                    self.assertEqual(response.status, 303)
+                    old = response.cookies[COOKIE]
+                    self.assertTrue(old['secure'] and old['httponly'])
+                cop = await self.connect(address, 'cop')
+                await self.apply(cop, OPT_IN)
+                await denied('citizen')
+                async with await post('/login', login) as response:
+                    self.assertEqual(response.status, 303)
+                    new = response.cookies[COOKIE].value
+                self.assertNotIn(COP, server.peers)
+                new_cop = await self.connect(address, 'cop')
+                with self.assertRaises((EOFError, OSError, ProtocolError)):
+                    await cop.transact(cop.command(OPT_IN))
+                self.assertEqual(server.authority.snapshot(COP)[2], 0)
+                async with await post('/logout', {}, cookies={COOKIE: old.value}) as response:
+                    self.assertEqual(response.status, 303)
+                self.assertIn(COP, server.peers)
+                async with await post('/logout', {}, cookies={COOKIE: new}) as response:
+                    self.assertEqual(response.status, 303)
+                self.assertNotIn(COP, server.peers)
+                await denied('cop')
+
+    async def test_account_expiry_rotation_restart_and_login_limits(self):
+        from rp_accounts import Accounts, open_database, provision
+        import secrets
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        db = open_database(folder / 'accounts.sqlite3')
+        self.addCleanup(db.close)
+        clock = [0]
+        accounts = Accounts(db, idle=5, lifetime=9, clock=lambda: clock[0])
+        password = secrets.token_urlsafe(24)
+        provision(db, 'One', COP, password)
+        token = await accounts.login('ONE', password, 'local')
+        key = accounts.token_key(token)
+        self.assertIsNone(Accounts(db).admission(COP))
+        clock[0] = 4
+        self.assertIsNotNone(accounts.validate(key, COP, touch=True))
+        clock[0] = 8
+        self.assertIsNotNone(accounts.validate(key, COP, touch=True))
+        clock[0] = 9
+        self.assertIsNone(accounts.validate(key))
+        await accounts.login('one', password, 'local')
+        clock[0] += 5
+        self.assertIsNone(accounts.admission(COP))
+        await accounts.login('one', password, 'local')
+        provision(db, 'one', COP, secrets.token_urlsafe(20), reset=True)
+        self.assertIsNone(accounts.admission(COP))
+        for _ in range(5):
+            self.assertTrue(accounts._attempt('invalid', 'other'))
+        self.assertFalse(accounts._attempt('invalid', 'other'))
 
     async def receive_kind(self, client, expected):
         async with asyncio.timeout(3):

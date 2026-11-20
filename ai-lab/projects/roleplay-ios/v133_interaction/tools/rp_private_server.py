@@ -82,7 +82,7 @@ async def read_record(reader, timeout):
 
 
 class PrivateServer:
-    def __init__(self, credentials, registry, authority, *, lease_seconds=15.0):
+    def __init__(self, credentials, registry, authority, *, lease_seconds=15.0, accounts=None):
         validate_registry(registry)
         if not 0.1 <= lease_seconds <= 60:
             raise ValueError('lease must be between 0.1 and 60 seconds')
@@ -93,6 +93,14 @@ class PrivateServer:
         self.revision, self._rows = 0, None
         self.listener = self.timer = None
         self.stopping = False
+        self.accounts = accounts
+
+    def revoke_logins(self):
+        if self.accounts is None:
+            return
+        for peer in list(self.peers.values()):
+            if not self.accounts.validate(peer['login'], peer['id']):
+                self._drop(peer)
 
     @staticmethod
     def now():
@@ -162,9 +170,12 @@ class PrivateServer:
             principal = self.registry.get(hashlib.sha256(certificate).digest()) if certificate else None
             if principal is None or principal.rp_id in self.peers:
                 raise ProtocolError('unregistered certificate or duplicate connection')
+            login = self.accounts.admission(principal.rp_id) if self.accounts is not None else None
+            if self.accounts is not None and login is None:
+                raise ProtocolError('account login required')
             if not self.authority.admit(principal.rp_id, principal.role):
                 raise ProtocolError('authority admission failed')
-            peer = {'id': principal.rp_id, 'writer': writer, 'out': asyncio.Queue(maxsize=32)}
+            peer = {'id': principal.rp_id, 'writer': writer, 'out': asyncio.Queue(maxsize=32), 'login': login}
             self.peers[principal.rp_id] = peer
             sender = asyncio.create_task(self._sender(peer))
             previous_nonce = self.authority.snapshot(principal.rp_id)[9]
@@ -174,6 +185,7 @@ class PrivateServer:
             tokens, replenished = 60.0, time.monotonic()
             while self.peers.get(principal.rp_id) is peer:
                 kind, payload = await read_record(reader, self.lease)
+                self.revoke_logins()
                 # A writer failure can retire this admission while the read is suspended.
                 if self.peers.get(principal.rp_id) is not peer:
                     break
@@ -216,6 +228,7 @@ class PrivateServer:
     async def _timer(self):
         while True:
             await asyncio.sleep(0.05)
+            self.revoke_logins()
             if not self.authority.tick(self.now()):
                 raise RuntimeError('authority clock failed')
             self.social.tick(self.now())
@@ -350,22 +363,46 @@ class PrivateClient:
             self.writer.transport.abort()
 
 
-async def serve(args):
+async def serve(args, *, ready=None):
     config = json.loads(args.config.read_text(encoding='utf-8'))
     root = args.config.resolve().parent
     credentials = Credentials(*(root / config[name] for name in ('certificate', 'private_key', 'trusted_ca')))
     registry = registry_from_json(config['principals'])
+    db = accounts = portal = None
+    login = config.get('login')
+    if 'login' in config:
+        from rp_accounts import Accounts, open_database
+        from rp_login_web import start_portal
+        from urllib.parse import urlsplit
+        if not isinstance(login, dict) or set(login) != {'database', 'origin'}:
+            raise ValueError('login requires database and HTTPS origin')
+        url = urlsplit(login['origin'])
+        if (url.scheme != 'https' or not url.hostname or url.username is not None or
+                url.password is not None or url.path or url.query or url.fragment or not url.port):
+            raise ValueError('login origin must be https://host:port')
+        db = open_database(root / login['database'])
+        accounts = Accounts(db)
     # Fresh random scope after every restart invalidates old commands without a replay DB.
     authority = NativeAuthority(args.library, secrets.randbits(64) or 1, secrets.randbits(64) or 1)
-    server = PrivateServer(credentials, registry, authority)
+    server = PrivateServer(credentials, registry, authority, accounts=accounts)
     try:
+        if accounts is not None:
+            portal = await start_portal(accounts, args.host, url.port, login['origin'],
+                                        credentials, server.revoke_logins)
         address = await server.start(args.host, args.port)
+        if ready is not None:
+            ready()
         print(json.dumps({'listening': list(address), 'principals': len(registry),
-                          'game_observations': False, 'protocol': ALPN}), flush=True)
+                          'game_observations': False, 'protocol': ALPN,
+                          'login_origin': login['origin'] if accounts is not None else None}), flush=True)
         async with server.listener:
             await server.listener.serve_forever()
     finally:
         await server.close()
+        if portal is not None:
+            await portal.cleanup()
+        if db is not None:
+            db.close()
         authority.close()
 
 

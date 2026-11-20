@@ -18,7 +18,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from run_ios_tls_probe import issue
 
 
-def prepare(folder, address, port, *, consent_probe=False, social_probe=False, panel=False):
+def prepare(folder, address, port, *, consent_probe=False, social_probe=False, panel=False,
+            login_port=None):
     if sum((consent_probe, social_probe, panel)) > 1:
         raise ValueError('choose one iPhone mode')
     folder = folder.resolve()
@@ -28,6 +29,8 @@ def prepare(folder, address, port, *, consent_probe=False, social_probe=False, p
         raise ValueError('development kit accepts loopback or private IP only')
     if type(port) is not int or not 1024 <= port <= 65535:
         raise ValueError('invalid development port')
+    if login_port is not None and (type(login_port) is not int or not 1024 <= login_port <= 65535 or login_port == port):
+        raise ValueError('login port must be a separate port between 1024 and 65535')
     folder.mkdir(mode=0o700, parents=True, exist_ok=False)
 
     def emit(name, value):
@@ -67,7 +70,10 @@ def prepare(folder, address, port, *, consent_probe=False, social_probe=False, p
             if social_probe or panel:
                 iphone_config['rp_peer_id'] = '22' if name == 'officer' else '11'
             emit(name + '-iPhone-PRIVATE.json', iphone_config)
-    emit('server.json', {'certificate': 'server.pem', 'private_key': 'server.key',
+    origin_host = f'[{address}]' if address.version == 6 else str(address)
+    login = {'login': {'database': '../rp-accounts.sqlite3',
+                       'origin': f'https://{origin_host}:{login_port}'}} if login_port else {}
+    emit('server.json', {**login, 'certificate': 'server.pem', 'private_key': 'server.key',
          'trusted_ca': 'ca.pem', 'principals': [
              {'certificate_sha256': pins['officer'], 'rp_id': 11, 'role': 2},
              {'certificate_sha256': pins['citizen'], 'rp_id': 22, 'role': 1}]})
@@ -83,6 +89,7 @@ def main():
     parser.add_argument('folder', type=Path)
     parser.add_argument('--ip', type=ipaddress.ip_address, default=ipaddress.ip_address('127.0.0.1'))
     parser.add_argument('--port', type=int, default=30133)
+    parser.add_argument('--login-port', type=int, help='require account login and serve its HTTPS portal')
     probes = parser.add_mutually_exclusive_group()
     probes.add_argument('--consent-probe', action='store_true',
                         help='request one iPhone opt-in/opt-out round trip and disconnect')
@@ -92,7 +99,7 @@ def main():
                         help='enable manual RP controls for the two generated iPhone identities')
     args = parser.parse_args()
     prepare(args.folder, args.ip, args.port, consent_probe=args.consent_probe,
-            social_probe=args.social_probe, panel=args.panel)
+            social_probe=args.social_probe, panel=args.panel, login_port=args.login_port)
     print('Created local development kit (30 minutes); private keys are not printed.')
 
 

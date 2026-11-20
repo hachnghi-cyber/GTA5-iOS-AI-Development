@@ -4,6 +4,13 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Server laptop có mục đăng nhập HTTPS cho từng tài khoản RP và giữ nguyên
+giao thức mTLS của panel 103c23b. Khởi chạy bằng `v133_interaction/tools/rp_laptop.py`.
+189 bài kiểm thử host đã qua, gồm đăng nhập lại khi client vẫn mở, thu hồi sau
+đăng xuất và từ chối chứng chỉ của RP ID khác. Bước tiếp theo là đối chiếu đăng
+nhập laptop với trạng thái Tham gia/Rời trên iPhone, rồi xác minh liên kết nhân vật.
+Xem `PRIVATE_RP_SERVER_VI.md`.
+
 Mẫu iPhone trong phòng riêng xác nhận hai connection ID đầy đủ trỏ tới
 hai bản ghi đang mở trên cùng endpoint, đúng ô kênh 7 và 13. Bộ đo theo
 cách `GetEndpointId` tra bảng, kiểm tra ID đầy đủ, trạng thái mở và ô

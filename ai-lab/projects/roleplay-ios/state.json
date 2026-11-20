@@ -1,6 +1,15 @@
 {
   "schema_version": 1,
   "project_id": "gta-v-ios-roleplay",
+  "private_laptop_login": {
+    "base_commit": "f886f95171b27983b5d88875490d87880d22d13f",
+    "entrypoint": "v133_interaction/tools/rp_laptop.py",
+    "host_tests_passed": 189,
+    "host_test_log_sha256": "b23cf125cc58c7d2ae2cd36cac73c3fd893a392ed58d687ced2dfb89c9ef4e92",
+    "verified": "HTTPS login plus real mTLS admission, identity separation, replacement and logout clearing consent, expiration and password reset",
+    "iphone_account_login_verified": false,
+    "next": "Run account-gated login with the signed iPhone panel and verify revocation on the private server. Native player and session binding are still required for gameplay."
+  },
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
