@@ -4,6 +4,23 @@
 
 ## Checkpoint v13.3 hiện tại
 
+Đã đóng gói IPA tài khoản từ commit `3fe45fd`, build iPhoneOS ARM64
+`44676650520`. Đã chép IPA chưa ký vào **Tệp → Trên iPhone của tôi → GTA V**
+và đọc lại qua USB. SHA-256 khớp với bản trên laptop. Xem `state.json`.
+Server đã sửa lỗi từ chối client thứ hai khi hai người đăng ký cùng lúc.
+192 kiểm thử host đạt, gồm hai kết nối mTLS đồng thời và hủy lời chào nếu
+người nhận ngắt kết nối trước khi xác nhận. Bước thử trên máy là ký và cài
+bản này, cấp hai hồ sơ riêng của cùng lượt server, rồi kiểm chứng đăng nhập
+và chào hỏi giữa GTA cài riêng với bản trong LiveContainer.
+
+Trong bản panel mới, mở **RP riêng → Tạo tài khoản** trên iPhone, nhập tên và
+mật khẩu hai lần. Khi server xác nhận, chọn **Tham gia RP**. Những lần sau dùng
+**Đăng nhập**. **Đăng xuất** đóng kết nối RP. Laptop chỉ cần chạy server bằng
+`rp_laptop.py start` và cấp hồ sơ panel của lượt hiện tại cho từng bản GTA.
+Server lấy RP ID từ chứng chỉ đã cấp. Mỗi RP ID có một tài khoản. Nếu đã tạo
+tài khoản trước đó, đăng nhập bằng chính tài khoản đó. 190 kiểm thử host đã
+qua. Cần xác nhận thao tác UIKit trên bản đã ký và liên kết nhân vật GTA.
+
 Server laptop có mục đăng nhập HTTPS cho từng tài khoản RP và giữ nguyên
 giao thức mTLS của panel 103c23b. Khởi chạy bằng `v133_interaction/tools/rp_laptop.py`.
 189 bài kiểm thử host đã qua, gồm đăng nhập lại khi client vẫn mở, thu hồi sau

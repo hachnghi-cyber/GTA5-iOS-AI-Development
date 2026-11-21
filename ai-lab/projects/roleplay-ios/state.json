@@ -1,6 +1,25 @@
 {
   "schema_version": 1,
   "project_id": "gta-v-ios-roleplay",
+  "iphone_account_panel": {
+    "parent": "180cf1440710ddf9ee4a9f372af934124cfce25a",
+    "ios_source_commit": "3fe45fda56b74596fb711f4b3d28ac2cc1ac9c7a",
+    "ios_build_run": 44676650520,
+    "ios_build_artifact_sha256": "f02d157235e99e2714ee546fb4a3390f1acacdf3c02e20235af0ad317ec744b9",
+    "panel_uuid": "EEB7364C-7015-34F4-B6A4-419AF36BF07F",
+    "panel_sha256": "a513323763e3e6047ea04e8dd08407106b2c5ba55ce42012e12d8d23a94ce436",
+    "unsigned_ipa_sha256": "93b8b14b9254eff8cb66bdb2845674c9472a97db92adc3dd005118023cf2e3f8",
+    "ipa_delivery": "Verified the original game UUID, archive entries and CRC. Read back the 60246975-byte unsigned IPA from the standalone GTA V Documents folder over USB and matched its SHA-256.",
+    "paired_account_host_tests": {
+      "passed": 192,
+      "log_sha256": "6bf64cb0511299684d41e51440d7f32e79815a61470277376b40cd626877372e",
+      "scope": "Two concurrent certificate-bound registrations over real loopback mTLS, independent consent, and cancellation of an unacknowledged greeting on recipient disconnect. One scrypt worker and one waiting request, including cancellation."
+    },
+    "controls": ["register", "login", "logout"],
+    "evidence": "test_device_registration_login_and_socket_bound_logout; 190 Windows host tests",
+    "scope": "Real TLS sockets and host authority. Account operations use the enrolled certificate's RP principal. The iPhone form requires signing the account build and installing separate current panel profiles for the two clients.",
+    "physical_iphone_registration_verified": false
+  },
   "private_laptop_login": {
     "base_commit": "f886f95171b27983b5d88875490d87880d22d13f",
     "entrypoint": "v133_interaction/tools/rp_laptop.py",

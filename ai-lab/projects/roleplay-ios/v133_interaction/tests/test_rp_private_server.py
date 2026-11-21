@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -270,6 +271,103 @@ class PrivateServerTests(unittest.IsolatedAsyncioTestCase):
                 if kind == expected:
                     return payload
                 self.assertIn(kind, (rp.SNAPSHOT, rp.PONG))
+
+    async def test_two_device_accounts_can_join_together_and_disconnect_mid_greeting(self):
+        import secrets
+        from rp_accounts import Accounts, open_database, password_hash
+
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        db = open_database(folder / 'accounts.sqlite3')
+        self.addCleanup(db.close)
+        accounts = Accounts(db)
+        both_arrived = threading.Event()
+        arrivals = set()
+        attempt = accounts._attempt
+
+        def record_arrival(name, remote):
+            arrivals.add(name)
+            if len(arrivals) == 2:
+                both_arrived.set()
+            return attempt(name, remote)
+
+        def hash_after_both_arrive(password, salt):
+            if not both_arrived.wait(5):
+                raise AssertionError('second login did not reach server')
+            return password_hash(password, salt)
+
+        async with self.running(accounts=accounts, lease=30) as (_, address):
+            async def register(label, expected_identity):
+                tls = rp.context(self.credentials[label], False, device_accounts=True)
+                reader, writer = await asyncio.open_connection(*address, ssl=tls, server_hostname='127.0.0.1')
+                self.addAsyncCleanup(writer.wait_closed)
+                self.addCleanup(writer.close)
+                writer.write(rp.record(rp.ACCOUNT_REGISTER, label.encode() + b'\0' + secrets.token_urlsafe(20).encode()))
+                await writer.drain()
+                self.assertEqual(await rp.read_record(reader, 8), (rp.ACCOUNT_RESULT, b'\x01'))
+                kind, payload = await rp.read_record(reader, 3)
+                self.assertEqual(kind, rp.WELCOME)
+                magic, identity, session, epoch, nonce = rp.HELLO.unpack(payload)
+                self.assertEqual((magic, identity), (b'PRPSRV01', expected_identity))
+                return rp.PrivateClient(reader, writer, identity, session, epoch, nonce)
+
+            with patch.object(accounts, '_attempt', side_effect=record_arrival), \
+                    patch('rp_accounts.password_hash', side_effect=hash_after_both_arrive):
+                officer, citizen = await asyncio.gather(register('cop', COP), register('citizen', CITIZEN))
+
+            actor, target = SocialClient(officer), SocialClient(citizen)
+            await actor.open()
+            await target.open()
+            await self.apply(officer, OPT_IN)
+            await self.apply(citizen, OPT_IN)
+            await actor.request(1, CITIZEN)
+            await self.receive_kind(citizen, social.SOCIAL_EVENT)
+            await citizen.close()
+            reply = await self.receive_kind(officer, social.SOCIAL_RESULT)
+            self.assertEqual((await actor.consume(social.SOCIAL_RESULT, reply))['interaction_result'], 'cancelled')
+            await self.wait_state(officer, lambda members: COP in members and CITIZEN not in members)
+            self.assertEqual(set(accounts.identities), {COP})
+
+    async def test_cancelled_login_keeps_hash_budget_until_worker_finishes(self):
+        import secrets
+        from rp_accounts import Accounts, open_database, password_hash
+
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        db = open_database(folder / 'accounts.sqlite3')
+        self.addCleanup(db.close)
+        accounts = Accounts(db)
+        started = asyncio.Event()
+        release = threading.Event()
+        loop = asyncio.get_running_loop()
+        hash_calls = 0
+
+        def held_hash(password, salt):
+            nonlocal hash_calls
+            hash_calls += 1
+            loop.call_soon_threadsafe(started.set)
+            if not release.wait(5):
+                raise AssertionError('hash worker was never released')
+            return password_hash(password, salt)
+
+        async def register(name, identity):
+            return await accounts.login(name, secrets.token_urlsafe(20), 'local',
+                                        device_id=identity, register=True)
+
+        with patch('rp_accounts.password_hash', side_effect=held_hash):
+            first = asyncio.create_task(register('officer', COP))
+            try:
+                await asyncio.wait_for(started.wait(), 3)
+                first.cancel()
+                with self.assertRaises(asyncio.CancelledError):
+                    await first
+                second = asyncio.create_task(register('citizen', CITIZEN))
+                await asyncio.sleep(0)  # Let the second request take the single waiting slot.
+                self.assertIsNone(await asyncio.wait_for(register('extra', 33), 1))
+                self.assertEqual(hash_calls, 1)
+            finally:
+                release.set()
+            self.assertIsNotNone(await asyncio.wait_for(second, 5))
+        self.assertEqual(hash_calls, 2)
+        self.assertEqual(db.execute('SELECT name FROM accounts').fetchall(), [('citizen',)])
 
     async def test_record_read_before_drop_cannot_change_reconnected_member(self):
         async with self.running() as (server, address):

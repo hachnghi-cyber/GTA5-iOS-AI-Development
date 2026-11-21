@@ -80,7 +80,8 @@ class Accounts:
             raise ValueError('Invalid login lifetime')
         self.db, self.idle, self.lifetime, self.clock = db, idle, lifetime, clock
         self.grants, self.identities, self.generations, self.attempts = {}, {}, {}, {}
-        self.hashing = False
+        self._hash_lock = asyncio.Lock()
+        self._hash_jobs = set()
         self.dummy_salt = secrets.token_bytes(16)
 
     def _row(self, name):
@@ -107,6 +108,15 @@ class Accounts:
             self.attempts[k] = (start, count + 1)
         return True
 
+    async def _hash_serially(self, password, salt):
+        async with self._hash_lock:
+            return await asyncio.to_thread(password_hash, password, salt)
+
+    def _hash_finished(self, job):
+        self._hash_jobs.discard(job)
+        if not job.cancelled():
+            job.exception()  # Observe worker errors even if the requesting client has gone.
+
     async def login(self, name, password, remote, *, device_id=None, register=False):
         """device_id, when present, must come from the server certificate registry."""
         try:
@@ -115,16 +125,17 @@ class Accounts:
             return None
         if ((register and device_id is None) or not isinstance(password, str) or
                 not (15 if register else 1) <= len(password) <= 128 or
-                not self._attempt(name, remote) or self.hashing):
+                not self._attempt(name, remote) or len(self._hash_jobs) >= 2):
             return None
         row = self._row(name)
         salt = secrets.token_bytes(16) if register else (row[1] if row else self.dummy_salt)
         generation = self.generations.get(name, 0)
-        self.hashing = True  # At most one 128 MiB password operation, no unbounded queue.
-        try:
-            value = await asyncio.to_thread(password_hash, password, salt)
-        finally:
-            self.hashing = False
+        # One scrypt calculation and one waiter for the paired clients. Cancellation
+        # of a request must not release the lock while its worker still uses memory.
+        job = asyncio.create_task(self._hash_serially(password, salt))
+        self._hash_jobs.add(job)
+        job.add_done_callback(self._hash_finished)
+        value = await asyncio.shield(job)
         if register:
             # Both unique constraints arbitrate races with the operator or another device.
             try:
