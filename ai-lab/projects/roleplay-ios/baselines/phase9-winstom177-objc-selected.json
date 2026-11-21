@@ -1,0 +1,387 @@
+{
+  "source": "Winstom-0.7.177 lmx.dylib",
+  "sha256": "206037a1eaeea734e44886e050558421d1df965c8fd4bd3c078c317ca300906a",
+  "uuid": "98e342827c4d3e7b81c211a9803c8108",
+  "class_count": 26,
+  "class_linked_method_count": 368,
+  "classes": [
+    {
+      "class": "LMXMessageProxy",
+      "methods": [
+        {
+          "selector": "userContentController:didReceiveScriptMessage:",
+          "imp_vmaddr": "0xe8a4"
+        },
+        {
+          "selector": "target",
+          "imp_vmaddr": "0xe9c4"
+        },
+        {
+          "selector": "setTarget:",
+          "imp_vmaddr": "0xe9f0"
+        },
+        {
+          "selector": ".cxx_destruct",
+          "imp_vmaddr": "0xea24"
+        }
+      ]
+    },
+    {
+      "class": "WRTransport",
+      "methods": [
+        {
+          "selector": "init",
+          "imp_vmaddr": "0x77bc0"
+        },
+        {
+          "selector": "URLSession:task:willPerformHTTPRedirection:newRequest:completionHandler:",
+          "imp_vmaddr": "0x77e04"
+        },
+        {
+          "selector": "URLSession:dataTask:didReceiveResponse:completionHandler:",
+          "imp_vmaddr": "0x77f3c"
+        },
+        {
+          "selector": "URLSession:dataTask:didReceiveData:",
+          "imp_vmaddr": "0x78240"
+        },
+        {
+          "selector": "URLSession:task:didCompleteWithError:",
+          "imp_vmaddr": "0x784c0"
+        },
+        {
+          "selector": "get:limit:",
+          "imp_vmaddr": "0x7861c"
+        },
+        {
+          "selector": "outcome",
+          "imp_vmaddr": "0x78c60"
+        },
+        {
+          "selector": "session",
+          "imp_vmaddr": "0x79360"
+        },
+        {
+          "selector": "setSession:",
+          "imp_vmaddr": "0x79388"
+        },
+        {
+          "selector": "body",
+          "imp_vmaddr": "0x793c0"
+        },
+        {
+          "selector": "setBody:",
+          "imp_vmaddr": "0x793e8"
+        },
+        {
+          "selector": "limit",
+          "imp_vmaddr": "0x79420"
+        },
+        {
+          "selector": "setLimit:",
+          "imp_vmaddr": "0x7943c"
+        },
+        {
+          "selector": "accepted",
+          "imp_vmaddr": "0x79460"
+        },
+        {
+          "selector": "setAccepted:",
+          "imp_vmaddr": "0x79480"
+        },
+        {
+          "selector": "done",
+          "imp_vmaddr": "0x794a4"
+        },
+        {
+          "selector": "setDone:",
+          "imp_vmaddr": "0x794cc"
+        },
+        {
+          "selector": "status",
+          "imp_vmaddr": "0x79504"
+        },
+        {
+          "selector": "setStatus:",
+          "imp_vmaddr": "0x79520"
+        },
+        {
+          "selector": "failure",
+          "imp_vmaddr": "0x79544"
+        },
+        {
+          "selector": "setFailure:",
+          "imp_vmaddr": "0x7956c"
+        },
+        {
+          "selector": ".cxx_destruct",
+          "imp_vmaddr": "0x795a4"
+        }
+      ]
+    },
+    {
+      "class": "WRAccountSession",
+      "methods": [
+        {
+          "selector": "initWithReader:writer:clock:",
+          "imp_vmaddr": "0xa7568"
+        },
+        {
+          "selector": "validToken:",
+          "imp_vmaddr": "0xa7714"
+        },
+        {
+          "selector": "persist:",
+          "imp_vmaddr": "0xa7948"
+        },
+        {
+          "selector": "current",
+          "imp_vmaddr": "0xa7d70"
+        },
+        {
+          "selector": "saveToken:mode:lifetime:",
+          "imp_vmaddr": "0xa8c5c"
+        },
+        {
+          "selector": "clear",
+          "imp_vmaddr": "0xa9140"
+        },
+        {
+          "selector": "limitLifetime:token:",
+          "imp_vmaddr": "0xa9368"
+        },
+        {
+          "selector": "reader",
+          "imp_vmaddr": "0xa9ab8"
+        },
+        {
+          "selector": "setReader:",
+          "imp_vmaddr": "0xa9ad4"
+        },
+        {
+          "selector": "writer",
+          "imp_vmaddr": "0xa9b0c"
+        },
+        {
+          "selector": "setWriter:",
+          "imp_vmaddr": "0xa9b28"
+        },
+        {
+          "selector": "clock",
+          "imp_vmaddr": "0xa9b60"
+        },
+        {
+          "selector": "setClock:",
+          "imp_vmaddr": "0xa9b7c"
+        },
+        {
+          "selector": "value",
+          "imp_vmaddr": "0xa9bb4"
+        },
+        {
+          "selector": "setValue:",
+          "imp_vmaddr": "0xa9bd0"
+        },
+        {
+          "selector": "loaded",
+          "imp_vmaddr": "0xa9c08"
+        },
+        {
+          "selector": "setLoaded:",
+          "imp_vmaddr": "0xa9c28"
+        },
+        {
+          "selector": ".cxx_destruct",
+          "imp_vmaddr": "0xa9c50"
+        }
+      ]
+    },
+    {
+      "class": "AVPanel",
+      "methods": [
+        {
+          "selector": "start",
+          "imp_vmaddr": "0xae458"
+        },
+        {
+          "selector": "second",
+          "imp_vmaddr": "0xaedec"
+        },
+        {
+          "selector": "toggleEngine",
+          "imp_vmaddr": "0xaf10c"
+        },
+        {
+          "selector": "toggleBelt",
+          "imp_vmaddr": "0xaf130"
+        },
+        {
+          "selector": "inventory",
+          "imp_vmaddr": "0xaf154"
+        },
+        {
+          "selector": "toggle",
+          "imp_vmaddr": "0xaf26c"
+        },
+        {
+          "selector": "setInteractive:",
+          "imp_vmaddr": "0xaf438"
+        },
+        {
+          "selector": "micTap",
+          "imp_vmaddr": "0xb0b14"
+        },
+        {
+          "selector": "radioDown:",
+          "imp_vmaddr": "0xb0b70"
+        },
+        {
+          "selector": "radioUp:",
+          "imp_vmaddr": "0xb0dec"
+        },
+        {
+          "selector": "micLook",
+          "imp_vmaddr": "0xb0f94"
+        },
+        {
+          "selector": "phoneOnTop",
+          "imp_vmaddr": "0xb1300"
+        },
+        {
+          "selector": "refresh",
+          "imp_vmaddr": "0xb1bf8"
+        },
+        {
+          "selector": "userContentController:didReceiveScriptMessage:",
+          "imp_vmaddr": "0xb6538"
+        },
+        {
+          "selector": "webViewWebContentProcessDidTerminate:",
+          "imp_vmaddr": "0xcdea0"
+        },
+        {
+          "selector": "webView:didStartProvisionalNavigation:",
+          "imp_vmaddr": "0xce0ac"
+        },
+        {
+          "selector": "webView:didFinishNavigation:",
+          "imp_vmaddr": "0xce220"
+        },
+        {
+          "selector": "webView:decidePolicyForNavigationAction:decisionHandler:",
+          "imp_vmaddr": "0xce590"
+        },
+        {
+          "selector": "web",
+          "imp_vmaddr": "0xce914"
+        },
+        {
+          "selector": "setWeb:",
+          "imp_vmaddr": "0xce930"
+        },
+        {
+          "selector": "loaded",
+          "imp_vmaddr": "0xce964"
+        },
+        {
+          "selector": "setLoaded:",
+          "imp_vmaddr": "0xce984"
+        },
+        {
+          "selector": "forceRefresh",
+          "imp_vmaddr": "0xce9ac"
+        },
+        {
+          "selector": "setForceRefresh:",
+          "imp_vmaddr": "0xce9cc"
+        },
+        {
+          "selector": "spawnPresentationToken",
+          "imp_vmaddr": "0xce9f4"
+        },
+        {
+          "selector": "setSpawnPresentationToken:",
+          "imp_vmaddr": "0xcea10"
+        },
+        {
+          "selector": "spawnPresentationEpoch",
+          "imp_vmaddr": "0xcea48"
+        },
+        {
+          "selector": "setSpawnPresentationEpoch:",
+          "imp_vmaddr": "0xcea64"
+        },
+        {
+          "selector": "spawnCapturePending",
+          "imp_vmaddr": "0xcea88"
+        },
+        {
+          "selector": "setSpawnCapturePending:",
+          "imp_vmaddr": "0xceaa8"
+        },
+        {
+          "selector": "spawnPresented",
+          "imp_vmaddr": "0xcead0"
+        },
+        {
+          "selector": "setSpawnPresented:",
+          "imp_vmaddr": "0xceaf0"
+        },
+        {
+          "selector": "timer",
+          "imp_vmaddr": "0xceb18"
+        },
+        {
+          "selector": "setTimer:",
+          "imp_vmaddr": "0xceb34"
+        },
+        {
+          "selector": "textInput",
+          "imp_vmaddr": "0xceb68"
+        },
+        {
+          "selector": "setTextInput:",
+          "imp_vmaddr": "0xceb88"
+        },
+        {
+          "selector": "button",
+          "imp_vmaddr": "0xcebb0"
+        },
+        {
+          "selector": "setButton:",
+          "imp_vmaddr": "0xcebcc"
+        },
+        {
+          "selector": "bag",
+          "imp_vmaddr": "0xcec00"
+        },
+        {
+          "selector": "setBag:",
+          "imp_vmaddr": "0xcec1c"
+        },
+        {
+          "selector": "mic",
+          "imp_vmaddr": "0xcec50"
+        },
+        {
+          "selector": "setMic:",
+          "imp_vmaddr": "0xcec6c"
+        },
+        {
+          "selector": "windowOpen",
+          "imp_vmaddr": "0xceca0"
+        },
+        {
+          "selector": "setWindowOpen:",
+          "imp_vmaddr": "0xcecc0"
+        },
+        {
+          "selector": ".cxx_destruct",
+          "imp_vmaddr": "0xcece8"
+        }
+      ]
+    }
+  ],
+  "limitations": "ObjC metadata only; implementation address before ASLR; not a v13.3 hook",
+  "selection_note": "Selected classes only; counts refer to the full 26-class map. Metadata is not source code or runtime proof."
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "v133-usb-drop-session-boundary-v1",
+  "date": "2026-11-19",
+  "parent_commit": "4e6914fdf88ed2d3ba74322122be46579ef7e204",
+  "device_probe_source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+  "gta_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "gta_executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "static_verified_on_exact_binary": [
+    {
+      "at": "0x1017ec224",
+      "source": "session_update",
+      "target": "drop_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ec234",
+      "source": "session_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017f19a4",
+      "source": "session_transition_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eb7a0",
+      "source": "drop_session",
+      "target": "session_shutdown",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eba1c",
+      "source": "drop_session",
+      "target": "session_init",
+      "kind": "BL"
+    }
+  ],
+  "device_probe": {
+    "scope": "One iPhone; tester confirmed leaving an invite-only room and returning to Sandbox.",
+    "bounded_window_seconds": 60,
+    "raw_log_sha256": "4e9f26ade73ea854d7933a681d4d10551f22ec162ff1207c0e09166a1152c775",
+    "sample": {
+      "authenticated_rp_sender_verified": false,
+      "main_slot_establishment_ended": false,
+      "same_call_observed": false,
+      "session_generation_verified": false,
+      "site": "drop_session_call",
+      "status": "timeout"
+    }
+  },
+  "next_measurement": "Capture ClearSession with the guarded direct caller label in a private session, then follow the observed path to the retired slot.",
+  "clear_session_caller_verified_on_iphone": false,
+  "authenticated_sender_verified": false,
+  "native_game_binding_verified": false
+}

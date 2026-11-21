@@ -1,0 +1,50 @@
+{
+  "schema": "v133-private-authority-iphone-social-round-trip-v1",
+  "scope": "One signed iPhone and Windows on the private LAN with distinct authenticated RP identities",
+  "date": "2026-11-19",
+  "diagnostic_commit": "0c3834880f2dfeadbb20e36addcd6bf645e040b7",
+  "game_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "phone_log": {
+    "schema": "prp-authority-client-v1",
+    "time": "2026-11-19 10:53:59 +0000",
+    "result": "social_round_trip_passed",
+    "rp_tls_verified": "1",
+    "connected": "0",
+    "member_count": "0",
+    "revision": "0",
+    "engine_player_binding_verified": "0",
+    "gameplay_rp_enabled": "0",
+    "sha256": "31dc65bc5b520af84615a405756834860aabb7105774eb32f1c63d5c314051a7"
+  },
+  "startup_log_sha256": "f010d1121352ed7e855e7a8ee72a9195dcb3a30b6663b0e144fbd348c95eb2ac",
+  "host_stages": [
+    {
+      "status": "ready",
+      "time_utc": "2026-11-19T10:50:28.263270+00:00"
+    },
+    {
+      "status": "iphone_opted_in",
+      "time_utc": "2026-11-19T10:54:01.169763+00:00"
+    },
+    {
+      "status": "greet_confirmed_by_recipient",
+      "time_utc": "2026-11-19T10:54:01.218777+00:00"
+    },
+    {
+      "status": "documents_requested_by_iphone_identity_and_confirmed",
+      "time_utc": "2026-11-19T10:54:01.270249+00:00"
+    },
+    {
+      "status": "host_social_witness_passed",
+      "time_utc": "2026-11-19T10:54:01.284896+00:00"
+    }
+  ],
+  "host_log_sha256": "03b7450b2c2fa0e3d52c4ae309123c4f4c887b43964c0a80977f96aeb254bf3b",
+  "verified": [
+    "Windows GREET routed to the intended iPhone RP identity and receipted",
+    "iPhone DOCUMENTS request routed back to the Windows RP identity and receipted"
+  ],
+  "document_content_transferred": false,
+  "native_gta_participant_binding_verified": false,
+  "two_gta_peers_tested": false
+}

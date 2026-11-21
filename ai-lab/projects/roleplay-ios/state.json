@@ -1,14 +1,42 @@
 {
   "schema_version": 1,
   "project_id": "gta-v-ios-roleplay",
+  "iphone_account_panel": {
+    "parent": "180cf1440710ddf9ee4a9f372af934124cfce25a",
+    "ios_source_commit": "3fe45fda56b74596fb711f4b3d28ac2cc1ac9c7a",
+    "ios_build_run": 44676650520,
+    "ios_build_artifact_sha256": "f02d157235e99e2714ee546fb4a3390f1acacdf3c02e20235af0ad317ec744b9",
+    "panel_uuid": "EEB7364C-7015-34F4-B6A4-419AF36BF07F",
+    "panel_sha256": "a513323763e3e6047ea04e8dd08407106b2c5ba55ce42012e12d8d23a94ce436",
+    "unsigned_ipa_sha256": "93b8b14b9254eff8cb66bdb2845674c9472a97db92adc3dd005118023cf2e3f8",
+    "ipa_delivery": "Verified the original game UUID, archive entries and CRC. Read back the 60246975-byte unsigned IPA from the standalone GTA V Documents folder over USB and matched its SHA-256.",
+    "paired_account_host_tests": {
+      "passed": 192,
+      "log_sha256": "6bf64cb0511299684d41e51440d7f32e79815a61470277376b40cd626877372e",
+      "scope": "Two concurrent certificate-bound registrations over real loopback mTLS, independent consent, and cancellation of an unacknowledged greeting on recipient disconnect. One scrypt worker and one waiting request, including cancellation."
+    },
+    "controls": ["register", "login", "logout"],
+    "evidence": "test_device_registration_login_and_socket_bound_logout; 190 Windows host tests",
+    "scope": "Real TLS sockets and host authority. Account operations use the enrolled certificate's RP principal. The iPhone form requires signing the account build and installing separate current panel profiles for the two clients.",
+    "physical_iphone_registration_verified": false
+  },
+  "private_laptop_login": {
+    "base_commit": "f886f95171b27983b5d88875490d87880d22d13f",
+    "entrypoint": "v133_interaction/tools/rp_laptop.py",
+    "host_tests_passed": 189,
+    "host_test_log_sha256": "b23cf125cc58c7d2ae2cd36cac73c3fd893a392ed58d687ced2dfb89c9ef4e92",
+    "verified": "HTTPS login plus real mTLS admission, identity separation, replacement and logout clearing consent, expiration and password reset",
+    "iphone_account_login_verified": false,
+    "next": "Run account-gated login with the signed iPhone panel and verify revocation on the private server. Native player and session binding are still required for gameplay."
+  },
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
-  "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
+  "phase": "v13.3-private-server-and-engine-binding",
+  "target": "Police Roleplay on verified GTA V iOS v13.3 using a private authenticated RP server requested by the user on 2026-11-18; preserve stock modes and require verified game-player binding before native actions",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
-  "last_known_github_pr": 1,
+  "last_known_github_pr": 16,
   "verified_facts": [
     {
       "claim": "AI Lab routing and static validation were added on a feature branch and validated by GitHub Actions",
@@ -34,26 +62,139 @@
       "claim": "User-supplied GTA V iOS IPA executable GTA5 SHA256 and Mach-O UUID both exactly match prior v12 Police RP reference. IPA SHA256 and 15 ARM64 binary fingerprints collected in a read-only local inspection.",
       "evidence": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json; local inspection on 2026-11-13",
       "scope": "static fingerprint only, no signing, in-game hook or on-device gameplay verification"
+    },
+    {
+      "claim": "The user-supplied Winstom 0.7.171 IPA was statically inventoried: bundle com.winstom.rp, iOS minimum 18.0, GTA5 ARM64 UUID 048DCEFF-A696-3E7A-9086-2A9953C909CD, seven Mach-O images cryptid=0, an avenor RP WebKit interaction bridge, and Westrayn native transport/OneSync diagnostic strings.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_STATIC_AUDIT.md; IPA SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
+      "scope": "Static user-provided binary inspection only. Not proof of police arrest, working OneSync, runtime network synchronization or v13 binary compatibility."
+    },
+    {
+      "claim": "Deep Winstom ARM64 static inspection: Objective-C LMXMessageProxy/WRTransport classes, police state literals cuffed/follow, mp_arresting ADRP+ADD code xrefs, server-centered core combat state keys, and all 2031 WSPK files satisfying 80+L+16*ceil(L/262144) overhead invariant.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_DEEP_RE_PHASE2.md; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126",
+      "scope": "Static analysis only; 2,120-entry ZIP testzip() PASS; no iPhone, live protocol or v13 binary-diff validation."
+    },
+    {
+      "claim": "v13.3 clean-room RP greet/documents gate implemented in C11 with per-peer replay ledger, exact baseline UUID/SHA256 parameter checks, session/epoch/thread/consent/proximity/authenticated transport callback requirements; compiled as ARM64 Apple iOS Mach-O object and passed GCC ASan+UBSan and Clang Linux-host synthetic test harness.",
+      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/{include,src,tests,README_VI.md}; local test run 2026-11-16; user-visible source archive SHA256 e676fcb6426987eeaae14358e89acac175f2f6a89a042cc6fd19cbec9cc85853",
+      "scope": "SOURCE ONLY; simulated callbacks do not establish engine-sourced identity or trusted GTA network events; no GTA5 binary patch, iOS SDK link or two-iPhone runtime test."
+    },
+    {
+      "claim": "Original GTA V iOS v13.3 IPA independently loaded and SHA256/UUID verified; compared all 16 original Mach-O images against Winstom's seven Mach-O images. Winstom GTA5 adds direct lmx and wf dylib imports, libgtacompat adds wf, libgtamsl SHA256 matches exactly; GTA5, libgtacompat and winemetal hashes/UUIDs and layout differ. Winstom lmx ObjC relative method metadata resolves 26 classes and 357 class-linked methods including actual native message handler IMPs.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_BINARY_DIFF_PHASE3.md; v13.3 IPA SHA256 7a5e23358e4a72a03322fe016ea08adde1ee6189b0c66f86e656a48649057b89; Winstom SHA256 9459b8753e1e8e171ec7da52624466cd2cfd6396a802415e7fa18814efeb0126; ai-lab/winstom_lmx_objc_map.py",
+      "scope": "Static SHA256/Mach-O/imports/section diff and metadata disassembly only; does not establish Winstom source provenance, v13.3 engine hooks, trusted networking or playable RP."
+    },
+    {
+      "claim": "Winstom lmx native CFString xrefs: AVPanel method 0xb2358 references rp/interact, a distinct code function at 0xba738 references cuffed/follow; 0x112214 references interact and target. Added synthetic two-endpoint source-only greet/documents test with replay, distance, session migration and consent checks; GCC ASan+UBSan and Clang host binaries pass locally.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_0_7_171_CFSTRING_ROUTE_PHASE4.md; ai-lab/projects/roleplay-ios/v133_interaction/tests/test_v133_two_peers.c; local test outputs 2026-11-16",
+      "scope": "Static code references + synthetic test only; neither proves 0xba738 mutates actual in-game player state nor establishes a true authenticated network carrier."
+    },
+    {
+      "claim": "Phase 5 Winstom lmx native call-path: LMXMessageProxy didReceiveScriptMessage forwards to target, AVPanel compares action 'interact' via isEqual:, and separate state function reads 'cuffed'/'follow' with objectForKeyedSubscript:. A clean-room 40-byte PRP3 v1 codec was added to v13.3 source-only module; GCC and Clang host ASan/UBSan 3-test suites and Apple ARM64 freestanding object compilation pass locally.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE5_DISPATCH_WIRE.md; ai-lab/projects/roleplay-ios/v133_interaction/{include/rp_v133_wire.h,src/rp_v133_wire.c,tests/test_v133_wire.c,tests/test_v133_two_peers.c,tools/run_host_tests.sh}; local archive WINSTOM-v13.3-PHASE5-RP-WIRE-SOURCE.zip SHA256 4c273a2de6df867e5b5d318d416d9548b13f3fd568984475620c8f7f934233ae",
+      "scope": "Read-only Winstom static disassembly, simulated network and source compilation only; NOT real police cuff, engine transport, two iPhone tests, or CI success."
+    },
+    {
+      "claim": "Phase 6: Winstom ObjC method inventory separates WRTransport (NSURLSession HTTP), WRAccountSession (account tokens), WRVoice (voice host/port/ticket, encodeAndSend/receive) from the still-unproven Westrayn gameplay sender transport. R19/H5 user-source device sample documents sender_auth=0 and gameplay=0 in eight Decide and eight MPJ2 samples. A Python read-only PRP3 trace auditor and synthetic unit tests were added for version/nonce/session/sender consistency.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE6_TRACE_VALIDATION.md; ai-lab/projects/roleplay-ios/v133_interaction/tools/verify_device_trace.py; ai-lab/projects/roleplay-ios/v133_interaction/tests/test_verify_device_trace.py; local Phase 6 source ZIP SHA256 635c216d93851a1d7b31f33056b501e4b5261fe05b7296b975f71d91d9f35160",
+      "scope": "Read-only static Mach-O/ObjC and prior H5 sampled evidence; locally executed 13 Python tests and reran GCC/Clang ASan/UBSan Phase 5 host tests. GitHub Actions is failing; no iPhone authenticated sender, gameplay or actual network proof."
+    },
+    {
+      "claim": "GitHub Actions Winstom audit and v13.3 RP synthetic CI recovered at commit 14e332a5: Winstom audit 5/5, Phase 6 offline trace verifier 14/14, ObjC mapper Python tests and C11 GCC/Clang ASan/UBSan pass on GitHub runner; AI Lab CI and Continuous Source Watch also succeed. Root cause was mutable Mach-O bytearray/memoryview used in dictionary lookup/UUID/dylib parsing.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076085 ; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076104 ; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43771076060 ; issue https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/17 closed; fix commit 14e332a5f69a4debe02e9975241a9b68798d8d86",
+      "scope": "CI static and synthetic tests ONLY. GitHub manual IPA analysis job skipped in pull_request event. No real device, GTA Online private carrier, authenticated sender, or Police RP functionality proven."
+    },
+    {
+      "claim": "Phase 7: separate GTA v13.3 PRP3 40-byte mailbox implemented (64 queue slots, 8 events per game frame, nonblocking network producers, fail-closed trust metadata and session/epoch checks via existing gate). GitHub Actions GCC ASan+UBSan and Clang passed deterministic mailbox tests and four-thread concurrency stress; reproducible five-test run script passes on both toolchains. All Winstom, AI Lab and Source Watch CI jobs succeeded.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE7_MAILBOX.md; v133_interaction/include/rp_v133_mailbox.h; src/rp_v133_mailbox.c; tests/test_v133_mailbox.c; tests/test_v133_mailbox_threads.c; tools/run_host_tests.sh; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760288; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760234; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43786760343",
+      "scope": "Synthetic source-only host tests, no ThreadSanitizer, no Xcode/iPhone, no original GTA5 hook or network callback, no authenticated sender provenance or playable Police RP."
+    },
+    {
+      "claim": "Phase 8 source audit found `police-rp/v1.4/DIAGNOSTIC_READONLY_REPORT_V13.json` is named V13 but records old GTA5 UUID 6a498e32e70c334cbca3affd35e8d171 and SHA d252...8585b; same as HOOK_CANDIDATES_V12.json. Neither is a verified GTA5 v13.3 hook address. Added read-only fail-closed fingerprint guard and 5 Python regressions; new GitHub Actions Python job passed on runner.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE8_HOOK_VERSION_GUARD.md; ai-lab/projects/roleplay-ios/v133_interaction/tools/audit_hook_fingerprint.py; tests/test_audit_hook_fingerprint.py; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43788777959",
+      "scope": "Verified source metadata comparison and CI Python test only; no direct v13.3 binary disassembly or true authenticated sender callback, no game/police gameplay or device test."
+    },
+    {
+      "claim": "Phase 8 iPhoneOS SDK boot-loader proof built on macOS-15 arm64: PRPV133LaunchProbe.m compiled to real arm64 PoliceRPV133Probe.dylib with install_name @executable_path/Frameworks/PoliceRPV133Probe.dylib. A local exact-IPA SHA-256 guarded unsigned packer and five synthetic Mach-O patcher tests were added. Mac workflow SUCCESS and artifact generated; no game IPA included.",
+      "evidence": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43791400799 ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{PRPV133LaunchProbe.m,patch_exact_v133_probe.py,test_v133_probe_packer.py,README_TEST_VI.md}; artifact GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA",
+      "scope": "Real iPhoneOS SDK link of a startup-only diagnostic dylib. No patcher run on the actual v13.3 IPA in the current execution environment, no signed or installable IPA created, no device boot test, no authenticated multiplayer or cuff/escort. Requires local exact original user IPA and user-managed signing."
+    },
+    {
+      "claim": "Phase 8 fast iPhone startup-probe packaging workflow now includes a Windows drag/drop local unsigned IPA maker and macOS/Linux one-command maker. Added 6th synthetic integration test covering full IPA rezip, exact build patch, resource preservation, binary size, bridge insertion and file-sharing plist. Apple iPhoneOS arm64 dylib build and all 6 tests succeeded on macos-15 GitHub Actions, with artifact containing dylib, patcher and both helper scripts.",
+      "evidence": "Build workflow https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43793010558 ; artifact 14192309099 `GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA` SHA256 archive 7419051d7545a0dfb40d78343fe7504754f0464d0050376ffad98b2ee95d09df ; ai-lab/projects/roleplay-ios/v133_interaction/ios/{Make_Phase8_IPA_Windows.bat,Make_Phase8_IPA_macOS_Linux.sh,test_v133_probe_packer.py,README_TEST_VI.md}",
+      "scope": "Generated ARM64 diagnostic dylib and locally runnable packer; unit test used synthetic IPA. No actual GTA v13.3 patched IPA was created in this environment, as local container tool execution is unavailable. No signing, iPhone boot, transport, or Police RP gameplay validation."
+    },
+    {
+      "claim": "Phase 9: both supplied IPA CRC/SHA inventories verified locally; v13.3 executable matches Phase 8 exactly despite changed archive hash; Winstom 0.7.177 lmx uses a new guarded profile (26 classes/368 methods). Exact v13.3 ARM64 evidence resolves sandbox callback, connection-associated sender dispatch, local dispatch exception, and conditional native slot write at payload +8 conflicting with bare PRP3 session_id.",
+      "evidence": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md; baselines/phase9-inputs.json; baselines/phase9-v133-engine.json",
+      "scope": "STATIC_VERIFIED; 65 local Python tests pass. New 56-byte source carrier feeds existing mailbox without trusting slot. C sanitizer/Apple builds pending this commit CI. No engine adapter, cryptographic authentication proof, signing or device test."
+    },
+    {
+      "claim": "Windows USB exact-build observer extended to capture on_net_event, script_event_handler and script_decide with bounded hardware breakpoints, and fail-closed origin/authentication output. Synthetic observer tests and C11 RP interaction suite passed on GitHub Actions after source commits.",
+      "evidence": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py; tests/test_observe_v133_windows_usb.py; V133_SCRIPTED_EVENT_OBSERVER_VI.md; commit ed02bd17077a6b07d11ceef88ca01e011b2524a2; ai-lab/projects/roleplay-ios/RAGE_SOURCE_HUNTER_20261116.md; GitHub Actions https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43872978849 (Synthetic-only Python tests and v13.3 RP interaction C11 source-only tests: success)",
+      "scope": "GitHub source and CI synthetic verification only. No live iPhone scripted receive, engine-authenticated player ID, custom GTA network event or two-iPhone Police RP gameplay has been verified by this change."
+    },
+    {
+      "evidence": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md; baselines/phase9-v133-engine.json; v133_interaction/tests/test_observe_v133_windows_usb.py; local Python test log 2026-11-16; implementation 63cfdf33c34ffbe5c50163048830e050a618da82; https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43877645973",
+      "scope": "Static exact private IPA inspector PASS and 54 host Python tests (21 USB fixtures). No new device sample: iPhone absent from usbmux. Neither authentication, session generation nor gameplay is established.",
+      "claim": "Exact v13.3 disassembly identifies a bounded scripted-handler frame chain that distinguishes OnNetEvent receive dispatch from the local SendBuffer branch; optional USB observer checks source/destination references and connection-ID equality with eight full function hash guards."
+    },
+    {
+      "claim": "Exact v13.3 GTA5 static disassembly verifies Cxn ID allocation (high16 marker and low16 slot), full 32-bit CloseConnection match and OnNetEvent peer-list connection match, plus P2pDecrypt success with an out-flag of zero forwarded through HandleReceivedPacket to Unpack. Read-only audit matches original user IPA SHA256/UUID and 26 exact ARM64 words; 6 local tests passed.",
+      "evidence": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md; cd05556e70bee188d7662237079f4a2ce7162d11; exact user IPA /mnt/data/GTAV-v13.3.ipa (local only)",
+      "scope": "STATIC_BINARY and LOCAL TEST ONLY. High16 is not a cryptographic authenticated generation; the out flag is not sender attestation; no iPhone receive-context/peer authorization or two-iPhone gameplay verified."
+    },
+    {
+      "scope": "One stopped sample on 2026-11-16. No active police duty, authenticated sender, scripted receive, session generation or two-iPhone gameplay proof. Debugger removal/detach acknowledged; later app log backgrounded and PID lookup returned 0, cause not established.",
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/v133-stock-job-device-20261116.json",
+      "claim": "A real Windows USB jobs_update stop on exact v13.3 observed the local stock job fields as empty known ID, kind=0 and state=0, with matching MacportOnlineUpdate caller."
+    },
+    {
+      "claim": "PR19 E0/E1/E3 unsigned dylibs linked for iPhoneOS ARM64; DllMain, UUIDs, rpath, platform, dependencies and SHA256 independently inspected after download. No iPhone E0/E1/E3 or RP claim.",
+      "evidence": "PR19 commit 1e910d4205ba0c2c3050c230d91b14604fb3bedd, Actions 43969424836, baselines/e3-iphoneos-build-1e910d4.json"
+    },
+    {
+      "claim": "v13.3 original GTA5 provides static instruction-proven OnNetEvent connection matching plus CNetworkSession member/peer-connection/endpoint validation. New read-only provenance diagnostic code and one-shot LLDB scanner are in source CI; NO authenticated RAGE sender or police gameplay has been device verified.",
+      "evidence": "Local 67/67 exact IPA ARM64 instruction check and https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43997074421 ; source 832c206f70dd986fde7c344b709a4959ca2dd32f",
+      "scope": "Read-only static analysis of proprietary original binary + simulated host tests, not on-device sender/session authority."
+    },
+    {
+      "scope": "One game-loop USB sample. Runtime session identity, generation and authenticated receive remain unverified.",
+      "evidence": "baselines/v133-usb-session-context-20261117.json",
+      "claim": "A real iPhone stop at the guarded jobs_update caller read native main progress false and transition progress true."
+    },
+    {
+      "scope": "65 original and seven additional opcode checks, 12 call targets and 116 local test cases in repository. No on-device Phase 19 trace or authenticated sender yet.",
+      "claim": "Phase 19 user archive event queue audit reproduced on exact GTA v13.3; Windows USB mode is integrated and host tested.",
+      "evidence": "baselines/phase19-v133-event-queue.json"
+    },
+    {
+      "evidence": "baselines/v133-phase19-usb-preflight-20261117.json",
+      "claim": "The v13.3 Phase 19 observer passed live code checks and a two-hardware-breakpoint setup and teardown on the iPhone.",
+      "scope": "Debugger setup only. No queued RAGE event, authenticated peer, session generation or RP action was observed."
     }
   ],
   "unknowns": [
-    "Current original IPA binary SHA-256, Mach-O UUID, engine and application version",
     "Actual available source code and legal provenance for the target IPA",
     "RAGE/native API compatibility of the specific iOS port",
     "Which network packet transport and session lifecycle the current game build supports",
     "Which Roleplay source snapshot is latest and already tested on a real device",
-    "Apple SDK build/link/signing availability, and hardware crash/performance results"
+    "Apple SDK build/link/signing availability, and hardware crash/performance results",
+    "Exact Winstom-to-original-v13 Mach-O changes, backend packet schemas, whether OneSync migration hooks are active, and two-iPhone police gameplay results.",
+    "Winstom RPC server schema, v13.3 real native UI bridge registration, authenticated GTA-owned sender metadata, and whether targeted 4m interaction can be proven in an engine frame rather than simulated.",
+    "Winstom native target bound to LMXMessageProxy at runtime and where native server grant/owner authoritative state is produced; v13.3 authenticated receiver/callback still unverified.",
+    "Runtime remote connection authentication vs local dispatch, native callback thread and pointer lifetime remain unverified despite exact static sender path.",
+    "Only one iPhone is currently available. Phase 9 diagnostic startup and stock Sandbox were observed on that device. Scripted RP sender/session and two-device event delivery remain unverified."
   ],
   "baseline": {
-    "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
-    "game_version": "user-labeled v12; CFBundleShortVersionString 1.0",
-    "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
+    "ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+    "game_version": "user-labeled v13.3; 3u export; CFBundleShortVersionString 1.0",
+    "macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
     "device_tested": false,
     "supported_ios_versions": [],
     "actual_build_artifact": null,
-    "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
-    "binary_count": 15,
-    "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+    "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+    "binary_count": 16,
+    "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/phase9-inputs.json"
   },
   "decisions": [
     {
@@ -88,19 +229,21 @@
         "No extracted copyrighted assets published"
       ],
       "issue_url": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/issues/2",
-      "note": "Authorized IPA supplied and hash/UUID/Info.plist matched historical v12 documentation. Static fingerprint verified; game callbacks/network integration and device testing still required.",
+      "note": "Current v13.3 and Winstom 0.7.177 local inputs statically verified; exact sender/callback evidence added in Phase 9. Runtime integration remains blocked.",
       "evidence": [
         "ai-lab/projects/roleplay-ios/baselines/v12-verified.json",
-        "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md"
+        "police-rp/v1.4/P2P/ENGINE_BINDINGS_REQUIRED.md",
+        "ai-lab/projects/roleplay-ios/baselines/phase9-inputs.json",
+        "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json"
       ]
     },
     {
       "id": "RP-002",
       "priority": 2,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Document native/script-hook compatibility and API contract",
       "blocked_on": [
-        "RP-001"
+        "Runtime callback thread, remote connection authentication, session generation and pointer lifetime verification"
       ],
       "acceptance": [
         "Versioned ABI contracts",
@@ -125,7 +268,7 @@
     {
       "id": "RP-004",
       "priority": 4,
-      "status": "not-started",
+      "status": "in-progress",
       "title": "Create native client/server handshake proof of concept with tests",
       "blocked_on": [
         "RP-002"
@@ -167,7 +310,981 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Correlate one guarded ingress frame through the native event queue to the same scripted receive and verified endpoint/channel mapping. Trace integrity provenance for that event, verify its sender and private-room admission generation, and observe leave before enabling gameplay.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "historical_baselines": [
+    {
+      "ipa_sha256": "23c039cb59e24f0107243a32252a3a60fbca1c934ac482d285109c323132f0dc",
+      "game_version": "user-labeled v12; CFBundleShortVersionString 1.0",
+      "macho_uuid": "6A498E32-E70C-334C-BCA3-AFFD35E8D171",
+      "device_tested": false,
+      "supported_ios_versions": [],
+      "actual_build_artifact": null,
+      "executable_sha256": "d252115585d8f81987fa88138e89e190d42a7ca8134421f0a5f639af27c8585b",
+      "binary_count": 15,
+      "ipa_static_analysis_report": "ai-lab/projects/roleplay-ios/baselines/v12-verified.json"
+    }
+  ],
+  "research_branch": "feature/winstom-rp-ipa-audit-20261116",
+  "last_work": {
+    "scope_renewal_fail_closed": {
+      "base_commit": "b57346d83f1770afb5e81d1b34c59341d770580d",
+      "status": "HOST_REGRESSION_VERIFIED",
+      "failure": "rp_rage_scope_begin returned false before clearing the previous active scope when the new ID was zero or its generation was exhausted.",
+      "fix": "Every non-null renewal attempt clears the previous candidates and active scope before validation. The counter advances without wrapping; failure leaves the observer inactive.",
+      "local_c11": "Windows x86_64, Zig 0.13.0 clang with -UNDEBUG and warnings as errors. New regression fails against the original source at stale-sample rejection and passes against the fixed source.",
+      "coverage": "Missing new session ID, exhausted generation with an active old scope, rejection of old samples, candidate erasure, same-ID recovery with a new generation and saturation.",
+      "local_python_tests_passed": 121,
+      "ci_location": "GitHub Actions on the commit containing this checkpoint; source and iPhoneOS workflows are required, not device evidence.",
+      "device_validation": "Not run. usbmux reported one Network connection and no USB device; user confirmed that reconnecting is not possible now.",
+      "engine_lifecycle_callback_verified": false,
+      "authenticated_sender_verified": false,
+      "two_iphone_gameplay_verified": false
+    },
+    "base_commit": "59d46193fd71dc995e283ea1fafebc7485e451de",
+    "phase9_ci": {
+      "source_checks": {
+        "conclusion": "success",
+        "run_id": 43798392324,
+        "private_ipa_job": "skipped"
+      },
+      "first_ios_build": {
+        "run_id": 43797946300,
+        "conclusion": "failure",
+        "cause": "Forced -x objective-c applied to object files; fixed and verified in build_commit"
+      },
+      "ios_build": {
+        "conclusion": "success",
+        "run_id": 43798387409,
+        "artifact_id": 14194999462,
+        "artifact_sha256": "a50a1c7d58d642d4f3002307cccc241f210f1020c73172fcf5180859384ca9a6",
+        "sdk": "18.5",
+        "min_ios": "16.3",
+        "arch": "arm64"
+      }
+    },
+    "device_tested": true,
+    "two_device_tested": false,
+    "report": "ai-lab/projects/roleplay-ios/WINSTOM_V133_PHASE9_SENDER_CARRIER.md",
+    "implementation_commit": "dafc8c55775542d2ecd29dde8570d92e2da7ff77",
+    "build_commit": "d56278d7af125dad0a717fdcda9534db4821c092",
+    "local_unsigned_diagnostic": {
+      "file": "GTAV-v13.3-Phase9-Diagnostic-UNSIGNED.ipa",
+      "ipa_sha256": "287dc4d6cb40cca713c26d983d044bbd257a3a3252e7c015f7345619c00c0a40",
+      "ipa_size": 60206600,
+      "input_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+      "probe_sha256": "bacd63b4782c4967dcc241dfacfbe1c9871c17fa25506f513f020136653fe93e",
+      "probe_dependencies": [
+        "/System/Library/Frameworks/Foundation.framework/Foundation",
+        "/usr/lib/libobjc.A.dylib",
+        "/usr/lib/libSystem.B.dylib",
+        "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+      ],
+      "analyzer_diagnostics": {
+        "rp_v133_carrier-analysis.plist": 0,
+        "rp_v133_interact_gate-analysis.plist": 0,
+        "rp_v133_mailbox-analysis.plist": 0,
+        "rp_v133_wire-analysis.plist": 0
+      },
+      "unchanged_ipa_entries": 58,
+      "zip_crc_passed": true,
+      "pending_resigning": true,
+      "device_tested": false
+    },
+    "package_checkpoint": "95af96e9d2e9709808b2937daec50cb9207b5bbf",
+    "engine_static_followup": {
+      "evidence": "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json",
+      "symbols": 35,
+      "branches": 22,
+      "observations": 25,
+      "local_tests_passed": 24,
+      "script_context": "VM run stores and restores active script; no runtime OS thread identity measured",
+      "packet_provenance": "Decrypt out-byte is forwarded to Unpack and can be zero on successful tunneling; no proof of end-to-end propagation with sender + session",
+      "session": "SetSessionState writes a state enum; no verified session identifier or epoch source",
+      "runtime_adapter": "unbound"
+    },
+    "device_startup_evidence": {
+      "date": "2026-11-16",
+      "source_revision": "phase9-carrier-unbound",
+      "hardware": "iPhone14,3",
+      "ios": "18.6 (22G86)",
+      "probe_loaded": true,
+      "executable_uuid_matches": true,
+      "tested_mode": "stock Macport Sandbox, including joining a native session",
+      "story_mode_tested": false,
+      "log_end": "app backgrounded at 99.5 s; no crash recorded for this run in supplied logs",
+      "script_vm_stack_samples_seconds": [
+        22.59,
+        23.47
+      ],
+      "stock_clone_create_stack_samples_seconds": [
+        28.4,
+        83.33
+      ],
+      "common_macho_slide_symbol_count": 11,
+      "callback_os_thread_and_cadence_verified": false,
+      "authenticated_rp_sender_verified": false,
+      "rp_network_enabled": false,
+      "two_device_rp_verified": false,
+      "report": "ai-lab/projects/roleplay-ios/V133_PHASE9_DEVICE_STARTUP.md"
+    },
+    "scripted_receive_followup": {
+      "prior_device_checkpoint": "7ce7831fcd09e87c460a33ad1de4f382cd95cf43",
+      "static_baseline": "ai-lab/projects/roleplay-ios/baselines/phase9-v133-engine.json",
+      "symbols": 46,
+      "branches": 28,
+      "observations": 39,
+      "vtable_rebases": 2,
+      "native_capacity_bytes": 432,
+      "candidate_carrier_bytes": 56,
+      "observer": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_lldb.py",
+      "runbook": "ai-lab/projects/roleplay-ios/V133_SCRIPTED_EVENT_OBSERVER_VI.md",
+      "host_python_tests_passed": 25,
+      "observer_device_tested": false,
+      "scripted_event_sender_authenticated": false,
+      "session_generation_verified": false,
+      "runtime_adapter": "unbound"
+    },
+    "windows_usb_retest": {
+      "time_utc": "2026-11-16 08:42:53 +0000",
+      "device": "iPhone14,3",
+      "app_launched_from_windows_usb": true,
+      "fresh_probe_uuid_matches": true,
+      "stock_sandbox_scene_loaded": true,
+      "macport_online_update_sample_seconds": 79.55,
+      "get_task_allow": true,
+      "debugproxy_capability_exchange": true,
+      "debugger_attached": false,
+      "scripted_receive_observed": false,
+      "rp_network_enabled": false,
+      "raw_logs_published": false
+    },
+    "windows_usb_game_callback": {
+      "prior_checkpoint": "4a07ee4d6c02c9009f4f1ac90d634302a5da10e7",
+      "device": "iPhone14,3",
+      "ios": "18.6",
+      "test_mode": "stock Sandbox in foreground",
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py",
+      "pymobiledevice3": "11.56.0",
+      "live_arm64_uuid_and_three_instruction_words_verified": true,
+      "site": "jobs_update",
+      "hardware_stop_at_expected_pc": true,
+      "macport_online_update_callsite_matches": true,
+      "stopped_thread_label": "T1",
+      "breakpoint_removed_and_detach_confirmed": true,
+      "background_timeout_cleanup_verified": true,
+      "authenticated_rp_sender_verified": false,
+      "session_generation_verified": false,
+      "thread_cadence_verified": false,
+      "scripted_receive_observed": false,
+      "two_device_rp_verified": false
+    },
+    "independent_transport_reference": {
+      "research": "Winstom 0.7.177 independent transport static clues; no wire protocol assumed",
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/tools/prp3_direct_tls.py",
+      "docs": "ai-lab/projects/roleplay-ios/PRP3_DIRECT_TLS_VI.md",
+      "scope": "Host reference for direct TCP mTLS 1.3, pinned peer and paired RP generation. No Winstom or game-server dependency.",
+      "real_host_tcp_tls_bidirectional_verified": true,
+      "engine_identity_mapping_verified": false,
+      "ios_adapter_integrated": false,
+      "two_iphone_verified": false
+    },
+    "native_tls_diagnostic": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133TLSProbe.m",
+      "host_runner": "ai-lab/projects/roleplay-ios/v133_interaction/tools/run_ios_tls_probe.py",
+      "generated_kit_host_tls_test_passed": true,
+      "device_tested": true,
+      "engine_sender_mapping_verified": false,
+      "gameplay_rp_enabled": false,
+      "windows_lan_cli_reference_test_passed": true,
+      "host_ci_run": 43838604101,
+      "mac_arm_host_run_queued_on_last_observation": 43839001640,
+      "build_retry": "standard Intel macOS 15 host, cross-compile iPhoneOS arm64 using Xcode SDK",
+      "build_commit": "ecfefc6377a355d3b4c0902353920cbc7d8fd71a",
+      "build_run": 43839768526,
+      "build_conclusion": "success",
+      "artifact_id": 14213040588,
+      "local_unsigned_package": {
+        "file": "GTAV-v13.3-TLS-Diagnostic-UNSIGNED.ipa",
+        "sha256": "d8baa787fbe76c910868bf6cafdb0d63f4db809f2912ff3696f65dc460adc7ff",
+        "size_bytes": 60216954,
+        "probe_sha256": "ab6cacef94322f2173d3474003185d4ef41ee8358b5e29e8cdb86aac878e377f",
+        "zip_crc_passed": true,
+        "preserved_original_entries": 58,
+        "changed_original_entries": [
+          "Payload/GTAV.app/GTA5"
+        ],
+        "dependencies": [
+          "/System/Library/Frameworks/Foundation.framework/Foundation",
+          "/System/Library/Frameworks/Network.framework/Network",
+          "/System/Library/Frameworks/Security.framework/Security",
+          "/usr/lib/libobjc.A.dylib",
+          "/usr/lib/libSystem.B.dylib",
+          "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+        ],
+        "unsigned": true,
+        "device_tested": false
+      },
+      "iphone_windows_diagnostic_verified": true,
+      "matched_diagnostic_log": "ai-lab/projects/roleplay-ios/baselines/phase10-iphone-windows-tls.json"
+    },
+    "police_authority": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police.c",
+      "doc": "ai-lab/projects/roleplay-ios/V133_POLICE_AUTHORITY_VI.md",
+      "scope": "Source-only authority decisions for opt-in, duty, cuff, escort, passenger seat and temporary jail",
+      "host_ci_requested": true,
+      "engine_integration": false,
+      "device_tested": false,
+      "host_ci_run": 43840665974,
+      "host_ci_conclusion": "success",
+      "host_binaries": 8
+    },
+    "police_transactions": {
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police_tx.c",
+      "format": "PRPC/PRPA v1; fixed 40 bytes; no sender in frame",
+      "scope": "Authority decisions and latest-transaction idempotency. Not yet routed over gameplay TLS.",
+      "engine_integration": false,
+      "device_tested": false,
+      "host_ci_requested": true,
+      "host_ci_run_before_freshness_gate": 43841634165,
+      "host_ci_conclusion": "success",
+      "ios_source_build_before_freshness_gate": 43841625655,
+      "fresh_authority_observation_max_age_ms": 250,
+      "freshness_gate_verified_on_device": false,
+      "host_ci_run_with_freshness_gate": 43841926057,
+      "ios_source_build_with_freshness_gate": 43841914439
+    },
+    "police_identity_bridge": {
+      "module": "ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_police_bridge.c",
+      "scope": "Source-only bookkeeping for independently verified RP-to-game associations",
+      "git_ci_requested": true,
+      "live_game_identity_provider_bound": false,
+      "two_iphone_gameplay_verified": false,
+      "native_duty_candidate": {
+        "scope": "One real jobs_update memory sample in stock Sandbox: empty known job ID, kind=0, state=0; no active duty/quit or role authorization verified",
+        "symbols": 49,
+        "branches": 31,
+        "observations": 46,
+        "observer": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py --stock-job",
+        "read_only_scope": "one exact-build jobs_update stop; job ID classification and two scalar fields",
+        "new_phone_sample": true,
+        "evidence": "ai-lab/projects/roleplay-ios/baselines/v133-stock-job-device-20261116.json"
+      },
+      "host_ci_run": 43843235701,
+      "host_ci_conclusion": "success",
+      "ios_source_build": 43843224585,
+      "ios_source_build_conclusion": "success",
+      "host_binaries": 10
+    },
+    "receive_context_observer": {
+      "parent_commit": "64e450ef7616fd35b32e0646241be0f8a08bc7d2",
+      "source": "ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_windows_usb.py",
+      "map": "ai-lab/projects/roleplay-ios/ENGINE_INTEGRATION_MAP.md",
+      "checkpoint": "ai-lab/projects/roleplay-ios/ROLEPLAY_CONTINUE.md",
+      "scope": "Exact-build read-only debugger observation; four caller frames plus receive/local origin; source/destination pointer and connection-ID comparisons",
+      "local_exact_ipa_inspector": "passed",
+      "whole_function_code_guards": 8,
+      "python_tests_passed": 54,
+      "usb_tests_passed": 21,
+      "ci": "success",
+      "new_ios_build_needed": false,
+      "device_sample_obtained": false,
+      "last_device_attempt": "2026-11-17: USB reconnected; after DDI mount scripted handler and OnNetEvent each timed out at 30s; jobs_update hit exact caller, kind/state 0. App still running; all hardware removals/detaches acknowledged. No peer-origin sample.",
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false,
+      "engine_adapter_bound": false,
+      "two_iphone_gameplay_verified": false,
+      "implementation_commit": "63cfdf33c34ffbe5c50163048830e050a618da82",
+      "ci_run": 43877645973,
+      "host_c_test_binaries": 10,
+      "host_sanitizers": [
+        "GCC ASan/UBSan",
+        "Clang ASan/UBSan"
+      ],
+      "device_attempt_evidence": "baselines/v133-usb-receive-attempts-20261117.json"
+    },
+    "native_v133_connection_chain": {
+      "source_commit": "cd05556e70bee188d7662237079f4a2ce7162d11",
+      "receive_semantics_fix_commit": "9e09a0a005ab03596e5e122de117eaa7ede29e83",
+      "report": "ai-lab/projects/roleplay-ios/V133_CONNECTION_CHAIN_CHECKPOINT.md",
+      "real_ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+      "gta5_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "static_opcode_pins": 67,
+      "local_binary_audit": "PASS: independent direct static check of 67/67 ARM64 instructions in exact user-supplied GTA5 IPA; SHA and UUID pinned",
+      "local_python_tests": "PASS 6/6; original plus mutation negatives",
+      "github_runner_binary_audit": "NO: original private IPA intentionally absent",
+      "source_ci": "CHECK_PENDING",
+      "source_provenance_verified_on_device": false,
+      "authenticated_sender_verified": false,
+      "game_thread_verified": false,
+      "custom_event_received": false,
+      "roleplay_enabled": false,
+      "next_gate": "Controlled developer-signed iPhone stock Sandbox: capture script_event_handler --receive-context with cooperative peer. Require separate call-chain and same-event source association, then trace sender authorization, session incarnation and reconnect/migration. No hook or gameplay enabled.",
+      "github_workflow_test_commit": "82fe44cb0848217def1543853a475ec8e63d5125",
+      "github_synthetic_run": 43997074421,
+      "github_synthetic_test_result": "SUCCESS: Python parser/LLDB synthetic tests and C11 GCC+Clang ASan/UBSan source-only 11 binaries",
+      "github_actual_binary_test_result": "NOT RUN in public CI (proprietary GTA5 IPA excluded); local original executable static verification PASS 67/67",
+      "remaining_blocker": "On-device read-only OnNetEvent breakpoint and peer connection mapping; reconcile same sender with authenticated RAGE transport, snSession GamerInfo/peer and locally minted generation across disconnect/migration. A candidate match must never authorize PoliceRP."
+    },
+    "experimental_e3_hardened_phase9": {
+      "baseline": "Phase4 E0/E1/E3 source; GTA v13.3 IPA baseline unchanged",
+      "source_delivery": "Conversation artifact GTA_v13.3_PHASE9_E3_HARDENED_SOURCE_AND_TESTS.zip (not yet committed to GitHub)",
+      "source_zip_sha256": "8c05bf57ac0a70a12cfdd22423683fb9a2510c7745bbb39d9a3f81fb0394a529",
+      "patch_sha256": "7d19c57099ada47dc6be5980715c4ac95f362cbcae76a68bfb91fdb89454e0c2",
+      "host_result": "PASS: Clang + GCC strict, C ASan/UBSan, 37/37 Python tests, two Linux processes with real UDP and MOCK ScriptHook/native callbacks",
+      "major_fixes": [
+        "bounded 900-tick scriptWait(16) with no-yield fail-closed and cleanup",
+        "GCC pedantic-compliant dlsym resolution",
+        "explicit distinct native-invocation HMAC report after B game callback; queue ACK remains separate",
+        "strict nonce/seq/ID/session/skew matching; only diagnostic PING and mocked UI"
+      ],
+      "ios_dylib_linked": false,
+      "iphone_e0_verified": false,
+      "iphone_e1_verified": false,
+      "iphone_e3_verified": false,
+      "rage_transport_sender_auth_verified": false,
+      "actual_roleplay_gameplay_enabled": false,
+      "source_git_integration": "PENDING: local source ZIP / patch provided; do not claim E3 source is in this PR",
+      "next": "Import validated Phase9 source to dedicated E3 diagnostic branch. macOS Xcode iPhoneOS build/sign E0, collect same-run iPhone logs. Then E1 HUD and two-phone LAN E3, compare ACK and native-invocation report; independently prove PR16 native RAGE sender/session provenance before PoliceRP integration."
+    },
+    "phase10_e3_build": {
+      "source_pr": 19,
+      "source_branch": "feature/rbp-e3-hardened-20261116",
+      "source_commit": "d08ba160cb0b3a26f923c50ceb0fa0ed01b08376",
+      "source_files_added": 50,
+      "workflow": "https://github.com/hachnghi-cyber/GTA5-iOS-AI-Development/actions/runs/43912516647",
+      "host_regression": "SUCCESS GCC+Clang diagnostics with mock game thread, 37 Python tests, ASan/UBSan",
+      "local_core_build": "PASS: 3 Mach-O ARM64 relocatable objects and deterministic static libRBPPhase9Core-arm64.a",
+      "local_core_sha256": "cd383ba20e5dc9fe9c16685cebb596d7fff1bac04f5c5c707102311823a554e1",
+      "local_core_archive": "GTA_v13.3_PHASE9_ARM64_CORE_BUILD.zip (conversation artifact, not GitHub)",
+      "iphoneos_link": "SUCCESS: E0/E1/E3 linked and validated with Xcode iPhoneOS SDK 18.5, minimum iOS 16.3, ARM64",
+      "ipa_signed": false,
+      "iphone_e0_verified": false,
+      "iphone_e1_verified": false,
+      "iphone_e3_verified": false,
+      "rage_sender_session_authenticated": false,
+      "online_police_rp_enabled": false,
+      "next_gate": "Keep the existing one-iPhone E3 diagnostic as separate evidence; verify native RAGE sender+session (PR16) and controlled two-device gameplay.",
+      "followup_run": 43969424836,
+      "followup_commit": "1e910d4205ba0c2c3050c230d91b14604fb3bedd",
+      "artifact_id": 14278505355,
+      "artifact_sha256": "9f75bfc5d1304fda0740ab12fce9fefddb55061013117a1231f20af4235d70a9",
+      "build_evidence": "baselines/e3-iphoneos-build-1e910d4.json",
+      "build_fixes": [
+        "c4b8841: macos-15-intel and host prerequisite",
+        "a029c52: lipo input ordering",
+        "25ab79f: Darwin header extension; successful SDK build 43968789184",
+        "1e910d4: latest concurrent PR19 Security RNG and Bash 3.2 array correction; SDK build 43969424836 successful"
+      ],
+      "followup_device_evidence": "PR19 checkpoint 844ea9c3c2b9cacd5db6355bd45c812cbb364571 records one-iPhone E3 UDP with Windows and a native invocation receipt. Separate from RAGE sender binding."
+    },
+    "native_v133_sender_provenance_phase16": {
+      "pr": 16,
+      "branch": "feature/winstom-rp-ipa-audit-20261116",
+      "initial_module_commit": "0573b6a9d4b6943f73a5d9c7c33c27f4affb7a41",
+      "corrected_sanitizer_test_commit": "d41295ec4fa8867740636683756c0ced52f7318e",
+      "session_peer_disasm_pin_commit": "afa1e26011647ae2cb236fb05fe5d9f123efb272",
+      "read_only_lldb_observer_commit": "1700c10ea0cefdeada79a8656ca4f7e816720fb2",
+      "membership_endpoint_chain_commit": "832c206f70dd986fde7c344b709a4959ca2dd32f",
+      "documentation": "ai-lab/projects/roleplay-ios/V133_RAGE_PROVENANCE_PHASE16.md",
+      "source_files": [
+        "v133_interaction/include/rp_v133_rage_provenance.h",
+        "v133_interaction/src/rp_v133_rage_provenance.c",
+        "v133_interaction/tests/test_v133_rage_provenance.c",
+        "v133_interaction/tools/observe_v133_lldb.py",
+        "v133_interaction/tools/audit_v133_connection_chain.py"
+      ],
+      "exact_game_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "exact_game_macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "actual_local_static_instruction_verification": "67/67 PASS from original user IPA; 26 pre-existing + 25 peer/session + 16 membership/endpoint",
+      "github_ci_run": 43997074421,
+      "github_ci_status": "SUCCESS (Synthetic-only Python and C11 GCC/Clang with ASan/UBSan)",
+      "guard_protections": "Reject local SendBuffer path, mismatched netPlayer/event/session connection, invalid membership, stale/future timestamps, alias peer mapping, reused generation, monotonic clock rollback; quarantine on conflict",
+      "observability": "LLDB one-shot hardware OnNetEvent capture offers bounded, redacted connection-ID list matching, without raw pointers or player IDs",
+      "authority_status": "STATIC CANDIDATE ONLY: no verified remote sender/session owner; no authenticated RP delivery; no RAGE event hook; no PoliceRP gameplay enabled",
+      "device_runtime_provenance_tested": false,
+      "next_gate": "Use developer-signed iPhone with controlled remote peer and validated LLDB breakpoint at OnNetEvent; correlate live event connection to netPlayer and independent CNetworkSession GamerInfo IsMember/GetPeerCxn/GetPeerEndpointId and actual RAGE authenticated receive path, with join/leave generation invalidation; then only consider game-thread police native calls after two-device validation."
+    },
+    "native_v133_sender_provenance_phase17": {
+      "pr": 16,
+      "branch": "feature/winstom-rp-ipa-audit-20261116",
+      "latest_code_commits": [
+        "53136d4143208a56612625625a1933077f1a44d2",
+        "ee95b03050c989d935881b93817bfde06779346a",
+        "4255b25d783aacc07bc6fb9a7f59e8982be2eaf5",
+        "8961d0789cdf54e4173c3dd88c778ab42789e947",
+        "92eced46a54b4cb6d483382e5717f7167654c77a",
+        "b96afec8e6a6add586d6c069b593e30c570b7e28",
+        "16936c5121252fddedc442d07b8f69f3d0f5b071",
+        "78633541ee05c7f9727af1f1e0b1a07b7dd7f7f1"
+      ],
+      "original_private_executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+      "exact_macho_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "static_code_pins_unique": 128,
+      "independent_exact_binary_new_pins": "24/24 exact disassembly words from local original GTA5 MATCH; 104 prior audited pins",
+      "new_windows_usb_site": [
+        "on_net_event_pre_dispatch",
+        "on_connection_peer_verify"
+      ],
+      "on_net_event_pre_dispatch_va": "0x1020249a8",
+      "on_connection_peer_verify_va": "0x1017dfa48",
+      "native_chain": "CNetworkSession::OnConnectionEvent reads netEvent+0x3c -> NetworkInterface::GetPlayerFromConnectionId -> netPlayer::IsValid -> GetRlPeerId -> snSession::GetPeerCxn",
+      "peer_session_check": "CNetGamePlayer GetGamerInfo/rlPeerInfo GetPeerId independently compared with snSession+0xba30/+0xb930 GetPeerIdByCxn mapping; same event x1 peer register; does not authenticate transport",
+      "privacy": "96-bit temporary HMAC tag per debugger process for correlation of connection IDs; no raw IDs or keys logged",
+      "ci_phase17_source": {
+        "run_44000373924": "SUCCESS: Python synthetic, C11 source-only GCC/Clang ASan/UBSan",
+        "run_44000700884": "SUCCESS: Python & C11 for opaque LLDB tag",
+        "run_44000965904": "SUCCESS: Python Windows USB internal observer and C11 source tests",
+        "latest_windows_stop_tests": "new hardware-stop synthetic fixture added, CI pending",
+        "run_44001170666": "SUCCESS: Synthetic-only Python including hardware-stop cleanup tests; C11 GCC/Clang with ASan/UBSan"
+      },
+      "actual_windows_usb_internal_site_hit": false,
+      "actual_rage_packet_authenticated": false,
+      "actual_remote_netplayer_bound": false,
+      "actual_session_generation_verified": false,
+      "actual_two_iphone_roleplay": false,
+      "police_gameplay_enabled": false,
+      "next_gate": "Run the developer-signed single-iPhone Windows USB read-only hardware observer with actual controlled remote RAGE peer. Require verified internal OnConnectionEvent and OnNetEvent pre-dispatch samples; still must prove same packet's decrypt provenance and session generation across reconnect before allowing police action.",
+      "actual_local_full_audit": "128/128 unique pin instructions MATCH original GTA5 executable directly (local python struct unpack), SHA256 exactly f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc, no duplicate VA and zero mismatches",
+      "last_code_commit": "3077ee9798d87277130180b12d99fa035aca7d5e",
+      "remaining_proof": "Windows USB internal hardware site(s) not captured on device; must observe real RAGE OnNetEvent and OnConnectionEvent with controlled peer and bind decrypt provenance + session generation before enabling any PoliceRP effects."
+    },
+    "native_session_context_usb": {
+      "status": "DEVICE_OBSERVED_TWO_PROGRESS_BITS",
+      "evidence": "baselines/v133-usb-session-context-20261117.json",
+      "local_source_parent": "b1a01e5ef275ee4a3daecfb20fd47c4b561f2ca6",
+      "integrated_on": "d09dabfcc212798276c1c1aae8ab23998098d71b",
+      "local_python_tests_passed": 110,
+      "exact_ipa_manifest_reproduced": true,
+      "sample_site": "jobs_update",
+      "matched_stock_caller": true,
+      "native_main_session_in_progress": false,
+      "native_transition_session_in_progress": true,
+      "session_identity_verified": false,
+      "session_generation_verified": false,
+      "sender_authenticated": false,
+      "next_gate": "Correlate normal traffic from a cooperating peer with a receive hit and the current snSession. Keep capture scope and stop lifetimes separate.",
+      "ci": "PR16 55f164dacaaa6e4ee040ce037e2648eb5e3256ce Actions 44011485557 Python and C11 jobs passed"
+    },
+    "native_event_queue_phase19": {
+      "status": "CORRECTED_FRAME_PRODUCERS_SOURCE_VERIFIED_DEVICE_PENDING",
+      "producer_correction": {
+        "base_commit": "5605e8e779ee7c3b3333e79d7d4c9d9e572d3ec7",
+        "rejected_site": "0x101cd70bc constructs netEventConnectionError, not a received frame. Earlier opcode checks did not validate the event-class interpretation.",
+        "immediate_frame_site": "0x101cc684c",
+        "buffered_frame_site": "0x101cc5cec",
+        "evidence": "32 new exact opcode checks, 3 chained-vtable targets, 18 total call targets on the original executable; see baselines/phase19-v133-event-queue.json.",
+        "runtime_guards": "Profile v2 checks InFrame vtable, FrameReceived GetId target, native type 4, owning queue and connection ID before correlation.",
+        "buffered_frame_rule": "Never associate the current packet's decrypt indicator with a previously buffered frame.",
+        "local_python_tests_passed": 124,
+        "live_code_guard_ranges": 13,
+        "device_preflight": false,
+        "device_capture": false,
+        "authenticated_sender_verified": false
+      },
+      "source_archive_sha256": "1a39b62a4b68782d53da3efcb3646bf5f3f9951f9f66c0700ec1803683ea9b3d",
+      "archive_manifest_entries_verified": 18,
+      "exact_ipa_audit": "65 Phase 19 opcode pins and 12 direct calls independently passed; 7 additional Windows trace pins",
+      "original_python_tests_passed": 21,
+      "original_c_test_limit": "Archive has the C guard source but omits tests/test_guard_v2.c. The 29 guard assertions in the supplied log were not independently rerun.",
+      "integrated_host_python_tests_passed": 124,
+      "audit_profile": "baselines/phase19-v133-event-queue.json",
+      "usb_mode": "--queue-context profile v2 (one event per attach; at most two simultaneous hardware sites)",
+      "observed_association": "Compare enqueue queue/event with the real Dispatch consumer and OnNetEvent pre-dispatch. Same dispatcher thread and pre-return fence required.",
+      "usb_runtime_match_observed": false,
+      "authenticated_transport_verified": false,
+      "current_session_bound": false,
+      "two_iphone_verified": false,
+      "next": "Run this trace on the development-signed device in controlled Sandbox. Correlate a genuine stop with a cooperating peer and current session.",
+      "first_integration_commit": "ef18c7ecedcb12062345c6bd25476fa7d0b5d022",
+      "first_integration_ci": "44013266765 Python queue fixtures and C11 host jobs passed",
+      "transport_indicator": {
+        "exact_opcode_pins": 13,
+        "additional_direct_call_target_verified": true,
+        "scope": "One boolean-sized local recorded as set, clear or unobserved at the enqueue stop after matching the caller, FP and manager; no equivalent sender authentication assertion.",
+        "caller": "HandleReceivedPacket -> Unpack",
+        "device_runtime_sample": false
+      },
+      "current_device_readiness": "Earlier one-iPhone iOS 18.6 preflight verified live code and two hardware sites, then removed them and detached. Current usbmux inventory has only a Network connection and no USB device; user cannot reconnect now. No live queue sample.",
+      "transport_commit": "162e584740e503f0fbf7937e48142bb4cfafffec",
+      "transport_ci": "44014313853 SUCCESS Python and C11 ASan/UBSan jobs",
+      "device_preflight_evidence": "baselines/v133-phase19-usb-preflight-20261117.json",
+      "usb_device_selection": {
+        "status": "DEVICE_PREFLIGHT_PASSED",
+        "rule": "Pin PID lookup and debugproxy to the same USB inventory identity. Require --udid when multiple USB devices are connected.",
+        "physical_devices_in_test": 1,
+        "case_sensitive_udid_lookup_reproduced": true,
+        "live_code_ranges_verified": 8,
+        "two_hardware_sites_removed_and_detach_acknowledged": true,
+        "local_python_tests_passed": 119,
+        "live_queue_event_observed": false
+      },
+      "queue_to_scripted_usb": {
+        "status": "PREVIOUS_PROFILE_PREFLIGHT_ONLY_CORRECTED_PROFILE_PENDING",
+        "mode": "--queue-context --receive-context",
+        "scope": "One attach through pre-dispatch and into the scripted handler. Requires exact frame, event, sender, receiver, thread and delegate lifetime.",
+        "local_python_tests_passed": 120,
+        "live_code_guard_checks": 16,
+        "two_scripted_stage_hardware_sites_installed_removed_and_detach_acknowledged": true,
+        "queue_to_scripted_runtime_match": false,
+        "authenticated_sender_verified": false
+      },
+      "scripted_session_slot_candidate": {
+        "status": "EXACT_BINARY_AND_SYNTHETIC_TESTS_PASSED",
+        "fixture": "Same scripted stop with unique transition slot and consistent peer table; ambiguous slots refuse the table scan.",
+        "guard_functions": 7,
+        "python_tests_passed": 120,
+        "device_attempt": "USB inventory had no connected iPhone at capture time.",
+        "device_session_slot_sample": false,
+        "device_peer_table_match": false,
+        "authenticated_sender_verified": false,
+        "session_generation_verified": false
+      },
+      "session_swap_boundary": {
+        "status": "EXACT_BINARY_AND_SYNTHETIC_TESTS_PASSED",
+        "evidence": "Exact ClearSession branch calls SwapSessions. The guarded ARM64 block exchanges two slots in one store; a slot alone is not an incarnation.",
+        "mode": "--site session_swap",
+        "local_python_tests_passed": 121,
+        "device_sample": false,
+        "session_generation_verified": false
+      },
+      "endpoint_channel_observer": {
+        "base_commit": "35bbb15ba5a68130ab3f92d869915bab457c68e4",
+        "status": "STATIC_AND_HOST_TESTED_DEVICE_PENDING",
+        "evidence": "Manager Unpack selects x22 from endpoint x23 indexed by channel x25 at 0x101cd6874; connection Unpack saves x23 at FP-0x28 and x25 at FP-0x38. 17 new exact opcode checks passed; see ENGINE_INTEGRATION_MAP.md.",
+        "implementation": "Immediate-frame transport reader checks bounded endpoint[channel] equals enqueue connection before observing the packet indicator. Buffered frames remain unobserved.",
+        "local_python_tests_passed": 126,
+        "negative_cases": "null/unaligned/overflow endpoint, channel >=16 or high register bits, empty/mismatched channel, unreadable entry; boundary channels and ASLR covered",
+        "parent_ci": {
+          "source": 44074391157,
+          "ai_lab": 44074391084,
+          "source_watch": 44074391197,
+          "conclusion": "success"
+        },
+        "current_ci": "Check Actions for the commit containing this checkpoint; source changes do not require rebuilding the unchanged ARM64 dylib.",
+        "device_capture": false,
+        "authenticated_sender_verified": false,
+        "session_generation_verified": false,
+        "two_device_tested": false
+      },
+      "packet_integrity_observer": {
+        "base_commit": "66961ca8ab49b82f42f9de592d6a6c1b987966f0",
+        "status": "STATIC_AND_HOST_TESTED_DEVICE_PENDING",
+        "evidence": "47 exact opcodes, 9 call targets, eight-byte HMAC tag comparison before AES; HMAC-success block dominates AES call and success literal in a conservative intraprocedural CFG. See ENGINE_INTEGRATION_MAP.md.",
+        "profile_version": 3,
+        "queue_code_guard_ranges": 17,
+        "local_python_tests_passed": 133,
+        "interpretation": "Set indicator on a guarded immediate frame implies address_key_hmac_candidate only; clear is tunnel_or_bypass_unresolved; buffered frames stay unobserved. No key/packet reads.",
+        "parent_ci": {
+          "source": 44124651444,
+          "ai_lab": 44124651572,
+          "source_watch": 44124651628,
+          "conclusion": "success"
+        },
+        "device_capture": false,
+        "authenticated_sender_verified": false,
+        "key_peer_bound_to_game_player": false,
+        "two_device_tested": false
+      },
+      "peer_identity_domains": {
+        "parent_commit": "874980490ea0b0c3b645775b88726f82e2ce21d3",
+        "additional_exact_opcode_pins": 15,
+        "total_connection_chain_pins": 143,
+        "local_python_tests_passed": 137,
+        "transport_id_offset": 0,
+        "rl_id_offset": 464,
+        "new_session_code_guards": [
+          "peer_info_init",
+          "local_net_peer_address",
+          "peer_address_getter"
+        ],
+        "result": "Scripted observer separately compares transport and rl domains; wrong/missing transport ID fails closed. Legacy optional probes do not claim transport consistency.",
+        "authenticated_sender": false,
+        "new_device_capture": false,
+        "parent_ci": {
+          "source": 44128501576,
+          "ai_lab": 44128501608,
+          "watch": 44128501617,
+          "conclusion": "success"
+        }
+      }
+    },
+    "private_server_direction": {
+      "requested": "2026-11-18",
+      "status": "host server implemented and tested; native client and game binding pending",
+      "supersedes": "Earlier preference not to require a user-operated RP server",
+      "reuse": [
+        "prp3_direct_tls.py",
+        "rp_v133_police.c",
+        "rp_v133_police_tx.c"
+      ],
+      "boundary": "Authenticated RP certificate identity is not yet a verified GTA character identity."
+    },
+    "native_live_connection_objects": {
+      "parent_commit": "112d5bb8f8b353aeae545fe6f769c67e41065594",
+      "scope": "At a guarded iPhone receive stop, both full connection IDs resolved to open native records under one transport manager and one endpoint. Endpoint slots 7 and 13 held the respective records. The session table reported eight remote peers.",
+      "evidence": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "player_channel": 7,
+      "session_channel": 13,
+      "host_python_tests_passed": 187,
+      "host_test_log_sha256": "98155cab3a49feab4829618db296009e5df74525979cb0a5f52635e4db41df97",
+      "live_connection_objects_verified": true,
+      "specific_test_peer_attributed": false,
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false
+    },
+    "native_channel_configuration_observer": {
+      "parent_commit": "113184892cd7f969b97a38f724fca1abd4bdbb13",
+      "scope": "After an endpoint match, recover the player manager from the guarded Dispatch frame, corroborate its delegate, and compare configured channels only if the player manager and session use the same transport manager.",
+      "observer": "script_event_handler --receive-context",
+      "host_python_tests_passed": 186,
+      "host_test_log_sha256": "68d2f5ce57f0f2d23bdc9fed4e0cab6cda7232159ae463e538f28e5542f93c6d",
+      "live_channel_comparison_verified": true,
+      "iphone_sample": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "observed_configured_channels": {"player_manager": 7, "main_session": 13},
+      "live_connection_objects_verified": true,
+      "authenticated_sender_verified": false
+    },
+    "native_connection_assignment_domains": {
+      "parent_commit": "657f5025e418106ffe64026cdf1504e55722b0c0",
+      "scope": "Exact-build AddRemotePlayer uses the player manager channel and stores connection and endpoint on netPlayer. ConnectToPeer uses the session channel when establishing a connection; AddPeer stores the supplied connection and endpoint in a separate snPeer row.",
+      "initial_session_channels": {"main": 13, "transition": 12},
+      "profile": "baselines/phase9-v133-engine.json",
+      "observer": "script_event_handler --receive-context records an anonymous endpoint comparison only after matching the rl peer and transport identities on a different-connection row.",
+      "host_python_tests_passed": 185,
+      "host_test_log_sha256": "613c3efc5f657b045e38bcac27b0cf177dffcbb346c5a84222f3113332d44aee",
+      "live_endpoint_comparison_verified": true,
+      "live_channel_assignments_verified": false,
+      "authenticated_sender_verified": false
+    },
+    "single_iphone_native_receive": {
+      "parent_commit": "96be0918ff2c69d48f150f6446ef2a2a647e5bff",
+      "evidence": "baselines/v133-single-iphone-native-receive-20261119.json",
+      "scope": "One standalone GTA client and one LiveContainer GTA client on an iPhone. The tester reported both in one invite-only room and stock player interaction. USB samples on the standalone receiver validated the native receive stack and event to netPlayer connection equality.",
+      "main_session_sample": "Established main slot; the first examined remote entry had an equal rl peer ID and a different connection value. The scan stopped at that row; this is not a roster count.",
+      "queue_sample": "Immediate ingress frame with connection and guarded integrity-path evidence; dispatch stage did not match.",
+      "transport_domain_followup": "After reconnecting USB, a guarded standalone receive stop found that the conflicting row's transport metadata also matched the sender. The event and session table connection values still differed.",
+      "connection_lookup_static": "Three exact instructions after GetPeerCxn at the guarded OnConnectionEvent call site check its -1 sentinel and select the continuation. This immediate block does not compare the returned connection to the event connection.",
+      "roster_count": "The checker now reports the guarded session remote peer count separately from the number of rows examined. The user later reported five players in the room; no sample was attributed to a specific guest based on that count.",
+      "host_python_tests_passed": 184,
+      "host_test_log_sha256": "0c4d8571994ee0fc3910c4e358eca9c34b221aea4040b6370017c6d6aba4ced5",
+      "authenticated_sender_verified": false,
+      "session_generation_verified": false,
+      "native_gameplay_rp_verified": false
+    },
+    "single_iphone_livecontainer_feasibility": {
+      "parent_commit": "c262c3c173aef7870292b44b23fbc62a863edab9",
+      "evidence": "baselines/v133-livecontainer-standalone-cpu-20261119.json",
+      "scope": "One USB-connected iPhone with a standalone GTA5 process and a LiveProcess. Over an eight-second Sysmon window GTA5 had zero reported CPU across all 16 samples and LiveProcess reported nonzero CPU across all 16.",
+      "liveprocess_guest_executable_verified": false,
+      "both_gta_game_loops_verified": false,
+      "same_private_gta_room_verified": false,
+      "native_event_delivery_verified": false
+    },
+    "native_leave_session_id_comparison": {
+      "parent_commit": "e73d0675292ca25f8ab24aa6174bd16e4fa523f6",
+      "scope": "Guard both exact v13.3 session ID getters, then compare the selected main slot's ID at the accepted leave request and later Update decision. Output contains only ID presence and relation, never the ID or slot pointer.",
+      "relations": ["unchanged", "cleared", "changed", "unknown_initial_id"],
+      "host_python_tests_passed": 182,
+      "host_test_log_sha256": "3061f27a7d2772886893e1b92428fe792596cbbbf7573458240565e17efbdfea",
+      "iphone_id_comparison_verified": false,
+      "session_generation_verified": false,
+      "authenticated_sender_verified": false
+    },
+    "native_leave_call_observer": {
+      "parent_commit": "a4f0975cf6bed5487b8abf0ce4e77912f43d1e18",
+      "scope": "Guarded observer compares the established main slot and native leave task at the call, the accepted return in the same frame, and the later Update cleanup decision during one attach.",
+      "observer_site": "leave_session_call",
+      "profile": "baselines/phase9-v133-engine.json",
+      "host_python_tests_passed": 181,
+      "host_test_log_sha256": "3325b5cac938f84ccc14bf3355d95ac19f0fa924b690d2f594762774ee656c0a",
+      "iphone_call_capture_verified": false,
+      "session_generation_verified": false,
+      "authenticated_sender_verified": false
+    },
+    "native_private_leave_path_iphone": {
+      "parent_commit": "f7bbede429b2445517b169e040dad87c10aaea1a",
+      "evidence": "baselines/v133-private-leave-path-iphone-20261119.json",
+      "scope": "Two private-room exits on one signed iPhone. The first hit ClearSession from Update. The second reached the bypass destination in the same guarded Update frame and thread. Both slots were already unestablished at the branch.",
+      "earlier_target": "The exact LeaveSession call passes the main slot as the snSession::Leave receiver and the manager task-status pointer as x2. Runtime capture of this earlier path is pending.",
+      "host_python_tests_passed": 178,
+      "host_test_log_sha256": "5221481055f2d9b3f1c988b106dca48a7367158d57cca0e01606ebf7391d9957",
+      "session_generation_verified": false,
+      "native_game_binding_verified": false
+    },
+    "native_drop_session_boundary": {
+      "parent_commit": "4e6914fdf88ed2d3ba74322122be46579ef7e204",
+      "evidence": "baselines/v133-drop-session-boundary-iphone-20261119.json",
+      "scope": "The exact Update branch calls DropSession before ClearSession. The exact DropSession wrapper shuts down and reinitializes the main snSession slot. UpdateTransition contains a separate direct call to ClearSession.",
+      "iphone_drop_session_call_status": "timeout",
+      "clear_session_caller_observer": "Guarded LR labels distinguish the two direct call sites. Runtime caller label still needs a device capture.",
+      "host_python_tests_passed": 176,
+      "host_test_log_sha256": "d0a8770bfcfd108e7ec19761cd0003967dffca79370f1157edd977051c2f33a7",
+      "session_generation_verified": false,
+      "native_game_binding_verified": false
+    },
+    "native_private_session_leave_iphone": {
+      "parent_commit": "3e38f3a1f4b2057b2ccebbb54d1cff4d1b411187",
+      "evidence": "baselines/v133-private-session-leave-iphone-20261119.json",
+      "scope": "One signed iPhone, invite-only GTA room and two manual exits to Sandbox. The main slot was established in the private room while its progress bit was clear. Both post-exit samples had no established slot.",
+      "lifecycle_entry": "A guarded read-only USB breakpoint hit ClearSession during the second exit. SwapSessions was not sampled during the first exit.",
+      "host_python_tests_passed": 173,
+      "host_test_log_sha256": "7858946a508d09ac527be2657c167ca276cfd9b4f8e635766ec25de329fb322a",
+      "session_generation_verified": false,
+      "remote_sender_verified": false,
+      "native_game_binding_verified": false
+    },
+    "private_authority_listener_shutdown": {
+      "parent_commit": "89fcd86f9b70979e304823ea04cf2f1026d3f2e8",
+      "scope": "Stop the listener from accepting new connections, retire active TLS clients, and then await listener shutdown. Python 3.13 can otherwise keep waiting while admitted clients remain connected.",
+      "validation_scope": "A real idle mTLS peer with an active RP admission is retired within the three-second regression deadline and receives EOF. Signed iPhone panel consent completed with the corrected Windows server.",
+      "host_python_tests_passed": 172,
+      "host_test_log_sha256": "d5186cc17e0b713e2de4869b45ab080fbd2b012bde47a50f2d506cb478edf5ba"
+    },
+    "private_authority_player_panel": {
+      "parent_commit": "6155e9de1628ee191a52341c09711244613f0f3e",
+      "scope": "Optional native UIKit controls for manual join/leave and two-way GREET/DOCUMENTS against the paired RP principal in a development kit. Uses the existing authenticated LAN transport.",
+      "config": "prepare_private_rp.py --panel",
+      "safety": "No game identifiers, game state changes or custody requests. Controls require the existing RP server state and consent. No UI for default config.",
+      "private_server_host_tests_passed": 27,
+      "build": {
+        "source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+        "source_ci_run": 44514592006,
+        "iphone_arm64_run": 44514579411,
+        "artifact_id": 14524956332,
+        "artifact_scope": "Compiled probe and helper scripts only. The IPA was built and remains local.",
+        "local_unsigned_ipa": "GTAV-v13.3-Private-RP-Panel-103c23b-UNSIGNED.ipa",
+        "ipa_sha256": "729e928146e5ef5221f63e62f61f4e86a6551556a1e309e9308483ecb7f2f18a",
+        "dylib_sha256": "7f38538c09c567192e93288cee2ce97d0a774d725b319530aa15c4ef9b3f9416",
+        "dylib_uuid": "2BC69080-1D4C-354B-A739-9F327EA03BEA",
+        "validation": "ZIP CRC and exact entry comparison passed. Only the GTA5 dylib load command and the additional probe changed. UIKit linked as an iOS system dependency. C static analyzer reported no diagnostics.",
+        "device_tested": true
+      },
+      "manual_ui_verified_on_iphone": true,
+      "physical_evidence": "baselines/private-rp-iphone-panel-20261119.json",
+      "physical_validation_scope": "One signed iPhone and a distinct Windows RP principal on private LAN. Both social operations were receipted in both directions in one trial. Manual opt-in and opt-out were matched to ordered snapshots and successive nonces in a separate trial.",
+      "native_game_binding_verified": false
+    },
+    "private_authority_reconnect_read_guard": {
+      "parent_commit": "1bafd76e379c6876811d2a3d83662b1d0793b57c",
+      "scope": "The server verifies that a TLS connection still owns its RP admission after awaiting a record and before dispatching it.",
+      "validation_scope": "Loopback mTLS regression pauses a completed read, retires the original connection, then checks that the replacement keeps its own consent and nonce. The replacement can submit its own opt-in.",
+      "host_python_tests_passed": 170,
+      "host_test_log_sha256": "0e2de3e5b6bdf2a3b21c30cd8d8b9979c1b00bd87a1920f47edac2fd4604a792",
+      "iphone_session_swap_observation": {
+        "context": "Sandbox reported by tester",
+        "wait_seconds": 55,
+        "status": "timeout",
+        "same_session_slots_swapped": false,
+        "session_generation_verified": false
+      },
+      "gameplay_tested_on_iphone": false
+    },
+    "private_authority_game_binding_lifecycle": {
+      "parent_commit": "a7f57f74d41b9a629156e5fb0aa4fbfa2bc84d01",
+      "host_abi": 3,
+      "scope": "Game-dependent actions require an in-process verified one-to-one binding for each current mTLS admission, GTA scope and game incarnation. No client wire can establish this mapping; no GTA adapter is active.",
+      "lifecycle": "Engine leave or generation rotation revokes consent and releases custody while retaining TLS and replay nonces; old bindings cannot revoke a replacement. New game binding requires a new opt-in.",
+      "host_python_tests_passed": 169,
+      "host_c_ffi_tests_passed": true,
+      "host_test_log_sha256": "743adb556ac7b0307cb8c9a9e9f88eec4d7d8e8d266cc56e7058b6112a9b5bea",
+      "local_server_dll_sha256": "048da3951d2ee03ab8c1dc28b4501806f02237d191121ba6d75f50ea7fe51c64",
+      "lan_cli_smoke_log_sha256": "16e4be68455b749a06c3a2ffa24559bbe202e6ff9b59cbee87b018460d69b5b2",
+      "validation_scope": "Live mTLS with modeled GTA game admissions for leave and rotation; two Windows CLI peers via Wi-Fi for consent/notifications with no GTA adapter.",
+      "gameplay_tested_on_iphone": false
+    },
+    "private_authority_social_transport": {
+      "parent_commit": "052c8b1db30cf5658d9d9c56c402517c0aa61f6f",
+      "scope": "Opt-in PRP3 GREET and DOCUMENTS notifications via private mTLS authority; source is the authenticated RP principal; one pending request per sender; receiver-specific receipt; no document content or native gameplay action.",
+      "host_tests_passed": 167,
+      "host_c_codec_tests_passed": true,
+      "interop": "compiled native C client and Windows peer exchanged both actions over real loopback TLS; two actual host CLI processes did so using the PC Wi-Fi address",
+      "negative_cases": "unsubscribed peer, opt-out cancellation, sender cannot confirm own delivery, expiration, replay after reconnect",
+      "source_commit": "0c3834880f2dfeadbb20e36addcd6bf645e040b7",
+      "iphone_build": {
+        "status": "passed",
+        "run": 44508897696,
+        "artifact": 14521415918,
+        "dylib_uuid": "C86C942B-4E2B-39D3-80D3-6E6D41BF3163",
+        "dylib_sha256": "4e637a5ba0dcb2096b566b0d0ee7e91ce9e2bab4ea76aedadcf3acb191601291",
+        "arm64_ios_sdk_static_analyzer_diagnostics": 0
+      },
+      "local_unsigned_ipa": {
+        "name": "GTAV-v13.3-Private-RP-Social-Probe-0c38348-UNSIGNED.ipa",
+        "sha256": "a0b28c6b42bdb5a4c7dfb90c3c688d819c4156a1a463a52f4c8f0333a6e8d5fd",
+        "verification": "Exact original checked; ZIP intact, one probe added, original asset data byte-identical, system dylib dependencies only. User signing pending."
+      },
+      "windows_private_lan_witness": "Physical signed iPhone and distinct Windows peer completed both receipted RP actions over private mTLS; iPhone log collected by USB. Server stopped on completion.",
+      "source_ci": {"run": 44508906075, "status": "passed"},
+      "device_evidence": "baselines/private-rp-iphone-social-20261119.json",
+      "iphone_runtime_tested": true,
+      "game_identity_binding": false
+    },
+    "private_authority_pair_admission": {
+      "parent_commit": "52813aa91e4eb31a854615723612a010bd43edb5",
+      "scope": "Server validates current RP actor and target admissions on a typed observation before applying pair actions. Provider cannot read the raw client command. C authority remains the decision maker. No wire or ABI changes.",
+      "host_python_tests_passed": 163,
+      "test_log_sha256": "f52e2017ab3929954130d486dc2bbef5b215fdcab45422035568bb8cb748c590",
+      "host_checks": "Real loopback mTLS with synthetic observations: reject switched actor/target and stale target admission even with a fresh timestamp; accept matching current admissions.",
+      "native_game_provider_enabled": false,
+      "gameplay_tested_on_iphone": false
+    },
+    "private_authority_duty_revocation": {
+      "parent_commit": "9db58b4d71c812cdfb5f44614abdba743e04bc42",
+      "host_abi": 2,
+      "scope": "Authority owner requires an independent in-process duty observation scoped to RP principal, session, epoch and admission; original observation age <= 250ms. No RP wire changes or native source enabled.",
+      "verified": "Timer reuses C revoke_duty and publishes released custody when local duty ends, becomes stale, or its source fails. A paired action observation alone cannot grant duty. A previous admission cannot regrant it after reconnect.",
+      "host_python_tests_passed": 161,
+      "test_log_sha256": "c7072aece407b9c5f22055257c4e82282e1e5306cf392fcc362590acdaf698a7",
+      "host_c_ffi_tests_passed": true,
+      "windows_server_dll_sha256": "8fb1b29202d6b5bbcb895640c2a0179a72fd0f364c9cda9d390730af18f94341",
+      "windows_lan_cli_smoke": "two Windows processes over the PC Wi-Fi interface, mutual TLS, opt-in and disconnect synchronized; duty denied without a native source",
+      "windows_lan_cli_log_sha256": "9f73654488e580f417bbfe9d5832314f3f4f86956500beb62dcd34cf9077bdf6",
+      "gameplay_tested_on_iphone": false
+    },
+    "v133_local_work_duty": {
+      "baseline": "baselines/v133-local-work-duty-iphone-20261119.json",
+      "distinct_source": "MacportWorkStatus reads local work job index and on-shift byte; the older network job ID/kind/state remained idle while the displayed police mission was active",
+      "exact_binary_checks": "10 pinned ARM64 instructions, 3 first table rows verified by chained rebase, full live function SHA-256 guard",
+      "iphone_observed": "cop_ls on_shift=true while active and job=none on_shift=false after quitting in private Sandbox; both at the guarded jobs_update caller",
+      "local_policy": "read-only evidence for duty display; does not authorize remote commands or identify any player",
+      "host_checks": "32 USB observer tests and 6 static-inspector tests passed"
+    },
+    "private_authority_iphone_sandbox_observer": {
+      "baseline": "baselines/private-rp-authority-build-sandbox-20261119.json",
+      "device_scope": "one physical iPhone after passing the private authority transport test",
+      "sample": "Verified two jobs_update hardware stops and the expected direct caller. Both progress bits true, neither session slot established; local stock job idle. Queue v3 preflight reached enqueue on this signed app, timed out without a frame in 7 seconds.",
+      "game_thread_affinity_verified": false,
+      "native_authenticated_sender_verified": false,
+      "session_generation_verified": false
+    },
+    "private_authority_iphone_device_consent": {
+      "baseline": "baselines/private-rp-iphone-consent-20261119.json",
+      "physical_iphone": true,
+      "host_witness": "Windows second mTLS identity verified ordered join, opt-in, opt-out and disconnect at 09:47:58 UTC",
+      "device_log": "consent_round_trip_passed, rp_tls_verified=1, retrieved via USB from GTA Documents",
+      "game_uuid_verified": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+      "native_game_binding_verified": false,
+      "two_iphone_gameplay_tested": false
+    },
+    "private_authority_iphone_lan_witness": {
+      "scope": "One command generates a temporary private kit, binds the diagnostic server, and observes join / opt-in / opt-out / disconnect through a distinct host mTLS identity",
+      "host_tests_passed": 157,
+      "host_checks": "Positive test ran the native codec over real loopback mTLS. Negative test rejected disconnect after opt-in. The PC Wi-Fi listener and host witness reached ready on Windows.",
+      "device_runtime": "one iPhone plus a host peer passed; see private_authority_iphone_device_consent"
+    },
+    "private_authority_consent_probe": {
+      "mode": "Explicit local kit opt-in; self opt-in and opt-out with ACK and nonce-matched snapshots, then disconnect",
+      "gameplay_effects": false,
+      "device_runtime": "passed on a physical iPhone; see private_authority_iphone_device_consent",
+      "host_validation": "155 Python tests passed, including the new native C round trip over real loopback mTLS with a second client observing [0, 1, 0]; Zig Clang C11 assertion fixtures passed for ACK/snapshot ordering and policy failure",
+      "windows_wifi_interface_smoke": "two Windows CLI peers connected via the PC Wi-Fi IPv4 address; the kit generated the iPhone probe option; no cross-device Wi-Fi data",
+      "source_commit": "2455bc3f49b25e531bc4430612ca29c1288d6d53",
+      "source_ci": {"run": 44496263476, "conclusion": "success"},
+      "iphoneos_arm64": {
+        "run": 44496252663,
+        "artifact_id": 14515181692,
+        "conclusion": "success",
+        "dylib_uuid": "C6A8D192-F610-38AC-90D5-BBE7AB93EAF8",
+        "dylib_sha256": "39baadb617d74a5588619a9adba1963b6516ddfcc38499c46224cebe79b39461",
+        "sdk_clang_analysis_translation_units_without_diagnostics": 9
+      },
+      "unsigned_ipa": {
+        "file": "GTAV-v13.3-Private-RP-Consent-Probe-2455bc3-UNSIGNED.ipa",
+        "sha256": "48ccecbba80677dc161ea9e9256e7dcaeafdd4a5ccc5ae42e805e530fc070de6",
+        "verification": "ZIP CRC, original asset bytes, one added dylib and matching arm64 load command verified locally"
+      }
+    },
+    "private_authority_ios_transport": {
+      "scope": "Native C codec and Objective-C private mTLS transport source; no engine binding or gameplay hooks",
+      "host_python_tests_passed": 154,
+      "real_loopback_tls_native_codec_tests_passed": 2,
+      "assertion_enabled_native_codec_tests": "passed on Windows with Zig Clang",
+      "windows_clang_static_analysis": "0 diagnostics across codec, authority, transactions and FFI",
+      "iphone_packer_fixture_tests_passed": 9,
+      "source_commit": "99ed120c35f164a14f020b11209d8d53985f0533",
+      "source_github_actions": {"run": 44492869967, "conclusion": "success", "gcc_clang_sanitizers": "passed", "static_analysis": "passed"},
+      "iphoneos_build": {
+        "run": 44492859651,
+        "artifact_id": 14513936310,
+        "conclusion": "success",
+        "architecture": "arm64",
+        "sdk": "18.5",
+        "minimum_ios": "16.3",
+        "dylib_uuid": "CD2AE636-0A9B-3AD8-99D9-65FD931AAE58",
+        "dylib_sha256": "528b170dc2d1388446ee46fb57a0173b94cca118d3bbc29f68328de5e47a8a5f",
+        "artifact_sha256": "f5b7c3ca314c6a32aedced5861c64c59b368a9e3cfe734ed70647e43483f47f0",
+        "sdk_clang_analysis_translation_units_without_diagnostics": 9
+      },
+      "local_unsigned_ipa": {
+        "file": "GTAV-v13.3-Private-RP-Authority-Diagnostic-99ed120-UNSIGNED.ipa",
+        "sha256": "4bdf4a86854a2e1dda469871930dfe1cf9eaa97d91a7dccbf0041f6602dff85a",
+        "verified": "ZIP CRC, one 80-byte load command in GTA5, one arm64 probe added, byte-identical remaining archive entries, system-only dylib dependencies",
+        "signing_and_installation": "pending"
+      },
+      "production_cli_loopback_smoke": "server plus two actual host client processes; both opt in, same snapshot, deny duty without game observations, disconnect replicated",
+      "iphone_runtime": "unverified; no USB iPhone detected at packaging checkpoint"
+    },
+    "private_authority_server": {
+      "schema": "private-rp-server-host-v1",
+      "recorded_date": "2026-11-19",
+      "parent_commit": "7b9c16d6b3b4f34380d9494666f6a6101ac249a3",
+      "runtime": "Windows x86_64 Python 3.13; cryptography 50.0.2; Zig 0.13.0 clang C11 DLL",
+      "python_tests": {
+        "total": 152,
+        "private_server": 15,
+        "result": "PASS",
+        "log_sha256": "5d7b86dba7443c600ea69440aa5f97c74c42e52e0e97ac3b71a79b3fc189e573"
+      },
+      "c_tests": {
+        "result": "PASS",
+        "assertions_enabled": true,
+        "binaries": [
+          "test_v133_server_ffi",
+          "test_v133_police",
+          "test_v133_police_tx",
+          "test_v133_police_bridge"
+        ],
+        "log_sha256": "8dce313f9305d47ac55384d011dcee46c7a1c1943adf49a9318c61a20aa07701"
+      },
+      "host_dll_sha256": "20a8a6d11b7a39e7de20b43c056d81af6fab17c3b4622f32ab3ece402a8e25a3",
+      "actual_network": "Loopback TCP with mutually authenticated TLS 1.3, server/client certificate pinning and two host clients",
+      "synthetic_inputs": "All game observations (position, job, vehicle and jail intake); supplied only by test-owned in-process fixture",
+      "verified": [
+        "certificate registry roles",
+        "opt-in and opt-out",
+        "duty and custody sequence under modeled facts",
+        "matching two-client snapshots",
+        "deadline and oversized-record rejection",
+        "wrong scope and nonce replay rejection",
+        "duplicate connection rejection",
+        "distance/freshness/instance checks",
+        "lease expiry and disconnect revocation",
+        "timer-driven jail release",
+        "reconnect nonce retention and old ACK invalidation",
+        "client snapshot invalidation on close and cancelled transaction",
+        "generated development certificate kit"
+      ],
+      "default_game_observation_provider": null,
+      "iphone_tested": false,
+      "two_device_tested": false,
+      "gameplay_online_working": false,
+      "remaining": [
+        "native iOS authority protocol client",
+        "independent RP identity to GTA player binding",
+        "trusted game observations",
+        "native game-thread effects",
+        "real two-device and stock-mode regression tests"
+      ],
+      "parent_ci": {
+        "source": 44333349429,
+        "ai_lab": 44333349400,
+        "watch": 44333349363,
+        "conclusion": "success"
+      },
+      "this_checkpoint_ci": "pending until pushed; inspect Actions for resulting commit"
+    }
+  }
 }

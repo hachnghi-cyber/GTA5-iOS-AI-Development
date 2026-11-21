@@ -1,0 +1,29 @@
+{
+  "schema": "v133-livecontainer-standalone-cpu-v1",
+  "date": "2026-11-19",
+  "parent_commit": "c262c3c173aef7870292b44b23fbc62a863edab9",
+  "scope": "One user-connected iPhone; iOS Instruments Sysmon process CPU sample through USB. User reported a standalone GTA instance and a LiveContainer instance. App foreground, Picture-in-Picture, and room membership were not verified.",
+  "requested_window_ms": 8000,
+  "sample_span_ms": 7909,
+  "measurement": "pymobiledevice3 11.56.0 developer dvt sysmon process monitor threshold",
+  "counts": {
+    "GTA5": {
+      "samples": 16,
+      "nonzero_cpu_samples": 0
+    },
+    "LiveProcess": {
+      "samples": 16,
+      "nonzero_cpu_samples": 16
+    },
+    "LiveContainer": {
+      "samples": 16,
+      "nonzero_cpu_samples": 7
+    }
+  },
+  "raw_log_sha256": "1a56e55b2fc077ea894312f13a4d3094917fe2e03a9e2df59adcb6fe9f2595c9",
+  "observation": "The standalone GTA5 process was present and had zero reported CPU in every sample. LiveProcess reported nonzero CPU in every sample.",
+  "liveprocess_guest_executable_verified": false,
+  "both_gta_game_loops_verified": false,
+  "same_private_gta_room_verified": false,
+  "native_event_delivery_verified": false
+}

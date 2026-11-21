@@ -1,0 +1,91 @@
+{
+  "schema": "v133-local-police-work-device-v1",
+  "date": "2026-11-19",
+  "scope": "Physical iPhone in private Sandbox; local work/duty observation only",
+  "expected_executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "parent_commit": "16b44e2cd1404cccd78a0c7d091a701e425cd1be",
+  "static_profile": "phase9-v133-engine.json#local_work_sample",
+  "observed": "On-screen police dispatch mission and a guarded local-work cop_ls active shift; the separate stock job fields remained idle.",
+  "active_sample": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "game_thread_affinity_verified": false,
+    "hardware_stop_at_expected_pc": true,
+    "local_work_candidate": {
+      "job": "cop_ls",
+      "local_police_duty_candidate": true,
+      "on_shift": true,
+      "police_role_authorized": false,
+      "shift_field_valid": true
+    },
+    "macport_online_update_callsite_matches": true,
+    "native_main_session_in_progress": true,
+    "native_transition_session_in_progress": true,
+    "network_receive_call_chain_observed": false,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_context_status": "observed",
+    "session_generation_verified": false,
+    "session_identity_verified": false,
+    "session_slots": {
+      "candidate_slot": "none",
+      "main_slot_established": false,
+      "status": "observed",
+      "transition_slot_established": false
+    },
+    "site": "jobs_update",
+    "stock_job_candidate": {
+      "job_id_is_cop_ls": false,
+      "job_id_known": true,
+      "police_role_authorized": false,
+      "stock_job_kind": 0,
+      "stock_job_state": 0
+    },
+    "thread_label": "T1",
+    "thread_label_scope": "anonymous_single_capture_only",
+    "timed_out": false
+  },
+  "raw_observer_log_sha256": "38f2aeac1ce17e9a99782dc5125050c8ef459d833443666ce51c5738b5d3662e",
+  "quit_sample": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "game_thread_affinity_verified": false,
+    "hardware_stop_at_expected_pc": true,
+    "local_work_candidate": {
+      "job": "none",
+      "local_police_duty_candidate": false,
+      "on_shift": false,
+      "police_role_authorized": false,
+      "shift_field_valid": true
+    },
+    "macport_online_update_callsite_matches": true,
+    "native_main_session_in_progress": true,
+    "native_transition_session_in_progress": true,
+    "network_receive_call_chain_observed": false,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_context_status": "observed",
+    "session_generation_verified": false,
+    "session_identity_verified": false,
+    "session_slots": {
+      "candidate_slot": "none",
+      "main_slot_established": false,
+      "status": "observed",
+      "transition_slot_established": false
+    },
+    "site": "jobs_update",
+    "stock_job_candidate": {
+      "job_id_is_cop_ls": false,
+      "job_id_known": true,
+      "police_role_authorized": false,
+      "stock_job_kind": 0,
+      "stock_job_state": 0
+    },
+    "thread_label": "T1",
+    "thread_label_scope": "anonymous_single_capture_only",
+    "timed_out": false
+  },
+  "quit_raw_observer_log_sha256": "8659c5e64defa0e65f10059e8b2c12a6d3954a11bab1b67b6f0a019c4ff0ad97",
+  "quit_sample_collected": true,
+  "gameplay_or_identity_authorization": false
+}
