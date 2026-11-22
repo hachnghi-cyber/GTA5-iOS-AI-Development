@@ -1,0 +1,5 @@
+# RP14 session probe
+Read-only same-process diagnostic for the exact GTA5 v14 executable (SHA-256 fc274e3423c56d2aa12db5fe1146d4aea26f63eb5a7b8f46471c9fbf20906d47; UUID D7880147-4EEE-3350-A19B-D6A18B2F0D24). No game assets, original executable, credentials or IPA included.
+The probe checks UUID and image layout; memory reads are diagnostic only. Slot and epoch are not authenticated identity. Output: Documents/RP14SessionProbe.jsonl; no raw pointers or session IDs logged. No native calls or gameplay state changes.
+CI links iOS ARM64 device dylib only after host regression. Use the local Phase 7 pack_probe.py with hash-matched R3 IPA and downloaded RP14Probe.dylib, then re-sign using your own approved signing workflow. Never publish the packaged IPA here. Delete the diagnostic app and reinstall original R3 to roll back.
+Acceptance on two consenting devices in a private room: UUID gate success, stable roster while both present, invalidation on room exit, new epoch on rejoin. Log failures; do not treat static/host/CI tests as gameplay evidence. Main queue sampling is not a verified RAGE script context.
