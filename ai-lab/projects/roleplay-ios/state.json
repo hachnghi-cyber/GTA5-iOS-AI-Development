@@ -4,7 +4,7 @@
   "display_name": "GTA V iOS Roleplay (FiveM-style, not the official FiveM client)",
   "repository": "hachnghi-cyber/GTA5-iOS-AI-Development",
   "state_scope": "versioned engineering handoff; updated only after actual changes/verification",
-  "phase": "ipa-v12-baselined-source-integration-pending",
+  "phase": "v14-session-probe-ci-pending",
   "target": "independent iOS Roleplay client and authoritative multiplayer backend built around a legally obtained GTA V iOS port and documented interfaces",
   "default_branch": "main",
   "integration_branch": "feature/gta-ai-lab-100-agents",
@@ -167,7 +167,16 @@
       ]
     }
   ],
-  "next_action": "Continue RP-003 and RP-002 without recreating the IPA: examine actual P2P/runtime/engine-adapter source and host tests, extend an evidence-backed API compatibility matrix; RP-001 baseline is now available for exact binary version gating. Do not claim in-game transport or automatic gameplay compatibility.",
+  "next_action": "Build v14 read-only session probe with iPhoneOS SDK; verify artifacts; package only locally with hash-matched user IPA and sign; collect two-device roster logs before any native interaction.",
   "last_completed_task": null,
-  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested."
+  "update_policy": "After each task, commit code/tests/reports and update this file in the same PR with verified evidence, remaining blockers, next_action, and exact artifact hashes. Never mark a simulated test as hardware-tested.",
+  "v14_handoff": {
+    "executable_sha256": "fc274e3423c56d2aa12db5fe1146d4aea26f63eb5a7b8f46471c9fbf20906d47",
+    "macho_uuid": "D7880147-4EEE-3350-A19B-D6A18B2F0D24",
+    "source_path": "police-rp/rp14-session-probe/",
+    "branch": "feature/rp14-session-probe-ios-20261122",
+    "device_tested": false,
+    "ci_verified": false,
+    "notes": "Original Phase 7 local source passed 26 host checks and IPA preflight on 2026-11-22. This PR transfers the probe and a compact session/roster fixture to CI; CI results pending. No commercial assets or IPA uploaded."
+  }
 }

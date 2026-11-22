@@ -1,0 +1,57 @@
+name: RP14 iPhoneOS Session Probe
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/rp14-session-probe-ios-20261122
+    paths:
+      - 'police-rp/rp14-session-probe/**'
+      - '.github/workflows/build-rp14-session-probe.yml'
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: police-rp/rp14-session-probe
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host regression with sanitizers
+        run: |
+          set -o pipefail
+          clang -Wall -Wextra -Werror -g -fsanitize=address,undefined roster.c session.c test_session.c -o /tmp/rp14-test
+          /tmp/rp14-test | tee host.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: RP14-host-log
+          path: police-rp/rp14-session-probe/host.log
+  ios:
+    needs: host
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: police-rp/rp14-session-probe
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link device dylib
+        run: |
+          set -o pipefail
+          (
+            set -e
+            xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=15.0 -O2 -Wall -Wextra -Werror -dynamiclib probe.c roster.c session.c -Wl,-install_name,@rpath/RP14Probe.dylib -o RP14Probe.dylib
+            xcrun vtool -show-build RP14Probe.dylib
+            file RP14Probe.dylib
+            shasum -a 256 RP14Probe.dylib
+          ) 2>&1 | tee ios-build.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: RP14-ios-build-log
+          path: police-rp/rp14-session-probe/ios-build.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP14Phase7-iOS-probe
+          path: police-rp/rp14-session-probe/RP14Probe.dylib
+          if-no-files-found: error
