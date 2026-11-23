@@ -37,6 +37,7 @@ jobs:
         run: |
           python3 -m py_compile v200-viet-hoa/tools/inject_ipa.py v200-viet-hoa/tests/test_ci.py
           python3 v200-viet-hoa/tests/test_ci.py
+          python3 v200-viet-hoa/tests/test_mock_ipa.py
 
   ios-arm64-dylib:
     name: macOS/Xcode ARM64 iPhoneOS compile
