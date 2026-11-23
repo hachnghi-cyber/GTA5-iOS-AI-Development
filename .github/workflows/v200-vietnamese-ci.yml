@@ -37,7 +37,7 @@ jobs:
 
   ios-arm64-dylib:
     name: macOS/Xcode ARM64 iPhoneOS compile
-    runs-on: macos-15
+    runs-on: macos-14
     needs: linux-tests
     steps:
       - uses: actions/checkout@v4
@@ -74,7 +74,7 @@ jobs:
   private-ipa-experimental:
     name: Optional private-only unsigned IPA
     if: github.event_name == 'workflow_dispatch' && github.event.repository.private
-    runs-on: macos-15
+    runs-on: macos-14
     needs: [linux-tests, ios-arm64-dylib]
     env:
       V200_IPA_URL: ${{ secrets.V200_IPA_URL }}
