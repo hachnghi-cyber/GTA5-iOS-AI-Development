@@ -1,30 +1,100 @@
-name: v200 Apple Mach-O Linux linker probe
+name: v200 Story Vietnamese - iOS arm64 dylib on Linux
 on:
   pull_request:
     paths:
       - ".github/workflows/v200-linux-ios-link-probe.yml"
+      - "v200-viet-hoa/src/StoryVietnameseInstaller.c"
   workflow_dispatch:
 
 permissions:
   contents: read
+
 jobs:
-  probe:
+  cross-build:
+    name: iOS arm64 Mach-O build (Ubuntu clang/lld, experimental)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Cross-link minimal iPhoneOS dylib with Ubuntu LLD
+      - name: Cross-compile C without Apple SDK headers
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y lld-18 clang-18
-          cat > /tmp/link_probe.c <<'EOF'
-          extern int puts(const char *);
-          __attribute__((constructor)) static void init(void) { puts("iOS ARM64 probe"); }
-          int probe(void) { return 42; }
-          EOF
-          clang-18 -target arm64-apple-ios16.0 -fPIC -c /tmp/link_probe.c -o /tmp/link_probe.o
-          ld64.lld-18 -arch arm64 -dylib -platform_version ios 16.0 18.0 \
+          mkdir -p v200-viet-hoa/build
+          INC="$(clang-18 -print-resource-dir)/include"
+          clang-18 -target arm64-apple-ios16.0 -std=c11 \
+            -ffreestanding -nostdinc -isystem "$INC" \
+            -fPIC -fno-stack-protector -O2 \
+            -Wall -Wextra -Werror \
+            -c v200-viet-hoa/src/StoryVietnameseInstaller.c \
+            -o v200-viet-hoa/build/StoryVietnameseInstaller.ios.o
+          ld64.lld-18 -arch arm64 -dylib \
+            -platform_version ios 16.0 18.0 \
             -install_name @executable_path/Frameworks/libVietHoaBoot.dylib \
-            -undefined dynamic_lookup /tmp/link_probe.o -o /tmp/link_probe.dylib
-          file /tmp/link_probe.dylib
-          llvm-objdump-18 --macho --private-headers /tmp/link_probe.dylib | head -65
+            -undefined dynamic_lookup -adhoc_codesign \
+            v200-viet-hoa/build/StoryVietnameseInstaller.ios.o \
+            -o v200-viet-hoa/build/libVietHoaBoot.dylib
+          file v200-viet-hoa/build/libVietHoaBoot.dylib
+          llvm-objdump-18 --macho --private-headers \
+            v200-viet-hoa/build/libVietHoaBoot.dylib \
+            > v200-viet-hoa/build/macho-headers.txt
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, 'v200-viet-hoa/tools')
+          from inject_ipa import validate_dylib
+          validate_dylib('v200-viet-hoa/build/libVietHoaBoot.dylib')
+          data = open('v200-viet-hoa/build/macho-headers.txt').read()
+          assert 'LC_BUILD_VERSION' in data and 'iOS' in data
+          assert '__mod_init_func' in data, 'Missing constructor'
+          print('PASS ARM64 iOS Mach-O, dylib install name and constructor section')
+          PY
+      - name: Build and test importer on Linux (synthetic Story GXT2)
+        run: |
+          set -euo pipefail
+          cat >/tmp/pgvi_cli.c <<'EOF'
+          #include <stdio.h>
+          extern int PGVietHoaInstall(const char *,const char *);
+          int main(int argc,char**argv) {
+            if(argc!=3)return 2;
+            int r=PGVietHoaInstall(argv[1],argv[2]);
+            printf("PGVietHoaInstall=%d\n",r);
+            return r==0?0:1;
+          }
+          EOF
+          gcc -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Werror -O2 \
+            v200-viet-hoa/src/StoryVietnameseInstaller.c /tmp/pgvi_cli.c \
+            -o /tmp/pgvi_cli
+          python3 - <<'PY'
+          import os,struct,json,subprocess,tempfile
+          with tempfile.TemporaryDirectory() as t:
+            names = ['common/data/ui/fontmap.xml',
+              'x64/data/cdimages/scaleform_frontend.rpf/font_lib_editor.gfx',
+              'x64/data/cdimages/scaleform_frontend.rpf/font_lib_sc.gfx',
+              'x64/data/cdimages/scaleform_platform_pc.rpf/font_lib_efigs_pc.gfx',
+              'x64/data/cdimages/scaleform_platform_pc.rpf/font_lib_efigs_pc.ytd']
+            names += [f'x64/data/lang/american.rpf/file{i:03d}.gxt2' for i in range(608)]
+            names += [f'x64/data/lang/american_REL.rpf/file{i:03d}.gxt2' for i in range(608)]
+            assert len(names)==1221
+            payload=b'';index=[]
+            for name in names:
+              b=b'2TXG' + name.encode()
+              index.append([name,len(payload),len(b)]);payload+=b
+            encoded=json.dumps(index,separators=(',',':')).encode()
+            pack=b'NOVAPAK1'+struct.pack('<Q',len(encoded))+encoded+payload
+            file=os.path.join(t,'test.nvp')
+            docs=os.path.join(t,'Documents')
+            with open(file,'wb') as f:f.write(pack)
+            for _ in range(2):
+              subprocess.run(['/tmp/pgvi_cli',file,docs],check=True)
+            for name in names:
+              assert os.path.isfile(os.path.join(docs,'Mods',name))
+            with open(os.path.join(docs,'Mods',names[-1]),'wb') as f:f.write(b'corrupt')
+            assert subprocess.run(['/tmp/pgvi_cli',file,docs]).returncode!=0
+            print('PASS: 1221 Story-only resources, repeat install, tamper rejection')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v200-story-vietnamese-arm64-ios-dylib-unsigned-experimental
+          path: v200-viet-hoa/build/libVietHoaBoot.dylib
+          retention-days: 7
+          if-no-files-found: error
