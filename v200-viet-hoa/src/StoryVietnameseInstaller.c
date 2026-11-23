@@ -26,6 +26,8 @@ extern int unlink(const char *);
 extern int rename(const char *, const char *);
 extern void *malloc(unsigned long);
 extern void free(void *);
+extern char *realpath(const char *, char *);
+extern int snprintf(char *, unsigned long, const char *, ...);
 extern unsigned long strlen(const char *);
 extern void *memcpy(void *, const void *, unsigned long);
 extern int memcmp(const void *, const void *, unsigned long);
@@ -42,6 +44,7 @@ extern int pthread_detach(pthread_t);
 #define O_EXCL 0x800
 #define O_NOFOLLOW 0x100
 #define O_DIRECTORY 0x100000
+#define O_TRUNC 0x400
 #define SEEK_END 2
 #define F_OK 0
 #endif
@@ -58,6 +61,9 @@ extern int pthread_detach(pthread_t);
 #define PG_SEEDED ".pg_story_vietnamese_r5_seeded"
 #define PG_SEEDED_TEXT "PGVI-V200-STORY-R5\n"
 #define PG_TEMP_DIR ".pg_story_vietnamese_r5_stage"
+#define PG_DIAG_FILE "PGVI_Status.log"
+#define PG_ACTIVATED_R6 ".pg_story_vietnamese_r6_activated"
+#define PG_ACTIVATED_TEXT "PGVI-V200-AUTOON-R6\n"
 
 struct Item { char name[PG_MAX_PATH]; uint64_t off,size; };
 struct P { const unsigned char *p, *end; };
@@ -256,11 +262,52 @@ static int cleanup_r4_files(int pack,const char *root,struct Item *items,
     }
     return 1;
 }
+static int r6_activated(const char *docs) {
+    char p[4096],x[64];
+    if(!cat(p,sizeof(p),docs,PG_ACTIVATED_R6))return 0;
+    int fd=open(p,O_RDONLY|O_NOFOLLOW);
+    if(fd<0)return 0;
+    long n=read(fd,x,sizeof(x));close(fd);
+    return n==(long)strlen(PG_ACTIVATED_TEXT) &&
+        memcmp(x,PG_ACTIVATED_TEXT,(unsigned)n)==0;
+}
+static int write_r6_activation(const char *docs) {
+    char p[4096],tmp[4096];
+    if(!cat(p,sizeof(p),docs,PG_ACTIVATED_R6) ||
+       !cat(tmp,sizeof(tmp),docs,".pg_story_vietnamese_r6_writing"))return 0;
+    int fd=open(tmp,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);
+    if(fd<0)return 0;
+    int ok=write_all(fd,PG_ACTIVATED_TEXT,(unsigned)strlen(PG_ACTIVATED_TEXT));
+    if(close(fd)!=0)ok=0;
+    if(ok && rename(tmp,p)==0)return 1;
+    unlink(tmp);return 0;
+}
+/* Write a small deterministic status file, without leaking app/container paths.
+ * Failure to record diagnostics must not block Story Mode.
+ */
+static void report_status(const char *docs,int code,int enabled,int disabled,
+                          int wasSeeded,int hadLegacy) {
+    char p[4096],line[256];
+    if(!cat(p,sizeof(p),docs,PG_DIAG_FILE))return;
+    int fd=open(p,O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW,0600);
+    if(fd<0)return;
+    int count=snprintf(line,sizeof(line),
+      "PGVI Story R6\nresult=%d\nmod_on=%d\nmod_off=%d\nr5_seeded=%d\nr4_marker=%d\n"
+      "engine_overlay=unverified\nnote=RPF-internal mods require local game files\n",
+      code,enabled,disabled,wasSeeded,hadLegacy);
+    if(count>0 && count<(int)sizeof(line))write_all(fd,line,(unsigned)count);
+    close(fd);
+}
 /* A top-level named Mods directory becomes an existing UISwitch entry.
  * The .off suffix means OFF; we seed OFF and preserve subsequent choices.
  */
 int PGVietHoaInstall(const char *bundleNvp,const char *docs) {
     if(!bundleNvp||!docs)return -1;
+    /* Canonicalize iOS /var symlink in the trusted sandbox prefix. Below
+       Documents we still reject symlinked Mods directories. */
+    char canonicalDocs[4096];
+    if(!realpath(docs,canonicalDocs))return -15;
+    docs=canonicalDocs;
     int fd=-1,result=-1,count=0;
     unsigned char head[16];unsigned char *index=0;
     struct Item *items=0;
@@ -273,10 +320,10 @@ int PGVietHoaInstall(const char *bundleNvp,const char *docs) {
        !cat(off,sizeof(off),mods,PG_MOD_DISPLAY_OFF)||
        !cat(stage,sizeof(stage),docs,PG_TEMP_DIR))return -1;
     int seeded=state_marker_ok(docs);
-    if(!seeded && access(seedMarker,F_OK)==0)return -2;
+    if(!seeded && access(seedMarker,F_OK)==0){report_status(docs,-2,0,0,0,0);return -2;}
     int legacy=marker_ok(docs);
-    if(!legacy && access(oldMarker,F_OK)==0)return -2;
-    fd=open(bundleNvp,O_RDONLY|O_NOFOLLOW);if(fd<0)return -3;
+    if(!legacy && access(oldMarker,F_OK)==0){report_status(docs,-2,0,0,seeded,0);return -2;}
+    fd=open(bundleNvp,O_RDONLY|O_NOFOLLOW);if(fd<0){report_status(docs,-3,0,0,seeded,legacy);return -3;}
     long long sz=lseek(fd,0,SEEK_END);
     if(sz<=16||sz>PG_MAX_FILESIZE+PG_MAX_INDEX+16LL||
        !full_read(fd,head,16,0)||memcmp(head,"NOVAPAK1",8))goto done;
@@ -290,12 +337,19 @@ int PGVietHoaInstall(const char *bundleNvp,const char *docs) {
     free(index);index=0;
     uint64_t begin=16+idx;
     int isOn=safe_directory(on),isOff=safe_directory(off);
+    int activated=r6_activated(docs);
     if(isOn<0||isOff<0||(isOn&&isOff)){result=-6;goto done;}
     const char *live=isOn?on:isOff?off:0;
     if(seeded) {
         if(!live){result=0;goto done;} /* Removed deliberately by user */
-        result=matches_pack(fd,live,items,count,begin)?0:-4;
-        goto done;
+        if(!matches_pack(fd,live,items,count,begin)){result=-4;goto done;}
+        /* One-time R5->R6 activation: restore VI by default, keep UISwitch.
+         * Future user OFF choices are preserved by the R6 activation marker. */
+        if(!activated) {
+            if(isOff && rename(off,on)!=0){result=-16;goto done;}
+            if(!write_r6_activation(docs)){result=-17;goto done;}
+        }
+        result=0;goto done;
     }
     if(live) {
         if(!matches_pack(fd,live,items,count,begin)){result=-4;goto done;}
@@ -316,16 +370,18 @@ int PGVietHoaInstall(const char *bundleNvp,const char *docs) {
         for(int i=0;i<count;i++) {
             if(!check_parent_and_write(fd,stage,&items[i],begin)){result=-10;goto done;}
         }
-        if(rename(stage,off)!=0){result=-11;goto done;}
-        live=off;
+        if(rename(stage,on)!=0){result=-11;goto done;}
+        live=on;
     }
     if(legacy) {
         if(!cleanup_r4_files(fd,mods,items,count,begin)){result=-12;goto done;}
         if(unlink(oldMarker)!=0){result=-13;goto done;}
     }
     if(!write_state_marker(docs)){result=-14;goto done;}
+    if(!write_r6_activation(docs)){result=-17;goto done;}
     result=0;
 done:
+    report_status(docs,result,safe_directory(on)==1,safe_directory(off)==1,seeded,legacy);
     if(fd>=0)close(fd);
     if(index)free(index);
     if(items)free(items);
