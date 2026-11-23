@@ -33,6 +33,7 @@ jobs:
           python3 -m py_compile v200-viet-hoa/tools/inject_ipa.py v200-viet-hoa/tests/test_ci.py
           python3 v200-viet-hoa/tests/test_ci.py
           python3 v200-viet-hoa/tests/test_mock_ipa.py
+          python3 v200-viet-hoa/tests/test_preflight.py
 
   ios-arm64-dylib:
     name: macOS/Xcode ARM64 iPhoneOS compile
@@ -94,6 +95,7 @@ jobs:
             --connect-timeout 30 --max-time 900 -o VietnameseAccented.nvp "$V200_NVP_URL"
           echo "a267c2683ce9df5cd68bc3498ade9282ee6d7dd201a2f0b2afeae0f64b0f587e  original.ipa" | shasum -a 256 -c -
           echo "a66869101865158c6d480834a7fec0d17ef5170c5e5c33cd037aa8507e4bfaea  VietnameseAccented.nvp" | shasum -a 256 -c -
+          python3 v200-viet-hoa/tools/preflight_pack.py VietnameseAccented.nvp --require-mugoat-layout --json
       - name: Build unsigned IPA
         run: |
           bash v200-viet-hoa/tools/build_on_macos.sh original.ipa VietnameseAccented.nvp v200-VI-UNSIGNED.ipa
