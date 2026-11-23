@@ -1,0 +1,30 @@
+name: v200 Apple Mach-O Linux linker probe
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/v200-linux-ios-link-probe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cross-link minimal iPhoneOS dylib with Ubuntu LLD
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y lld-18 clang-18
+          cat > /tmp/link_probe.c <<'EOF'
+          extern int puts(const char *);
+          __attribute__((constructor)) static void init(void) { puts("iOS ARM64 probe"); }
+          int probe(void) { return 42; }
+          EOF
+          clang-18 -target arm64-apple-ios16.0 -fPIC -c /tmp/link_probe.c -o /tmp/link_probe.o
+          ld64.lld-18 -arch arm64 -dylib -platform_version ios 16.0 18.0 \
+            -install_name @executable_path/Frameworks/libVietHoaBoot.dylib \
+            -undefined dynamic_lookup /tmp/link_probe.o -o /tmp/link_probe.dylib
+          file /tmp/link_probe.dylib
+          llvm-objdump-18 --macho --private-headers /tmp/link_probe.dylib | head -65
