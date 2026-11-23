@@ -22,17 +22,30 @@ constexpr uint64_t MAX_PAYLOAD = 64 * 1024 * 1024;
 constexpr size_t MAX_ENTRIES = 4096;
 
 bool SafeGamePath(const std::string& path) {
-  if (path.empty() || path.front() == '/' || path.find('\\') != std::string::npos || path.find(':') != std::string::npos) return false;
-  if (path.rfind("x64/", 0) != 0 && path.rfind("common/", 0) != 0) return false;
-  if (path.find("//") != std::string::npos) return false;
-  for (const auto& component : fs::path(path)) if (component.empty() || component == "." || component == "..") return false;
-  std::string suffix = fs::path(path).extension().string();
-  for (auto& ch : suffix) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-  if (suffix != ".gxt2" && suffix != ".xml" && suffix != ".gfx" && suffix != ".ytd") return false;
-  for (unsigned char ch : path) {
+  if (path.empty() || path.front() == '/' || path.find('\\') != std::string::npos ||
+      path.find(':') != std::string::npos || path.find("//") != std::string::npos)
+    return false;
+  for (const auto& component : fs::path(path))
+    if (component.empty() || component == "." || component == "..") return false;
+  for (unsigned char ch : path)
     if (!std::isalnum(ch) && ch != '/' && ch != '-' && ch != '_' && ch != '.') return false;
-  }
-  return true;
+
+  // Story-mode localization resources only. No network/Online/gameplay paths.
+  static const std::unordered_set<std::string> allowedFonts = {
+    "common/data/ui/fontmap.xml",
+    "x64/data/cdimages/scaleform_frontend.rpf/font_lib_editor.gfx",
+    "x64/data/cdimages/scaleform_frontend.rpf/font_lib_sc.gfx",
+    "x64/data/cdimages/scaleform_platform_pc.rpf/font_lib_efigs_pc.gfx",
+    "x64/data/cdimages/scaleform_platform_pc.rpf/font_lib_efigs_pc.ytd"
+  };
+  if (allowedFonts.count(path)) return true;
+
+  const std::string a = "x64/data/lang/american.rpf/";
+  const std::string b = "x64/data/lang/american_REL.rpf/";
+  const bool translation = path.rfind(a, 0) == 0 || path.rfind(b, 0) == 0;
+  if (!translation || fs::path(path).extension() != ".gxt2") return false;
+  // GXT2 replacement must be a direct file inside one of the two known RPFs.
+  return path.find('/', path.rfind(".rpf/") + 5) == std::string::npos;
 }
 
 struct Reader {
