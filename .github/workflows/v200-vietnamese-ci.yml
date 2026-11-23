@@ -1,10 +1,5 @@
 name: v200 Vietnamese experimental CI (source only)
 on:
-  push:
-    branches: [feature/v200-mugoat-vietnamese-ci]
-    paths:
-      - ".github/workflows/v200-vietnamese-ci.yml"
-      - "v200-viet-hoa/**"
   pull_request:
     paths:
       - ".github/workflows/v200-vietnamese-ci.yml"
