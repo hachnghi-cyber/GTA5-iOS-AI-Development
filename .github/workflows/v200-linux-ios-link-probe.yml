@@ -1,0 +1,84 @@
+name: v200 Story Vietnamese - iOS arm64 dylib on Linux
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/v200-linux-ios-link-probe.yml"
+      - "v200-viet-hoa/src/StoryVietnameseInstaller.c"
+      - "v200-viet-hoa/tests/test_toggle_r5.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cross-build:
+    name: iOS arm64 Mach-O build (Ubuntu clang/lld, experimental)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cross-compile C without Apple SDK headers
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y lld-18 clang-18
+          mkdir -p v200-viet-hoa/build
+          INC="$(clang-18 -print-resource-dir)/include"
+          clang-18 -target arm64-apple-ios16.0 -std=c11 \
+            -ffreestanding -nostdinc -isystem "$INC" \
+            -fPIC -fno-stack-protector -O2 \
+            -Wall -Wextra -Werror \
+            -c v200-viet-hoa/src/StoryVietnameseInstaller.c \
+            -o v200-viet-hoa/build/StoryVietnameseInstaller.ios.o
+          ld64.lld-18 -arch arm64 -dylib \
+            -platform_version ios 16.0 18.0 \
+            -install_name @executable_path/Frameworks/libVietHoaBoot.dylib \
+            -undefined dynamic_lookup -adhoc_codesign \
+            v200-viet-hoa/build/StoryVietnameseInstaller.ios.o \
+            -o v200-viet-hoa/build/libVietHoaBoot.dylib
+          file v200-viet-hoa/build/libVietHoaBoot.dylib
+          llvm-objdump-18 --macho --private-headers \
+            v200-viet-hoa/build/libVietHoaBoot.dylib \
+            > v200-viet-hoa/build/macho-headers.txt
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, 'v200-viet-hoa/tools')
+          from inject_ipa import validate_dylib
+          validate_dylib('v200-viet-hoa/build/libVietHoaBoot.dylib')
+          data = open('v200-viet-hoa/build/macho-headers.txt').read()
+          import struct
+          blob = open('v200-viet-hoa/build/libVietHoaBoot.dylib', 'rb').read()
+          ncmds = struct.unpack_from('<I', blob, 16)[0]
+          offset = 32
+          platforms = []
+          for _ in range(ncmds):
+            cmd, size = struct.unpack_from('<II', blob, offset)
+            if cmd == 0x32: platforms.append(struct.unpack_from('<I', blob, offset + 8)[0])
+            if cmd == 0x25: platforms.append(2)  # LC_VERSION_MIN_IPHONEOS
+            offset += size
+          assert 2 in platforms, ('iOS build platform missing', platforms)
+          assert '__mod_init_func' in data, 'Missing constructor'
+          print('PASS ARM64 iOS Mach-O, dylib install name and constructor section')
+          PY
+      - name: Build and test importer on Linux (synthetic Story GXT2)
+        run: |
+          set -euo pipefail
+          cat >/tmp/pgvi_cli.c <<'EOF'
+          #include <stdio.h>
+          extern int PGVietHoaInstall(const char *,const char *);
+          int main(int argc,char**argv) {
+            if(argc!=3)return 2;
+            int r=PGVietHoaInstall(argv[1],argv[2]);
+            printf("PGVietHoaInstall=%d\n",r);
+            return r==0?0:1;
+          }
+          EOF
+          gcc -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Werror -O2 \
+            v200-viet-hoa/src/StoryVietnameseInstaller.c /tmp/pgvi_cli.c \
+            -o v200-viet-hoa/build/nvp_install_r5_cli
+          python3 v200-viet-hoa/tests/test_toggle_r5.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v200-story-vietnamese-arm64-ios-dylib-unsigned-experimental
+          path: v200-viet-hoa/build/libVietHoaBoot.dylib
+          retention-days: 7
+          if-no-files-found: error
