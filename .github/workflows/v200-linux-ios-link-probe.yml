@@ -44,7 +44,17 @@ jobs:
           from inject_ipa import validate_dylib
           validate_dylib('v200-viet-hoa/build/libVietHoaBoot.dylib')
           data = open('v200-viet-hoa/build/macho-headers.txt').read()
-          assert 'LC_BUILD_VERSION' in data and 'iOS' in data
+          import struct
+          blob = open('v200-viet-hoa/build/libVietHoaBoot.dylib', 'rb').read()
+          ncmds = struct.unpack_from('<I', blob, 16)[0]
+          offset = 32
+          platforms = []
+          for _ in range(ncmds):
+            cmd, size = struct.unpack_from('<II', blob, offset)
+            if cmd == 0x32: platforms.append(struct.unpack_from('<I', blob, offset + 8)[0])
+            if cmd == 0x25: platforms.append(2)  # LC_VERSION_MIN_IPHONEOS
+            offset += size
+          assert 2 in platforms, ('iOS build platform missing', platforms)
           assert '__mod_init_func' in data, 'Missing constructor'
           print('PASS ARM64 iOS Mach-O, dylib install name and constructor section')
           PY
