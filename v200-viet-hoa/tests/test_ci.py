@@ -54,6 +54,19 @@ def importer_checks(cli, root):
     target.write_bytes(b"existing")
     invoke(cli, pack, conflict, False)
     assert target.read_bytes() == b"existing"
+    # Story-only: the importer must refuse unintended gameplay/network assets.
+    invalid_paths = [
+        "x64/data/network/session.xml",
+        "x64/data/lang/american.rpf/subfolder/demo.gxt2",
+        "common/data/ui/scripts.xml",
+        "x64/data/cdimages/scaleform_frontend.rpf/unapproved.gfx",
+    ]
+    for i, name in enumerate(invalid_paths):
+        wrong_index = json.dumps([[name, 0, 4]], separators=(",", ":")).encode()
+        damaged.write_bytes(b"NOVAPAK1" + struct.pack("<Q", len(wrong_index)) + wrong_index + b"TEST")
+        isolated = root / ("story_reject_%d" % i) / "Mods"
+        invoke(cli, damaged, isolated, False)
+        assert not isolated.exists(), name
 
 
 def macho_checks():
