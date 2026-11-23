@@ -1,0 +1,110 @@
+name: v200 Vietnamese experimental CI (source only)
+on:
+  push:
+    branches: [feature/v200-mugoat-vietnamese-ci]
+    paths:
+      - ".github/workflows/v200-vietnamese-ci.yml"
+      - "v200-viet-hoa/**"
+  pull_request:
+    paths:
+      - ".github/workflows/v200-vietnamese-ci.yml"
+      - "v200-viet-hoa/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v200-vi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-tests:
+    name: Linux C++17 and synthetic NVP/Mach-O tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile C++ importer
+        run: |
+          set -euo pipefail
+          mkdir -p v200-viet-hoa/build
+          g++ -std=c++17 -Wall -Wextra -Werror -O2 \
+            -Iv200-viet-hoa/src \
+            v200-viet-hoa/src/NovaVietnameseInstaller.cpp \
+            v200-viet-hoa/tests/nvp_install_cli.cpp \
+            -o v200-viet-hoa/build/nvp_install_cli
+      - name: Synthetic NVP and Mach-O tests
+        run: |
+          python3 -m py_compile v200-viet-hoa/tools/inject_ipa.py v200-viet-hoa/tests/test_ci.py
+          python3 v200-viet-hoa/tests/test_ci.py
+
+  ios-arm64-dylib:
+    name: macOS/Xcode ARM64 iPhoneOS compile
+    runs-on: macos-15
+    needs: linux-tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned iOS ARM64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p v200-viet-hoa/build
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang++ \
+            -arch arm64 -isysroot "$SDK" -miphoneos-version-min=16.0 \
+            -std=c++17 -O2 -fobjc-arc -fvisibility=hidden -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/libVietHoaBoot.dylib \
+            -framework Foundation -lc++ \
+            v200-viet-hoa/src/NovaVietnameseInstaller.cpp \
+            v200-viet-hoa/src/VietnameseBoot.mm \
+            -o v200-viet-hoa/build/libVietHoaBoot.dylib
+      - name: Inspect compiled Mach-O
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, 'v200-viet-hoa/tools')
+          from inject_ipa import validate_dylib
+          validate_dylib('v200-viet-hoa/build/libVietHoaBoot.dylib')
+          print("PASS ARM64 Mach-O dylib (not on-device tested)")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v200-vietnamese-arm64-unsigned-dylib-experimental
+          path: v200-viet-hoa/build/libVietHoaBoot.dylib
+          if-no-files-found: error
+          retention-days: 7
+
+  private-ipa-experimental:
+    name: Optional private-only unsigned IPA
+    if: github.event_name == 'workflow_dispatch' && github.event.repository.private
+    runs-on: macos-15
+    needs: [linux-tests, ios-arm64-dylib]
+    env:
+      V200_IPA_URL: ${{ secrets.V200_IPA_URL }}
+      V200_NVP_URL: ${{ secrets.V200_NVP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download from authorized private HTTPS storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$V200_IPA_URL" && test -n "$V200_NVP_URL" || {
+            echo "::error::Configure V200_IPA_URL and V200_NVP_URL in private repo Secrets."
+            exit 1
+          }
+          curl -fL --proto '=https' --proto-redir '=https' --retry 3 \
+            --connect-timeout 30 --max-time 900 -o original.ipa "$V200_IPA_URL"
+          curl -fL --proto '=https' --proto-redir '=https' --retry 3 \
+            --connect-timeout 30 --max-time 900 -o VietnameseAccented.nvp "$V200_NVP_URL"
+          echo "a267c2683ce9df5cd68bc3498ade9282ee6d7dd201a2f0b2afeae0f64b0f587e  original.ipa" | shasum -a 256 -c -
+          echo "a66869101865158c6d480834a7fec0d17ef5170c5e5c33cd037aa8507e4bfaea  VietnameseAccented.nvp" | shasum -a 256 -c -
+      - name: Build unsigned IPA
+        run: |
+          bash v200-viet-hoa/tools/build_on_macos.sh original.ipa VietnameseAccented.nvp v200-VI-UNSIGNED.ipa
+          unzip -t v200-VI-UNSIGNED.ipa | tail -n 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v200-vietnamese-unsigned-ipa-private-experimental
+          path: v200-VI-UNSIGNED.ipa
+          if-no-files-found: error
+          retention-days: 1
