@@ -5,6 +5,7 @@ if [[ "$#" -ne 3 ]]; then
   echo "Usage: bash build_on_macos.sh <base.ipa> <VietnameseAccented.nvp> <output.ipa>" >&2
   exit 2
 fi
+python3 "$(dirname "$0")/preflight_pack.py" "$2" --require-mugoat-layout
 [[ "$(uname -s)" == "Darwin" ]] || { echo "macOS/Xcode required" >&2; exit 2; }
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
