@@ -1,0 +1,1 @@
+R50 links the exact R49 12-module source snapshot on a physical iOS target. Concatenate source.part0 through source.part6 in numerical order; SHA-256 6c584f65c310405034c289c15ddfeb367fd5d516ca3c84fcbf96ae2da09570e2. No game binary or user data. The resulting dylib is not installed or hooked; it must not be mistaken for a playable IPA. Private, explicitly opted-in RP rooms only.

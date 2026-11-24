@@ -1,0 +1,68 @@
+name: Police RP R50 iOS link
+on:
+  push:
+    branches: [feature/rp-r50-ios-link]
+    paths:
+      - 'police-rp/r50/**'
+      - '.github/workflows/build-rp-r50-ios.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: police-rp/r50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover exact R49 source snapshot
+        run: |
+          cat source.part{0,1,2,3,4,5,6} > source.tar.xz
+          echo '6c584f65c310405034c289c15ddfeb367fd5d516ca3c84fcbf96ae2da09570e2  source.tar.xz' | shasum -a 256 -c -
+          mkdir src dist
+          tar -xJf source.tar.xz -C src
+          test "$(find src -name '*.c' | wc -l | tr -d ' ')" = 12
+      - name: Host smoke and compile
+        run: |
+          cd src
+          cat > smoke.c <<'EOF'
+          #include "native49.h"
+          #include <assert.h>
+          #include <stdio.h>
+          int main(void) {
+            RP49 p={0};
+            RP49Ops ops=rp49_native_ops(0);
+            assert(!ops.collect);
+            assert(!rp49_arm(&p,&ops,0,0,0));
+            assert(!rp49_tick(&p,&ops,1,0));
+            assert(!rp49_confirm(&p,&ops,1,1,0));
+            assert(!rp49_native_rx(&p,0,1,0,"",20,0));
+            rp49_stop(&p,&ops);
+            printf("PASS unarmed runtime smoke; state bytes=%zu\n",sizeof(p));
+            return 0;
+          }
+          EOF
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined *.c -o /tmp/rp50-smoke
+          /tmp/rp50-smoke
+          rm smoke.c
+      - name: Link full native core for iPhoneOS
+        run: |
+          xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=15.0 -std=c11 -O2 -Wall -Wextra -Werror -dynamiclib -Wl,-install_name,@rpath/libRP49.dylib src/*.c -o dist/libRP49.dylib
+          file dist/libRP49.dylib
+          xcrun lipo dist/libRP49.dylib -verify_arch arm64
+          xcrun vtool -show-build dist/libRP49.dylib | tee dist/build-target.txt
+          grep -Eq 'platform[[:space:]]+IOS[[:space:]]*$' dist/build-target.txt
+          xcrun otool -L dist/libRP49.dylib | tee dist/dependencies.txt
+          xcrun nm -gU dist/libRP49.dylib | tee dist/exports.txt
+          for symbol in rp49_arm rp49_tick rp49_confirm rp49_native_rx rp49_native_ops rp49_stop; do
+            grep -Eq "[[:space:]]_${symbol}$" dist/exports.txt
+          done
+          (cd dist && shasum -a 256 libRP49.dylib > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP-R50-iOS-arm64-core
+          path: police-rp/r50/dist/
+          if-no-files-found: error
+          retention-days: 7
