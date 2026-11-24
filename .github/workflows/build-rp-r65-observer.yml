@@ -1,0 +1,41 @@
+name: Police RP R65 Thread Observer
+on:
+  push:
+    branches: ['rp/r63-sdk-build']
+    paths: ['police-rp/r65/**', '.github/workflows/build-rp-r65-observer.yml']
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: police-rp/r65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify source and test host thread observer
+        run: |
+          set -eu
+          printf '%s\n' '93be9a10b55175b7ec73ea98c339ed20493421cbca3685ab4cde23f1dfc2d7d6  observer65.c' '3e977ec8f792f04855165b2d96feee740abe0213b6d2763a671381e2f272a55e  observer65.h' 'd499cec99090238495c8c7cccd42c310b4fe4b8f84ec60178d315a9dfec8e604  test_observer65.c' | shasum -a 256 -c -
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined observer65.c test_observer65.c -o /tmp/r65-observer
+          /tmp/r65-observer
+      - name: Link diagnostic-only iPhoneOS ARM64 dylib
+        run: |
+          mkdir dist
+          xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=15.0 -std=c11 -O2 -Wall -Wextra -Werror -dynamiclib -Wl,-install_name,@rpath/libRP65Observer.dylib observer65.c -o dist/libRP65Observer.dylib
+          xcrun lipo dist/libRP65Observer.dylib -verify_arch arm64
+          xcrun vtool -show-build dist/libRP65Observer.dylib | tee dist/build-target.txt
+          grep -Eq 'platform[[:space:]]+IOS[[:space:]]*$' dist/build-target.txt
+          xcrun nm -gU dist/libRP65Observer.dylib | tee dist/exports.txt
+          grep -Eq '[[:space:]]_rp65_observe$' dist/exports.txt
+          grep -Eq '[[:space:]]_rp65_snapshot$' dist/exports.txt
+          xcrun otool -L dist/libRP65Observer.dylib | tee dist/dependencies.txt
+          (cd dist && shasum -a 256 libRP65Observer.dylib > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP65-observer-only
+          path: police-rp/r65/dist/
+          if-no-files-found: error
