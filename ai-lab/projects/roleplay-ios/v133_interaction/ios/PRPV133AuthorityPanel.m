@@ -11,6 +11,9 @@
 @property(nonatomic, strong) UIButton *consent;
 @property(nonatomic, strong) UIButton *greet;
 @property(nonatomic, strong) UIButton *documents;
+@property(nonatomic, strong) UIButton *roster;
+@property(nonatomic, weak) UIAlertController *rosterAlert;
+@property(nonatomic, copy) NSString *rosterText;
 @property(nonatomic, strong) UIButton *login;
 @property(nonatomic, strong) UIButton *signup;
 @property(nonatomic, strong) UIButton *logout;
@@ -48,6 +51,8 @@
     self.consent = [self button:@"Tham gia RP" action:@selector(changeConsent)];
     self.greet = [self button:@"Chào hỏi" action:@selector(sendGreet)];
     self.documents = [self button:@"Yêu cầu giấy tờ" action:@selector(sendDocuments)];
+    self.roster = [self button:@"Người chơi RP" action:@selector(showRoster)];
+    self.roster.hidden = YES;
     self.login = [self button:@"Đăng nhập" action:@selector(showLogin)];
     self.signup = [self button:@"Tạo tài khoản" action:@selector(showSignup)];
     self.logout = [self button:@"Đăng xuất" action:@selector(logoutAccount)];
@@ -57,7 +62,7 @@
     self.event = [self label];
     self.panel = [[UIStackView alloc] initWithArrangedSubviews:
                   @[self.status, self.event, self.login, self.signup, self.consent,
-                    self.greet, self.documents, self.logout]];
+                    self.roster, self.greet, self.documents, self.logout]];
     self.panel.axis = UILayoutConstraintAxisVertical;
     self.panel.spacing = 4;
     self.panel.layoutMarginsRelativeArrangement = YES;
@@ -121,6 +126,35 @@
 - (void)sendGreet { prp_authority_panel_send(RP_V133_GREET); }
 - (void)sendDocuments { prp_authority_panel_send(RP_V133_DOCUMENTS); }
 
+- (void)showRoster {
+    UIViewController *presenter = self.container.window.rootViewController;
+    if (!presenter || presenter.presentedViewController || !self.rosterText.length) return;
+    UIAlertController *list = [UIAlertController alertControllerWithTitle:@"Người đang tham gia RP"
+        message:self.rosterText preferredStyle:UIAlertControllerStyleAlert];
+    [list addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
+    self.rosterAlert = list;
+    [presenter presentViewController:list animated:YES completion:nil];
+}
+
+- (void)updateRoster:(NSDictionary *)state available:(BOOL)available {
+    self.roster.hidden = !available;
+    if (!available) {
+        self.rosterText = nil;
+        [self.rosterAlert dismissViewControllerAnimated:NO completion:nil];
+        return;
+    }
+    NSMutableArray<NSString *> *players = [NSMutableArray array];
+    for (NSDictionary *member in state[@"members"]) {
+        if (![member[@"consent"] boolValue]) continue;
+        NSString *role = [member[@"role"] unsignedIntValue] == 2 ? @"Cảnh sát" : @"Công dân";
+        NSString *you = [member[@"is_self"] boolValue] ? @" (bạn)" : @"";
+        NSString *duty = [member[@"duty"] boolValue] ? @" · đang trong ca" : @"";
+        [players addObject:[NSString stringWithFormat:@"RP %@%@ · %@%@", member[@"rp_id"], you, role, duty]];
+    }
+    self.rosterText = [players componentsJoinedByString:@"\n"];
+    self.rosterAlert.message = self.rosterText;
+}
+
 - (void)showLogin { [self accountForm:NO]; }
 - (void)showSignup { [self accountForm:YES]; }
 - (void)logoutAccount { prp_authority_logout(); }
@@ -181,7 +215,10 @@
     self.panel.hidden = !open;
     [self.refreshTimer invalidate];
     self.refreshTimer = nil;
-    if (!open) return;
+    if (!open) {
+        [self updateRoster:@{} available:NO];
+        return;
+    }
     [self refresh];
     __weak PRPV133AuthorityPanel *weakSelf = self;
     self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:YES
@@ -206,6 +243,7 @@
         BOOL busy = [state[@"pending"] boolValue] || [state[@"panel_social_pending"] boolValue];
         BOOL peer = [state[@"panel_peer_consented"] boolValue];
         self.optedIn = [state[@"panel_consented"] boolValue];
+        [self updateRoster:state available:ready && self.optedIn];
         UIButtonConfiguration *consentStyle = self.consent.configuration;
         consentStyle.title = self.optedIn ? @"Rời RP" : @"Tham gia RP";
         self.consent.configuration = consentStyle;

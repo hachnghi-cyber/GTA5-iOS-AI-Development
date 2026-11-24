@@ -8,6 +8,10 @@ Panel tài khoản chọn R85 theo UUID của executable và SHA-256 của trang
 thay đổi tuần tra. Giao diện cần hồ sơ tài khoản của server riêng. Luồng này
 ghi kết quả vào `PoliceRP-R85-Authority.txt`. Chưa có log đăng nhập R85 từ iPhone.
 
+CI `45438412021` đã liên kết panel cho iPhoneOS ARM64 với phiên bản tối thiểu
+iOS 15. Bản mã nguồn kế tiếp có mục **Người chơi RP** sau khi tham gia. Danh
+sách lấy RP ID, vai trò và trạng thái trong ca từ snapshot của server riêng.
+
 Ngày 24/11/2026 đã tìm lại IPA R85 và ZIP mã nguồn từ chat cũ. Hai tệp được lưu
 cục bộ tại `work/private-binaries/v135/` của workspace. IPA có 62 mục, kiểm tra
 CRC đạt và SHA-256 khớp báo cáo R85. Trên Windows đã chạy lại 3 bài kiểm tra bộ

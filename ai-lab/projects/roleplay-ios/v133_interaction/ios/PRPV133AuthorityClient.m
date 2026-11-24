@@ -84,7 +84,8 @@ static NSTimeInterval rp_uptime(void) {
     for (uint32_t i = 0; i < state.member_count; ++i) {
         const uint64_t *row = state.members[i];
         [members addObject:@{@"rp_id": [NSString stringWithFormat:@"%llu", (unsigned long long)row[0]],
-            @"role": @(row[1]), @"consent": @(row[2]), @"duty": @(row[3]), @"custody": @(row[4])}];
+            @"is_self": @(row[0] == self.expectedID), @"role": @(row[1]), @"consent": @(row[2]),
+            @"duty": @(row[3]), @"custody": @(row[4])}];
     }
     const uint64_t *subject = [self member:self.expectedID];
     const uint64_t *peer = [self member:self.socialPeer];

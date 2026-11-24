@@ -83,16 +83,20 @@ def patch_gta5(original):
     info = header_info(original)
     if info['type'] != MH_EXECUTE:
         raise ValueError('Target is not an executable')
-    if LOAD_PATH in info['dylibs']:
+    return add_panel_dependency(original, info, LOAD_PATH)
+
+
+def add_panel_dependency(original, info, load_path):
+    if load_path in info['dylibs']:
         raise ValueError('Probe dependency already exists')
-    size = (24 + len(LOAD_PATH) + 1 + 7) & ~7
+    size = (24 + len(load_path) + 1 + 7) & ~7
     if info['slack'] < size:
         raise ValueError('Insufficient header padding; refusing to shift code')
     if any(original[info['end']:info['end'] + size]):
         raise ValueError('Load-command padding is not empty')
 
     dylib_command = struct.pack('<IIIIII', LC_LOAD_DYLIB, size, 24, 0, 0, 0)
-    dylib_command += LOAD_PATH + b'\x00'
+    dylib_command += load_path + b'\x00'
     dylib_command += b'\x00' * (size - len(dylib_command))
 
     patched = bytearray(original)
@@ -101,7 +105,7 @@ def patch_gta5(original):
     patched[info['end']:info['end'] + size] = dylib_command
     result = bytes(patched)
     updated = header_info(result)
-    if len(result) != len(original) or LOAD_PATH not in updated['dylibs']:
+    if len(result) != len(original) or updated['dylibs'] != info['dylibs'] + [load_path]:
         raise AssertionError('Post-patch Mach-O validation failed')
     if updated['ncmds'] != info['ncmds'] + 1:
         raise AssertionError('Unexpected number of commands')
