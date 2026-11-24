@@ -2,7 +2,7 @@ name: Police RP R63 iPhoneOS SDK build
 on:
   push:
     branches: ['rp/r63-sdk-build']
-    paths: ['GTA_R62_Police_P2P_CI_Artifact_Gate.zip']
+    paths: ['GTA_R62_Police_P2P_CI_Artifact_Gate.zip', '.github/workflows/build-rp-r63-sdk.yml']
 permissions:
   contents: read
 jobs:
@@ -13,7 +13,115 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Verify actual Apple iPhoneOS toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos --show-sdk-version
+          mkdir -p sdk-probe
+          cat > sdk-probe/probe.c <<'EOF'
+          #include <pthread.h>
+          #include <stdatomic.h>
+          #include <time.h>
+          static _Atomic unsigned calls;
+          __attribute__((visibility("default")))
+          unsigned sdk_probe(void) {
+              struct timespec t;
+              if (clock_gettime(CLOCK_MONOTONIC, &t) != 0) return 0;
+              if (!pthread_equal(pthread_self(), pthread_self())) return 0;
+              return atomic_fetch_add(&calls, 1) + 1;
+          }
+          EOF
+          xcrun --sdk iphoneos clang -isysroot "$sdk" -arch arm64 -miphoneos-version-min=15.0 -std=c11 -O2 -Wall -Wextra -Werror -dynamiclib -Wl,-undefined,error -Wl,-install_name,@rpath/sdk-probe.dylib sdk-probe/probe.c -o sdk-probe/sdk-probe.dylib
+          xcrun lipo -verify_arch arm64 sdk-probe/sdk-probe.dylib
+          xcrun vtool -show-build sdk-probe/sdk-probe.dylib | tee sdk-probe/platform.txt
+          grep -Eiq '^[[:space:]]*platform[[:space:]]+IOS[[:space:]]*
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, stat, zipfile
+          src = pathlib.Path('GTA_R62_Police_P2P_CI_Artifact_Gate.zip')
+          assert hashlib.sha256(src.read_bytes()).hexdigest() == '24288b7433a83e504fe08db90147d0518741ed3d64f9a130fc9872cd2cd25ae9', 'unexpected source archive'
+          dest = pathlib.Path('ci-r63-extract')
+          dest.mkdir(exist_ok=False)
+          with zipfile.ZipFile(src) as z:
+              selected = [i for i in z.infolist() if i.filename.startswith('police-rp/r62/') and not i.is_dir()]
+              assert 0 < len(selected) <= 100
+              assert sum(i.file_size for i in selected) <= 2000000
+              seen = set()
+              for i in selected:
+                  p = pathlib.PurePosixPath(i.filename)
+                  assert len(p.parts) == 3 and '..' not in p.parts and not p.is_absolute()
+                  assert not stat.S_ISLNK(i.external_attr >> 16)
+                  assert i.filename not in seen
+                  seen.add(i.filename)
+                  target = dest.joinpath(*p.parts)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(z.read(i))
+          PY
+      - name: Build iPhoneOS dylib
+        if: ${{ hashFiles('GTA_R62_Police_P2P_CI_Artifact_Gate.zip') != '' }}
+        working-directory: ci-r63-extract/police-rp/r62
+        run: sh BUILD_MACOS_R61.sh
+      - name: Record artifact identity and validate
+        if: ${{ hashFiles('GTA_R62_Police_P2P_CI_Artifact_Gate.zip') != '' }}
+        working-directory: ci-r63-extract/police-rp/r62
+        run: python3 artifact62.py record dist-r61
+      - uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('GTA_R62_Police_P2P_CI_Artifact_Gate.zip') != '' }}
+        with:
+          name: RP62-iphoneos-dylib
+          path: ci-r63-extract/police-rp/r62/dist-r61/
+          if-no-files-found: error
+ sdk-probe/platform.txt
+          xcrun nm -gU sdk-probe/sdk-probe.dylib | tee sdk-probe/exports.txt
+          grep -q '_sdk_probe
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, stat, zipfile
+          src = pathlib.Path('GTA_R62_Police_P2P_CI_Artifact_Gate.zip')
+          assert hashlib.sha256(src.read_bytes()).hexdigest() == '24288b7433a83e504fe08db90147d0518741ed3d64f9a130fc9872cd2cd25ae9', 'unexpected source archive'
+          dest = pathlib.Path('ci-r63-extract')
+          dest.mkdir(exist_ok=False)
+          with zipfile.ZipFile(src) as z:
+              selected = [i for i in z.infolist() if i.filename.startswith('police-rp/r62/') and not i.is_dir()]
+              assert 0 < len(selected) <= 100
+              assert sum(i.file_size for i in selected) <= 2000000
+              seen = set()
+              for i in selected:
+                  p = pathlib.PurePosixPath(i.filename)
+                  assert len(p.parts) == 3 and '..' not in p.parts and not p.is_absolute()
+                  assert not stat.S_ISLNK(i.external_attr >> 16)
+                  assert i.filename not in seen
+                  seen.add(i.filename)
+                  target = dest.joinpath(*p.parts)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(z.read(i))
+          PY
+      - name: Build iPhoneOS dylib
+        working-directory: ci-r63-extract/police-rp/r62
+        run: sh BUILD_MACOS_R61.sh
+      - name: Record artifact identity and validate
+        working-directory: ci-r63-extract/police-rp/r62
+        run: python3 artifact62.py record dist-r61
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP62-iphoneos-dylib
+          path: ci-r63-extract/police-rp/r62/dist-r61/
+          if-no-files-found: error
+ sdk-probe/exports.txt
+          xcrun otool -L sdk-probe/sdk-probe.dylib
+          echo 'SDK probe only: not the Police RP dylib.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP63-sdk-probe-only
+          path: sdk-probe/
+          if-no-files-found: error
       - name: Verify and extract pinned source archive
+        if: ${{ hashFiles('GTA_R62_Police_P2P_CI_Artifact_Gate.zip') != '' }}
         shell: bash
         run: |
           python3 - <<'PY'
