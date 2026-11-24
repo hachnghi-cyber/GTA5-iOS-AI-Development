@@ -1,0 +1,42 @@
+name: RP R39 iOS native bridge
+on:
+  push:
+    branches: [feature/rp-r39-native-bridge]
+    paths:
+      - 'police-rp/r39/**'
+      - '.github/workflows/build-rp-r39-native.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: police-rp/r39
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host parser and compile check
+        run: |
+          clang -O2 -Wall -Wextra -Werror native/frame.c native/test_parse.c -o /tmp/rp-parser
+          /tmp/rp-parser
+          clang -DRP_HOST_TEST -O2 -Wall -Wextra -Werror native/client.c native/frame.c -pthread -o /tmp/rp-host
+      - name: Link physical iOS ARM64 dylib
+        run: |
+          mkdir -p dist
+          xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=15.0 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib -Wl,-install_name,@rpath/libRP38.dylib native/client.c native/frame.c -o dist/libRP38.dylib
+          file dist/libRP38.dylib
+          xcrun lipo -verify_arch arm64 dist/libRP38.dylib
+          xcrun vtool -show-build dist/libRP38.dylib | tee dist/build-target.txt
+          grep -Eq 'platform IOS$' dist/build-target.txt
+          xcrun otool -L dist/libRP38.dylib | tee dist/dependencies.txt
+          grep -F '@rpath/libRP38.dylib' dist/dependencies.txt
+          grep -F '/usr/lib/libSystem.B.dylib' dist/dependencies.txt
+          (cd dist && shasum -a 256 libRP38.dylib > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP-R39-iOS-arm64
+          path: police-rp/r39/dist/
+          if-no-files-found: error
+          retention-days: 7

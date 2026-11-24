@@ -1,0 +1,2 @@
+# Police Patrol R39 — native bridge build
+R38 protocol, R35 log input, opt-in private LAN only. No bundled game, credentials, or device logs. No remote entity control; server cuff is a state, not a physical animation. Build for iOS ARM64 with Xcode, output libRP38.dylib matching the R38 packager contract. Run requires separately supplied R35 IPA, R38 server, and config per participant. No unsigned IPA is published here. Main branch remains untouched. CI verifies architecture, target platform and dependency; device runtime testing remains required.
