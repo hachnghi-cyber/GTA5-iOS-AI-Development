@@ -27,9 +27,9 @@ jobs:
           mkdir -p dist
           xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=15.0 -O2 -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib -Wl,-install_name,@rpath/libRP38.dylib native/client.c native/frame.c -o dist/libRP38.dylib
           file dist/libRP38.dylib
-          xcrun lipo -verify_arch arm64 dist/libRP38.dylib
+          xcrun lipo dist/libRP38.dylib -verify_arch arm64
           xcrun vtool -show-build dist/libRP38.dylib | tee dist/build-target.txt
-          grep -Eq 'platform IOS$' dist/build-target.txt
+          grep -Eq 'platform[[:space:]]+IOS[[:space:]]*$' dist/build-target.txt
           xcrun otool -L dist/libRP38.dylib | tee dist/dependencies.txt
           grep -F '@rpath/libRP38.dylib' dist/dependencies.txt
           grep -F '/usr/lib/libSystem.B.dylib' dist/dependencies.txt
