@@ -1,0 +1,112 @@
+name: Police RP R79 Roster Diagnostic Core
+on:
+  push:
+    branches: ['rp/r63-sdk-build']
+    paths: ['police-rp/r79/**', '.github/workflows/build-rp-r79-roster.yml']
+permissions:
+  contents: read
+jobs:
+  merged:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and test bounded logger
+        run: |
+          set -eu
+          cd police-rp/r68
+          printf '%s\n' '044496ff47e0b55900acb90a75553d2a440b6fb937b0101f10d528a908410305  logger68.c' '3992d8b54b161f34196224d40dc35232e04d0a6c392536e9d9388d0b672059a4  test_logger68.c' | shasum -a 256 -c -
+          cd ../r66
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined -DRP68_TEST -DRP68_SAMPLES=4 -DRP68_INTERVAL_NS=1000000ull -I. observer65.c ../r68/logger68.c ../r68/test_logger68.c -o /tmp/r68-test
+          for mode in normal collision missing; do /tmp/r68-test "$mode"; done
+      - name: Recover pinned R62 core
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, stat, zipfile
+          src=pathlib.Path('GTA_R62_Police_P2P_CI_Artifact_Gate.zip')
+          assert hashlib.sha256(src.read_bytes()).hexdigest()=='24288b7433a83e504fe08db90147d0518741ed3d64f9a130fc9872cd2cd25ae9'
+          dest=pathlib.Path('merged-r79')
+          dest.mkdir()
+          with zipfile.ZipFile(src) as z:
+              selected=[i for i in z.infolist() if i.filename.startswith('police-rp/r62/') and not i.is_dir()]
+              assert len(selected)==46 and sum(i.file_size for i in selected)<=2000000
+              seen=set()
+              for i in selected:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert len(p.parts)==3 and '..' not in p.parts and not p.is_absolute()
+                  assert not stat.S_ISLNK(i.external_attr >> 16) and i.filename not in seen
+                  seen.add(i.filename)
+                  (dest/p.name).write_bytes(z.read(i))
+          PY
+          cp police-rp/r66/observer65.c police-rp/r66/observer65.h merged-r79/
+          cp police-rp/r68/logger68.c merged-r79/
+          printf '%s\n' observer65.c logger68.c >> merged-r79/SOURCES_R61.txt
+          printf '%s\n' _rp65_observe _rp65_snapshot _rp68_observe >> merged-r79/EXPORTS_R61.txt
+      - name: Recover and test exact R74 lifecycle source
+        working-directory: merged-r79
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import hashlib, pathlib, zipfile
+          p=pathlib.Path('../police-rp/r75/R74_gate_source.zip')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=='fc4676fa4c8cf50f451f77342150217a52a7ef3407121e964cca363baf947ea2'
+          allowed={'gate74.c','gate74.h','bind55_74.c','test_gate74.c','test_idle74.c'}
+          with zipfile.ZipFile(p) as z:
+              assert len(z.infolist())==5 and set(z.namelist())==allowed
+              for name in sorted(allowed):
+                  assert z.getinfo(name).file_size<16000
+                  with open(name,'xb') as out: out.write(z.read(name))
+          PY
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined gate74.c test_gate74.c -o /tmp/r75-gate
+          /tmp/r75-gate
+          clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined gate74.c bind55_74.c test_idle74.c $(cat SOURCES_R61.txt) -o /tmp/r75-idle
+          /tmp/r75-idle
+          printf '%s\n' gate74.c bind55_74.c >> SOURCES_R61.txt
+          printf '%s\n' _rp74_init _rp74_start _rp74_frame _rp74_confirm _rp74_stop _rp74_bind55 >> EXPORTS_R61.txt
+      - name: Apply pinned R78 delta and verify exact source
+        run: |
+          set -eu
+          echo 'cc8da923eefbd19448c7299c2c6c74f8a5b292e645d11b1bd5a63ff2d2fcc188  police-rp/r79/R78.patch.gz' | shasum -a 256 -c -
+          gzip -dc police-rp/r79/R78.patch.gz > /tmp/R78.patch
+          git apply --check --directory=merged-r79 /tmp/R78.patch
+          git apply --directory=merged-r79 /tmp/R78.patch
+          cp police-rp/r68/test_logger68.c merged-r79/
+          cd merged-r79
+          python3 - <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          files=sorted(p for p in Path('.').iterdir() if p.is_file())
+          manifest=''.join(sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in files)
+          assert len(files)==62 and sha256(manifest.encode()).hexdigest()=='47a714188b0597e17b8909a939c9d12332c80c9930f9394e9768caac74ca3daa'
+          Path('SOURCE_R79.sha256').write_text(manifest)
+          print('PASS exact 62-file R78 source manifest')
+          PY
+      - name: Test R78 adapter and RX lifecycle
+        working-directory: merged-r79
+        run: |
+          set -eu
+          for t in test_gate74 test_rx76; do
+            clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined gate74.c "$t.c" -o "/tmp/$t"
+            "/tmp/$t"
+          done
+          for t in test_adapter77 test_integration77; do
+            clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined gate74.c adapter77.c "$t.c" -o "/tmp/$t"
+            "/tmp/$t"
+          done
+          for t in test_idle74 test_native_deny76; do
+            clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined "$t.c" $(cat SOURCES_R61.txt) -o "/tmp/$t"
+            "/tmp/$t"
+          done
+      - name: Build single iPhoneOS ARM64 dylib
+        working-directory: merged-r79
+        run: |
+          sh BUILD_MACOS_R61.sh
+          cp SOURCES_R61.txt EXPORTS_R61.txt SOURCE_R79.sha256 dist-r61/
+          cat dist-r61/lifecycle-validation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP79-roster-diagnostic
+          path: merged-r79/dist-r61/
+          if-no-files-found: error
