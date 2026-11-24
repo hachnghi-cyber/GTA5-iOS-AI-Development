@@ -88,7 +88,7 @@ jobs:
           }
           EOF
           xcrun --sdk iphoneos clang -isysroot "$sdk" -arch arm64 -miphoneos-version-min=15.0 -std=c11 -O2 -Wall -Wextra -Werror -dynamiclib -Wl,-undefined,error -Wl,-install_name,@rpath/sdk-probe.dylib sdk-probe/probe.c -o sdk-probe/sdk-probe.dylib
-          xcrun lipo -verify_arch arm64 sdk-probe/sdk-probe.dylib
+          xcrun lipo sdk-probe/sdk-probe.dylib -verify_arch arm64
           xcrun vtool -show-build sdk-probe/sdk-probe.dylib | tee sdk-probe/platform.txt
           grep -Eiq '^[[:space:]]*platform[[:space:]]+IOS[[:space:]]*$' sdk-probe/platform.txt
           xcrun nm -gU sdk-probe/sdk-probe.dylib | tee sdk-probe/exports.txt
