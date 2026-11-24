@@ -1,0 +1,65 @@
+name: Police RP R66 Merged Native Core
+on:
+  push:
+    branches: ['rp/r63-sdk-build']
+    paths: ['police-rp/r66/**', '.github/workflows/build-rp-r66-merged.yml']
+permissions:
+  contents: read
+jobs:
+  merged:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and test observer
+        working-directory: police-rp/r66
+        run: |
+          set -eu
+          printf '%s\n' '21c7ae2854fdf2ac46755d32e473d85c9a76bdadb848ba2eb52ddfdd32c0600f  observer65.c' '3e977ec8f792f04855165b2d96feee740abe0213b6d2763a671381e2f272a55e  observer65.h' '827652ff9e9ae72d1afbadd9f0cec882a2dae32c5b639237d232847083ce060f  test_observer65.c' '850b3d65ca6f4781e36e84f0e3a2760df870eca5287fb71ba371c1fb28137025  test_first_tick66.c' | shasum -a 256 -c -
+          for t in test_observer65 test_first_tick66; do
+            clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined observer65.c "$t.c" -o "/tmp/$t"
+            "/tmp/$t"
+          done
+      - name: Recover pinned R62 core
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, stat, zipfile
+          src=pathlib.Path('GTA_R62_Police_P2P_CI_Artifact_Gate.zip')
+          assert hashlib.sha256(src.read_bytes()).hexdigest()=='24288b7433a83e504fe08db90147d0518741ed3d64f9a130fc9872cd2cd25ae9'
+          dest=pathlib.Path('merged-r66')
+          dest.mkdir()
+          with zipfile.ZipFile(src) as z:
+              selected=[i for i in z.infolist() if i.filename.startswith('police-rp/r62/') and not i.is_dir()]
+              assert len(selected)==46 and sum(i.file_size for i in selected)<=2000000
+              seen=set()
+              for i in selected:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert len(p.parts)==3 and '..' not in p.parts and not p.is_absolute()
+                  assert not stat.S_ISLNK(i.external_attr >> 16) and i.filename not in seen
+                  seen.add(i.filename)
+                  (dest/p.name).write_bytes(z.read(i))
+          PY
+          cp police-rp/r66/observer65.c police-rp/r66/observer65.h merged-r66/
+          printf '%s\n' observer65.c >> merged-r66/SOURCES_R61.txt
+          printf '%s\n' _rp65_observe _rp65_snapshot >> merged-r66/EXPORTS_R61.txt
+      - name: Build single iPhoneOS ARM64 dylib
+        working-directory: merged-r66
+        run: |
+          sh BUILD_MACOS_R61.sh
+          python3 - <<'PY'
+          from pathlib import Path
+          import validate56
+          validate56.EXPORTS += ('_rp65_observe','_rp65_snapshot')
+          import json
+          report=validate56.validate(Path('dist-r61/libRP53.dylib').read_bytes())
+          Path('dist-r61/merged-validation.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+          cp SOURCES_R61.txt EXPORTS_R61.txt dist-r61/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP66-merged-iphoneos
+          path: merged-r66/dist-r61/
+          if-no-files-found: error
