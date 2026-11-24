@@ -1,7 +1,6 @@
-// GTA V iOS v13.3 — safe startup diagnostics, no game/network hooks.
-// This initializer runs ONLY if the app's Mach-O explicitly loads the dylib.
-// It proves dylib load and exact GTA5 UUID; does not prove Police RP works.
+// Startup routing for the v13.3 diagnostic and the R85 private account panel.
 #import <Foundation/Foundation.h>
+#import <CommonCrypto/CommonDigest.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 #include <stdio.h>
@@ -12,18 +11,17 @@ void prp_start_tls_probe(NSString *folder);
 
 #define PRP_EXPECTED_UUID "EB122C35-96F4-307F-91C3-A2255DD9C685"
 
-static NSString *prp_uuid_of_main_image(void) {
-    const struct mach_header *head = _dyld_get_image_header(0);
-    if (!head || head->magic != MH_MAGIC_64 ||
-        head->cputype != CPU_TYPE_ARM64) return nil;
+static NSString *prp_image_uuid(const struct mach_header *head, size_t available) {
+    if (!head || available < sizeof(struct mach_header_64) || head->magic != MH_MAGIC_64 ||
+        head->cputype != CPU_TYPE_ARM64 || head->filetype != MH_EXECUTE) return nil;
     const struct mach_header_64 *h = (const struct mach_header_64 *)head;
-    if (h->sizeofcmds > 1024 * 1024 || h->ncmds > 4096) return nil;
+    if (h->sizeofcmds > available - sizeof(*h) || h->sizeofcmds > 1024 * 1024 || h->ncmds > 4096) return nil;
     const uint8_t *ptr = (const uint8_t *)h + sizeof(*h);
     const uint8_t *end = ptr + h->sizeofcmds;
     for (uint32_t i=0; i<h->ncmds; ++i) {
         if ((size_t)(end - ptr) < sizeof(struct load_command)) return nil;
         const struct load_command *cmd = (const struct load_command *)ptr;
-        if (cmd->cmdsize < sizeof(*cmd) || cmd->cmdsize > (size_t)(end - ptr)) return nil;
+        if (cmd->cmdsize < sizeof(*cmd) || (cmd->cmdsize & 7) || cmd->cmdsize > (size_t)(end - ptr)) return nil;
         if (cmd->cmd == LC_UUID && cmd->cmdsize >= sizeof(struct uuid_command)) {
             const struct uuid_command *u = (const struct uuid_command *)ptr;
             const uint8_t *v = u->uuid;
@@ -37,10 +35,36 @@ static NSString *prp_uuid_of_main_image(void) {
     return nil;
 }
 
+// Check the guest executable via NSBundle so a container host's dyld image 0
+// cannot identify a different GTA build. The patrol page survives re-signing.
+static BOOL prp_is_r85_account_host(void) {
+    NSURL *url = NSBundle.mainBundle.executableURL;
+    if (![url.lastPathComponent isEqualToString:@"GTA5"]) return NO;
+    NSFileHandle *file = [NSFileHandle fileHandleForReadingFromURL:url error:NULL];
+    if (!file) return NO;
+    NSData *prefix = [file readDataUpToLength:0x4000 error:NULL];
+    [file closeAndReturnError:NULL];
+    if (prefix.length != 0x4000 ||
+        ![prp_image_uuid(prefix.bytes, prefix.length) isEqualToString:@"DC32A27A-E407-320F-8F52-76515044B1A9"])
+        return NO;
+    uint8_t digest[CC_SHA256_DIGEST_LENGTH];
+    const uint8_t expected[CC_SHA256_DIGEST_LENGTH] = {
+        0x88, 0xD5, 0xF2, 0xC6, 0x33, 0x33, 0xF0, 0x3E, 0x40, 0x2F, 0x17, 0x77, 0x58, 0xEB, 0x41, 0xB0,
+        0xCA, 0x9F, 0x9D, 0x28, 0xAA, 0x65, 0x3B, 0x7C, 0xE0, 0xFA, 0x27, 0x81, 0xFA, 0x5D, 0xED, 0x75
+    };
+    CC_SHA256((const uint8_t *)prefix.bytes + 0x3000, 0x1000, digest);
+    return memcmp(digest, expected, sizeof expected) == 0;
+}
+
 __attribute__((constructor))
 static void prp_phase8_launch_probe(void) {
     @autoreleasepool {
-        NSString *uuid = prp_uuid_of_main_image();
+        NSString *documents = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+        if (prp_is_r85_account_host()) {
+            prp_start_r85_account_panel(documents);
+            return;
+        }
+        NSString *uuid = prp_image_uuid(_dyld_get_image_header(0), SIZE_MAX);
         BOOL exact = uuid && [uuid isEqualToString:@PRP_EXPECTED_UUID];
         NSString *entry = [NSString stringWithFormat:
             @"schema=prp-v133-launch-probe-v1\n"
@@ -59,7 +83,6 @@ static void prp_phase8_launch_probe(void) {
         fwrite(msg, 1, strlen(msg), stderr);
         // Never put private networking identifiers or a token in logs.
         // Best effort only: Documents may be inaccessible without File Sharing.
-        NSString *documents = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
         NSString *destination = [documents stringByAppendingPathComponent:@"PoliceRP-v13.3-Phase8.txt"];
         NSError *error = nil;
         [[NSFileManager defaultManager] createDirectoryAtPath:documents

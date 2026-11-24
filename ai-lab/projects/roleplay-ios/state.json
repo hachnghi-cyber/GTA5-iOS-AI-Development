@@ -15,6 +15,7 @@
     "r83_iphoneos_build_run": 45432386458,
     "windows_verification": "3 original Python staging tests and 23 stock station selection assertions with assertions enabled (Zig 0.13 clang, C11, -O0 -UNDEBUG).",
     "device_patrol_verified": false,
+    "account_panel_host_guard": "Private account profiles only on the R85 executable UUID and its 4096-byte patrol page at file offset 12288 (SHA-256 88d5f2c63333f03e402f177758eb41b0ca9f9d28aa653b7ce0fa2781fa5ded75). iPhone panel login on R85 pending.",
     "private_account_linked_to_gta_character": false,
     "next_action": "Use the recovered R85 patrol baseline for the combined private RP client. Verify private room, active shift, and both consenting participants before enabling police interactions."
   },

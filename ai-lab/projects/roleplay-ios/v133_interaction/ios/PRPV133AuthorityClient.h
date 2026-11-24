@@ -6,6 +6,7 @@
 // Starts only with a valid local private config. A transport client, not a
 // RAGE adapter: no player pointers, game natives or stock event replacement.
 void prp_start_authority_client(NSString *folder);
+void prp_start_r85_account_panel(NSString *folder);
 // RP target is a server principal, never a game slot.
 void prp_authority_submit(uint32_t operation, uint64_t target);
 void prp_authority_panel_consent(BOOL enabled);

@@ -4,6 +4,10 @@
 
 ## Bản tuần tra v13.5 R85
 
+Panel tài khoản chọn R85 theo UUID của executable và SHA-256 của trang chứa
+thay đổi tuần tra. Giao diện cần hồ sơ tài khoản của server riêng. Luồng này
+ghi kết quả vào `PoliceRP-R85-Authority.txt`. Chưa có log đăng nhập R85 từ iPhone.
+
 Ngày 24/11/2026 đã tìm lại IPA R85 và ZIP mã nguồn từ chat cũ. Hai tệp được lưu
 cục bộ tại `work/private-binaries/v135/` của workspace. IPA có 62 mục, kiểm tra
 CRC đạt và SHA-256 khớp báo cáo R85. Trên Windows đã chạy lại 3 bài kiểm tra bộ

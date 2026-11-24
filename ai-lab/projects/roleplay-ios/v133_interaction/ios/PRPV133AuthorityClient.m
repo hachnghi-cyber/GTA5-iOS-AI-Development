@@ -10,7 +10,6 @@
 static const char RP_AUTH_ALPN[] = "police-rp-authority/1";
 static const char RP_ACCOUNT_ALPN[] = "police-rp-account/1";
 static NSString *const RP_AUTH_CONFIG = @"PoliceRP-Authority-PRIVATE.json";
-static NSString *const RP_AUTH_LOG = @"PoliceRP-v13.3-Authority.txt";
 void prp_install_authority_panel(void);
 
 typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
@@ -27,6 +26,7 @@ typedef NS_ENUM(NSUInteger, RPSocialProbePhase) {
 @property(nonatomic, strong) dispatch_queue_t queue;
 @property(nonatomic, strong) dispatch_source_t timer;
 @property(nonatomic, copy) NSString *folder;
+@property(nonatomic, copy) NSString *logName;
 @property(nonatomic) uint64_t expectedID;
 @property(nonatomic) NSTimeInterval expires;
 @property(nonatomic) NSTimeInterval readDeadline;
@@ -112,7 +112,7 @@ static NSTimeInterval rp_uptime(void) {
          [NSDate date], result, self.verified ? 1 : 0,
          (!self.done && state.ready) ? 1 : 0, state.member_count,
          (unsigned long long)state.revision];
-    [text writeToFile:[self.folder stringByAppendingPathComponent:RP_AUTH_LOG]
+    [text writeToFile:[self.folder stringByAppendingPathComponent:self.logName]
            atomically:YES encoding:NSUTF8StringEncoding error:NULL];
 }
 
@@ -417,7 +417,7 @@ static NSTimeInterval rp_uptime(void) {
 }
 @end
 
-void prp_start_authority_client(NSString *folder) {
+static void start_authority(NSString *folder, BOOL r85AccountPanel) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         authorityQueue = dispatch_queue_create("police.rp.authority", DISPATCH_QUEUE_SERIAL);
@@ -432,6 +432,7 @@ void prp_start_authority_client(NSString *folder) {
             NSDictionary *config = [parsed isKindOfClass:[NSDictionary class]] ? parsed : nil;
             PRPV133AuthorityClient *client = [[PRPV133AuthorityClient alloc] init];
             client.folder = folder;
+            client.logName = r85AccountPanel ? @"PoliceRP-R85-Authority.txt" : @"PoliceRP-v13.3-Authority.txt";
             client.queue = authorityQueue;
             authorityClient = client;
             NSString *host = config[@"host"];
@@ -444,7 +445,8 @@ void prp_start_authority_client(NSString *folder) {
             BOOL deviceAccount = [account isEqual:@"device-account-v1"];
             uint64_t identityID = 0, socialPeer = 0;
             NSTimeInterval now = [NSDate date].timeIntervalSince1970;
-            if (![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
+            if ((r85AccountPanel && (!deviceAccount || !usePanel || diagnostic)) ||
+                ![config[@"schema"] isEqual:@"prp-authority-client-v1"] || !prp_is_local_ip(host) ||
                 ![port isKindOfClass:[NSNumber class]] || port.doubleValue != port.unsignedIntValue ||
                 port.unsignedIntValue < 1024 || port.unsignedIntValue > 65535 ||
                 ![expires isKindOfClass:[NSNumber class]] || !(expires.doubleValue > now && expires.doubleValue <= now + 1230) ||
@@ -536,6 +538,7 @@ void prp_authority_account(BOOL create, NSString *name, NSString *password) {
         // from a retired connection cannot overwrite the new client's state.
         PRPV133AuthorityClient *client = [[PRPV133AuthorityClient alloc] init];
         client.folder = old.folder;
+        client.logName = old.logName;
         client.queue = authorityQueue;
         client.expectedID = old.expectedID;
         client.socialPeer = old.socialPeer;
@@ -554,6 +557,14 @@ void prp_authority_account(BOOL create, NSString *name, NSString *password) {
         client.accountFrame = frame;
         [client start];
     });
+}
+
+void prp_start_authority_client(NSString *folder) {
+    start_authority(folder, NO);
+}
+
+void prp_start_r85_account_panel(NSString *folder) {
+    start_authority(folder, YES);
 }
 
 void prp_authority_logout(void) {

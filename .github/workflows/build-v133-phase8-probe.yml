@@ -46,19 +46,20 @@ jobs:
           set -euo pipefail
           mkdir -p out
           SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          export IPHONEOS_DEPLOYMENT_TARGET=15.0
           MODULE=ai-lab/projects/roleplay-ios/v133_interaction
           for source in "$MODULE"/src/*.c; do
             name="$(basename "$source" .c)"
             xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
-              -miphoneos-version-min=16.3 -std=c11 -O2 \
+              -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" -std=c11 -O2 \
               -fvisibility=hidden -Wall -Wextra -Werror -Wpedantic \
               -I "$MODULE/include" -c "$source" -o "out/$name.o"
             xcrun --sdk iphoneos clang --analyze -arch arm64 -isysroot "$SDK" \
-              -miphoneos-version-min=16.3 -std=c11 -I "$MODULE/include" \
+              -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" -std=c11 -I "$MODULE/include" \
               "$source" -o "out/$name-analysis.plist"
           done
           xcrun --sdk iphoneos clang -arch arm64 \
-            -isysroot "$SDK" -miphoneos-version-min=16.3 \
+            -isysroot "$SDK" -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" \
             -fobjc-arc -fvisibility=hidden \
             -O2 -Wall -Wextra -Werror -dynamiclib \
             -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
