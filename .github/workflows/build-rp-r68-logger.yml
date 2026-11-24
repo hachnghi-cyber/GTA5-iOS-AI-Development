@@ -17,7 +17,7 @@ jobs:
         run: |
           set -eu
           cd police-rp/r68
-          printf '%s\n' 'aee5273e14d68ba901b974a52d6ac2e2b07ec11562b33dae45528121dc340e99  logger68.c' '386c1ae7636e644cb22c3b3cf185d7cc5ce72af1dc0b23a76b65e3deb2854f84  test_logger68.c' | shasum -a 256 -c -
+          printf '%s\n' '044496ff47e0b55900acb90a75553d2a440b6fb937b0101f10d528a908410305  logger68.c' '3992d8b54b161f34196224d40dc35232e04d0a6c392536e9d9388d0b672059a4  test_logger68.c' | shasum -a 256 -c -
           cd ../r66
           clang -std=c11 -O1 -g -Wall -Wextra -Werror -pthread -fsanitize=address,undefined -DRP68_TEST -DRP68_SAMPLES=4 -DRP68_INTERVAL_NS=1000000ull -I. observer65.c ../r68/logger68.c ../r68/test_logger68.c -o /tmp/r68-test
           for mode in normal collision missing; do /tmp/r68-test "$mode"; done
