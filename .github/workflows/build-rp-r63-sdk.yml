@@ -1,0 +1,50 @@
+name: Police RP R63 iPhoneOS SDK build
+on:
+  push:
+    branches: ['rp/r63-sdk-build']
+    paths: ['GTA_R62_Police_P2P_CI_Artifact_Gate.zip']
+permissions:
+  contents: read
+jobs:
+  iphoneos:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and extract pinned source archive
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, stat, zipfile
+          src = pathlib.Path('GTA_R62_Police_P2P_CI_Artifact_Gate.zip')
+          assert hashlib.sha256(src.read_bytes()).hexdigest() == '24288b7433a83e504fe08db90147d0518741ed3d64f9a130fc9872cd2cd25ae9', 'unexpected source archive'
+          dest = pathlib.Path('ci-r63-extract')
+          dest.mkdir(exist_ok=False)
+          with zipfile.ZipFile(src) as z:
+              selected = [i for i in z.infolist() if i.filename.startswith('police-rp/r62/') and not i.is_dir()]
+              assert 0 < len(selected) <= 100
+              assert sum(i.file_size for i in selected) <= 2000000
+              seen = set()
+              for i in selected:
+                  p = pathlib.PurePosixPath(i.filename)
+                  assert len(p.parts) == 3 and '..' not in p.parts and not p.is_absolute()
+                  assert not stat.S_ISLNK(i.external_attr >> 16)
+                  assert i.filename not in seen
+                  seen.add(i.filename)
+                  target = dest.joinpath(*p.parts)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(z.read(i))
+          PY
+      - name: Build iPhoneOS dylib
+        working-directory: ci-r63-extract/police-rp/r62
+        run: sh BUILD_MACOS_R61.sh
+      - name: Record artifact identity and validate
+        working-directory: ci-r63-extract/police-rp/r62
+        run: python3 artifact62.py record dist-r61
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RP62-iphoneos-dylib
+          path: ci-r63-extract/police-rp/r62/dist-r61/
+          if-no-files-found: error
