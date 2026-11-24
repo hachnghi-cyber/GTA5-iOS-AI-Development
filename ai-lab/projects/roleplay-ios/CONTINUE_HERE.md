@@ -2,6 +2,16 @@
 
 **Tài liệu mở đầu bắt buộc trong MỖI cuộc trò chuyện GPT-6 mới.**
 
+## Bản tuần tra v13.5 R85
+
+Ngày 24/11/2026 đã tìm lại IPA R85 và ZIP mã nguồn từ chat cũ. Hai tệp được lưu
+cục bộ tại `work/private-binaries/v135/` của workspace. IPA có 62 mục, kiểm tra
+CRC đạt và SHA-256 khớp báo cáo R85. Trên Windows đã chạy lại 3 bài kiểm tra bộ
+đóng gói và 23 kiểm tra chọn nghề tại đồn. Hash, UUID và CI R83 nằm trong
+`state.json` ở mục `v135_r85_patrol_baseline`. Mốc còn thiếu là đối chiếu
+trạng thái đang trong ca và danh tính của hai người tự nguyện trong cùng phiên
+trước khi thử thao tác cảnh sát trên bản gộp.
+
 ## Checkpoint v13.3 hiện tại
 
 Đã đóng gói IPA tài khoản từ commit `3fe45fd`, build iPhoneOS ARM64

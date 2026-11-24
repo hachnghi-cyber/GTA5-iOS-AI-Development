@@ -1,6 +1,23 @@
 {
   "schema_version": 1,
   "project_id": "gta-v-ios-roleplay",
+  "v135_r85_patrol_baseline": {
+    "ipa_file": "GTAV_v13.5_R85_Patrol_Isolation_Unsigned.ipa",
+    "ipa_sha256": "1aa536cf66306aa0885354a5792f0df9597b30048c777a316a050283f088bc1b",
+    "ipa_bytes": 102068958,
+    "zip_entries_crc_verified": 62,
+    "source_file": "GTA_v13.5_R85_Patrol_Isolation_Source.zip",
+    "source_sha256": "353d8a19e091d048e035d72b4faa7f129b06032eeedfb2ab62dd225ee7206eb9",
+    "executable_uuid": "DC32A27A-E407-320F-8F52-76515044B1A9",
+    "unsigned_executable_sha256": "2a654de3c7f3804857b1598617621cf23d592f04ecb31010df1f7fa0e3f2b3af",
+    "libRP53_sha256": "0175335532a17e4f10c5203cc6795a0a19129d50db758dde12501ef57421c994",
+    "r83_source_commit": "86d871d61ca0956d1b5bafa2ae58c2518dda9580",
+    "r83_iphoneos_build_run": 45432386458,
+    "windows_verification": "3 original Python staging tests and 23 stock station selection assertions with assertions enabled (Zig 0.13 clang, C11, -O0 -UNDEBUG).",
+    "device_patrol_verified": false,
+    "private_account_linked_to_gta_character": false,
+    "next_action": "Use the recovered R85 patrol baseline for the combined private RP client. Verify private room, active shift, and both consenting participants before enabling police interactions."
+  },
   "iphone_account_panel": {
     "parent": "180cf1440710ddf9ee4a9f372af934124cfce25a",
     "ios_source_commit": "3fe45fda56b74596fb711f4b3d28ac2cc1ac9c7a",
