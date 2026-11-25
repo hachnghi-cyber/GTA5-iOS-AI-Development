@@ -1,0 +1,93 @@
+name: GTA v13.3 - iPhone Launch Probe (NO GAME IPA)
+
+on:
+  push:
+    branches:
+      - feature/winstom-rp-ipa-audit-20261116
+    paths:
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/ios/**'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_lldb.py'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/src/**'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/include/**'
+      - '.github/workflows/build-v133-phase8-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iPhone_arm64_probe:
+    name: Compile iPhoneOS arm64 read-only startup dylib
+    # Use an Intel host queue; the iPhoneOS compiler still targets arm64 below.
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check local packer and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ai-lab/projects/roleplay-ios/v133_interaction/ios/patch_exact_v133_probe.py
+          python3 -m unittest discover \
+            -s ai-lab/projects/roleplay-ios/v133_interaction/ios \
+            -p 'test_v133_probe_packer.py' -v
+      - name: Smoke test LLDB observer command registration
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun lldb --batch \
+            -o 'command script import ai-lab/projects/roleplay-ios/v133_interaction/tools/observe_v133_lldb.py' \
+            -o 'help prp-arm' -o 'help prp-capture' -o 'help prp-disarm'
+      - name: Compile diagnostic dylib using iPhoneOS SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          export IPHONEOS_DEPLOYMENT_TARGET=15.0
+          MODULE=ai-lab/projects/roleplay-ios/v133_interaction
+          for source in "$MODULE"/src/*.c; do
+            name="$(basename "$source" .c)"
+            xcrun --sdk iphoneos clang -arch arm64 -isysroot "$SDK" \
+              -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" -std=c11 -O2 \
+              -fvisibility=hidden -Wall -Wextra -Werror -Wpedantic \
+              -I "$MODULE/include" -c "$source" -o "out/$name.o"
+            xcrun --sdk iphoneos clang --analyze -arch arm64 -isysroot "$SDK" \
+              -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" -std=c11 -I "$MODULE/include" \
+              "$source" -o "out/$name-analysis.plist"
+          done
+          xcrun --sdk iphoneos clang -arch arm64 \
+            -isysroot "$SDK" -miphoneos-version-min="$IPHONEOS_DEPLOYMENT_TARGET" \
+            -fobjc-arc -fvisibility=hidden \
+            -O2 -Wall -Wextra -Werror -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/PoliceRPV133Probe.dylib \
+            -framework Foundation -framework Network -framework Security -framework UIKit \
+            ai-lab/projects/roleplay-ios/v133_interaction/ios/PRPV133LaunchProbe.m \
+            -I "$MODULE/include" "$MODULE/ios/PRPV133TLSProbe.m" \
+            "$MODULE/ios/PRPV133AuthorityClient.m" \
+            "$MODULE/ios/PRPV133AuthorityPanel.m" \
+            out/rp_v133_*.o \
+            -o out/PoliceRPV133Probe.dylib
+          xcrun lipo -info out/PoliceRPV133Probe.dylib
+          xcrun otool -D out/PoliceRPV133Probe.dylib
+          xcrun otool -L out/PoliceRPV133Probe.dylib > out/dependencies.txt
+          xcrun vtool -show-build out/PoliceRPV133Probe.dylib > out/build_version.txt
+          shasum -a 256 out/PoliceRPV133Probe.dylib > out/sha256.txt
+      - name: Bundle safe patcher and instructions (no game data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/patch_exact_v133_probe.py out/
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/README_TEST_VI.md out/
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/Make_Phase8_IPA_Windows.bat out/
+          cp ai-lab/projects/roleplay-ios/v133_interaction/ios/Make_Phase8_IPA_macOS_Linux.sh out/
+          chmod +x out/Make_Phase8_IPA_macOS_Linux.sh
+          bash -n out/Make_Phase8_IPA_macOS_Linux.sh
+          printf 'NO IPA. Startup diagnostics and optional private RP panel. Game transport UNBOUND. Use allowlisted original v13.3 IPA locally, then re-sign.\n' > out/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GTA-v13.3-Phase8-iPhone-STARTUP-PROBE-NO-IPA
+          path: out/
+          retention-days: 7

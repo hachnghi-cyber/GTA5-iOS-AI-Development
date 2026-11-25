@@ -1,0 +1,160 @@
+{
+  "status": "PASS_STATIC_EXACT_BUILD",
+  "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "verified_opcode_pins": 65,
+  "verified_direct_call_targets": 18,
+  "verified_usb_additional_opcode_pins": 7,
+  "verified_transport_frame_opcode_pins": 30,
+  "verified_received_frame_opcode_pins": 32,
+  "verified_event_vtable_targets": 3,
+  "packet_integrity": {
+    "verified_opcode_pins": 47,
+    "verified_call_targets": 9,
+    "received_tag_bytes_compared": 8,
+    "hmac_success_block_dominates_aes_and_success_literal": true,
+    "key_source": "address-selected netKeyExchange entry",
+    "key_entry_bound_to_game_player": false,
+    "runtime_packet_integrity_verified": false
+  },
+  "rejected_old_enqueue": {
+    "va": "0x101cd70bc",
+    "event_class": "netEventConnectionError",
+    "reason": "constructor installs the connection-error vtable, not the frame-received vtable"
+  },
+  "unpack_uses_event_queue": true,
+  "consumer_iteration_uses_next_event": true,
+  "manager_update_calls_dispatch": true,
+  "dispatch_routes_event_into_channel": true,
+  "channel_subscriber_callback_is_indirect": true,
+  "same_net_event_object_runtime_observed": false,
+  "queue_consumer_on_net_event_binding_runtime_observed": false,
+  "packet_cryptographic_sender_identity_verified": false,
+  "rage_membership_generation_verified": false,
+  "rp_actions_enabled": false,
+  "usb_profile": {
+    "version": 3,
+    "enqueue_sites": {
+      "immediate_frame": "0x101cc684c",
+      "buffered_frame": "0x101cc5cec"
+    },
+    "frame_vtable_va": "0x1028446b8",
+    "frame_get_id_va": "0x101d42a24",
+    "frame_type_id_va": "0x10332b674",
+    "immediate_parent_returns": [
+      "0x101cc576c",
+      "0x101cd6b14"
+    ],
+    "dispatch_event_va": "0x101cdbe50",
+    "dispatch_caller_returns": [
+      "0x101cd9ec4",
+      "0x101cd9fa0"
+    ],
+    "on_net_event_pre_dispatch_va": "0x1020249a8",
+    "unpack_caller_return_va": "0x101cd77ac",
+    "code_guards": [
+      {
+        "function": "p2p_decrypt",
+        "va": "0x101cd5ea4",
+        "size": 908,
+        "sha256": "7bbc9c836c347b5d4a4e0bc215948c24284120dd3e6b1f980737d71501d4777d"
+      },
+      {
+        "function": "p2p_crypt_decrypt",
+        "va": "0x101cdfee4",
+        "size": 1064,
+        "sha256": "a90e41966b5c4e5591b485d6cfeaa06001bff1b042f5473c84c4c75e08e958a6"
+      },
+      {
+        "function": "generate_hmac",
+        "va": "0x101ce8810",
+        "size": 248,
+        "sha256": "c9af4c0e787518220eee0d069ca4e36fa49356d7e8e194d394338d55d3c89b2f"
+      },
+      {
+        "function": "get_p2p_key",
+        "va": "0x101cfbe9c",
+        "size": 304,
+        "sha256": "dce2c1cbc9acc5a7b2f65e8a94dfe65f7b9023c04080ea3f6856e2db35212c70"
+      },
+      {
+        "function": "connection_unpack",
+        "va": "0x101cc5020",
+        "size": 3592,
+        "sha256": "3aabbcd35ef5d59f42d28e546fde43058a773cb9badbcd37344270e607fa85c3"
+      },
+      {
+        "function": "queue_frame_event",
+        "va": "0x101cc67b0",
+        "size": 400,
+        "sha256": "7f4bf8a1f39b6d05acbecb8deb099c08a899460b3938492a2c71822df00031c1"
+      },
+      {
+        "function": "alloc_in_frame",
+        "va": "0x101cc7d28",
+        "size": 412,
+        "sha256": "21055793f078973bad010c8b9b138f20c752e60965bf68ac99ece0e297f12c8d"
+      },
+      {
+        "function": "in_frame_constructor",
+        "va": "0x101d42768",
+        "size": 512,
+        "sha256": "d6bfc664be0885f9f87915ef6f8a1b296738118b30bce21167b8b7ce8df9ff31"
+      },
+      {
+        "function": "frame_get_id",
+        "va": "0x101d42a24",
+        "size": 12,
+        "sha256": "d71176d81aa497849083f32bcc3d682fbbced0b0b5826ccd5fc20e8eaecbeb1b"
+      },
+      {
+        "function": "unpack_head",
+        "va": "0x101cd6230",
+        "size": 4096,
+        "sha256": "d146bff23e3fdc17a9136e3485b1eb515d086c46d59d9f17f2d6ebf1f14ac6e9"
+      },
+      {
+        "function": "unpack_tail",
+        "va": "0x101cd7230",
+        "size": 304,
+        "sha256": "f4e36e7884ece3b4b0ff75e0e4d694b29613602e037931ca6ec1164e18f622a5"
+      },
+      {
+        "function": "handle_received_packet",
+        "va": "0x101cd7690",
+        "size": 352,
+        "sha256": "9798727160ed98a59700b9ff95316e60c4648ef07a18cf9b01eb46eb519a1a7c"
+      },
+      {
+        "function": "next_event",
+        "va": "0x101a3801c",
+        "size": 272,
+        "sha256": "6cd1525f5e6c641ffce44d8c1df8605274d10916321ce63cd9a445195fa709ff"
+      },
+      {
+        "function": "dispatch",
+        "va": "0x101cd9810",
+        "size": 2356,
+        "sha256": "55e283b338f2958737c2c892fd44b9b8b1e638814a7ec47b94b4b4368c862b34"
+      },
+      {
+        "function": "dispatch_event",
+        "va": "0x101cdbe50",
+        "size": 800,
+        "sha256": "3297ae20e9bb53faf2620fee60fab1e821629543d4584378b5fd08df15a1fac1"
+      },
+      {
+        "function": "channel_dispatch_event",
+        "va": "0x101cc9c98",
+        "size": 340,
+        "sha256": "b1a1c2ff83a44403993c1b748302678a414a07933c9aba1548c315bef7dc06d7"
+      },
+      {
+        "function": "on_net_event",
+        "va": "0x102024914",
+        "size": 272,
+        "sha256": "a0a1cb18d83c44cd1ce5038fa67e9604e6f6b2ddcabfe53f9f1bec679d6c0a15"
+      }
+    ]
+  }
+}

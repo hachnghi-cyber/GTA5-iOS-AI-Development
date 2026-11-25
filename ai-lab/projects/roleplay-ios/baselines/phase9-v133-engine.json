@@ -1,0 +1,1956 @@
+{
+  "status": "STATIC_VERIFIED",
+  "executable_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+  "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "symbols": {
+    "sandbox_program": {
+      "name": "__Z21MacportSandboxProgramv",
+      "va": "0x10003b2d8"
+    },
+    "sandbox_callback": {
+      "name": "__ZL20MacportSandboxNativeRN4rage9scrThread4InfoE",
+      "va": "0x10003b384"
+    },
+    "online_update": {
+      "name": "__ZL19MacportOnlineUpdatev",
+      "va": "0x1000e16f8"
+    },
+    "jobs_update": {
+      "name": "__ZL17MacportJobsUpdateP4CPedi",
+      "va": "0x1000eb57c"
+    },
+    "work_status": {
+      "name": "__ZL17MacportWorkStatusv",
+      "va": "0x1000f92a0"
+    },
+    "online_command": {
+      "name": "__ZL20MacportOnlineCommandPKc",
+      "va": "0x1000f2d54"
+    },
+    "job_start": {
+      "name": "__ZL15MacportJobStartiPKcii",
+      "va": "0x1000f74b8"
+    },
+    "job_cleanup": {
+      "name": "__ZL17MacportJobCleanupi",
+      "va": "0x1000f5ba4"
+    },
+    "job_send": {
+      "name": "__ZL14MacportJobSendR13MacportJobMsgjj",
+      "va": "0x1000f7d30"
+    },
+    "register_command": {
+      "name": "__ZN4rage9scrThread15RegisterCommandEmPFvRNS0_4InfoEE",
+      "va": "0x101fad4d4"
+    },
+    "startup_script": {
+      "name": "__ZN11CTheScripts19LaunchStartupScriptEv",
+      "va": "0x100e33818"
+    },
+    "on_net_event": {
+      "name": "__ZN4rage16netPlayerMgrBase10OnNetEventEPNS_20netConnectionManagerEPKNS_8netEventE",
+      "va": "0x102024914"
+    },
+    "dispatch": {
+      "name": "__ZN4rage12atDelegator1IvRKNS_19ReceivedMessageDataEE8DispatchES3_",
+      "va": "0x102026114"
+    },
+    "send_buffer": {
+      "name": "__ZN4rage16netPlayerMgrBase10SendBufferEPKNS_9netPlayerEPKvjjPtS3_",
+      "va": "0x101ffee34"
+    },
+    "on_message": {
+      "name": "__ZN4rage11netEventMgr17OnMessageReceivedERKNS_19ReceivedMessageDataE",
+      "va": "0x10200a78c"
+    },
+    "packed_events": {
+      "name": "__ZN4rage11netEventMgr21HandlePackedEventsMsgERKNS_19ReceivedMessageDataE",
+      "va": "0x10200be0c"
+    },
+    "process_events": {
+      "name": "__ZN4rage11netEventMgr19ProcessPackedEventsERNS_12datBitBufferERKNS_9netPlayerES5_",
+      "va": "0x10200c158"
+    },
+    "process_data": {
+      "name": "__ZN4rage11netEventMgr16ProcessEventDataERKNS_9netPlayerES3_tjjtRNS_12datBitBufferE",
+      "va": "0x10200d9ec"
+    },
+    "handle_event": {
+      "name": "__ZN4rage11netEventMgr11HandleEventEPNS_12netGameEventERNS_12datBitBufferERKNS_9netPlayerES7_tjj",
+      "va": "0x10200c7ec"
+    },
+    "script_event_handler": {
+      "name": "__ZN18CScriptedGameEvent12EventHandlerERN4rage12datBitBufferERKNS0_9netPlayerES5_tjj",
+      "va": "0x10191259c"
+    },
+    "script_decide": {
+      "name": "__ZN18CScriptedGameEvent6DecideERKN4rage9netPlayerES3_",
+      "va": "0x101912c44"
+    },
+    "script_ctor": {
+      "name": "__ZN18CScriptedGameEventC1ER13CGameScriptIdPvjj",
+      "va": "0x10191246c"
+    },
+    "group_event_ctor1": {
+      "name": "__ZN24CEventNetworkScriptEventC1EPvjPKN4rage9netPlayerE",
+      "va": "0x1006ada0c"
+    },
+    "group_event_ctor2": {
+      "name": "__ZN24CEventNetworkScriptEventC2EPvjPKN4rage9netPlayerE",
+      "va": "0x1006ad850"
+    },
+    "player_valid": {
+      "name": "__ZNK4rage9netPlayer7IsValidEv",
+      "va": "0x102013b84"
+    },
+    "session_state": {
+      "name": "__ZN15CNetworkSession15SetSessionStateENS_13eSessionStateEb",
+      "va": "0x1017e9de4"
+    },
+    "handle_packet": {
+      "name": "__ZN4rage20netConnectionManager20HandleReceivedPacketERKNS_10netAddressEPKvj",
+      "va": "0x101cd7690"
+    },
+    "p2p_decrypt": {
+      "name": "__ZN4rage20netConnectionManager10P2pDecryptERKNS_10netAddressEPPhRjRb",
+      "va": "0x101cd5ea4"
+    },
+    "packet_unpack": {
+      "name": "__ZN4rage20netConnectionManager6UnpackERKNS_10netAddressEPKvjb",
+      "va": "0x101cd6230"
+    },
+    "network_update": {
+      "name": "__ZN8CNetwork6UpdateEb",
+      "va": "0x1016fd174"
+    },
+    "connection_update": {
+      "name": "__ZN4rage20netConnectionManager6UpdateEj",
+      "va": "0x101cd8d48"
+    },
+    "connection_dispatch": {
+      "name": "__ZN4rage20netConnectionManager8DispatchEv",
+      "va": "0x101cd9810"
+    },
+    "scripts_process": {
+      "name": "__ZN11CTheScripts7ProcessEv",
+      "va": "0x100e3452c"
+    },
+    "scripts_internal_process": {
+      "name": "__ZN11CTheScripts15InternalProcessEv",
+      "va": "0x100e346e0"
+    },
+    "script_update_all": {
+      "name": "__ZN4rage9scrThread9UpdateAllEi",
+      "va": "0x101facf9c"
+    },
+    "script_run": {
+      "name": "__ZN4rage9scrThread3RunEi",
+      "va": "0x101faa8f0"
+    },
+    "script_vm_run": {
+      "name": "__ZN4rage9scrThread3RunEPNS_8scrValueEPS2_RKNS_10scrProgramEPNS0_10SerializedE",
+      "va": "0x101faaae8"
+    },
+    "current_gta_script": {
+      "name": "__ZN11CTheScripts25GetCurrentGtaScriptThreadEv",
+      "va": "0x100e32420"
+    },
+    "register_events": {
+      "name": "__ZN17NetworkEventTypes21RegisterNetworkEventsEv",
+      "va": "0x10192a8fc"
+    },
+    "register_event": {
+      "name": "__ZN4rage11netEventMgr20RegisterNetworkEventEtPFvRNS_12datBitBufferERKNS_9netPlayerES5_tjjEPKc",
+      "va": "0x10200b93c"
+    },
+    "script_read": {
+      "name": "__ZN18CScriptedGameEvent6HandleERN4rage12datBitBufferERKNS0_9netPlayerES5_",
+      "va": "0x101912b8c"
+    },
+    "read_bits": {
+      "name": "__ZNK4rage12datBitBuffer8ReadBitsEPvii",
+      "va": "0x10000cb28"
+    },
+    "clear_session": {
+      "name": "__ZN15CNetworkSession12ClearSessionEj18LeaveSessionReason",
+      "va": "0x1017ef284"
+    },
+    "migrate_end": {
+      "name": "__ZN15CNetworkSession29ProcessSessionMigrateEndEventEPN4rage24snEventSessionMigrateEndE",
+      "va": "0x101810fd8"
+    },
+    "session_id": {
+      "name": "__ZNK4rage9snSession12GetSessionIdEv",
+      "va": "0x1019d255c"
+    },
+    "rl_session_id": {
+      "name": "__ZNK4rage9rlSession5GetIdEv",
+      "va": "0x101d6b2b8"
+    },
+    "session_member": {
+      "name": "__ZNK4rage9snSession8IsMemberERKNS_9rlGamerIdE",
+      "va": "0x1019d2ea4"
+    },
+    "session_endpoint": {
+      "name": "__ZN15CNetworkSession23GetSessionNetEndpointIdERKN4rage11rlGamerInfoEPj",
+      "va": "0x1018046e8"
+    },
+    "session_peer_connection": {
+      "name": "__ZNK4rage9snSession10GetPeerCxnEm",
+      "va": "0x1019d62d4"
+    },
+    "session_peer_endpoint": {
+      "name": "__ZNK4rage9snSession17GetPeerEndpointIdEm",
+      "va": "0x1019d30d4"
+    },
+    "active_script": {
+      "name": "__ZN4rage9scrThread15GetActiveThreadEv",
+      "va": "0x101faa42c"
+    },
+    "main_session_progress_native": {
+      "name": "__ZZN16network_commands19SetupScriptCommandsEvEN39scrWrapped_NETWORK_MAIN_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE",
+      "va": "0x100cfe314"
+    },
+    "transition_session_progress_native": {
+      "name": "__ZZN16network_commands19SetupScriptCommandsEvEN45scrWrapped_NETWORK_TRANSITION_GET_IN_PROGRESS4CallERN4rage9scrThread4InfoE",
+      "va": "0x100cfe370"
+    },
+    "session_in_progress": {
+      "name": "__ZN15CNetworkSession20GetSessionInProgressE11SessionType",
+      "va": "0x101803134"
+    },
+    "on_connection_event": {
+      "name": "__ZN15CNetworkSession17OnConnectionEventEPN4rage20netConnectionManagerEPKNS0_8netEventE",
+      "va": "0x1017df3f4"
+    },
+    "gamer_info_getter": {
+      "name": "__ZNK14CNetGamePlayer12GetGamerInfoEv",
+      "va": "0x1018d92e8"
+    },
+    "peer_id_getter": {
+      "name": "__ZNK4rage10rlPeerInfo9GetPeerIdEv",
+      "va": "0x101d64b9c"
+    },
+    "peer_info_init": {
+      "name": "__ZN4rage10rlPeerInfo4InitEmRKNS_14netPeerAddressE",
+      "va": "0x101d64ae4"
+    },
+    "local_net_peer_address": {
+      "name": "__ZN4rage14netPeerAddress19GetLocalPeerAddressEiPS0_",
+      "va": "0x101ce0a3c"
+    },
+    "peer_address_getter": {
+      "name": "__ZNK4rage10rlPeerInfo14GetPeerAddressEv",
+      "va": "0x101d64ba4"
+    },
+    "get_current_session": {
+      "name": "__ZN15CNetworkSession17GetCurrentSessionEb",
+      "va": "0x10180bc5c"
+    },
+    "session_exists": {
+      "name": "__ZNK4rage9snSession6ExistsEv",
+      "va": "0x1019d1984"
+    },
+    "session_is_established": {
+      "name": "__ZNK4rage9rlSession13IsEstablishedEv",
+      "va": "0x101d74600"
+    },
+    "peer_id_by_connection": {
+      "name": "__ZNK4rage9snSession14GetPeerIdByCxnEi",
+      "va": "0x1019dc870"
+    },
+    "swap_sessions": {
+      "name": "__ZN15CNetworkSession12SwapSessionsEv",
+      "va": "0x1018043d4"
+    },
+    "session_update": {
+      "name": "__ZN15CNetworkSession6UpdateEv",
+      "va": "0x1017ebabc"
+    },
+    "session_transition_update": {
+      "name": "__ZN15CNetworkSession16UpdateTransitionEv",
+      "va": "0x1017f166c"
+    },
+    "leave_session": {
+      "name": "__ZN15CNetworkSession12LeaveSessionEj18LeaveSessionReason",
+      "va": "0x1017fe4d0"
+    },
+    "native_session_leave": {
+      "name": "__ZN4rage9snSession5LeaveEiPNS_9netStatusE",
+      "va": "0x1019cfa70"
+    },
+    "drop_session": {
+      "name": "__ZN15CNetworkSession11DropSessionEv",
+      "va": "0x1017eb6e4"
+    },
+    "session_shutdown": {
+      "name": "__ZN4rage9snSession8ShutdownEbi",
+      "va": "0x1019d0aac"
+    },
+    "session_init": {
+      "name": "__ZN4rage9snSession4InitEPNS_15sysMemAllocatorERKNS_14snSessionOwnerEPNS_20netConnectionManagerEjPKc",
+      "va": "0x1019d0744"
+    },
+    "main_session_init": {
+      "name": "__ZN15CNetworkSession4InitEv",
+      "va": "0x1017e9674"
+    },
+    "transition_session_init": {
+      "name": "__ZN15CNetworkSession14InitTransitionEv",
+      "va": "0x1017e9c30"
+    },
+    "session_channel_id": {
+      "name": "__ZNK4rage9snSession12GetChannelIdEv",
+      "va": "0x1019d6370"
+    },
+    "session_connect_peer": {
+      "name": "__ZN4rage9snSession13ConnectToPeerERKNS_10rlPeerInfoEijPKvjPNS_9netStatusE",
+      "va": "0x1019e6ca4"
+    },
+    "session_add_peer": {
+      "name": "__ZN4rage9snSession7AddPeerEijRKNS_10rlPeerInfoE",
+      "va": "0x1019dcb40"
+    },
+    "player_add_remote": {
+      "name": "__ZN4rage16netPlayerMgrBase15AddRemotePlayerERKNS_11rlGamerInfoERKNS_13playerDataMsgEjPNS_25nonPhysicalPlayerDataBaseE",
+      "va": "0x102026d74"
+    },
+    "player_manager_init": {
+      "name": "__ZN4rage16netPlayerMgrBase4InitEPNS_20netConnectionManagerEjNS_10atDelegateIFbjRNS_9netPlayerEEEE",
+      "va": "0x102024fa4"
+    },
+    "establish_connection": {
+      "name": "__ZN4rage20netConnectionManager19EstablishConnectionEjjPKvjPNS_9netStatusE",
+      "va": "0x101cdeaf8"
+    },
+    "transport_get_endpoint_id": {
+      "name": "__ZNK4rage20netConnectionManager13GetEndpointIdEi",
+      "va": "0x101cdf4b8"
+    },
+    "transport_is_open": {
+      "name": "__ZNK4rage20netConnectionManager6IsOpenEi",
+      "va": "0x101cdf540"
+    },
+    "transport_create_connection": {
+      "name": "__ZN4rage20netConnectionManager16CreateConnectionEPNS_11netEndpointEj",
+      "va": "0x101cd0608"
+    }
+  },
+  "branches": [
+    {
+      "at": "0x100e33838",
+      "source": "startup_script",
+      "target": "sandbox_program",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10003b30c",
+      "source": "sandbox_program",
+      "target": "register_command",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10003b384",
+      "source": "sandbox_callback",
+      "target": "online_update",
+      "kind": "B"
+    },
+    {
+      "at": "0x1000e66e0",
+      "source": "online_update",
+      "target": "jobs_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000f4950",
+      "source": "online_command",
+      "target": "job_start",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000ebcb4",
+      "source": "jobs_update",
+      "target": "job_start",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1000f3a88",
+      "source": "online_command",
+      "target": "job_cleanup",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1020249b8",
+      "source": "on_net_event",
+      "target": "dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101ffeecc",
+      "source": "send_buffer",
+      "target": "dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200a804",
+      "source": "on_message",
+      "target": "packed_events",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200bf40",
+      "source": "packed_events",
+      "target": "process_events",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10200c238",
+      "source": "process_events",
+      "target": "process_data",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912688",
+      "source": "script_event_handler",
+      "target": "handle_event",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912c84",
+      "source": "script_decide",
+      "target": "group_event_ctor1",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1006ad8b4",
+      "source": "group_event_ctor2",
+      "target": "player_valid",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd770c",
+      "source": "handle_packet",
+      "target": "p2p_decrypt",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd77a8",
+      "source": "handle_packet",
+      "target": "packet_unpack",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1016fd618",
+      "source": "network_update",
+      "target": "connection_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1016fd66c",
+      "source": "network_update",
+      "target": "connection_update",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd9008",
+      "source": "connection_update",
+      "target": "connection_dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101cd914c",
+      "source": "connection_update",
+      "target": "connection_dispatch",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e345d8",
+      "source": "scripts_process",
+      "target": "scripts_internal_process",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e34974",
+      "source": "scripts_internal_process",
+      "target": "script_update_all",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101faaa5c",
+      "source": "script_run",
+      "target": "script_vm_run",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100e32420",
+      "source": "current_gta_script",
+      "target": "active_script",
+      "kind": "B"
+    },
+    {
+      "at": "0x10192abe8",
+      "source": "register_events",
+      "target": "register_event",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101912c3c",
+      "source": "script_read",
+      "target": "read_bits",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ef388",
+      "source": "clear_session",
+      "target": "session_id",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019d2560",
+      "source": "session_id",
+      "target": "rl_session_id",
+      "kind": "B"
+    },
+    {
+      "at": "0x1017ef498",
+      "source": "clear_session",
+      "target": "swap_sessions",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ec224",
+      "source": "session_update",
+      "target": "drop_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017ec234",
+      "source": "session_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017f19a4",
+      "source": "session_transition_update",
+      "target": "clear_session",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017fe70c",
+      "source": "leave_session",
+      "target": "native_session_leave",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eb7a0",
+      "source": "drop_session",
+      "target": "session_shutdown",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017eba1c",
+      "source": "drop_session",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017e9768",
+      "source": "main_session_init",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1017e9c7c",
+      "source": "transition_session_init",
+      "target": "session_init",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019e6eb4",
+      "source": "session_connect_peer",
+      "target": "establish_connection",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019e6ed4",
+      "source": "session_connect_peer",
+      "target": "session_add_peer",
+      "kind": "BL"
+    },
+    {
+      "at": "0x102026dcc",
+      "source": "player_add_remote",
+      "target": "establish_connection",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10180bc78",
+      "source": "get_current_session",
+      "target": "session_exists",
+      "kind": "BL"
+    },
+    {
+      "at": "0x10180bc98",
+      "source": "get_current_session",
+      "target": "session_exists",
+      "kind": "BL"
+    },
+    {
+      "at": "0x1019d1988",
+      "source": "session_exists",
+      "target": "session_is_established",
+      "kind": "B"
+    },
+    {
+      "at": "0x1019dc8ac",
+      "source": "peer_id_by_connection",
+      "target": "peer_id_getter",
+      "kind": "B"
+    },
+    {
+      "at": "0x101804720",
+      "source": "session_endpoint",
+      "target": "session_member",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101804740",
+      "source": "session_endpoint",
+      "target": "session_peer_connection",
+      "kind": "BL"
+    },
+    {
+      "at": "0x101804760",
+      "source": "session_endpoint",
+      "target": "session_peer_endpoint",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100cfe334",
+      "source": "main_session_progress_native",
+      "target": "session_in_progress",
+      "kind": "BL"
+    },
+    {
+      "at": "0x100cfe390",
+      "source": "transition_session_progress_native",
+      "target": "session_in_progress",
+      "kind": "BL"
+    }
+  ],
+  "observations": [
+    {
+      "at": "0x101cdf4d8",
+      "function": "transport_get_endpoint_id",
+      "word": "0x12003e88",
+      "observation": "use the low 16 bits as the connection table index"
+    },
+    {
+      "at": "0x101cdf4dc",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb940e269",
+      "observation": "read the paged connection table count"
+    },
+    {
+      "at": "0x101cdf4e8",
+      "function": "transport_get_endpoint_id",
+      "word": "0xf9406e69",
+      "observation": "read the connection page table pointer"
+    },
+    {
+      "at": "0x101cdf4ec",
+      "function": "transport_get_endpoint_id",
+      "word": "0x295dae6a",
+      "observation": "read the page shift and mask"
+    },
+    {
+      "at": "0x101cdf4fc",
+      "function": "transport_get_endpoint_id",
+      "word": "0x5280370a",
+      "observation": "use the 0x1b8-byte connection record stride"
+    },
+    {
+      "at": "0x101cdf508",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb9401109",
+      "observation": "read the full connection ID from the record"
+    },
+    {
+      "at": "0x101cdf50c",
+      "function": "transport_get_endpoint_id",
+      "word": "0x6b14013f",
+      "observation": "reject recycled slots with a different full connection ID"
+    },
+    {
+      "at": "0x101cdf514",
+      "function": "transport_get_endpoint_id",
+      "word": "0xf9400508",
+      "observation": "read the endpoint pointer in the connection record"
+    },
+    {
+      "at": "0x101cdf51c",
+      "function": "transport_get_endpoint_id",
+      "word": "0xb944d114",
+      "observation": "read the native endpoint ID"
+    },
+    {
+      "at": "0x101cdf59c",
+      "function": "transport_is_open",
+      "word": "0x3946c109",
+      "observation": "read the connection flags"
+    },
+    {
+      "at": "0x101cdf5a0",
+      "function": "transport_is_open",
+      "word": "0x36000109",
+      "observation": "skip the open test when flag bit zero is set"
+    },
+    {
+      "at": "0x101cdf5c0",
+      "function": "transport_is_open",
+      "word": "0xb9402108",
+      "observation": "read the connection state"
+    },
+    {
+      "at": "0x101cdf5c4",
+      "function": "transport_is_open",
+      "word": "0x71000d1f",
+      "observation": "the open state is 3"
+    },
+    {
+      "at": "0x101cd0994",
+      "function": "transport_create_connection",
+      "word": "0xf8345ab6",
+      "observation": "store the connection record in the endpoint channel slot"
+    },
+    {
+      "at": "0x102024930",
+      "function": "on_net_event",
+      "word": "0xaa0003f3",
+      "observation": "retain the player manager in x19"
+    },
+    {
+      "at": "0x1020249b0",
+      "function": "on_net_event",
+      "word": "0x9122e260",
+      "observation": "pass the player manager delegate at +0x8b8 into Dispatch"
+    },
+    {
+      "at": "0x102026130",
+      "function": "dispatch",
+      "word": "0xf90013e0",
+      "observation": "save the delegate at dispatch frame pointer -0x20"
+    },
+    {
+      "at": "0x102024ff4",
+      "function": "player_manager_init",
+      "word": "0xf9000676",
+      "observation": "store transport manager at player manager +8"
+    },
+    {
+      "at": "0x102024ff8",
+      "function": "player_manager_init",
+      "word": "0xb900fa75",
+      "observation": "store channel at player manager +0xf8"
+    },
+    {
+      "at": "0x1019d0794",
+      "function": "session_init",
+      "word": "0xf9003403",
+      "observation": "store transport manager at snSession +0x68"
+    },
+    {
+      "at": "0x1017e9764",
+      "function": "main_session_init",
+      "word": "0x528001a4",
+      "observation": "initial main snSession channel argument is 13"
+    },
+    {
+      "at": "0x1017e9c78",
+      "function": "transition_session_init",
+      "word": "0x52800184",
+      "observation": "initial transition snSession channel argument is 12"
+    },
+    {
+      "at": "0x1019d0798",
+      "function": "session_init",
+      "word": "0xb90eaaa4",
+      "observation": "store supplied snSession channel"
+    },
+    {
+      "at": "0x1019d6370",
+      "function": "session_channel_id",
+      "word": "0x5297d508",
+      "observation": "select the session channel field at +0xbea8"
+    },
+    {
+      "at": "0x1019d6374",
+      "function": "session_channel_id",
+      "word": "0xb8686800",
+      "observation": "load the session channel"
+    },
+    {
+      "at": "0x1019e6cdc",
+      "function": "session_connect_peer",
+      "word": "0x91402c1c",
+      "observation": "form the snSession base plus 0xb000"
+    },
+    {
+      "at": "0x1019e6ea0",
+      "function": "session_connect_peer",
+      "word": "0xb94eab82",
+      "observation": "pass snSession channel to EstablishConnection"
+    },
+    {
+      "at": "0x1019e6ec8",
+      "function": "session_connect_peer",
+      "word": "0xaa1703e1",
+      "observation": "pass the selected session connection ID to AddPeer"
+    },
+    {
+      "at": "0x1019dcb70",
+      "function": "session_add_peer",
+      "word": "0xaa0103f8",
+      "observation": "preserve the supplied connection ID in x24"
+    },
+    {
+      "at": "0x1019dccc0",
+      "function": "session_add_peer",
+      "word": "0xb9000118",
+      "observation": "store connection ID at snPeer +0"
+    },
+    {
+      "at": "0x1019dccc4",
+      "function": "session_add_peer",
+      "word": "0xb901e115",
+      "observation": "store endpoint ID at snPeer +0x1e0"
+    },
+    {
+      "at": "0x1019d3104",
+      "function": "session_peer_endpoint",
+      "word": "0xb941e100",
+      "observation": "return the matching snPeer endpoint ID"
+    },
+    {
+      "at": "0x102026d90",
+      "function": "player_add_remote",
+      "word": "0xaa0303f7",
+      "observation": "preserve the supplied endpoint ID in x23"
+    },
+    {
+      "at": "0x102026db8",
+      "function": "player_add_remote",
+      "word": "0xb940fa82",
+      "observation": "pass the player manager channel to EstablishConnection"
+    },
+    {
+      "at": "0x102026dbc",
+      "function": "player_add_remote",
+      "word": "0xaa1703e1",
+      "observation": "pass the endpoint ID to EstablishConnection"
+    },
+    {
+      "at": "0x102026dd4",
+      "function": "player_add_remote",
+      "word": "0x29035ea0",
+      "observation": "store returned connection and endpoint at netPlayer +0x18 and +0x1c"
+    },
+    {
+      "at": "0x101cdeef8",
+      "function": "establish_connection",
+      "word": "0xf8765b5a",
+      "observation": "select the established connection for the supplied channel"
+    },
+    {
+      "at": "0x1017dfa4c",
+      "function": "on_connection_event",
+      "word": "0x3100041f",
+      "observation": "test GetPeerCxn return against the not-found sentinel -1"
+    },
+    {
+      "at": "0x1017dfa50",
+      "function": "on_connection_event",
+      "word": "0x540033c0",
+      "observation": "branch when the session peer lookup returns -1"
+    },
+    {
+      "at": "0x1017dfa54",
+      "function": "on_connection_event",
+      "word": "0x5280001b",
+      "observation": "set the local continuation flag after the lookup"
+    },
+    {
+      "at": "0x1019d255c",
+      "function": "session_id",
+      "word": "0x9102a000",
+      "observation": "session ID wrapper selects the rlSession member at +0xa8"
+    },
+    {
+      "at": "0x101d6b2b8",
+      "function": "rl_session_id",
+      "word": "0xf9429000",
+      "observation": "rlSession ID getter reads a 64-bit value at +0x520"
+    },
+    {
+      "at": "0x101d6b2bc",
+      "function": "rl_session_id",
+      "word": "0xd65f03c0",
+      "observation": "rlSession ID getter returns directly"
+    },
+    {
+      "at": "0x1017ec088",
+      "function": "session_update",
+      "word": "0xf9401f08",
+      "observation": "load the pending leave status pointer from the manager"
+    },
+    {
+      "at": "0x1017ec08c",
+      "function": "session_update",
+      "word": "0xb9400108",
+      "observation": "read the pending leave status value"
+    },
+    {
+      "at": "0x1017ec098",
+      "function": "session_update",
+      "word": "0x71000d1f",
+      "observation": "compare the pending leave status with 3"
+    },
+    {
+      "at": "0x1017ec09c",
+      "function": "session_update",
+      "word": "0x54000c60",
+      "observation": "status 3 branches past DropSession to the ClearSession call sequence"
+    },
+    {
+      "at": "0x1017fe6f8",
+      "function": "leave_session",
+      "word": "0xf9401275",
+      "observation": "read main session into x21 for the Leave call"
+    },
+    {
+      "at": "0x1017fe704",
+      "function": "leave_session",
+      "word": "0xf9401e62",
+      "observation": "pass the manager leave status pointer as x2"
+    },
+    {
+      "at": "0x1017fe708",
+      "function": "leave_session",
+      "word": "0xaa1503e0",
+      "observation": "pass the main session as the Leave receiver"
+    },
+    {
+      "at": "0x1017fe710",
+      "function": "leave_session",
+      "word": "0x370002e0",
+      "observation": "test bit zero of the native Leave return value"
+    },
+    {
+      "at": "0x1017ec220",
+      "function": "session_update",
+      "word": "0xaa1803e0",
+      "observation": "pass manager x24 as the DropSession receiver"
+    },
+    {
+      "at": "0x1017ec228",
+      "function": "session_update",
+      "word": "0xb948ab21",
+      "observation": "read ClearSession flags after DropSession returns"
+    },
+    {
+      "at": "0x1017eb794",
+      "function": "drop_session",
+      "word": "0xf9401260",
+      "observation": "load the main session slot before shutdown"
+    },
+    {
+      "at": "0x100e33834",
+      "function": "startup_script",
+      "word": "0x34000460",
+      "observation": "sandbox-mode guard; registration is conditional"
+    },
+    {
+      "at": "0x10003b2f4",
+      "function": "sandbox_program",
+      "word": "0x90000001",
+      "observation": "ADRP callback page into x1"
+    },
+    {
+      "at": "0x10003b2f8",
+      "function": "sandbox_program",
+      "word": "0x910e1021",
+      "observation": "ADD callback offset 0x384 into x1"
+    },
+    {
+      "at": "0x10202496c",
+      "function": "on_net_event",
+      "word": "0xb940192b",
+      "observation": "player connection ID load at +0x18"
+    },
+    {
+      "at": "0x102024970",
+      "function": "on_net_event",
+      "word": "0x6b0a017f",
+      "observation": "compare player connection ID with transport event"
+    },
+    {
+      "at": "0x1020249a8",
+      "function": "on_net_event",
+      "word": "0xa9012be9",
+      "observation": "ReceivedMessageData source/destination from engine pointers"
+    },
+    {
+      "at": "0x102024928",
+      "function": "on_net_event",
+      "word": "0x910183fd",
+      "observation": "frame pointer is sp+0x60; message starts at sp"
+    },
+    {
+      "at": "0x10202492c",
+      "function": "on_net_event",
+      "word": "0xaa0203f4",
+      "observation": "preserve netEvent argument in x20"
+    },
+    {
+      "at": "0x102024954",
+      "function": "on_net_event",
+      "word": "0xb9403e8a",
+      "observation": "load netEvent connection ID at +0x3c"
+    },
+    {
+      "at": "0x102026118",
+      "function": "dispatch",
+      "word": "0xa9034ff4",
+      "observation": "save caller x20/x19 at sp+0x30"
+    },
+    {
+      "at": "0x102026120",
+      "function": "dispatch",
+      "word": "0x910103fd",
+      "observation": "frame pointer is sp+0x40; saved netEvent at fp-0x10"
+    },
+    {
+      "at": "0x102026190",
+      "function": "dispatch",
+      "word": "0xd63f0120",
+      "observation": "indirect member callback; return offset +0x80"
+    },
+    {
+      "at": "0x10200c170",
+      "function": "process_events",
+      "word": "0x910143fd",
+      "observation": "frame pointer is sp+0x50 before dynamic stack allocation"
+    },
+    {
+      "at": "0x10200c228",
+      "function": "process_events",
+      "word": "0xaa1403e1",
+      "observation": "forward source player in x1 before ProcessEventData"
+    },
+    {
+      "at": "0x10200c22c",
+      "function": "process_events",
+      "word": "0xf94003e2",
+      "observation": "forward saved destination in x2"
+    },
+    {
+      "at": "0x10200be1c",
+      "function": "packed_events",
+      "word": "0x9100c3fd",
+      "observation": "frame pointer is sp+0x30 before payload stack allocation"
+    },
+    {
+      "at": "0x10200a79c",
+      "function": "on_message",
+      "word": "0x910143fd",
+      "observation": "frame pointer is sp+0x50"
+    },
+    {
+      "at": "0x101ffee4c",
+      "function": "send_buffer",
+      "word": "0x9101c3fd",
+      "observation": "local branch frame pointer is sp+0x70"
+    },
+    {
+      "at": "0x101ffeeb4",
+      "function": "send_buffer",
+      "word": "0xa90187e6",
+      "observation": "local branch source/destination written at sp+0x18"
+    },
+    {
+      "at": "0x101ffeec8",
+      "function": "send_buffer",
+      "word": "0x910023e1",
+      "observation": "local branch passes message at sp+8, hence fp-0x68"
+    },
+    {
+      "at": "0x101912c74",
+      "function": "script_decide",
+      "word": "0xaa0103e3",
+      "observation": "first netPlayer reference forwarded as constructor x3"
+    },
+    {
+      "at": "0x1006ad8c0",
+      "function": "group_event_ctor2",
+      "word": "0x394086a8",
+      "observation": "read engine player slot byte at +0x21"
+    },
+    {
+      "at": "0x1006ad8cc",
+      "function": "group_event_ctor2",
+      "word": "0x39402029",
+      "observation": "read payload byte at +8"
+    },
+    {
+      "at": "0x1006ad8dc",
+      "function": "group_event_ctor2",
+      "word": "0xb9000828",
+      "observation": "conditional 32-bit sender slot overwrite at payload +8"
+    },
+    {
+      "at": "0x1000eb694",
+      "function": "jobs_update",
+      "word": "0x7102b81f",
+      "observation": "script group event type 0xAE filter"
+    },
+    {
+      "at": "0x1000eb6ac",
+      "function": "jobs_update",
+      "word": "0x52801e82",
+      "observation": "retrieve 244-byte stock job message"
+    },
+    {
+      "at": "0x1000eb6b8",
+      "function": "jobs_update",
+      "word": "0xb9414bf6",
+      "observation": "read claimed slot from stack payload +8"
+    },
+    {
+      "at": "0x1000f78d4",
+      "function": "job_start",
+      "word": "0x9001aa48",
+      "observation": "ADRP for local job metadata"
+    },
+    {
+      "at": "0x1000f78d8",
+      "function": "job_start",
+      "word": "0x91366108",
+      "observation": "compute destination for job identifier"
+    },
+    {
+      "at": "0x1000f78fc",
+      "function": "job_start",
+      "word": "0x3900011f",
+      "observation": "terminate local job identifier"
+    },
+    {
+      "at": "0x1000f7900",
+      "function": "job_start",
+      "word": "0x9001aa48",
+      "observation": "ADRP for job kind metadata"
+    },
+    {
+      "at": "0x1000f7904",
+      "function": "job_start",
+      "word": "0xb908d913",
+      "observation": "store local job kind"
+    },
+    {
+      "at": "0x1000f3554",
+      "function": "online_command",
+      "word": "0xb001a9d8",
+      "observation": "load local job state page"
+    },
+    {
+      "at": "0x1000f3a8c",
+      "function": "online_command",
+      "word": "0xb902431f",
+      "observation": "clear job state after the cleanup call"
+    },
+    {
+      "at": "0x101cd76e0",
+      "function": "handle_packet",
+      "word": "0x39006fff",
+      "observation": "initialize decrypt out-byte to zero"
+    },
+    {
+      "at": "0x101cd7794",
+      "function": "handle_packet",
+      "word": "0x39406fe4",
+      "observation": "forward out-byte as fifth argument to Unpack"
+    },
+    {
+      "at": "0x101cd6128",
+      "function": "p2p_decrypt",
+      "word": "0x52800008",
+      "observation": "successful tunneling branch writes zero"
+    },
+    {
+      "at": "0x101cd612c",
+      "function": "p2p_decrypt",
+      "word": "0x390002c8",
+      "observation": "write out-byte separately from return value"
+    },
+    {
+      "at": "0x101cd6254",
+      "function": "packet_unpack",
+      "word": "0xaa0403f6",
+      "observation": "preserve fifth argument for Unpack checks"
+    },
+    {
+      "at": "0x101cd6550",
+      "function": "packet_unpack",
+      "word": "0x340009f6",
+      "observation": "one Unpack branch tests the boolean argument"
+    },
+    {
+      "at": "0x101cd65e4",
+      "function": "packet_unpack",
+      "word": "0x340067d6",
+      "observation": "second Unpack branch tests the boolean argument"
+    },
+    {
+      "at": "0x101faa9c0",
+      "function": "script_run",
+      "word": "0xf9000014",
+      "observation": "publish active script before VM run"
+    },
+    {
+      "at": "0x101faaa64",
+      "function": "script_run",
+      "word": "0xf90002b9",
+      "observation": "restore previous active script after VM run"
+    },
+    {
+      "at": "0x101faa444",
+      "function": "active_script",
+      "word": "0xf9400000",
+      "observation": "read active script pointer through storage accessor"
+    },
+    {
+      "at": "0x1017e9e20",
+      "function": "session_state",
+      "word": "0x6b08003f",
+      "observation": "compare requested state with current state"
+    },
+    {
+      "at": "0x1017e9ebc",
+      "function": "session_state",
+      "word": "0xb9058693",
+      "observation": "conditionally write state enum, not a session generation"
+    },
+    {
+      "at": "0x10192abd4",
+      "function": "register_events",
+      "word": "0x90ffff42",
+      "observation": "ADRP x2 scripted handler page"
+    },
+    {
+      "at": "0x10192abd8",
+      "function": "register_events",
+      "word": "0x91167042",
+      "observation": "ADD x2 scripted handler offset"
+    },
+    {
+      "at": "0x10192abe4",
+      "function": "register_events",
+      "word": "0x52800381",
+      "observation": "w1 selects scripted event type 0x1c"
+    },
+    {
+      "at": "0x10200b960",
+      "function": "register_event",
+      "word": "0xf82a6922",
+      "observation": "write callback into indexed handler table"
+    },
+    {
+      "at": "0x10200da88",
+      "function": "process_data",
+      "word": "0xf959ed49",
+      "observation": "load callback from the same handler table"
+    },
+    {
+      "at": "0x10200da98",
+      "function": "process_data",
+      "word": "0xd61f0120",
+      "observation": "tail dispatch to indexed callback"
+    },
+    {
+      "at": "0x1019125fc",
+      "function": "script_event_handler",
+      "word": "0x90007888",
+      "observation": "ADRP event vtable address-point page"
+    },
+    {
+      "at": "0x101912600",
+      "function": "script_event_handler",
+      "word": "0x911ea108",
+      "observation": "ADD event vtable address-point offset"
+    },
+    {
+      "at": "0x101912614",
+      "function": "script_event_handler",
+      "word": "0xf90003e8",
+      "observation": "install event vtable on stack object"
+    },
+    {
+      "at": "0x10200c910",
+      "function": "handle_event",
+      "word": "0xf9402108",
+      "observation": "load Decide from event vtable slot +0x40"
+    },
+    {
+      "at": "0x10200c920",
+      "function": "handle_event",
+      "word": "0xd63f0100",
+      "observation": "call virtual Decide with source and destination refs"
+    },
+    {
+      "at": "0x101912c08",
+      "function": "script_read",
+      "word": "0xb9022668",
+      "observation": "store declared native event byte count"
+    },
+    {
+      "at": "0x101912c24",
+      "function": "script_read",
+      "word": "0x7106bd3f",
+      "observation": "compare length minus one with 431"
+    },
+    {
+      "at": "0x101912c28",
+      "function": "script_read",
+      "word": "0x54fffd68",
+      "observation": "skip payload read outside 1..432 bytes"
+    },
+    {
+      "at": "0x1017dfa48",
+      "function": "on_connection_event",
+      "word": "0x9407da23",
+      "observation": "call GetPeerCxn with the selected session and peer"
+    },
+    {
+      "at": "0x1018d92e8",
+      "function": "gamer_info_getter",
+      "word": "0xf9405008",
+      "observation": "load CPlayerInfo at netPlayer+0xa0"
+    },
+    {
+      "at": "0x1018d92ec",
+      "function": "gamer_info_getter",
+      "word": "0x91008100",
+      "observation": "derive rlGamerInfo at CPlayerInfo+0x20"
+    },
+    {
+      "at": "0x101d64b9c",
+      "function": "peer_id_getter",
+      "word": "0xf940e800",
+      "observation": "load peer ID at rlPeerInfo+0x1d0"
+    },
+    {
+      "at": "0x10180bc74",
+      "function": "get_current_session",
+      "word": "0xf9401400",
+      "observation": "transition slot load at manager+0x28"
+    },
+    {
+      "at": "0x10180bc94",
+      "function": "get_current_session",
+      "word": "0xf8420ea0",
+      "observation": "main slot load at manager+0x20"
+    },
+    {
+      "at": "0x1019d1984",
+      "function": "session_exists",
+      "word": "0x9102a000",
+      "observation": "inline rlSession base at snSession+0xa8"
+    },
+    {
+      "at": "0x101d74600",
+      "function": "session_is_established",
+      "word": "0xb9400808",
+      "observation": "read inline rlSession state at +8"
+    },
+    {
+      "at": "0x101d74604",
+      "function": "session_is_established",
+      "word": "0x121f7908",
+      "observation": "clear bit 0 for the established check"
+    },
+    {
+      "at": "0x101d74608",
+      "function": "session_is_established",
+      "word": "0x7100091f",
+      "observation": "compare masked state with 2"
+    },
+    {
+      "at": "0x1019dc878",
+      "function": "peer_id_by_connection",
+      "word": "0xb94a3128",
+      "observation": "remote peer count"
+    },
+    {
+      "at": "0x1019dc884",
+      "function": "peer_id_by_connection",
+      "word": "0x9124c129",
+      "observation": "first remote peer slot"
+    },
+    {
+      "at": "0x1019dc88c",
+      "function": "peer_id_by_connection",
+      "word": "0xb940014b",
+      "observation": "read peer connection field"
+    },
+    {
+      "at": "0x1018043e4",
+      "function": "swap_sessions",
+      "word": "0x9100c3fd",
+      "observation": "set the SwapSessions frame pointer"
+    },
+    {
+      "at": "0x1018043e8",
+      "function": "swap_sessions",
+      "word": "0xaa0003f3",
+      "observation": "preserve the session manager in x19"
+    },
+    {
+      "at": "0x101804434",
+      "function": "swap_sessions",
+      "word": "0x3dc00a60",
+      "observation": "load both session slots"
+    },
+    {
+      "at": "0x101804438",
+      "function": "swap_sessions",
+      "word": "0x6e004001",
+      "observation": "exchange the two 64-bit halves"
+    },
+    {
+      "at": "0x10180443c",
+      "function": "swap_sessions",
+      "word": "0x3d800a61",
+      "observation": "store the exchanged session slots"
+    },
+    {
+      "at": "0x101804440",
+      "function": "swap_sessions",
+      "word": "0x3cc38261",
+      "observation": "next instruction after the store"
+    },
+    {
+      "at": "0x100cfe324",
+      "function": "main_session_progress_native",
+      "word": "0xb0012788",
+      "observation": "ADRP x8 session global page 0x1031ef000"
+    },
+    {
+      "at": "0x100cfe328",
+      "function": "main_session_progress_native",
+      "word": "0x91138108",
+      "observation": "ADD x8 storage offset 0x4e0"
+    },
+    {
+      "at": "0x100cfe32c",
+      "function": "main_session_progress_native",
+      "word": "0xf9400100",
+      "observation": "load session object pointer into x0"
+    },
+    {
+      "at": "0x100cfe330",
+      "function": "main_session_progress_native",
+      "word": "0x52800001",
+      "observation": "w1=0 selects main session"
+    },
+    {
+      "at": "0x100cfe380",
+      "function": "transition_session_progress_native",
+      "word": "0xb0012788",
+      "observation": "ADRP same session global page"
+    },
+    {
+      "at": "0x100cfe384",
+      "function": "transition_session_progress_native",
+      "word": "0x91138108",
+      "observation": "ADD same storage offset 0x4e0"
+    },
+    {
+      "at": "0x100cfe388",
+      "function": "transition_session_progress_native",
+      "word": "0xf9400100",
+      "observation": "load same session object into x0"
+    },
+    {
+      "at": "0x100cfe38c",
+      "function": "transition_session_progress_native",
+      "word": "0x52800021",
+      "observation": "w1=1 selects transition session"
+    },
+    {
+      "at": "0x101803134",
+      "function": "session_in_progress",
+      "word": "0x52802908",
+      "observation": "per-session-type stride is 0x148"
+    },
+    {
+      "at": "0x101803138",
+      "function": "session_in_progress",
+      "word": "0x9b280028",
+      "observation": "x8=this+signed(session_type)*0x148"
+    },
+    {
+      "at": "0x10180313c",
+      "function": "session_in_progress",
+      "word": "0x91406109",
+      "observation": "add 0x18000 to per-type address"
+    },
+    {
+      "at": "0x101803140",
+      "function": "session_in_progress",
+      "word": "0x39435928",
+      "observation": "read byte at per-type address+0x180d6"
+    },
+    {
+      "at": "0x101803144",
+      "function": "session_in_progress",
+      "word": "0x12000100",
+      "observation": "return bit zero only, not authority or generation"
+    },
+    {
+      "at": "0x101803148",
+      "function": "session_in_progress",
+      "word": "0xd65f03c0",
+      "observation": "leaf getter returns without calling game functions"
+    }
+  ],
+  "scripted_event": {
+    "registered_type": 28,
+    "payload_max_bytes": 432,
+    "primary_vtable_slots": {
+      "script_read": 56,
+      "script_decide": 64
+    }
+  },
+  "trace_sites": {
+    "jobs_update": "0x6db82beb",
+    "script_event_handler": "0xa9bb6ffc",
+    "script_decide": "0xa9be4ff4",
+    "on_net_event": "0xb9403c48",
+    "clear_session": "0xd10203ff",
+    "migrate_end": "0xa9ba6ffc",
+    "leave_session_call": "0x940744d9",
+    "leave_session_branch": "0x54000c60",
+    "drop_session_call": "0x97fffd30",
+    "session_swap": "0x3d800a61",
+    "on_net_event_pre_dispatch": "0xa9012be9",
+    "on_connection_peer_verify": "0x9407da23"
+  },
+  "receive_context": {
+    "site": "script_event_handler",
+    "frames": [
+      {
+        "function": "process_events",
+        "return_va": "0x10200c23c"
+      },
+      {
+        "function": "packed_events",
+        "return_va": "0x10200bf44"
+      },
+      {
+        "function": "on_message",
+        "return_va": "0x10200a808"
+      },
+      {
+        "function": "dispatch",
+        "return_va": "0x102026194"
+      }
+    ],
+    "origins": {
+      "engine_receive_dispatch": {
+        "return_va": "0x1020249bc",
+        "message_fp_offset": -96
+      },
+      "local_sendbuffer_dispatch": {
+        "return_va": "0x101ffeed0",
+        "message_fp_offset": -104
+      }
+    },
+    "message_source_offset": 16,
+    "message_destination_offset": 24,
+    "dispatch_saved_event_fp_offset": -16,
+    "dispatch_saved_manager_fp_offset": -8,
+    "dispatch_delegate_fp_offset": -32,
+    "event_connection_offset": 60,
+    "player_connection_offset": 24,
+    "code_guards": [
+      {
+        "function": "script_event_handler",
+        "va": "0x10191259c",
+        "size": 304,
+        "sha256": "a485bbc78441fbb0fcc87e5da8cbc7ddbf86c69eb132f3f2648ba3d2935ee257"
+      },
+      {
+        "function": "process_data",
+        "va": "0x10200d9ec",
+        "size": 276,
+        "sha256": "5225aa1a480837776b5f8a804481d885b7be72f981e1eb5b80ad870db1ce4c5c"
+      },
+      {
+        "function": "process_events",
+        "va": "0x10200c158",
+        "size": 788,
+        "sha256": "db8bdb7486efdd4257f4b4eccfce47264c28d30f722af0791ddeccc2f324a217"
+      },
+      {
+        "function": "packed_events",
+        "va": "0x10200be0c",
+        "size": 364,
+        "sha256": "ec7b7bc3da3556357a35fa28d25c13feda2a838b3da5c5ea5e39295b6089f252"
+      },
+      {
+        "function": "on_message",
+        "va": "0x10200a78c",
+        "size": 176,
+        "sha256": "70e9c4aa4976917ece6e49ba5f3f5f8696616621a5ed0fc7b62d0cd28a8abdf4"
+      },
+      {
+        "function": "dispatch",
+        "va": "0x102026114",
+        "size": 244,
+        "sha256": "8e214c74c0c38a83c8fa4de730a0b16710dfe97774c6f4b3a41340e41264deac"
+      },
+      {
+        "function": "on_net_event",
+        "va": "0x102024914",
+        "size": 272,
+        "sha256": "a0a1cb18d83c44cd1ce5038fa67e9604e6f6b2ddcabfe53f9f1bec679d6c0a15"
+      },
+      {
+        "function": "send_buffer",
+        "va": "0x101ffee34",
+        "size": 332,
+        "sha256": "04ce8ca4e01d85a7ea5940ce7800b386288a81725b020b33b95b3a3ec5ff4c04"
+      }
+    ],
+    "scope": "bounded frame and pointer equality observation only; no authentication or session proof"
+  },
+  "leave_session_call_context": {
+    "return_va": "0x1017fe710",
+    "session_id_offset": 1480,
+    "code_guards": [
+      {
+        "function": "leave_session",
+        "va": "0x1017fe4d0",
+        "size": 968,
+        "sha256": "1dd31185dcfed275f8e175cd9a8515d1e9da5d9f216193ab86adfc1c47882b8c"
+      },
+      {
+        "function": "native_session_leave",
+        "va": "0x1019cfa70",
+        "size": 488,
+        "sha256": "a63d4fd8773715190a51f8b76d6a04b44ba93bbf93209a10ea28db940c2e4c62"
+      },
+      {
+        "function": "session_id",
+        "va": "0x1019d255c",
+        "size": 8,
+        "sha256": "ba79cd05a5754e1a9d656354be0b0bdb37a364aa39507d7fc5d90983daf7331f"
+      },
+      {
+        "function": "rl_session_id",
+        "va": "0x101d6b2b8",
+        "size": 8,
+        "sha256": "63bea93c82a1b02dfd8649b313d3d7f132788998ed628f223d09f836cb83f9f5"
+      }
+    ],
+    "scope": "main-slot and task reference equality through the native leave request and later Update decision"
+  },
+  "leave_session_branch_context": {
+    "code_guards": [
+      {
+        "function": "session_update_leave_status",
+        "va": "0x1017ec088",
+        "size": 44,
+        "sha256": "5613f0637cdffa34b493cf396d3fa0d617f222427ef33c29049c01c930cae126"
+      }
+    ],
+    "scope": "same invocation from the leave status branch to the guarded cleanup path"
+  },
+  "clear_session_caller_context": {
+    "code_guards": [
+      {
+        "function": "session_update_clear_call",
+        "va": "0x1017ec228",
+        "size": 16,
+        "sha256": "4e90e7262294d1fb5c2b62b4910e543995bcdc2256a14b74510796e36d14a89a"
+      },
+      {
+        "function": "session_transition_clear_call",
+        "va": "0x1017f1998",
+        "size": 16,
+        "sha256": "36abc92ab358d38aeafd390c631041c22ba9da097668cbf68c9689ca5d40707f"
+      }
+    ],
+    "scope": "exact ClearSession direct caller label from the link register"
+  },
+  "drop_session_context": {
+    "return_va": "0x1017ec228",
+    "code_guards": [
+      {
+        "function": "session_update_drop_call",
+        "va": "0x1017ec220",
+        "size": 24,
+        "sha256": "f20b41ed201b2199a51a3b79f49f9d947036a903ad2d03a792227b3d9c744f2c"
+      },
+      {
+        "function": "drop_session",
+        "va": "0x1017eb6e4",
+        "size": 984,
+        "sha256": "eed27e4e92e332d631ce96cea3a658d0708c6585ecaf870056b53dc3282f7699"
+      }
+    ],
+    "scope": "anonymous slot predicates across one guarded Update call to DropSession"
+  },
+  "session_swap": {
+    "global_pointer_va": "0x1031ef4e0",
+    "post_store_va": "0x101804440",
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "swap_sessions",
+        "va": "0x1018043d4",
+        "size": 448,
+        "sha256": "cc17b2b30075218cb5dd4575cb0310fd0ea9f02bd9e3a7f92d0b1e383ff1d267"
+      }
+    ],
+    "scope": "transient slot address equality across the store; no generation attestation"
+  },
+  "session_slots": {
+    "global_pointer_va": "0x1031ef4e0",
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "get_current_session",
+        "va": "0x10180bc5c",
+        "size": 156,
+        "sha256": "9d65453518c11386e09cd81d6a0e5e15f95b5787c41a81edf122cfc8d96eff4c"
+      },
+      {
+        "function": "session_exists",
+        "va": "0x1019d1984",
+        "size": 8,
+        "sha256": "ec6d705e7f87f7cfae3f1e4ce74945e1e9728601dbb72ef637a392b71075825a"
+      },
+      {
+        "function": "session_is_established",
+        "va": "0x101d74600",
+        "size": 20,
+        "sha256": "9b7c75c2a3977934d7b2131a0907cd5b7442c17429ba83bde7cffe20f1f8e50b"
+      },
+      {
+        "function": "peer_id_by_connection",
+        "va": "0x1019dc870",
+        "size": 72,
+        "sha256": "50ae6dc32dc1ee59fa1f12d1edaea30ce53106ed2a4b5c00256063067d974ac7"
+      },
+      {
+        "function": "gamer_info_getter",
+        "va": "0x1018d92e8",
+        "size": 12,
+        "sha256": "d28b457198ca411e2770bce93fd9c9d6ea3f7b670dccf3550ce469bbf72c14f3"
+      },
+      {
+        "function": "peer_id_getter",
+        "va": "0x101d64b9c",
+        "size": 8,
+        "sha256": "e5d4d981e65a59a917e0e348a6fd7d18413350479677c7505e3343c7674998bd"
+      },
+      {
+        "function": "peer_info_init",
+        "va": "0x101d64ae4",
+        "size": 184,
+        "sha256": "e441e8801ed6af5fa11a0202c74a4353ab67c57ca6fd2b10373f2f1b87dca264"
+      },
+      {
+        "function": "local_net_peer_address",
+        "va": "0x101ce0a3c",
+        "size": 856,
+        "sha256": "a2bd8092d1596ddeed67bab65e9cbb00c54c35c84464bab175ab7e80f67c1f90"
+      },
+      {
+        "function": "peer_address_getter",
+        "va": "0x101d64ba4",
+        "size": 4,
+        "sha256": "110f46b5b35c069160560c6ad6786f647dd44e8760a52a46fc22dbbcd7630b91"
+      },
+      {
+        "function": "player_add_remote",
+        "va": "0x102026d74",
+        "size": 476,
+        "sha256": "549895b3987ad1a13f1756e27d37e7c2d03b95ef7fdddaa3daede0a6523c6f1e"
+      },
+      {
+        "function": "player_manager_init",
+        "va": "0x102024fa4",
+        "size": 500,
+        "sha256": "c802109626ab1eda5e6931cf4809fff9b4653b28d12c6f951e8b6b5326b8a35c"
+      },
+      {
+        "function": "session_init",
+        "va": "0x1019d0744",
+        "size": 756,
+        "sha256": "509b6dec9cad392814cc266e7a9207575787229ceaa8bdc28c47e7bbc4f1831b"
+      },
+      {
+        "function": "session_channel_id",
+        "va": "0x1019d6370",
+        "size": 8,
+        "sha256": "48f5c6dc7d990db27b2f2f5d3a5da8602e01c56fad62b8bf2f6bd5d627fd857a"
+      },
+      {
+        "function": "session_add_peer",
+        "va": "0x1019dcb40",
+        "size": 592,
+        "sha256": "feffd6aeba80864bb7d763aa4556918a610e74c5c040befab9f2b019dc3feb15"
+      },
+      {
+        "function": "session_peer_endpoint",
+        "va": "0x1019d30d4",
+        "size": 156,
+        "sha256": "8a41121903ad538c7c7f9f8a88ec6f6c79bf9855aef961f26248a0af45ad38c8"
+      },
+      {
+        "function": "transport_get_endpoint_id",
+        "va": "0x101cdf4b8",
+        "size": 136,
+        "sha256": "79cedf1fcbbe5e3ec795bd27591b624cedb3c5f316d0a936143967bb45d175ae"
+      },
+      {
+        "function": "transport_is_open",
+        "va": "0x101cdf540",
+        "size": 144,
+        "sha256": "1f336483aa54f7bc0166870e3f132fc270e05e63ab079b1af76efbcb697fe0fa"
+      },
+      {
+        "function": "transport_create_connection",
+        "va": "0x101cd0608",
+        "size": 1228,
+        "sha256": "25c90ad4409cd3a3f66622d6c876344c8198b8f5213be20777eec236ab7fec92"
+      }
+    ],
+    "scope": "established slot/peer-table candidate only; no proof of routing, membership lifetime or identity"
+  },
+  "session_context": {
+    "global_pointer_va": "0x1031ef4e0",
+    "main_in_progress_offset": 98518,
+    "transition_in_progress_offset": 98846,
+    "code_guards": [
+      {
+        "function": "main_session_progress_native",
+        "va": "0x100cfe314",
+        "size": 56,
+        "sha256": "c966ff22854878f33997243010a711c333fd43f6dc89bfcf13742414e807df36"
+      },
+      {
+        "function": "transition_session_progress_native",
+        "va": "0x100cfe370",
+        "size": 56,
+        "sha256": "5f7cef2312951f04d32320fb757f0056fb9463e41f93bd7abb257379a404d9b4"
+      },
+      {
+        "function": "session_in_progress",
+        "va": "0x101803134",
+        "size": 24,
+        "sha256": "c16557f15ff178cc65b358c0daebb868a471bdb7c815a7176d9f7399889a2bb8"
+      }
+    ],
+    "scope": "read-only main/transition in-progress bits at guarded jobs callback; no identity, authentication or generation"
+  },
+  "stock_job_sample": {
+    "id_va": "0x10363fd98",
+    "kind_va": "0x10363f8d8",
+    "state_va": "0x10362c240",
+    "guard_sites": [
+      {
+        "va": "0x1000f78d4",
+        "word": "0x9001aa48"
+      },
+      {
+        "va": "0x1000f78d8",
+        "word": "0x91366108"
+      },
+      {
+        "va": "0x1000f78fc",
+        "word": "0x3900011f"
+      },
+      {
+        "va": "0x1000f7900",
+        "word": "0x9001aa48"
+      },
+      {
+        "va": "0x1000f7904",
+        "word": "0xb908d913"
+      },
+      {
+        "va": "0x1000f3554",
+        "word": "0xb001a9d8"
+      },
+      {
+        "va": "0x1000f3a8c",
+        "word": "0xb902431f"
+      }
+    ],
+    "scope": "read-only local stock job candidate; not police role authority"
+  },
+  "local_work_sample": {
+    "job_index_va": "0x1028925ac",
+    "on_shift_va": "0x10363fdd4",
+    "police_labels": [
+      "cop_ls",
+      "cop_sandy",
+      "cop_paleto"
+    ],
+    "code_guards": [
+      {
+        "function": "work_status",
+        "va": "0x1000f92a0",
+        "size": 204,
+        "sha256": "9f69f1a4abdcd2f72c58c9e43ad77039ea8b029d62cd337815a8271c13d06caa"
+      }
+    ],
+    "scope": "local work status only; not a verified game identity or authority"
+  },
+  "engine_owned_sender_path_static": true,
+  "cryptographic_authentication_verified": false,
+  "runtime_thread_verified": false,
+  "hook_installed": false,
+  "transport_connected": false,
+  "two_device_verified": false,
+  "warning": "Sender pointer provenance is static evidence only. Local SendBuffer also dispatches; exclude loopback. Native constructor can overwrite PRP3 session_id at offset 8. Do not send bare PRP3 as CScriptedGameEvent payload.",
+  "internal_sites": {
+    "leave_session_call": "0x1017fe70c",
+    "leave_session_branch": "0x1017ec09c",
+    "drop_session_call": "0x1017ec224",
+    "session_swap": "0x10180443c",
+    "on_net_event_pre_dispatch": "0x1020249a8",
+    "on_connection_peer_verify": "0x1017dfa48"
+  },
+  "peer_info_static": {
+    "getter_va": "0x1018d92e8",
+    "getter_instruction": "0xf9405008",
+    "getter_next_va": "0x1018d92ec",
+    "getter_next_instruction": "0x91008100",
+    "peer_getter_va": "0x101d64b9c",
+    "peer_getter_instruction": "0xf940e800",
+    "description": "CNetGamePlayer::GetGamerInfo x0+0xa0 then +0x20; rlGamerInfo::GetPeerInfo returns this; rlPeerInfo::GetPeerId +0x1d0; diagnostic only"
+  }
+}

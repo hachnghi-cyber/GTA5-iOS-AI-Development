@@ -1,0 +1,52 @@
+{
+  "schema": "private-rp-one-iphone-consent-v1",
+  "date": "2026-11-19",
+  "scope": "Physical iPhone and Windows on the private LAN. Two RP mTLS identities; one GTA process, no native gameplay action.",
+  "diagnostic_source_commit": "2455bc3f49b25e531bc4430612ca29c1288d6d53",
+  "host_witness_commit": "df1c60288d8e5a912f2877097b7d716ca3ee8d5f",
+  "loaded_game_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "iphone_log": {
+    "schema": "prp-authority-client-v1",
+    "time": "2026-11-19 09:47:57 +0000",
+    "result": "consent_round_trip_passed",
+    "rp_tls_verified": "1",
+    "connected": "0",
+    "member_count": "0",
+    "revision": "0",
+    "engine_player_binding_verified": "0",
+    "gameplay_rp_enabled": "0",
+    "collection": "USB app Documents through the standard file-sharing service",
+    "sha256": "8310ee61d7e60e2dfcba9da431cfba8108b41222f6d48d9dd6436fdd3911e209"
+  },
+  "startup_log_sha256": "22d2d148cb56b713e92126513670c9739b862a49f1e48ec68b760653f638ed20",
+  "host_witness": [
+    {
+      "status": "ready",
+      "time_utc": "2026-11-19T09:42:43.091034+00:00"
+    },
+    {
+      "status": "joined_without_consent",
+      "time_utc": "2026-11-19T09:47:58.827536+00:00"
+    },
+    {
+      "status": "opted_in",
+      "time_utc": "2026-11-19T09:47:58.841070+00:00"
+    },
+    {
+      "status": "opted_out",
+      "time_utc": "2026-11-19T09:47:58.858678+00:00"
+    },
+    {
+      "status": "disconnected",
+      "time_utc": "2026-11-19T09:47:58.873383+00:00"
+    },
+    {
+      "status": "host_witness_passed",
+      "time_utc": "2026-11-19T09:47:58.873475+00:00"
+    }
+  ],
+  "host_log_sha256": "87bcf6760954fec56fdefd29089044fe94236e7539927886582c7a7db33dace5",
+  "network_round_trip_verified": true,
+  "native_sender_binding_verified": false,
+  "two_iphone_gameplay_tested": false
+}

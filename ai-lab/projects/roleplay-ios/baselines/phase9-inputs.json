@@ -1,0 +1,904 @@
+{
+  "v133": {
+    "file": "GTAV-v13.3.ipa",
+    "size_bytes": 58455384,
+    "sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+    "status": "STATIC_ONLY",
+    "warnings": [],
+    "apps": [
+      {
+        "root": "Payload/GTAV.app/",
+        "bundle_id": "com.macport.gtav",
+        "version": "1.0",
+        "build": "1",
+        "minimum_ios": "16.3",
+        "executable": "GTA5"
+      }
+    ],
+    "archive": {
+      "files": 55,
+      "total_uncompressed_bytes": 170552173,
+      "zip_test": "PASS_FULL_ARCHIVE_CRC",
+      "entries_including_directories": 59
+    },
+    "binaries": [
+      {
+        "path": "Payload/GTAV.app/GTA5",
+        "normalized_path": "Payload/@APP/GTA5",
+        "size_bytes": 59798512,
+        "sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 2,
+          "ncmds": 40,
+          "uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtacompat.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/GameController.framework/GameController",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/CoreHaptics.framework/CoreHaptics",
+            "/System/Library/Frameworks/CoreMotion.framework/CoreMotion",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/usr/lib/libobjc.A.dylib"
+          ],
+          "rpaths": [
+            "@executable_path",
+            "@executable_path/../Frameworks",
+            "@executable_path/Frameworks"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libSystem.Native.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libSystem.Native.dylib",
+        "size_bytes": 126080,
+        "sha256": "c804c608d7020c2ea7769e591119b90d8a238093909295ff1518ea6ffe0045a7",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 18,
+          "uuid": "5BA6EF54-858E-3DDD-8EBB-65D1C3C9778E",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libSystem.Native.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/usr/lib/libobjc.A.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "network",
+          "packet",
+          "rpc"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libSystem.IO.Compression.Native.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libSystem.IO.Compression.Native.dylib",
+        "size_bytes": 822352,
+        "sha256": "ce965476acc0de1c378478cd27ec31f216d1ab02cd8f99bae3521b24bc660e0d",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 16,
+          "uuid": "10342AB0-FBBB-3DB3-A29C-32E0FEBD03A9",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libSystem.IO.Compression.Native.dylib",
+            "/usr/lib/libz.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "network",
+          "police",
+          "rage",
+          "script"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/dxgi.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/dxgi.dylib",
+        "size_bytes": 330016,
+        "sha256": "4041e0797048b0b6062a7f0265187889306620c827d6a4c4260edd237c0a5177",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 22,
+          "uuid": "6EC08657-91EF-36D5-BA76-48DFAFEE0961",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/dxgi.dylib",
+            "@rpath/libgtacompat.dylib",
+            "@rpath/winemetal.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@loader_path",
+            "@loader_path/../nativemetal"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat",
+          "script"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libcorlib-full.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libcorlib-full.dylib",
+        "size_bytes": 56040384,
+        "sha256": "a67b3e69e1adb88aab50b74af6bdfc00f02d1fa7b7574e3c4af96b22bfde7db4",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 15,
+          "uuid": "892310AD-0EB0-38D0-A300-03DE969FBC23",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libcorlib-full.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libcorlib-aot.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libcorlib-aot.dylib",
+        "size_bytes": 449744,
+        "sha256": "6e42451c92923b5c549eeec989b1abddbca663f276bb51b13dc4c8d630339801",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 15,
+          "uuid": "507AFFEB-D631-3D89-9AC7-6891E600B96D",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libcorlib-aot.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libmonosgen-2.0.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libmonosgen-2.0.dylib",
+        "size_bytes": 4279936,
+        "sha256": "77117bf8b4d2cd362ae0ae65af975fd8573a57e1bf4264aa81da3dc2b68a396d",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 22,
+          "uuid": "8FEADFE6-1662-3D00-9045-1C0609BF020F",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libmonosgen-2.0.dylib",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/usr/lib/libz.1.dylib",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libSystem.Security.Cryptography.Native.Apple.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libSystem.Security.Cryptography.Native.Apple.dylib",
+        "size_bytes": 87024,
+        "sha256": "b6aa5da4ea756aee41d3d0bae6bf91f5187d564936cd880d9a11f65cb55e469d",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 17,
+          "uuid": "60859CBB-4A13-38BA-BB1D-6F6952276E86",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libSystem.Security.Cryptography.Native.Apple.dylib",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "network"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/Menyoo.shv.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/Menyoo.shv.dylib",
+        "size_bytes": 3124624,
+        "sha256": "7dab057f15d87e50ebc5512fd4be3f5535ae6a732ca68c61294d3037d52eeee8",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 23,
+          "uuid": "3D64B5F8-63F6-34B9-BCCA-73D1C82C8B82",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/Menyoo.shv.dylib",
+            "@rpath/ScriptHookV.dylib",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@loader_path"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "script"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libSystem.Net.Security.Native.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libSystem.Net.Security.Native.dylib",
+        "size_bytes": 53648,
+        "sha256": "51f8d7d36e093cc7c8473e0a58663f8f902732b0bb2e3f5ee0de69ec462058a7",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 16,
+          "uuid": "4330CC99-E99B-3389-925F-5488279B2DA1",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libSystem.Net.Security.Native.dylib",
+            "/System/Library/Frameworks/GSS.framework/GSS",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/ScriptHookV.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/ScriptHookV.dylib",
+        "size_bytes": 1140688,
+        "sha256": "a86451f766925adf9fa8dfedd8cfa92f9895bd68fda16b3795e6f747fef2196d",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 31,
+          "uuid": "F768B7B5-AD75-39F4-83D3-8E49234325B5",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/ScriptHookV.dylib",
+            "/usr/lib/libz.1.dylib",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/ImageIO.framework/ImageIO",
+            "/System/Library/Frameworks/UniformTypeIdentifiers.framework/UniformTypeIdentifiers",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AVFAudio.framework/AVFAudio"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "arrest",
+          "cuff",
+          "escort",
+          "network",
+          "packet",
+          "police",
+          "rage",
+          "script"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libgtacompat.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libgtacompat.dylib",
+        "size_bytes": 2959056,
+        "sha256": "51d00d365988abae3d9dda2c5b3c080257b167b156591d1038b13b6d314845ec",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 37,
+          "uuid": "90C31DF4-65DC-3B68-877C-26F5B90B0DC8",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtacompat.dylib",
+            "/usr/lib/libz.1.dylib",
+            "/usr/lib/libarchive.2.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/GameController.framework/GameController",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/CoreHaptics.framework/CoreHaptics",
+            "/System/Library/Frameworks/CoreMotion.framework/CoreMotion",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AVFAudio.framework/AVFAudio",
+            "/usr/lib/libobjc.A.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libgtamsl.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libgtamsl.dylib",
+        "size_bytes": 2677248,
+        "sha256": "a23bc3e5dc6615a0457a97daad2319d782af99c8b01dc13df16fc732b6140b3b",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 17,
+          "uuid": "ACBA3FA5-1CEE-30E6-8C74-9FB4CCA96D1B",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtamsl.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/d3d10core.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/d3d10core.dylib",
+        "size_bytes": 55056,
+        "sha256": "484c7df69d3e78c23a4bed634a47094f75b5d74629529d652478c0d554f31050",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 25,
+          "uuid": "B87CAAC9-5730-3E18-8168-0DF4F250E4AA",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/d3d10core.dylib",
+            "@rpath/libgtacompat.dylib",
+            "@rpath/d3d11.dylib",
+            "@rpath/dxgi.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@loader_path",
+            "@loader_path/../d3d11",
+            "@loader_path/../dxgi",
+            "@loader_path/../nativemetal"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/d3d11.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/d3d11.dylib",
+        "size_bytes": 3308544,
+        "sha256": "b459c7431d8e324ec39e8d0801dc09735e4f31fdc7ba12cffb2a2c190aef139d",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 24,
+          "uuid": "6B51951D-BDA7-3C04-9B46-1A46C5F681DF",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/d3d11.dylib",
+            "@rpath/libgtacompat.dylib",
+            "@rpath/dxgi.dylib",
+            "@rpath/winemetal.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@loader_path",
+            "@loader_path/../dxgi",
+            "@loader_path/../nativemetal"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/winemetal.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/winemetal.dylib",
+        "size_bytes": 26660480,
+        "sha256": "4ace912c1e842b966dc1278ab1cb5f2f61eed38d61be797b43a91834a4400e3c",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 29,
+          "uuid": "EC439CF3-20FA-37A1-997A-AC42D0F09BCA",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/winemetal.dylib",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/MetalFX.framework/MetalFX",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/usr/lib/libsqlite3.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libobjc.A.dylib"
+          ],
+          "rpaths": [
+            "@loader_path",
+            "@loader_path/",
+            "@loader_path/../../"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      }
+    ],
+    "interpretation": "LC_ENCRYPTION_INFO cryptid is a FairPlay flag, not proof of complete decryptability. Binary keyword hints are not proof of gameplay, hook compatibility, networking, or a working RP mode."
+  },
+  "winstom_177": {
+    "file": "Winstom-0.7.177.ipa",
+    "size_bytes": 243710841,
+    "sha256": "eba3b6e29ce31c3667974892f5f650bc526df805f072111b95fc3c041b364641",
+    "status": "STATIC_ONLY",
+    "warnings": [],
+    "apps": [
+      {
+        "root": "Payload/GTAV.app/",
+        "bundle_id": "com.winstom.rp",
+        "version": "0.7.177",
+        "build": "20261105.307",
+        "minimum_ios": "18.0",
+        "executable": "GTA5"
+      }
+    ],
+    "archive": {
+      "files": 2125,
+      "total_uncompressed_bytes": 305349968,
+      "zip_test": "PASS_FULL_ARCHIVE_CRC",
+      "entries_including_directories": 2125
+    },
+    "binaries": [
+      {
+        "path": "Payload/GTAV.app/GTA5",
+        "normalized_path": "Payload/@APP/GTA5",
+        "size_bytes": 59760048,
+        "sha256": "df7427d0e19271b1b49f0132d8d6d3be0dd65a04b4c86991749b75ed9b15f0e4",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 2,
+          "ncmds": 42,
+          "uuid": "048DCEFF-A696-3E7A-9086-2A9953C909CD",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtacompat.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/GameController.framework/GameController",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/CoreHaptics.framework/CoreHaptics",
+            "/System/Library/Frameworks/CoreMotion.framework/CoreMotion",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/usr/lib/libobjc.A.dylib",
+            "@rpath/lmx.dylib",
+            "@rpath/wf.dylib"
+          ],
+          "rpaths": [
+            "@executable_path",
+            "@executable_path/../Frameworks",
+            "@executable_path/Frameworks"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/lmx.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/lmx.dylib",
+        "size_bytes": 4501536,
+        "sha256": "206037a1eaeea734e44886e050558421d1df965c8fd4bd3c078c317ca300906a",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 39,
+          "uuid": "98E34282-7C4D-3E7B-81C2-11A9803C8108",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/lmx.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/WebKit.framework/WebKit",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/System/Library/Frameworks/Network.framework/Network",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/CoreImage.framework/CoreImage",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/Photos.framework/Photos",
+            "/System/Library/Frameworks/CoreMotion.framework/CoreMotion",
+            "/System/Library/Frameworks/GameController.framework/GameController",
+            "@rpath/libgtacompat.dylib",
+            "@rpath/wrcrypto.dylib",
+            "@rpath/wf.dylib",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AVFAudio.framework/AVFAudio",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat",
+          "network"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/wf.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/wf.dylib",
+        "size_bytes": 70224,
+        "sha256": "88644444324f876ab9bae5d3600f755c72c8e27b2cd4069acede8e867e134d50",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 19,
+          "uuid": "DF0BC8B9-42A9-34C3-8013-5F1DA23C9A38",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/wf.dylib",
+            "@rpath/wrcrypto.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libgtacompat.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libgtacompat.dylib",
+        "size_bytes": 2941920,
+        "sha256": "110ecd62d32842009d1856795e2377a4d9a98d2d4150896cec7b409ca6523c1e",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 38,
+          "uuid": "A2BCB218-62D0-3A5C-91CF-679FFD93FBDD",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtacompat.dylib",
+            "/usr/lib/libz.1.dylib",
+            "/usr/lib/libarchive.2.dylib",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/GameController.framework/GameController",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/CoreHaptics.framework/CoreHaptics",
+            "/System/Library/Frameworks/CoreMotion.framework/CoreMotion",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AVFAudio.framework/AVFAudio",
+            "/usr/lib/libobjc.A.dylib",
+            "@rpath/wf.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "libgtacompat",
+          "rpc"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/wrcrypto.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/wrcrypto.dylib",
+        "size_bytes": 97216,
+        "sha256": "1e058f2c6d0d9bf843feb937070d09a94abf9e6b8e0fb7ba7ed767d4cdd9567c",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 31,
+          "uuid": "07D3AD81-D018-3270-837D-6D18DE5E4519",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/wrcrypto.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/CryptoKit.framework/CryptoKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/swift/libswiftCore.dylib",
+            "/usr/lib/swift/libswiftCoreFoundation.dylib",
+            "/usr/lib/swift/libswiftDarwin.dylib",
+            "/usr/lib/swift/libswiftDispatch.dylib",
+            "/usr/lib/swift/libswiftObjectiveC.dylib",
+            "/usr/lib/swift/libswiftXPC.dylib",
+            "/usr/lib/swift/libswift_Builtin_float.dylib",
+            "/usr/lib/swift/libswift_errno.dylib",
+            "/usr/lib/swift/libswift_stdio.dylib"
+          ],
+          "rpaths": [
+            "/usr/lib/swift"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "rage",
+          "script",
+          "winstom"
+        ]
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/libgtamsl.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/libgtamsl.dylib",
+        "size_bytes": 2677248,
+        "sha256": "a23bc3e5dc6615a0457a97daad2319d782af99c8b01dc13df16fc732b6140b3b",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 17,
+          "uuid": "ACBA3FA5-1CEE-30E6-8C74-9FB4CCA96D1B",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/libgtamsl.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": []
+      },
+      {
+        "path": "Payload/GTAV.app/Frameworks/winemetal.dylib",
+        "normalized_path": "Payload/@APP/Frameworks/winemetal.dylib",
+        "size_bytes": 26660480,
+        "sha256": "ee167d6304a0019cca0506a13c715399bf681428c1ab69dc143f4061c5a13419",
+        "macho": {
+          "format": "macho64",
+          "cpu_type": "0x100000c",
+          "is_arm64": true,
+          "cpu_subtype": "0x0",
+          "file_type": 6,
+          "ncmds": 29,
+          "uuid": "E07434F7-F40D-336B-81D7-7B5C38A066B5",
+          "cryptid": 0,
+          "linked_libraries": [
+            "@rpath/winemetal.dylib",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/MetalFX.framework/MetalFX",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/usr/lib/libsqlite3.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libobjc.A.dylib"
+          ],
+          "rpaths": [
+            "@loader_path",
+            "@loader_path/",
+            "@loader_path/../../"
+          ],
+          "code_signature_command": true
+        },
+        "markers_in_first_1mib": [
+          "rpc"
+        ]
+      }
+    ],
+    "interpretation": "LC_ENCRYPTION_INFO cryptid is a FairPlay flag, not proof of complete decryptability. Binary keyword hints are not proof of gameplay, hook compatibility, networking, or a working RP mode."
+  },
+  "comparison": {
+    "scope": "FULL_SHA256_OF_RECOGNIZED_MACHO_FILES_ONLY",
+    "baseline_ipa_sha256": "7ae987a7770610ae42024095861096f8eca45ec39db1a89c223e9d6f2c0c26d7",
+    "candidate_ipa_sha256": "eba3b6e29ce31c3667974892f5f650bc526df805f072111b95fc3c041b364641",
+    "added_binaries": [
+      "Payload/@APP/Frameworks/lmx.dylib",
+      "Payload/@APP/Frameworks/wf.dylib",
+      "Payload/@APP/Frameworks/wrcrypto.dylib"
+    ],
+    "removed_binaries": [
+      "Payload/@APP/Frameworks/Menyoo.shv.dylib",
+      "Payload/@APP/Frameworks/ScriptHookV.dylib",
+      "Payload/@APP/Frameworks/d3d10core.dylib",
+      "Payload/@APP/Frameworks/d3d11.dylib",
+      "Payload/@APP/Frameworks/dxgi.dylib",
+      "Payload/@APP/Frameworks/libSystem.IO.Compression.Native.dylib",
+      "Payload/@APP/Frameworks/libSystem.Native.dylib",
+      "Payload/@APP/Frameworks/libSystem.Net.Security.Native.dylib",
+      "Payload/@APP/Frameworks/libSystem.Security.Cryptography.Native.Apple.dylib",
+      "Payload/@APP/Frameworks/libcorlib-aot.dylib",
+      "Payload/@APP/Frameworks/libcorlib-full.dylib",
+      "Payload/@APP/Frameworks/libmonosgen-2.0.dylib"
+    ],
+    "changed_binaries": [
+      {
+        "path": "Payload/@APP/Frameworks/libgtacompat.dylib",
+        "old_sha256": "51d00d365988abae3d9dda2c5b3c080257b167b156591d1038b13b6d314845ec",
+        "new_sha256": "110ecd62d32842009d1856795e2377a4d9a98d2d4150896cec7b409ca6523c1e",
+        "old_uuid": "90C31DF4-65DC-3B68-877C-26F5B90B0DC8",
+        "new_uuid": "A2BCB218-62D0-3A5C-91CF-679FFD93FBDD",
+        "old_cryptid": 0,
+        "new_cryptid": 0,
+        "added_linked_libraries": [
+          "@rpath/wf.dylib"
+        ],
+        "removed_linked_libraries": []
+      },
+      {
+        "path": "Payload/@APP/Frameworks/winemetal.dylib",
+        "old_sha256": "4ace912c1e842b966dc1278ab1cb5f2f61eed38d61be797b43a91834a4400e3c",
+        "new_sha256": "ee167d6304a0019cca0506a13c715399bf681428c1ab69dc143f4061c5a13419",
+        "old_uuid": "EC439CF3-20FA-37A1-997A-AC42D0F09BCA",
+        "new_uuid": "E07434F7-F40D-336B-81D7-7B5C38A066B5",
+        "old_cryptid": 0,
+        "new_cryptid": 0,
+        "added_linked_libraries": [],
+        "removed_linked_libraries": []
+      },
+      {
+        "path": "Payload/@APP/GTA5",
+        "old_sha256": "f4b5e98efa44227dba8fb357dce02d3a42faac3328a7ce867edafba5916cddfc",
+        "new_sha256": "df7427d0e19271b1b49f0132d8d6d3be0dd65a04b4c86991749b75ed9b15f0e4",
+        "old_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+        "new_uuid": "048DCEFF-A696-3E7A-9086-2A9953C909CD",
+        "old_cryptid": 0,
+        "new_cryptid": 0,
+        "added_linked_libraries": [
+          "@rpath/lmx.dylib",
+          "@rpath/wf.dylib"
+        ],
+        "removed_linked_libraries": []
+      }
+    ],
+    "identical_binary_count": 1,
+    "caveat": "No disassembly, in-game test, asset hash comparison, or ABI equivalence proof."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "DEVICE_OBSERVED_SESSION_PROGRESS_BITS",
+  "captured_at": "2026-11-17T05:31:30+07:00",
+  "capture_source": "Local session-context observer worktree based on b1a01e5ef275ee4a3daecfb20fd47c4b561f2ca6",
+  "observer_stdout_sha256": "b0d33d9d25d7c194d6c8c2cc4185a44005f74358b907b8c327c1e9f9092d4d7b",
+  "executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "ios": "18.6",
+  "mode_reported_by_user": "Sandbox",
+  "sample": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "game_thread_affinity_verified": false,
+    "hardware_stop_at_expected_pc": true,
+    "macport_online_update_callsite_matches": true,
+    "native_main_session_in_progress": false,
+    "native_transition_session_in_progress": true,
+    "network_receive_call_chain_observed": false,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_context_status": "observed",
+    "session_generation_verified": false,
+    "session_identity_verified": false,
+    "site": "jobs_update",
+    "thread_label": "T1",
+    "thread_label_scope": "anonymous_single_capture_only",
+    "timed_out": false
+  },
+  "debugger_cleanup": "Hardware removal and detach acknowledged before observer exited 0",
+  "scope": "One stopped game-loop sample. The bits describe the native main/transition progress getters at that stop."
+}

@@ -1,0 +1,115 @@
+{
+  "schema": "v133-private-authority-iphone-panel-v1",
+  "date": "2026-11-19",
+  "scope": "One physical signed iPhone with the RP panel and one Windows peer on a private LAN",
+  "source_commit": "103c23b8cbd94760a5ec86f5407c3e224d0497ab",
+  "game_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "iphone_startup_log_sha256": "b348bf7279c121dade47d307416571ff77ee6df6706ffd68c01cbac599115c8d",
+  "social_round": {
+    "sha256": "2b9f07eb2f95003f5cb9e87b6e9c9c51ba53f67e92dc1a51dc31a4b948cb5e6c",
+    "stages": [
+      {
+        "status": "ready",
+        "time_utc": "2026-11-19T13:57:05.379690+00:00"
+      },
+      {
+        "status": "iphone_joined_without_consent",
+        "time_utc": "2026-11-19T13:57:30.157706+00:00"
+      },
+      {
+        "status": "iphone_panel_opted_in",
+        "time_utc": "2026-11-19T13:57:48.646443+00:00"
+      },
+      {
+        "status": "windows_greet_sent",
+        "time_utc": "2026-11-19T13:57:48.646564+00:00"
+      },
+      {
+        "status": "iphone_receipted_greet",
+        "time_utc": "2026-11-19T13:57:48.671967+00:00"
+      },
+      {
+        "status": "windows_documents_sent",
+        "time_utc": "2026-11-19T13:57:48.672074+00:00"
+      },
+      {
+        "status": "iphone_receipted_documents",
+        "time_utc": "2026-11-19T13:57:48.682327+00:00"
+      },
+      {
+        "status": "windows_receipted_iphone_documents",
+        "time_utc": "2026-11-19T13:57:53.460713+00:00"
+      },
+      {
+        "status": "windows_receipted_iphone_greet",
+        "time_utc": "2026-11-19T13:58:04.243629+00:00"
+      },
+      {
+        "status": "panel_actions_complete",
+        "time_utc": "2026-11-19T13:58:04.243677+00:00"
+      },
+      {
+        "status": "rejected",
+        "time_utc": "2026-11-19T13:58:13.742134+00:00"
+      }
+    ],
+    "iphone_authority_log": {
+      "schema": "prp-authority-client-v1",
+      "time": "2026-11-19 13:58:13 +0000",
+      "result": "short_or_failed_receive",
+      "rp_tls_verified": "1",
+      "connected": "0",
+      "member_count": "0",
+      "revision": "0",
+      "engine_player_binding_verified": "0",
+      "gameplay_rp_enabled": "0",
+      "sha256": "e8cfaf4df8ce4cf1f363db19806f18fbd72640021a9ec54ec659c187d1f3ea30"
+    },
+    "scope": "All four social messages receipted. The host observer stopped in the separate opt-out stage."
+  },
+  "consent_round": {
+    "sha256": "270378508fc5890a6f95fec3002ad7ce263a68bc22ae326a2980f645586c2819",
+    "stages": [
+      {
+        "status": "ready",
+        "time_utc": "2026-11-19T13:59:37.474819+00:00"
+      },
+      {
+        "status": "iphone_joined_without_consent",
+        "time_utc": "2026-11-19T14:00:01.172794+00:00"
+      },
+      {
+        "status": "iphone_panel_opted_in",
+        "time_utc": "2026-11-19T14:00:18.069089+00:00"
+      },
+      {
+        "status": "panel_consent_active",
+        "time_utc": "2026-11-19T14:00:18.069163+00:00"
+      },
+      {
+        "status": "iphone_panel_opted_out",
+        "time_utc": "2026-11-19T14:00:24.705231+00:00"
+      },
+      {
+        "status": "host_panel_consent_witness_passed",
+        "time_utc": "2026-11-19T14:00:24.705284+00:00"
+      }
+    ],
+    "iphone_authority_log": {
+      "schema": "prp-authority-client-v1",
+      "time": "2026-11-19 14:00:24 +0000",
+      "result": "short_or_failed_receive",
+      "rp_tls_verified": "1",
+      "connected": "0",
+      "member_count": "0",
+      "revision": "0",
+      "engine_player_binding_verified": "0",
+      "gameplay_rp_enabled": "0",
+      "sha256": "c9b06cd8916330e044488425fa22c4de3886c14cc2f73c3b8394e7ff3fa2427a"
+    },
+    "scope": "Manual opt-in and opt-out confirmed against the same RP admission and successive consent nonces."
+  },
+  "native_game_binding_verified": false,
+  "two_gta_peers_tested": false,
+  "document_contents_transferred": false
+}

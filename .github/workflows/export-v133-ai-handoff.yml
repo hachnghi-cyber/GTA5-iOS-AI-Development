@@ -1,0 +1,84 @@
+name: GTA v13.3 Police RP - AI handoff ZIP (SOURCE ONLY)
+
+on:
+  push:
+    branches:
+      - feature/winstom-rp-ipa-audit-20261116
+    paths:
+      - 'ai-lab/projects/roleplay-ios/AI_HANDOFF_V133_PHASE8.md'
+      - 'ai-lab/projects/roleplay-ios/PROMPT_CHUYEN_AI_V133.md'
+      - 'ai-lab/projects/roleplay-ios/tools/export_v133_ai_handoff.py'
+      - '.github/workflows/export-v133-ai-handoff.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source_handoff:
+    name: Validate source then export one handoff package
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Re-run source-only C11 host tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p handoff_evidence
+          (cd ai-lab/projects/roleplay-ios/v133_interaction && CC=gcc bash tools/run_host_tests.sh) \
+            2>&1 | tee handoff_evidence/c11_gcc.log
+          (cd ai-lab/projects/roleplay-ios/v133_interaction && CC=clang bash tools/run_host_tests.sh) \
+            2>&1 | tee handoff_evidence/c11_clang.log
+      - name: Re-run Python network/hook/packer synthetic tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=ai-lab/projects/roleplay-ios/v133_interaction
+          python3 -m unittest discover -s "$ROOT/tests" -p 'test_verify_device_trace.py' -v \
+            2>&1 | tee handoff_evidence/trace_python.log
+          python3 -m unittest discover -s "$ROOT/tests" -p 'test_audit_hook_fingerprint.py' -v \
+            2>&1 | tee handoff_evidence/hook_python.log
+          python3 -m unittest discover -s "$ROOT/ios" -p 'test_v133_probe_packer.py' -v \
+            2>&1 | tee handoff_evidence/ipa_packer_synthetic.log
+          python3 -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v \
+            2>&1 | tee handoff_evidence/winstom_audit_python.log
+      - name: Package clean source and documented proof (exclude game assets)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ai-lab/projects/roleplay-ios/tools/export_v133_ai_handoff.py \
+            --out-dir dist/ai-handoff \
+            --evidence-dir handoff_evidence
+          cd dist/ai-handoff
+          sha256sum -c GTA-V-iOS-v13.3-RP-AI-HANDOFF-SOURCE-REPORT.zip.sha256
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          path=Path('GTA-V-iOS-v13.3-RP-AI-HANDOFF-SOURCE-REPORT.zip')
+          with ZipFile(path) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              assert 'START_HERE_AI.md' in names
+              assert 'MANIFEST_SHA256.json' in names
+              assert 'ai-lab/projects/roleplay-ios/AI_HANDOFF_V133_PHASE8.md' in names
+              assert 'ai-lab/projects/roleplay-ios/v133_interaction/src/rp_v133_mailbox.c' in names
+              assert len(names)>35
+              forbidden={'.ipa','.dylib','.rpf','.wpk','.p12','.mobileprovision','.o'}
+              assert not any(Path(n).suffix.lower() in forbidden for n in names)
+          print('SOURCE_ONLY_HANDOFF_ZIP=PASS',len(names),'files')
+          PY
+      - name: Publish AI handoff source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA-V13.3-PoliceRP-AI-HANDOFF-SOURCE-REPORT
+          path: |
+            dist/ai-handoff/GTA-V-iOS-v13.3-RP-AI-HANDOFF-SOURCE-REPORT.zip
+            dist/ai-handoff/GTA-V-iOS-v13.3-RP-AI-HANDOFF-SOURCE-REPORT.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

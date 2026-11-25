@@ -1,0 +1,11 @@
+*.ipa
+*.p12
+*.p8
+*.mobileprovision
+__pycache__/
+private-binaries/
+
+# Short-lived device diagnostic credentials
+PRP3TLS-Probe-PRIVATE.json
+host-private.json
+host.key

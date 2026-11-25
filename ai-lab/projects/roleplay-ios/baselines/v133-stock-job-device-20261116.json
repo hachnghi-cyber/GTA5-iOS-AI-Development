@@ -1,0 +1,46 @@
+{
+  "status": "DEVICE_OBSERVED_LOCAL_STOCK_JOB_ONLY",
+  "captured_local_time": "2026-11-16 20:48:00 UTC+07:00",
+  "observer_commit": "63cfdf33c34ffbe5c50163048830e050a618da82",
+  "executable_uuid": "EB122C35-96F4-307F-91C3-A2255DD9C685",
+  "device_model": "iPhone14,3",
+  "ios": "18.6",
+  "mode": "stock Sandbox",
+  "probe_source_revision": "tls-probe-opt-in",
+  "sample": {
+    "authenticated_rp_sender_verified": false,
+    "custom_rp_event_received": false,
+    "hardware_stop_at_expected_pc": true,
+    "macport_online_update_callsite_matches": true,
+    "network_receive_stack_confirmed": false,
+    "observed_path": "undetermined",
+    "session_generation_verified": false,
+    "site": "jobs_update",
+    "stock_job_candidate": {
+      "job_id_is_cop_ls": false,
+      "job_id_known": true,
+      "police_role_authorized": false,
+      "stock_job_kind": 0,
+      "stock_job_state": 0
+    },
+    "thread_label": "T1",
+    "timed_out": false
+  },
+  "debugger_cleanup": "Hardware removal and detach acknowledged before observer exited 0",
+  "device_log_after_sample": {
+    "backgrounded_at_seconds": 234.0,
+    "followup_pid_result": 0,
+    "sandbox_loaded_at_seconds": 19.88,
+    "termination_cause": "not established",
+    "top_level_gta_crash_report_listed": false
+  },
+  "debug_transport": {
+    "changed_condition": "DeveloperDiskImage mounted successfully using pymobiledevice3 11.56.0 mounter auto-mount",
+    "retest": "jobs_update hardware sample succeeded",
+    "initial_failure": "ConnectionAbortedError at qSupported before attach"
+  },
+  "scripted_receive_sample_obtained": false,
+  "authenticated_sender_verified": false,
+  "two_device_gameplay_verified": false,
+  "private_logs_uploaded": false
+}

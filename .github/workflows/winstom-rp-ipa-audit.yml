@@ -1,0 +1,255 @@
+name: Winstom RP - Read-only IPA audit
+on:
+  pull_request:
+    paths:
+      - 'ai-lab/winstom_rp_audit.py'
+      - 'ai-lab/winstom_lmx_objc_map.py'
+      - 'ai-lab/tests/test_winstom_lmx_objc_map.py'
+      - 'ai-lab/tests/test_winstom_rp_audit.py'
+      - 'ai-lab/projects/roleplay-ios/v133_interaction/**'
+      - 'ai-lab/projects/roleplay-ios/v135/package_r85_private_panel.py'
+      - '.github/workflows/winstom-rp-ipa-audit.yml'
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'Authorized Winstom IPA direct HTTPS URL; avoid credentials in URL'
+        required: true
+        type: string
+      baseline_url:
+        description: 'Optional original GTA V iOS v13 IPA direct HTTPS URL'
+        required: false
+        type: string
+      expected_sha256:
+        description: 'Optional Winstom IPA SHA-256'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Synthetic-only Python tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m compileall -q ai-lab/winstom_rp_audit.py ai-lab/winstom_lmx_objc_map.py ai-lab/tests/test_winstom_rp_audit.py ai-lab/tests/test_winstom_lmx_objc_map.py
+      - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_lmx_objc_map.py' -v
+      - run: python -m unittest discover -s ai-lab/tests -p 'test_winstom_rp_audit.py' -v
+      - name: Reject stale v12 hook offsets in exact v13.3 build
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_audit_hook_fingerprint.py' -v
+      - name: Validate cross-device PRP3 trace checker (synthetic fixtures only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_verify_device_trace.py' -v
+      - name: Validate exact-build engine evidence parser (synthetic fixtures)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_inspect_v133_engine.py' -v
+      - name: Validate USB debugger reply parsing
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_usb.py' -v
+      - name: Validate Phase 19 USB queue capture (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_queue_usb.py' -v
+      - name: Reject packet-integrity control-flow bypasses (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_packet_integrity_audit.py' -v
+      - name: Validate debugger stack classification
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_lldb.py' -v
+      - name: Validate Windows USB internal native connection candidate (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_windows_internal.py' -v
+      - name: Validate internal pre-dispatch sender selection (synthetic only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_observe_v133_pre_dispatch.py' -v
+      - name: Validate netPlayer ↔ snSession peer mapping (synthetic memory only)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_check_v133_peer_session_map.py' -v
+      - name: Verify exact-build connection-chain static contract (synthetic; no IPA)
+        run: python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_audit_v133_connection_chain.py' -v
+      - name: Test direct PRP3 pairing over real TLS sockets
+        run: |
+          python -m pip install cryptography==50.0.2 aiohttp==3.14.5
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_prp3_direct_tls.py' -v
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_install_paired_rp_profiles.py' -v
+          python ai-lab/projects/roleplay-ios/v135/package_r85_private_panel.py --help
+      - name: Build C authority and exercise two real TLS clients (synthetic game facts)
+        env:
+          RP_AUTHORITY_LIBRARY: /tmp/rp_authority.so
+        run: |
+          python ai-lab/projects/roleplay-ios/v133_interaction/tools/build_rp_authority.py --compiler gcc --with-client-test-fixture --output "$RP_AUTHORITY_LIBRARY"
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_rp_private_server.py' -v
+          python -m unittest discover -s ai-lab/projects/roleplay-ios/v133_interaction/tests -p 'test_native_authority_tls.py' -v
+
+  v133-interaction-gate:
+    name: v13.3 RP interaction C11 source-only tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: GCC with ASan and UBSan
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c tests/test_v133_interact_gate.c \
+            -o /tmp/v133_interact_gate
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_interact_gate
+      - name: Two-peer synthetic transport (GCC sanitizers)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c tests/test_v133_two_peers.c \
+            -o /tmp/v133_two_peers
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_two_peers
+      - name: Wire v1 strict parser, golden vector and malformed frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c tests/test_v133_wire.c \
+            -o /tmp/v133_wire
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_wire
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -O2 \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c tests/test_v133_wire.c \
+            -o /tmp/v133_wire_clang
+          /tmp/v133_wire_clang
+      - name: Bounded C11 mailbox network-to-game-thread source regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox.c \
+            -o /tmp/v133_mailbox
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_mailbox
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -O2 \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox.c \
+            -o /tmp/v133_mailbox_clang
+          /tmp/v133_mailbox_clang
+      - name: Multi-producer network-thread mailbox stress (GCC/Clang)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -pthread -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
+            -o /tmp/v133_mailbox_threads
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 /tmp/v133_mailbox_threads
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -pthread -O2 \
+            -I include src/rp_v133_interact_gate.c src/rp_v133_wire.c \
+            src/rp_v133_mailbox.c tests/test_v133_mailbox_threads.c \
+            -o /tmp/v133_mailbox_threads_clang
+          /tmp/v133_mailbox_threads_clang
+      - name: Reproduce thirteen source test binaries with GCC and Clang sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          CC=gcc bash tools/run_host_tests.sh
+          CC=clang bash tools/run_host_tests.sh
+      - name: Static analysis of private authority boundary
+        run: |
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          clang --analyze -std=c11 -Wall -Wextra -Werror -I include server/rp_authority_ffi.c src/rp_v133_police.c src/rp_v133_police_tx.c src/rp_v133_authority_client.c
+      - name: Clang strict host build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ai-lab/projects/roleplay-ios/v133_interaction
+          clang -std=c11 -Wall -Wextra -Werror -Wpedantic -O2 \
+            -I include src/rp_v133_interact_gate.c tests/test_v133_interact_gate.c \
+            -o /tmp/v133_interact_gate_clang
+          /tmp/v133_interact_gate_clang
+
+  analyze:
+    name: Analyze authorized IPA; no binary publication
+    if: github.event_name == 'workflow_dispatch'
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download Winstom IPA over HTTPS
+        env:
+          IPA_URL: ${{ inputs.ipa_url }}
+          EXPECTED_SHA: ${{ inputs.expected_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$IPA_URL" != https://* ]]; then
+            echo "::error::IPA URL must begin with https://"
+            exit 2
+          fi
+          curl --proto '=https' --proto-redir '=https' --fail --location \
+            --silent --show-error --retry 2 --max-time 1800 \
+            --max-filesize 3000000000 \
+            --output "$RUNNER_TEMP/winstom.ipa" "$IPA_URL"
+          if [[ -n "$EXPECTED_SHA" ]]; then
+            if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{64}$ ]]; then
+              echo "::error::expected_sha256 must be 64 hex characters"
+              exit 2
+            fi
+            printf '%s  %s\n' "$EXPECTED_SHA" "$RUNNER_TEMP/winstom.ipa" | sha256sum -c -
+          fi
+          unzip -tqq "$RUNNER_TEMP/winstom.ipa" >/dev/null
+          echo "ZIP verified; IPA remains in runner temp storage."
+      - name: Download optional baseline v13 IPA
+        env:
+          BASELINE_URL: ${{ inputs.baseline_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$BASELINE_URL" ]]; then
+            echo "No v13 baseline URL. Binary diff will be unavailable."
+            exit 0
+          fi
+          if [[ "$BASELINE_URL" != https://* ]]; then
+            echo "::error::Baseline URL must begin with https://"
+            exit 2
+          fi
+          curl --proto '=https' --proto-redir '=https' --fail --location \
+            --silent --show-error --retry 2 --max-time 1800 \
+            --max-filesize 3000000000 \
+            --output "$RUNNER_TEMP/v13.ipa" "$BASELINE_URL"
+          unzip -tqq "$RUNNER_TEMP/v13.ipa" >/dev/null
+      - name: Generate structural report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p report
+          if [[ -f "$RUNNER_TEMP/v13.ipa" ]]; then
+            python ai-lab/winstom_rp_audit.py "$RUNNER_TEMP/winstom.ipa" \
+              --baseline "$RUNNER_TEMP/v13.ipa" \
+              --output-json report/WINSTOM_AUDIT.json \
+              --output-md report/WINSTOM_AUDIT.md
+          else
+            python ai-lab/winstom_rp_audit.py "$RUNNER_TEMP/winstom.ipa" \
+              --output-json report/WINSTOM_AUDIT.json \
+              --output-md report/WINSTOM_AUDIT.md
+          fi
+          cat report/WINSTOM_AUDIT.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload metadata and reports only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: winstom-rp-static-report
+          if-no-files-found: warn
+          path: |
+            report/WINSTOM_AUDIT.json
+            report/WINSTOM_AUDIT.md
+          retention-days: 7
