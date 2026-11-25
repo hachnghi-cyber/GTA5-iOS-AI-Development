@@ -19,7 +19,21 @@
     "account_panel_ios15_build_run": 45438412021,
     "roster_source": "A joined client can view consenting RP principals, roles and authoritative shift status from server snapshots. Native character identities remain unverified.",
     "private_account_linked_to_gta_character": false,
-    "next_action": "Use the recovered R85 patrol baseline for the combined private RP client. Verify private room, active shift, and both consenting participants before enabling police interactions."
+    "beta": {
+      "file": "GTAV_v13.5_R85_Private_RP_Beta_Unsigned.ipa",
+      "ipa_sha256": "048f15f15c52f142e7b3e6d42342674aa84ba782df20dd5fade83dc6b0981be1",
+      "ipa_bytes": 102115979,
+      "entries_crc_verified": 63,
+      "panel_commit": "8f8dea25052d01ae9a108726a451903bd9b5b553",
+      "iphoneos_build_run": 45438932208,
+      "panel_sha256": "851288bfc70c6a485ba43be6ad06ad50ad9c70a6a34dbb2d0ff203dfee688d0d",
+      "minimum_ios": "15.0",
+      "host_tests_passed": 197,
+      "device_ipa_sha256_readback": true,
+      "device_profiles_read_back": ["standalone-officer-11", "livecontainer-citizen-22"],
+      "r85_device_social_roundtrip_verified": false
+    },
+    "next_action": "Sign and open the beta on both clients, opt in independently and verify the roster and bidirectional social events. Verify private room, active shift and game-character binding before enabling custody."
   },
   "iphone_account_panel": {
     "parent": "180cf1440710ddf9ee4a9f372af934124cfce25a",

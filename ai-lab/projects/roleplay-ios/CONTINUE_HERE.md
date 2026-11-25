@@ -4,12 +4,21 @@
 
 ## Bản tuần tra v13.5 R85
 
+Beta R85 đã đóng gói cùng panel tài khoản iPhoneOS ARM64 từ commit
+`8f8dea25052d01ae9a108726a451903bd9b5b553`, Actions `45438932208`.
+Tệp `GTAV_v13.5_R85_Private_RP_Beta_Unsigned.ipa` có SHA-256
+`048f15f15c52f142e7b3e6d42342674aa84ba782df20dd5fade83dc6b0981be1`.
+Đã đọc lại IPA từ Documents của GTA trên iPhone và xác minh hai hồ sơ server
+ở đúng container GTA cài riêng và LiveContainer. Hai hồ sơ hết hạn sau 20 phút.
+Bài thử kế tiếp là đăng nhập trên cả hai bản R85, tham gia, kiểm tra danh sách
+và gửi lời chào hai chiều. Xem `IPHONE_RP_ACCOUNT_VI.md`.
+
 Panel tài khoản chọn R85 theo UUID của executable và SHA-256 của trang chứa
 thay đổi tuần tra. Giao diện cần hồ sơ tài khoản của server riêng. Luồng này
 ghi kết quả vào `PoliceRP-R85-Authority.txt`. Chưa có log đăng nhập R85 từ iPhone.
 
 CI `45438412021` đã liên kết panel cho iPhoneOS ARM64 với phiên bản tối thiểu
-iOS 15. Bản mã nguồn kế tiếp có mục **Người chơi RP** sau khi tham gia. Danh
+iOS 15. Bản beta có mục **Người chơi RP** sau khi tham gia. Danh
 sách lấy RP ID, vai trò và trạng thái trong ca từ snapshot của server riêng.
 
 Ngày 24/11/2026 đã tìm lại IPA R85 và ZIP mã nguồn từ chat cũ. Hai tệp được lưu
