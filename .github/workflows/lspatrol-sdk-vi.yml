@@ -1,0 +1,42 @@
+name: LSPatrol v0.5 SDK validation
+on:
+  push:
+    branches: [lspatrol-v05-sdk-vi]
+    paths: ['.github/workflows/lspatrol-sdk-vi.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    env:
+      SDK_GZIP_BASE64: ${{ secrets.LSPATROL_SDK_GZIP_BASE64 }}
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify supplied original SDK and compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$SDK_GZIP_BASE64" ]; then
+            echo "::notice::No SDK supplied. No DLL was built. Set LSPATROL_SDK_GZIP_BASE64 or build locally."
+            exit 0
+          fi
+          mkdir -p sdk-local
+          python - <<'PY'
+          import os, gzip, base64, pathlib, hashlib, re
+          source = gzip.decompress(base64.b64decode(os.environ['SDK_GZIP_BASE64'], validate=True))
+          assert hashlib.sha256(source).hexdigest() == '0021ef8957f8c63e1ca30401c54a04a45b3fb4c7c6de3ce44a57d9388db052ed'
+          assert len(re.findall(rb'EntryPoint\s*=\s*"', source)) == 210
+          pathlib.Path('sdk-local/LSPatrolApi.cs').write_bytes(source)
+          pathlib.Path('sdk-local/LSPatrolApi.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Library</OutputType><AssemblyName>LSPatrolApi</AssemblyName><Deterministic>true</Deterministic></PropertyGroup></Project>')
+          pathlib.Path('sdk-local/NuGet.Config').write_text('<configuration><packageSources><clear /></packageSources></configuration>')
+          PY
+          dotnet build sdk-local/LSPatrolApi.csproj -c Release --nologo --verbosity quiet
+          test -s sdk-local/bin/Release/net8.0/LSPatrolApi.dll
+          sha256sum sdk-local/bin/Release/net8.0/LSPatrolApi.dll
+          echo "Compiled only; no iOS runtime test. No redistribution artifact on public repo."
+      - name: Remove local SDK material
+        if: always()
+        run: rm -rf sdk-local
